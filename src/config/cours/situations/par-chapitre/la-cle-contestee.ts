@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_GAMME, PART_DU_CURSEUR, coutsParProduit, tableauDeLaGamme } from "../../chapitres/cout-par-produit";
 import { coutsDeLaGamme } from "../../monde/couts-et-budgets";
@@ -20,11 +20,15 @@ import type { Situation } from "../types";
  * chiffres sont ceux de `coutsParProduit`. Le résultat de la gamme vaut 4 511 € avec les deux clés
  * (l'ancien cas écrivait 4 527 € ici et 4 527,47 € au chapitre). L'argument du responsable est une
  * hypothèse de l'histoire.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les charges communes s'imputent au prorata, chaque part en
+ * une ligne arrondie au centime (au coût de l'heure ou des 100 € arrondi, avec une tolérance d'un
+ * demi-centime par unité d'œuvre, avant) : les parts retombent juste sur 33 578 €, et ce que One ne
+ * porte plus se retrouve exactement chez les deux autres références.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 /** Un résultat dit en mots, après « de » ou après « à » : « d'une perte de 642,62 € », « à un bénéfice de 829,20 € ». */
 const deResultat = (x: number) => (x >= 0 ? `d'un bénéfice de ${eur(x)}` : `d'une perte de ${eur(-x)}`);
 const aResultat = (x: number) => (x >= 0 ? `à un bénéfice de ${eur(x)}` : `à une perte de ${eur(-x)}`);
@@ -36,11 +40,11 @@ export function cleContestee(c: Pick<Cas, "code">) {
   const k = coutsParProduit(c);
   const x = k.x;
   // Le croisement des deux clés : ce que chaque référence porte de plus au chiffre d'affaires qu'aux heures.
-  const deplacement = k.refs.map((l, i) => ({ ...l, auChiffre: k.v.parReference[i]!.imputees, resultatAuChiffre: k.v.parReference[i]!.resultat, enPlus: auCentime(k.v.parReference[i]!.imputees - l.imputees) }));
+  const deplacement = k.refs.map((l, i) => ({ ...l, auChiffre: k.v.parReference[i]!.imputees, resultatAuChiffre: k.v.parReference[i]!.resultat, enPlus: arrondi2(k.v.parReference[i]!.imputees - l.imputees) }));
   const autres = deplacement.filter((l) => l.code !== x.code);
   const quiPaie = [...autres].sort((a, b) => b.enPlus - a.enPlus)[0]!;
   const autre = autres.find((l) => l.code !== quiPaie.code)!;
-  const gain = auCentime(k.xv.resultat - x.resultat);
+  const gain = arrondi2(k.xv.resultat - x.resultat);
   // Le verdict : la clé ne fait que déplacer des charges, le résultat de la gamme ne bouge pas, et la référence se garde par sa marge.
   const verdict: Verdict | null = k.v.resultat === k.h.resultat && x.margeSpecifique > 0 ? "la-cle-ne-cree-rien" : null;
   return {
@@ -51,8 +55,6 @@ export function cleContestee(c: Pick<Cas, "code">) {
     autre,
     gain,
     verdict,
-    toleranceQuiPaie: auCentime(k.toleranceAuxHeures(quiPaie.heures) + k.toleranceAuChiffre(quiPaie.chiffreDAffaires)),
-    toleranceAutre: auCentime(k.toleranceAuxHeures(autre.heures) + k.toleranceAuChiffre(autre.chiffreDAffaires)),
   };
 }
 
@@ -100,7 +102,7 @@ export const LA_CLE_CONTESTEE: Situation = {
       notions: ["full_unit_cost"],
       question: (c) => {
         const x = cleContestee(c).x;
-        return `Commencez par la répartition d'aujourd'hui : le coût direct de ${x.nom}, le coût d'une heure-machine pour toute la gamme, les charges communes portées par ${x.nom}, puis son résultat (négatif pour une perte).`;
+        return `Commencez par la répartition d'aujourd'hui : le coût direct de ${x.nom} et le coût d'une heure-machine pour toute la gamme. Donnez ensuite les charges communes portées par ${x.nom} (au prorata de ses heures, au centime), puis son résultat (négatif pour une perte).`;
       },
       champs: (c) => {
         const { k, x } = cleContestee(c);
@@ -109,18 +111,18 @@ export const LA_CLE_CONTESTEE: Situation = {
           {
             libelle: "Coût d'une heure-machine",
             attendu: k.coutDeLHeure,
-            calcul: `${eur(k.communes)} ÷ (${k.refs.map((l) => `${qte(l.quantite)} × ${qte(l.heuresMachineParUnite)} h`).join(" + ")}) = ${eur(k.communes)} ÷ ${qte(auCentime(k.heures))} h ≈ ${eur(k.coutDeLHeure)}`,
+            calcul: `${eur(k.communes)} ÷ (${k.refs.map((l) => `${qte(l.quantite)} × ${qte(l.heuresMachineParUnite)} h`).join(" + ")}) = ${eur(k.communes)} ÷ ${qte(arrondi2(k.heures))} h = ${eur(k.coutDeLHeure)}`,
           },
-          { libelle: `Charges communes : ${x.nom}, aux heures`, attendu: x.imputees, tolerance: k.toleranceAuxHeures(x.heures), calcul: `${qte(auCentime(x.heures))} h × ${eur(k.coutDeLHeure)} ≈ ${eur(x.imputees)}` },
-          { libelle: `Résultat : ${x.nom}, aux heures`, attendu: x.resultat, tolerance: k.toleranceAuxHeures(x.heures), calcul: `${eur(x.chiffreDAffaires)} − ${eur(x.direct)} − ${eur(x.imputees)} = ${eur(x.resultat)}` },
+          { libelle: `Charges communes : ${x.nom}, aux heures`, attendu: x.imputees, calcul: `${eur(k.communes)} × ${qte(arrondi2(x.heures))} h ÷ ${qte(arrondi2(k.heures))} h = ${eur(x.imputees)}` },
+          { libelle: `Résultat : ${x.nom}, aux heures`, attendu: x.resultat, calcul: `${eur(x.chiffreDAffaires)} − ${eur(x.direct)} − ${eur(x.imputees)} = ${eur(x.resultat)}` },
         ];
       },
       explication: (c) => {
         const { k, x } = cleContestee(c);
-        const partDesHeures = Math.round((x.heures / k.heures) * 100);
-        const partDuChiffre = Math.round((x.chiffreDAffaires / k.h.chiffreDAffaires) * 100);
+        const partDesHeures = taux2(x.heures, k.heures);
+        const partDuChiffre = taux2(x.chiffreDAffaires, k.h.chiffreDAffaires);
         return [
-          `${x.nom} demande ${partDesHeures} % des heures-machine de la gamme pour ${partDuChiffre} % du chiffre d'affaires : aux heures, elle porte une grosse part des charges communes, ${eur(x.imputees)}, et fait ${x.resultat >= 0 ? "un bénéfice" : "une perte"} de ${eur(Math.abs(x.resultat))}.`,
+          `${x.nom} demande ${pct(partDesHeures)} des heures-machine de la gamme pour ${pct(partDuChiffre)} du chiffre d'affaires : aux heures, elle porte une grosse part des charges communes, ${eur(x.imputees)}, et fait ${x.resultat >= 0 ? "un bénéfice" : "une perte"} de ${eur(Math.abs(x.resultat))}.`,
         ];
       },
     },
@@ -131,28 +133,25 @@ export const LA_CLE_CONTESTEE: Situation = {
       notions: ["full_unit_cost", "fixed_costs"],
       question: (c) => {
         const x = cleContestee(c).x;
-        return `Refaites le calcul avec la clé proposée, 100 € de chiffre d'affaires pour unité d'œuvre : le coût de cette unité d'œuvre, les charges communes portées par ${x.nom}, son résultat, puis le résultat de toute la gamme.`;
+        return `Refaites le calcul avec la clé proposée, 100 € de chiffre d'affaires pour unité d'œuvre. Donnez le coût de cette unité d'œuvre, les charges communes portées par ${x.nom} (au prorata de son chiffre d'affaires, au centime), son résultat, puis le résultat de toute la gamme.`;
       },
       champs: (c) => {
         const { k, x } = cleContestee(c);
         return [
-          { libelle: "Coût de 100 € de chiffre d'affaires", attendu: k.coutDesCent, calcul: `${eur(k.communes)} ÷ (${eur(k.h.chiffreDAffaires)} ÷ 100) ≈ ${eur(k.coutDesCent)}` },
+          { libelle: "Coût de 100 € de chiffre d'affaires", attendu: k.coutDesCent, calcul: `${eur(k.communes)} ÷ (${eur(k.h.chiffreDAffaires)} ÷ 100) = ${eur(k.coutDesCent)}` },
           {
             libelle: `Charges communes : ${x.nom}, au chiffre d'affaires`,
             attendu: k.xv.imputees,
-            tolerance: k.toleranceAuChiffre(x.chiffreDAffaires),
-            calcul: `${eur(x.chiffreDAffaires)} ÷ 100 × ${eur(k.coutDesCent)} ≈ ${eur(k.xv.imputees)}`,
+            calcul: `${eur(k.communes)} × ${eur(x.chiffreDAffaires)} ÷ ${eur(k.h.chiffreDAffaires)} = ${eur(k.xv.imputees)}`,
           },
           {
             libelle: `Résultat : ${x.nom}, au chiffre d'affaires`,
             attendu: k.xv.resultat,
-            tolerance: k.toleranceAuChiffre(x.chiffreDAffaires),
             calcul: `${eur(x.chiffreDAffaires)} − ${eur(x.direct)} − ${eur(k.xv.imputees)} = ${eur(k.xv.resultat)}`,
           },
           {
             libelle: "Résultat de la gamme",
             attendu: k.v.resultat,
-            tolerance: k.toleranceAuChiffre(k.h.chiffreDAffaires),
             calcul: `${eur(k.h.chiffreDAffaires)} − ${eur(k.h.directs)} de coûts directs − ${eur(k.communes)} de charges communes = ${eur(k.v.resultat)}`,
           },
         ];
@@ -171,16 +170,18 @@ export const LA_CLE_CONTESTEE: Situation = {
       notions: ["full_unit_cost", "fixed_costs"],
       question: (c) => {
         const r = cleContestee(c);
-        return `Croisez les deux répartitions. Combien de charges communes ${r.quiPaie.nom} porterait-elle en plus au chiffre d'affaires qu'aux heures, et ${r.autre.nom} (négatif si elle en porte moins) ? Quel serait alors le résultat de ${r.quiPaie.nom} ?`;
+        return `Croisez les deux répartitions. Combien de charges communes ${r.quiPaie.nom} porterait-elle en plus au chiffre d'affaires qu'aux heures, et ${r.autre.nom} (négatif si elle en porte moins) ? Chaque part se calcule au prorata, au centime. Quel serait alors le résultat de ${r.quiPaie.nom} ?`;
       },
       champs: (c) => {
         const r = cleContestee(c);
         const q = r.quiPaie;
         const a = r.autre;
+        const k = r.k;
+        const parts = (l: typeof q) => `au chiffre d'affaires ${eur(k.communes)} × ${eur(l.chiffreDAffaires)} ÷ ${eur(k.h.chiffreDAffaires)} = ${eur(l.auChiffre)}, aux heures ${eur(k.communes)} × ${qte(arrondi2(l.heures))} h ÷ ${qte(arrondi2(k.heures))} h = ${eur(l.imputees)}`;
         return [
-          { libelle: `Charges en plus : ${q.nom}`, attendu: q.enPlus, tolerance: r.toleranceQuiPaie, calcul: `${eur(q.auChiffre)} − ${eur(q.imputees)} = ${eur(q.enPlus)}` },
-          { libelle: `Charges en plus : ${a.nom}`, attendu: a.enPlus, tolerance: r.toleranceAutre, calcul: `${eur(a.auChiffre)} − ${eur(a.imputees)} = ${eur(a.enPlus)}` },
-          { libelle: `Résultat : ${q.nom}, au chiffre d'affaires`, attendu: q.resultatAuChiffre, tolerance: r.k.toleranceAuChiffre(q.chiffreDAffaires), calcul: `${eur(q.chiffreDAffaires)} − ${eur(q.direct)} − ${eur(q.auChiffre)} = ${eur(q.resultatAuChiffre)}` },
+          { libelle: `Charges en plus : ${q.nom}`, attendu: q.enPlus, calcul: `${parts(q)} ; ${eur(q.auChiffre)} − ${eur(q.imputees)} = ${eur(q.enPlus)}` },
+          { libelle: `Charges en plus : ${a.nom}`, attendu: a.enPlus, calcul: `${parts(a)} ; ${eur(a.auChiffre)} − ${eur(a.imputees)} = ${eur(a.enPlus)}` },
+          { libelle: `Résultat : ${q.nom}, au chiffre d'affaires`, attendu: q.resultatAuChiffre, calcul: `${eur(q.chiffreDAffaires)} − ${eur(q.direct)} − ${eur(q.auChiffre)} = ${eur(q.resultatAuChiffre)}` },
         ];
       },
       explication: (c) => {
@@ -188,7 +189,7 @@ export const LA_CLE_CONTESTEE: Situation = {
         const q = r.quiPaie;
         const a = r.autre;
         return [
-          `${eur(q.enPlus)} pour ${q.nom}, ${eur(a.enPlus)} pour ${a.nom} : ensemble, ${eur(auCentime(q.enPlus + a.enPlus))}, exactement ce que ${r.x.nom} ne porterait plus. ${q.nom} paierait même plus que le tout, ${a.nom} en portant moins : elle fait ${Math.round((q.chiffreDAffaires / r.k.h.chiffreDAffaires) * 100)} % du chiffre d'affaires pour ${Math.round((q.heures / r.k.heures) * 100)} % des heures-machine. Son résultat passerait de ${eur(q.resultat)} à ${eur(q.resultatAuChiffre)}, sans qu'elle ait rien fait.`,
+          `${eur(q.enPlus)} pour ${q.nom}, ${eur(a.enPlus)} pour ${a.nom} : ensemble, ${eur(arrondi2(q.enPlus + a.enPlus))}, exactement ce que ${r.x.nom} ne porterait plus. ${q.nom} paierait même plus que le tout, ${a.nom} en portant moins : elle fait ${Math.round((q.chiffreDAffaires / r.k.h.chiffreDAffaires) * 100)} % du chiffre d'affaires pour ${Math.round((q.heures / r.k.heures) * 100)} % des heures-machine. Son résultat passerait de ${eur(q.resultat)} à ${eur(q.resultatAuChiffre)}, sans qu'elle ait rien fait.`,
         ];
       },
     },

@@ -1,9 +1,10 @@
+import { nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   ajustementExponentiel,
   ajustementLineaire,
   aLUnite,
-  auDixieme,
+  auCentieme,
   coefficientsSaisonniers,
   moyennesMobilesDuMarche,
   novaEnN,
@@ -37,6 +38,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     la-prevision-de-l-annee (sans formule ; le calcul de chaque case se lit une fois l'étape réussie) ;
  *   · expert : le-choix-de-l-ajustement (comparer deux tendances et justifier), plus-loin-que-n-plus-1
  *     (prolonger la tendance, et ce que vaut une prévision lointaine) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part de marché de NOVA se donne à deux décimales (au
+ * dixième, avant ; monde/prevision-des-ventes.ts), et les ventes prévues en repartent ; les marchés
+ * et ventes prévus sont des quantités, à l'enceinte, le corrigé écrivant le produit à deux
+ * décimales ; les rapports à la tendance et les coefficients saisonniers gardent leur précision, au
+ * millième (des coefficients), comme la pente et l'ordonnée de la droite ; les rangs, moyennes,
+ * moyennes mobiles et tendances sont des grandeurs au centième.
  */
 
 /** La prévision se calcule sur le marché de NOVA, que le monde du cours tient sur trois années. */
@@ -46,7 +55,7 @@ export const ENTREPRISES_DE_LA_PREVISION: readonly string[] = ["nova"];
 export const PENTES_DU_LABORATOIRE = { min: 600, max: 900, pas: 10 } as const;
 
 /** Le laboratoire de la prévision : la part de marché de NOVA en N + 1, en %. */
-export const PARTS_DU_LABORATOIRE = { min: 22, max: 28, pas: 0.1 } as const;
+export const PARTS_DU_LABORATOIRE = { min: 22, max: 28, pas: 0.01 } as const;
 
 /** Les deux ajustements du levier à choix. */
 export const AJUSTEMENTS_DU_LABORATOIRE: readonly { valeur: number; ajustement: AjustementDeTendance; libelle: string }[] = [
@@ -57,9 +66,9 @@ export const AJUSTEMENTS_DU_LABORATOIRE: readonly { valeur: number; ajustement: 
 /** Le rang du trimestre que l'étape experte prévoit : le premier de N + 2. */
 export const RANG_DE_N_PLUS_2 = 17;
 
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const dec3 = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-const pct = (p: number) => `${qte(p, 1)} %`;
+const pct = pourcent;
 const NOMS = ["1er trimestre", "2e trimestre", "3e trimestre", "4e trimestre"] as const;
 const nomDe = (x: Pick<TrimestreDuMarche, "annee" | "trimestre">) => `${NOMS[x.trimestre - 1]} de ${x.annee}`;
 
@@ -145,9 +154,9 @@ function tableauDesAjustements(): TableauDeDonnees {
     titre: "Deux tendances pour le même marché",
     colonnes: ["Linéaire", "Exponentiel"],
     lignes: [
-      { libelle: "Équation", valeurs: [`y = ${qte(lin.a)} t + ${qte(lin.b)}`, `y = ${qte(exp.B, 0)} × ${qte(exp.A, 4)}^t`] },
-      { libelle: "Coefficient de corrélation linéaire", valeurs: [qte(lin.r, 3), `${qte(exp.r, 3)} (sur ln y)`] },
-      { libelle: "Ce que la tendance suppose", valeurs: [`${qte(lin.a)} enceintes de plus par trimestre`, `${pct(auDixieme((exp.A - 1) * 100))} de plus par trimestre`] },
+      { libelle: "Équation", valeurs: [`y = ${qte(lin.a)} t + ${qte(lin.b)}`, `y = ${qte(exp.B)} × ${qte(exp.A)}^t`] },
+      { libelle: "Coefficient de corrélation linéaire", valeurs: [qte(lin.r), `${qte(exp.r)} (sur ln y)`] },
+      { libelle: "Ce que la tendance suppose", valeurs: [`${qte(lin.a)} enceintes de plus par trimestre`, `${pct(auCentieme((exp.A - 1) * 100))} de plus par trimestre`] },
       { libelle: "Hausse du marché, de N − 2 à N − 1, puis de N − 1 à N", valeurs: [`${qte(an.hausses[0]!)} puis ${qte(an.hausses[1]!)} enceintes`, `${pct(an.taux[0]!)} puis ${pct(an.taux[1]!)}`] },
       { libelle: "Ventes de NOVA prévues pour N + 1", valeurs: [qte(p.nova), qte(pe.nova)] },
     ],
@@ -167,7 +176,7 @@ function grilleDesMoyennesMobiles(): TableauACompleter {
       if (m !== null && m !== undefined) {
         const s = serie;
         const calcul = `(${qte(s[i - 2]!.marche)} ÷ 2 + ${qte(s[i - 1]!.marche)} + ${qte(x.marche)} + ${qte(s[i + 1]!.marche)} + ${qte(s[i + 2]!.marche)} ÷ 2) ÷ 4 = ${qte(m)}`;
-        cellule = aCalculer.has(x.rang) ? aSaisir(m, calcul, { indice: "la moitié des 2 trimestres extrêmes, les 3 du milieu en entier, le tout divisé par 4" }) : { ...donnee(m), calcul };
+        cellule = aCalculer.has(x.rang) ? aSaisir(m, calcul, { unite: "enceintes", indice: "la moitié des 2 trimestres extrêmes, les 3 du milieu en entier, le tout divisé par 4" }) : { ...donnee(m), calcul };
       }
       return { libelle: `${nomDe(x)} (rang ${x.rang})`, cellules: [donnee(x.marche), cellule] };
     }),
@@ -190,8 +199,8 @@ function grilleDesRapports(): TableauACompleter {
           cellules: [
             texte(r2.rapport, dec3(r2.rapport)),
             texte(r1.rapport, dec3(r1.rapport)),
-            aSaisir(r0.rapport, `${qte(r0.marche)} ÷ ${qte(r0.tendance)} = ${dec3(r0.rapport)}`, { tolerance: 0.001, indice: "le marché du trimestre divisé par sa tendance" }),
-            aSaisir(k.coefficients[i]!, `(${dec3(r2.rapport)} + ${dec3(r1.rapport)} + ${dec3(r0.rapport)}) ÷ 3 = ${dec3(k.coefficients[i]!)}`, { tolerance: 0.001, indice: "la moyenne des rapports du même trimestre, sur les 3 années" }),
+            aSaisir(r0.rapport, `${qte(r0.marche)} ÷ ${qte(r0.tendance)} = ${dec3(r0.rapport)}`, { nature: "coefficient", tolerance: 0.001, indice: "le marché du trimestre divisé par sa tendance" }),
+            aSaisir(k.coefficients[i]!, `(${dec3(r2.rapport)} + ${dec3(r1.rapport)} + ${dec3(r0.rapport)}) ÷ 3 = ${dec3(k.coefficients[i]!)}`, { nature: "coefficient", tolerance: 0.001, indice: "la moyenne des rapports du même trimestre, sur les 3 années" }),
           ],
         };
       }),
@@ -199,7 +208,7 @@ function grilleDesRapports(): TableauACompleter {
         libelle: "Somme des coefficients",
         fort: true,
         totalDe: { plus: [0, 1, 2, 3] },
-        cellules: [VIDE, VIDE, VIDE, aSaisir(k.sommeBrute, `${k.coefficients.map(dec3).join(" + ")} = ${dec3(k.sommeBrute)}`, { tolerance: 0.001 })],
+        cellules: [VIDE, VIDE, VIDE, aSaisir(k.sommeBrute, `${k.coefficients.map(dec3).join(" + ")} = ${dec3(k.sommeBrute)}`, { nature: "coefficient", tolerance: 0.001 })],
       },
     ],
   };
@@ -218,15 +227,15 @@ function grilleDeLAnnee(): TableauACompleter {
         cellules: [
           aSaisir(x.tendance, `${qte(lin.a)} × ${x.rang} + ${qte(lin.b)} = ${qte(x.tendance)}`, { unite: "enceintes", indice: "la droite de tendance, au rang du trimestre" }),
           texte(x.coefficient, dec3(x.coefficient)),
-          aSaisir(x.marche, `${qte(x.tendance)} × ${dec3(x.coefficient)} = ${qte(x.tendance * x.coefficient)}, soit ${qte(x.marche)}`, { unite: "enceintes", tolerance: 1, indice: "la tendance multipliée par le coefficient du trimestre, à l'enceinte" }),
-          aSaisir(x.nova, `${qte(x.marche)} × ${pct(part)} = ${qte((x.marche * part) / 100)}, soit ${qte(x.nova)}`, { unite: "enceintes", tolerance: 1, indice: "le marché prévu multiplié par la part de NOVA, à l'enceinte" }),
+          aSaisir(x.marche, `${qte(x.tendance)} × ${dec3(x.coefficient)} = ${qte(x.tendance * x.coefficient)}, arrondi à l'enceinte : ${qte(x.marche)}`, { unite: "enceintes", nature: "quantite", indice: "la tendance multipliée par le coefficient du trimestre, à l'enceinte" }),
+          aSaisir(x.nova, `${qte(x.marche)} × ${pct(part)} = ${qte((x.marche * part) / 100)}, arrondi à l'enceinte : ${qte(x.nova)}`, { unite: "enceintes", nature: "quantite", indice: "le marché prévu multiplié par la part de NOVA, à l'enceinte" }),
         ],
       })),
       {
         libelle: "Année N + 1",
         fort: true,
         totalDe: { plus: [0, 1, 2, 3] },
-        cellules: [VIDE, VIDE, aSaisir(p.marche, `${p.trimestres.map((x) => qte(x.marche)).join(" + ")} = ${qte(p.marche)}`, { unite: "enceintes", tolerance: 1 }), aSaisir(p.nova, `${p.trimestres.map((x) => qte(x.nova)).join(" + ")} = ${qte(p.nova)}`, { unite: "enceintes", tolerance: 1 })],
+        cellules: [VIDE, VIDE, aSaisir(p.marche, `${p.trimestres.map((x) => qte(x.marche)).join(" + ")} = ${qte(p.marche)}`, { unite: "enceintes", nature: "quantite" }), aSaisir(p.nova, `${p.trimestres.map((x) => qte(x.nova)).join(" + ")} = ${qte(p.nova)}`, { unite: "enceintes", nature: "quantite" })],
       },
     ],
   };
@@ -306,8 +315,8 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
       champs: () => {
         const { lin, an } = prevision();
         return [
-          { libelle: "Rang moyen", attendu: lin.tMoyen, calcul: `(1 + 2 + … + 12) ÷ 12 = 78 ÷ 12 = ${qte(lin.tMoyen)}` },
-          { libelle: "Ventes moyennes d'un trimestre, en enceintes", attendu: lin.yMoyen, calcul: `(${an.totaux.map((t) => qte(t)).join(" + ")}) ÷ 12 = ${qte(lin.yMoyen)}` },
+          { libelle: "Rang moyen", nature: "grandeur", attendu: lin.tMoyen, calcul: `(1 + 2 + … + 12) ÷ 12 = 78 ÷ 12 = ${qte(lin.tMoyen)}` },
+          { libelle: "Ventes moyennes d'un trimestre, en enceintes", nature: "grandeur", attendu: lin.yMoyen, calcul: `(${an.totaux.map((t) => qte(t)).join(" + ")}) ÷ 12 = ${qte(lin.yMoyen)}` },
         ];
       },
       explication: () => {
@@ -371,8 +380,8 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
       champs: () => {
         const { lin } = prevision();
         return [
-          { libelle: "Pente a, en enceintes par trimestre", attendu: lin.a, calcul: `${qte(lin.sxy)} ÷ ${qte(lin.sxx)} = ${qte(lin.a)}` },
-          { libelle: "Ordonnée à l'origine b", attendu: lin.b, calcul: `${qte(lin.yMoyen)} − ${qte(lin.a)} × ${qte(lin.tMoyen)} = ${qte(lin.b)}` },
+          { libelle: "Pente a, en enceintes par trimestre", nature: "coefficient", attendu: lin.a, calcul: `${qte(lin.sxy)} ÷ ${qte(lin.sxx)} = ${qte(lin.a)}` },
+          { libelle: "Ordonnée à l'origine b", nature: "coefficient", attendu: lin.b, calcul: `${qte(lin.yMoyen)} − ${qte(lin.a)} × ${qte(lin.tMoyen)} = ${qte(lin.b)}` },
         ];
       },
       explication: () => {
@@ -425,7 +434,7 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
       explication: () => {
         const { k } = prevision();
         return [
-          `Le printemps vend ${pct(auDixieme((k.coefficients[1]! - 1) * 100))} de plus que la tendance, Noël ${pct(auDixieme((k.coefficients[3]! - 1) * 100))} ; l'hiver ${pct(auDixieme((1 - k.coefficients[0]!) * 100))} de moins. Le 1er trimestre de N a été faible (${dec3(k.serie[8]!.rapport)}) : la moyenne sur 3 années l'atténue.`,
+          `Le printemps vend ${pct(auCentieme((k.coefficients[1]! - 1) * 100))} de plus que la tendance, Noël ${pct(auCentieme((k.coefficients[3]! - 1) * 100))} ; l'hiver ${pct(auCentieme((1 - k.coefficients[0]!) * 100))} de moins. Le 1er trimestre de N a été faible (${dec3(k.serie[8]!.rapport)}) : la moyenne sur 3 années l'atténue.`,
         ];
       },
     },
@@ -456,8 +465,8 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
         const { p, lin } = prevision();
         const t = p.trimestres[0]!;
         return [
-          { libelle: "Tendance du rang 13, en enceintes", attendu: t.tendance, calcul: `${qte(lin.a)} × 13 + ${qte(lin.b)} = ${qte(t.tendance)}` },
-          { libelle: "Marché prévu, en enceintes", attendu: t.marche, tolerance: 1, calcul: `${qte(t.tendance)} × ${dec3(t.coefficient)} = ${qte(t.tendance * t.coefficient)}, soit ${qte(t.marche)}` },
+          { libelle: "Tendance du rang 13, en enceintes", nature: "grandeur", attendu: t.tendance, calcul: `${qte(lin.a)} × 13 + ${qte(lin.b)} = ${qte(t.tendance)}` },
+          { libelle: "Marché prévu, en enceintes", nature: "quantite", attendu: t.marche, calcul: `${qte(t.tendance)} × ${dec3(t.coefficient)} = ${qte(t.tendance * t.coefficient)}, arrondi à l\'enceinte : ${qte(t.marche)}` },
         ];
       },
       explication: () => {
@@ -472,14 +481,14 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
       titre: "La part de NOVA",
       notions: ["demand_market_share"],
       tableau: () => tableauDeNova(),
-      question: () => "NOVA garde en N + 1 sa part de marché de l'année N. Calculez cette part, au dixième, puis les ventes de NOVA prévues au 1er trimestre de N + 1, à l'enceinte, et le plan de production arrondi à la centaine.",
+      question: () => "NOVA garde en N + 1 sa part de marché de l'année N. Calculez cette part, à deux décimales, puis les ventes de NOVA prévues au 1er trimestre de N + 1, à l'enceinte, et le plan de production arrondi à la centaine.",
       champs: () => {
         const { p, n } = prevision();
         const t = p.trimestres[0]!;
         return [
-          { libelle: "Part de marché de NOVA en N, en %", attendu: n.part, tolerance: 0.05, calcul: `${qte(n.total)} ÷ ${qte(n.marcheTotal)} = ${pct(n.part)}` },
-          { libelle: "Ventes de NOVA prévues, en enceintes", attendu: t.nova, tolerance: 1, calcul: `${qte(t.marche)} × ${pct(n.part)} = ${qte((t.marche * n.part) / 100)}, soit ${qte(t.nova)}` },
-          { libelle: "Plan à la centaine, en enceintes", attendu: t.plan, calcul: `${qte(t.nova)} arrondies à la centaine : ${qte(t.plan)}` },
+          { libelle: "Part de marché de NOVA en N, en %", attendu: n.part, calcul: `${qte(n.total)} ÷ ${qte(n.marcheTotal)} × 100 = ${pct(n.part)}` },
+          { libelle: "Ventes de NOVA prévues, en enceintes", nature: "quantite", attendu: t.nova, calcul: `${qte(t.marche)} × ${pct(n.part)} = ${qte((t.marche * n.part) / 100)}, arrondi à l\'enceinte : ${qte(t.nova)}` },
+          { libelle: "Plan à la centaine, en enceintes", nature: "quantite", attendu: t.plan, calcul: `${qte(t.nova)} arrondies à la centaine : ${qte(t.plan)}` },
         ];
       },
       explication: () => {
@@ -503,7 +512,7 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
       explication: () => {
         const { p, n } = prevision();
         return [
-          `NOVA devrait vendre ${qte(p.nova)} enceintes en N + 1, ${pct(auDixieme((p.nova / n.total - 1) * 100))} de plus qu'en N. Arrondi à la centaine, le plan fait ${p.trimestres.map((x) => qte(x.plan)).join(", ")} enceintes : ${qte(p.plan)} sur l'année.`,
+          `NOVA devrait vendre ${qte(p.nova)} enceintes en N + 1, ${pct(auCentieme((p.nova / n.total - 1) * 100))} de plus qu'en N. Arrondi à la centaine, le plan fait ${p.trimestres.map((x) => qte(x.plan)).join(", ")} enceintes : ${qte(p.plan)} sur l'année.`,
         ];
       },
     },
@@ -519,7 +528,7 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
       options: () => {
         const { lin, exp } = prevision();
         return [
-          { texte: "La droite : la hausse annuelle ne bouge presque pas", juste: true, retour: `Oui. Le marché gagne à peu près la même quantité chaque année, et son taux de croissance baisse : c'est une croissance linéaire. Les deux coefficients de corrélation (${qte(lin.r, 3)} et ${qte(exp.r, 3)}) se valent : la saison pèse plus que la forme de la tendance.` },
+          { texte: "La droite : la hausse annuelle ne bouge presque pas", juste: true, retour: `Oui. Le marché gagne à peu près la même quantité chaque année, et son taux de croissance baisse : c'est une croissance linéaire. Les deux coefficients de corrélation (${qte(lin.r)} et ${qte(exp.r)}) se valent : la saison pèse plus que la forme de la tendance.` },
           { texte: "L'exponentielle : son coefficient de corrélation est un peu plus fort", juste: false, retour: "Non : l'écart est infime, et les deux coefficients sont abaissés par la saison. Ce qui départage, c'est la forme de la croissance : des hausses en quantités presque égales, des taux qui baissent." },
           { texte: "L'exponentielle : un marché qui grandit grandit toujours plus vite", juste: false, retour: "Non : rien ne le dit ici, au contraire. Le taux de croissance annuel baisse d'une année à l'autre ; l'exponentielle prolongerait une accélération que la série ne montre pas." },
         ];
@@ -583,7 +592,7 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
         const { n } = prevision();
         const l = laboratoireDeLaPrevision(0, p.part!);
         return [
-          `À ${pct(p.part!)} du marché, Noël prévoit ${qte(l.trimestres[3]!.nova)} enceintes : la ligne suffit. Pour y tenir, NOVA renoncerait à ${qte(auDixieme(n.part - p.part!), 1)} points de la part qu'elle a gagnée en N, soit ${qte(previsionDeNPlus1().nova - l.nova)} enceintes sur l'année.`,
+          `À ${pct(p.part!)} du marché, Noël prévoit ${qte(l.trimestres[3]!.nova)} enceintes : la ligne suffit. Pour y tenir, NOVA renoncerait à ${qte(auCentieme(n.part - p.part!))} points de la part qu'elle a gagnée en N, soit ${qte(previsionDeNPlus1().nova - l.nova)} enceintes sur l'année.`,
           "Avec l'exponentielle, la courbe du 4e trimestre est plus haute : la même ligne tiendrait une part plus faible encore. La prévision ne décide pas : elle dit au président où est le goulot, avant qu'il ne coûte des ventes.",
         ];
       },
@@ -620,9 +629,9 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
         const marche = aLUnite(t * k.coefficients[0]!);
         const nova = aLUnite((marche * n.part) / 100);
         return [
-          { libelle: "Tendance du rang 17, en enceintes", attendu: t, calcul: `${qte(lin.a)} × ${RANG_DE_N_PLUS_2} + ${qte(lin.b)} = ${qte(t)}` },
-          { libelle: "Marché prévu, en enceintes", attendu: marche, tolerance: 1, calcul: `${qte(t)} × ${dec3(k.coefficients[0]!)} = ${qte(t * k.coefficients[0]!)}, soit ${qte(marche)}` },
-          { libelle: "Ventes de NOVA prévues, en enceintes", attendu: nova, tolerance: 1, calcul: `${qte(marche)} × ${pct(n.part)} = ${qte((marche * n.part) / 100)}, soit ${qte(nova)}` },
+          { libelle: "Tendance du rang 17, en enceintes", nature: "grandeur", attendu: t, calcul: `${qte(lin.a)} × ${RANG_DE_N_PLUS_2} + ${qte(lin.b)} = ${qte(t)}` },
+          { libelle: "Marché prévu, en enceintes", nature: "quantite", attendu: marche, calcul: `${qte(t)} × ${dec3(k.coefficients[0]!)} = ${qte(t * k.coefficients[0]!)}, arrondi à l\'enceinte : ${qte(marche)}` },
+          { libelle: "Ventes de NOVA prévues, en enceintes", nature: "quantite", attendu: nova, calcul: `${qte(marche)} × ${pct(n.part)} = ${qte((marche * n.part) / 100)}, arrondi à l\'enceinte : ${qte(nova)}` },
         ];
       },
       explication: () => [

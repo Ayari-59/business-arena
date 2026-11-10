@@ -1,3 +1,4 @@
+import { arrondi2, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_CORRELATION } from "../../chapitres/correlation-et-lissage";
 import { ALPHA_A_LA_MAIN, JANVIER_N_PLUS_1_AUX_PARTICULIERS, VENTES_LISSEES, lissage, meilleurAlpha, previsionDeFevrier } from "../../monde/correlation-et-lissage";
@@ -13,10 +14,14 @@ import type { Situation } from "../types";
  * la prévision lissée. L'élève poursuit le lissage d'un mois, sans cours : l'erreur de janvier, la
  * prévision de février avec la constante retenue au chapitre, puis avec une constante plus prudente,
  * et rend un nombre au transporteur.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les erreurs et les prévisions du lissage sont des grandeurs
+ * au centième (à deux centièmes près, avant), chaque prévision partant de la précédente arrondie.
  */
 
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const auCentieme = arrondi2;
 
 /** Les chiffres du cas : le lissage au meilleur α, et le même avec l'α prudent du lissage à la main. */
 export function janvierEstTombe(_c?: Pick<Cas, "code">) {
@@ -80,8 +85,8 @@ export const JANVIER_EST_TOMBE: Situation = {
       champs: () => {
         const { retenu: r, alpha } = janvierEstTombe();
         return [
-          { libelle: "Erreur de janvier", attendu: auCentieme(r.erreur), tolerance: 0.02, calcul: `${qte(r.janvier)} − ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.erreur))}` },
-          { libelle: "Prévision de février", attendu: auCentieme(r.fevrier), tolerance: 0.02, calcul: `${qte(alpha)} × ${qte(r.janvier)} + ${qte(auCentieme(1 - alpha))} × ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.fevrier))}` },
+          { libelle: "Erreur de janvier", nature: "grandeur", attendu: auCentieme(r.erreur), calcul: `${qte(r.janvier)} − ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.erreur))}` },
+          { libelle: "Prévision de février", nature: "grandeur", attendu: auCentieme(r.fevrier), calcul: `${qte(alpha)} × ${qte(r.janvier)} + ${qte(auCentieme(1 - alpha))} × ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.fevrier))}` },
         ];
       },
       explication: () => {
@@ -98,8 +103,8 @@ export const JANVIER_EST_TOMBE: Situation = {
       champs: () => {
         const { prudent: r } = janvierEstTombe();
         return [
-          { libelle: "Erreur de janvier", attendu: auCentieme(r.erreur), tolerance: 0.02, calcul: `${qte(r.janvier)} − ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.erreur))}` },
-          { libelle: "Prévision de février", attendu: auCentieme(r.fevrier), tolerance: 0.02, calcul: `${qte(ALPHA_A_LA_MAIN)} × ${qte(r.janvier)} + ${qte(auCentieme(1 - ALPHA_A_LA_MAIN))} × ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.fevrier))}` },
+          { libelle: "Erreur de janvier", nature: "grandeur", attendu: auCentieme(r.erreur), calcul: `${qte(r.janvier)} − ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.erreur))}` },
+          { libelle: "Prévision de février", nature: "grandeur", attendu: auCentieme(r.fevrier), calcul: `${qte(ALPHA_A_LA_MAIN)} × ${qte(r.janvier)} + ${qte(auCentieme(1 - ALPHA_A_LA_MAIN))} × ${qte(auCentieme(r.janvierPrevu))} = ${qte(auCentieme(r.fevrier))}` },
         ];
       },
       explication: () => {

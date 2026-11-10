@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTRETENIR_L_OUTIL, entretienDeLOutil } from "../../chapitres/entretenir-l-outil";
 import { defautsEnPlusDeLEntretien, entretienAuSeuil as entretienAuSeuilDuModele } from "../../monde/capacite";
@@ -19,12 +19,15 @@ import type { Situation } from "../types";
  * bistrot ; chez NOVA, le cas validait « l'économie passe entière » (la capacité perdue valait 0).
  * Sur la simulation du cours, les défauts jouent chez NOVA, et « l'économie passe entière » devient
  * le distracteur : c'est ce qu'on trouve en oubliant les défauts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les points de taux de défaut, les défauts en plus, les ventes
+ * perdues par la qualité et les défauts que l'économie paierait sont des grandeurs au centième (à
+ * 0,1 près, avant) ; les taux s'écrivent à deux décimales.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(Math.round(t * 1000) / 10)} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 
 export type Verdict = "l-economie-passe-entiere" | "les-defauts-en-reprennent" | "les-defauts-coutent-plus" | "la-ligne-s-use";
 
@@ -35,13 +38,13 @@ export function entretienAuSeuil(c: Pick<Cas, "code">) {
   const s = entretienAuSeuilDuModele(f);
   const budget = s.budgets[0]!;
   const trimestres = s.budgets.length;
-  const economieParTrimestre = auCentime(e.reference - budget);
+  const economieParTrimestre = arrondi2(e.reference - budget);
   const volume = e.plan.production;
   // Un défaut en plus coûte sa retouche ou son retour, et la marge des ventes que la qualité perçue fait perdre.
-  const coutDUnDefautVentesComprises = auCentime(e.coutMoyen + (1 - e.detection) * e.ventesParDefautLivre * e.marge);
-  const coutDesDefauts = auCentime(s.coutDesDefautsEnPlus + s.margePerdueParLaQualite);
-  const defautsQueLEconomiePaie = auCentime(s.economie / coutDUnDefautVentesComprises);
-  const parEuroCoupe = auCentime(coutDesDefauts / s.economie);
+  const coutDUnDefautVentesComprises = arrondi2(e.coutMoyen + (1 - e.detection) * e.ventesParDefautLivre * e.marge);
+  const coutDesDefauts = arrondi2(s.coutDesDefautsEnPlus + s.margePerdueParLaQualite);
+  const defautsQueLEconomiePaie = arrondi2(s.economie / coutDUnDefautVentesComprises);
+  const parEuroCoupe = arrondi2(coutDesDefauts / s.economie);
   const verdict: Verdict =
     s.ventesPerdues > 0 ? "la-ligne-s-use" : s.ecartDeResultat >= s.economie - 0.5 ? "l-economie-passe-entiere" : s.ecartDeResultat > 0 ? "les-defauts-en-reprennent" : "les-defauts-coutent-plus";
   return {
@@ -53,8 +56,8 @@ export function entretienAuSeuil(c: Pick<Cas, "code">) {
     economieParTrimestre,
     volume,
     pointsEnPlus: defautsEnPlusDeLEntretien(f, budget),
-    defautsEnPlus: auCentime(s.defautsEnPlus),
-    ventesPerduesParLaQualite: auCentime(s.ventesPerduesParLaQualite),
+    defautsEnPlus: arrondi2(s.defautsEnPlus),
+    ventesPerduesParLaQualite: arrondi2(s.ventesPerduesParLaQualite),
     coutDUnDefautVentesComprises,
     coutDesDefauts,
     defautsQueLEconomiePaie,
@@ -152,11 +155,12 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
         return [
           {
             libelle: "Points de taux de défaut en plus",
-            attendu: auCentime(r.pointsEnPlus * 100),
-            calcul: `${qte(sans * 100)} × (1 − ${eur(r.budget)} ÷ ${eur(e.reference)}) = ${qte(auCentime(r.pointsEnPlus * 100))}`,
+            nature: "grandeur",
+            attendu: arrondi2(r.pointsEnPlus * 100),
+            calcul: `${qte(sans * 100)} × (1 − ${eur(r.budget)} ÷ ${eur(e.reference)}) = ${qte(arrondi2(r.pointsEnPlus * 100))}`,
             tolerance: 0.01,
           },
-          { libelle: "Défauts en plus sur l'année", attendu: r.defautsEnPlus, calcul: `${qte(r.volume)} × ${pct(r.pointsEnPlus)} = ${qte(r.defautsEnPlus)}`, tolerance: 0.1 },
+          { libelle: "Défauts en plus sur l'année", nature: "grandeur", attendu: r.defautsEnPlus, calcul: `${qte(r.volume)} × ${pct(r.pointsEnPlus)} = ${qte(r.defautsEnPlus)}` },
           {
             libelle: "Coût des défauts en plus",
             attendu: r.s.coutDesDefautsEnPlus,
@@ -164,9 +168,9 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
           },
           {
             libelle: "Ventes perdues par la qualité",
+            nature: "grandeur",
             attendu: r.ventesPerduesParLaQualite,
             calcul: `${qte(r.defautsEnPlus)} × ${pct(1 - e.detection)} livrés × ${qte(e.ventesParDefautLivre)} = ${qte(r.ventesPerduesParLaQualite)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -204,14 +208,14 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
       lecture: (c, b) => {
         const r = entretienAuSeuil(c);
         const defauts = r.volume * defautsEnPlusDeLEntretien(r.f, b);
-        const economie = auCentime((r.e.reference - b) * r.trimestres);
-        const coutDesDefauts = auCentime(defauts * r.e.coutMoyen);
-        const ventes = auCentime(defauts * (1 - r.e.detection) * r.e.ventesParDefautLivre * r.e.marge);
+        const economie = arrondi2((r.e.reference - b) * r.trimestres);
+        const coutDesDefauts = arrondi2(defauts * r.e.coutMoyen);
+        const ventes = arrondi2(defauts * (1 - r.e.detection) * r.e.ventesParDefautLivre * r.e.marge);
         return [
           { libelle: "Entretien économisé sur l'année", montant: economie },
           { libelle: "Coût des défauts en plus", montant: coutDesDefauts },
           { libelle: "Marge des ventes perdues par la qualité", montant: ventes },
-          { libelle: "Effet sur le résultat de l'année", montant: auCentime(economie - coutDesDefauts - ventes), fort: true },
+          { libelle: "Effet sur le résultat de l'année", montant: arrondi2(economie - coutDesDefauts - ventes), fort: true },
         ];
       },
       droites: (c) => {
@@ -245,7 +249,7 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
             attendu: r.coutDUnDefautVentesComprises,
             calcul: `${eur(e.coutMoyen)} + ${pct(1 - e.detection)} × ${qte(e.ventesParDefautLivre)} × ${eur(e.marge)} = ${eur(r.coutDUnDefautVentesComprises)}`,
           },
-          { libelle: "Défauts que l'économie pourrait payer", attendu: r.defautsQueLEconomiePaie, calcul: `${eur(r.s.economie)} ÷ ${eur(r.coutDUnDefautVentesComprises)} = ${qte(r.defautsQueLEconomiePaie)}`, tolerance: 0.1 },
+          { libelle: "Défauts que l'économie pourrait payer", nature: "grandeur", attendu: r.defautsQueLEconomiePaie, calcul: `${eur(r.s.economie)} ÷ ${eur(r.coutDUnDefautVentesComprises)} = ${qte(r.defautsQueLEconomiePaie)}` },
           {
             libelle: "Effet de l'entretien au seuil sur le résultat",
             attendu: r.s.ecartDeResultat,

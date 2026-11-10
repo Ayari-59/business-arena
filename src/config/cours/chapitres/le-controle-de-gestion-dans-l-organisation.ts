@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   CRITERE_DU_TYPE,
@@ -51,6 +51,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     (le critère du centre et le prix), avec le graphique du chiffre d'affaires et de la marge ;
  *   · expert : la structure, le contrôle selon l'organisation, le rôle du contrôleur, la performance
  *     globale et le tableau de bord ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part du soutien et les parts de marché se donnent à deux
+ * décimales (au dixième, avant).
  */
 
 /** Le chapitre se calcule sur la fiche de gestion de NOVA. */
@@ -67,11 +71,8 @@ const critereDe = (v: number): CritereDuCommercial => CRITERES_DU_LABORATOIRE.fi
 /** Les mois que compare l'étape sur l'efficacité et l'efficience : janvier et juin. */
 export const MOIS_COMPARES = [0, 5] as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, d = 1) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** La fiche de gestion du cours. */
@@ -293,7 +294,7 @@ export const LE_CONTROLE_DE_GESTION_DANS_L_ORGANISATION: Chapitre = {
       notions: ["fixed_costs"],
       question: (c) => {
         const x = organisationDuChapitre(c);
-        return `Sans formule cette fois : reprenez les montants que vous venez de ranger. Calculez les charges fixes de janvier des activités de soutien, celles des activités principales, puis la part du soutien dans les ${eur(x.chaine.total)} de charges fixes, en % au dixième.`;
+        return `Sans formule cette fois : reprenez les montants que vous venez de ranger. Calculez les charges fixes de janvier des activités de soutien, celles des activités principales, puis la part du soutien dans les ${eur(x.chaine.total)} de charges fixes, en % à deux décimales.`;
       },
       champs: (c) => {
         const x = organisationDuChapitre(c);
@@ -304,9 +305,8 @@ export const LE_CONTROLE_DE_GESTION_DANS_L_ORGANISATION: Chapitre = {
           { libelle: "Charges des activités principales", attendu: x.chaine.principales, calcul: `${p.map((a) => eur(a.charges)).join(" + ")} = ${eur(x.chaine.principales)}` },
           {
             libelle: "Part du soutien dans les charges fixes, en %",
-            attendu: auDixieme(x.chaine.partDuSoutien * 100),
-            tolerance: 0.1,
-            calcul: `${eur(x.chaine.soutien)} ÷ ${eur(x.chaine.total)} = ${pct(x.chaine.partDuSoutien)}`,
+            attendu: arrondi2(x.chaine.partDuSoutien * 100),
+            calcul: `${eur(x.chaine.soutien)} ÷ ${eur(x.chaine.total)} × 100 = ${pourcent(arrondi2(x.chaine.partDuSoutien * 100))}`,
           },
         ];
       },
@@ -608,14 +608,14 @@ export const LE_CONTROLE_DE_GESTION_DANS_L_ORGANISATION: Chapitre = {
       tableau: tableauDeJanvierEtJuin,
       question: (c) => {
         const x = organisationDuChapitre(c);
-        return `Le dirigeant vise ${pct(PART_DE_MARCHE_VISEE)} de part de marché. Calculez, en janvier puis en juin, la part de marché de ${x.f.entreprise} en % au dixième, et les charges fixes que porte chaque enceinte vendue.`;
+        return `Le dirigeant vise ${pct(PART_DE_MARCHE_VISEE)} de part de marché. Calculez, en janvier puis en juin, la part de marché de ${x.f.entreprise} en % à deux décimales, et les charges fixes que porte chaque enceinte vendue.`;
       },
       champs: (c) => {
         const x = organisationDuChapitre(c);
         const fixes = (k: number) => x.bord.mois[k]!.chargesFixes;
         return [
-          { libelle: "Part de marché de janvier, en %", attendu: auDixieme(x.jan.partDeMarche * 100), tolerance: 0.1, calcul: `${qte(x.jan.quantite)} ÷ ${qte(x.f.semestre.marche[0]!)} = ${pct(x.jan.partDeMarche)}` },
-          { libelle: "Part de marché de juin, en %", attendu: auDixieme(x.juin.partDeMarche * 100), tolerance: 0.1, calcul: `${qte(x.juin.quantite)} ÷ ${qte(x.f.semestre.marche[5]!)} = ${pct(x.juin.partDeMarche)}` },
+          { libelle: "Part de marché de janvier, en %", attendu: arrondi2(x.jan.partDeMarche * 100), calcul: `${qte(x.jan.quantite)} ÷ ${qte(x.f.semestre.marche[0]!)} × 100 = ${pourcent(arrondi2(x.jan.partDeMarche * 100))}` },
+          { libelle: "Part de marché de juin, en %", attendu: arrondi2(x.juin.partDeMarche * 100), calcul: `${qte(x.juin.quantite)} ÷ ${qte(x.f.semestre.marche[5]!)} × 100 = ${pourcent(arrondi2(x.juin.partDeMarche * 100))}` },
           { libelle: "Charges fixes par enceinte en janvier", attendu: x.jan.chargesFixesParEnceinte, calcul: `${eur(fixes(0))} ÷ ${qte(x.jan.quantite)} = ${eur(x.jan.chargesFixesParEnceinte)}` },
           { libelle: "Charges fixes par enceinte en juin", attendu: x.juin.chargesFixesParEnceinte, calcul: `${eur(fixes(5))} ÷ ${qte(x.juin.quantite)} = ${eur(x.juin.chargesFixesParEnceinte)}` },
         ];
@@ -665,16 +665,16 @@ export const LE_CONTROLE_DE_GESTION_DANS_L_ORGANISATION: Chapitre = {
       notions: ["staff_turnover", "payroll"],
       question: () => {
         const s = durabiliteDuSalaire();
-        return `Les opérateurs gagnent ${eur(s.salaire)} bruts par mois. Le marché paie ${eur(s.salaire / s.rapportN)} en N et ${eur(s.salaire / s.rapportNPlus1)} en N + 1. Sous ${pct(s.seuil, 0)} du marché, un opérateur démissionne. Calculez le rapport au marché en N puis en N + 1, en % au centième, le salaire qui garde le seuil en N + 1, puis ce qu'il coûterait de plus par mois pour les ${qte(s.operateurs)} opérateurs, avec ${pct(s.tauxPatronal, 0)} de cotisations patronales.`;
+        return `Les opérateurs gagnent ${eur(s.salaire)} bruts par mois. Le marché paie ${eur(s.salaire / s.rapportN)} en N et ${eur(s.salaire / s.rapportNPlus1)} en N + 1. Sous ${pct(s.seuil)} du marché, un opérateur démissionne. Calculez le rapport au marché en N puis en N + 1, en % au centième, le salaire qui garde le seuil en N + 1, puis ce qu'il coûterait de plus par mois pour les ${qte(s.operateurs)} opérateurs, avec ${pct(s.tauxPatronal)} de cotisations patronales.`;
       },
       champs: () => {
         const s = durabiliteDuSalaire();
         const marcheN = s.salaire / s.rapportN;
         const marcheN1 = s.salaire / s.rapportNPlus1;
         return [
-          { libelle: "Rapport au marché en N, en %", attendu: auCentieme(s.rapportN * 100), tolerance: 0.01, calcul: `${eur(s.salaire)} ÷ ${eur(marcheN)} = ${pct(s.rapportN, 2)}` },
-          { libelle: "Rapport au marché en N + 1, en %", attendu: auCentieme(s.rapportNPlus1 * 100), tolerance: 0.01, calcul: `${eur(s.salaire)} ÷ ${eur(marcheN1)} = ${pct(s.rapportNPlus1, 2)}` },
-          { libelle: "Salaire qui garde le seuil en N + 1", attendu: s.salaireAuSeuil, calcul: `${eur(marcheN1)} × ${pct(s.seuil, 0)} = ${eur(s.salaireAuSeuil)}` },
+          { libelle: "Rapport au marché en N, en %", attendu: arrondi2(s.rapportN * 100), tolerance: 0.01, calcul: `${eur(s.salaire)} ÷ ${eur(marcheN)} = ${pct(s.rapportN)}` },
+          { libelle: "Rapport au marché en N + 1, en %", attendu: arrondi2(s.rapportNPlus1 * 100), tolerance: 0.01, calcul: `${eur(s.salaire)} ÷ ${eur(marcheN1)} = ${pct(s.rapportNPlus1)}` },
+          { libelle: "Salaire qui garde le seuil en N + 1", attendu: s.salaireAuSeuil, calcul: `${eur(marcheN1)} × ${pct(s.seuil)} = ${eur(s.salaireAuSeuil)}` },
           {
             libelle: "Coût en plus par mois pour NOVA",
             attendu: s.enPlusParMois,

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { CENTRES_DE_RESPONSABILITE } from "../monde/centres-de-nova";
@@ -47,6 +47,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : le-tableau-de-mars est un tableau à compléter, le-semestre un calcul sans formule ;
  *   · expert : le taux de fréquence, les centres, la chaîne de valeur, les normes et les risques de la
  *     mesure, puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les énergies, émissions, déchets et le taux de fréquence des
+ * accidents sont des grandeurs au centième (le taux au dixième, avant) ; le volume qui éteint le
+ * voyant et le seuil de rentabilité sont des quantités, à l'unité supérieure ; les parts s'écrivent
+ * à deux décimales.
  */
 
 /** Le chapitre se calcule sur la fiche de gestion de NOVA. */
@@ -64,9 +70,10 @@ export const LEVIERS_DURABLES = {
   valorisee: { min: 40, max: 100, pas: 5 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number, d = 1) => `${(Math.round(t * 10 ** (d + 2)) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−")} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
+/** Un facteur d'émission, tel que la base carbone l'écrit : « 0,052 ». */
+const coef = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 4 });
 const arrondi = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d + 0;
 
 /** La fiche de gestion du cours. */
@@ -125,7 +132,7 @@ export function tableauDurable(c: Pick<Cas, "code">): TableauDeDonnees {
     colonnes: M.map((m) => m.nom),
     lignes: [
       { libelle: "Énergie par enceinte (kWh)", valeurs: M.map((m) => qte(m.valeurs.kwhParEnceinte)) },
-      { libelle: "Part des déchets valorisés", valeurs: M.map((m) => pct(m.valeurs.partValorisee, 0)) },
+      { libelle: "Part des déchets valorisés", valeurs: M.map((m) => pct(m.valeurs.partValorisee)) },
       { libelle: "Absentéisme", valeurs: M.map((m) => pct(m.valeurs.absenteisme)) },
       { libelle: "Accidents du travail avec arrêt", valeurs: M.map((m) => qte(m.accidents)) },
       { libelle: "Délai de paiement des fournisseurs (jours)", valeurs: M.map((m) => qte(m.valeurs.delaiFournisseurs)) },
@@ -231,14 +238,14 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
       question: (c) => {
         const x = durabiliteDuChapitre(c);
         const m = x.fevrier;
-        return `En février, ${x.f.entreprise} monte ${qte(m.quantite)} enceintes. La chaîne consomme ${qte(KWH_PAR_ENCEINTE)} kWh par enceinte ; le bâtiment, ${qte(KWH_DU_BATIMENT_PAR_MOIS)} kWh par mois. Calculez l'énergie du mois, l'énergie par enceinte au centième, puis les émissions du mois à ${qte(KG_CO2_PAR_KWH, 3)} kg de CO2 équivalent par kWh, au centième.`;
+        return `En février, ${x.f.entreprise} monte ${qte(m.quantite)} enceintes. La chaîne consomme ${qte(KWH_PAR_ENCEINTE)} kWh par enceinte ; le bâtiment, ${qte(KWH_DU_BATIMENT_PAR_MOIS)} kWh par mois. Calculez l'énergie du mois, l'énergie par enceinte au centième, puis les émissions du mois à ${coef(KG_CO2_PAR_KWH)} kg de CO2 équivalent par kWh, au centième.`;
       },
       champs: (c) => {
         const m = durabiliteDuChapitre(c).fevrier;
         return [
-          { libelle: "Énergie du mois (kWh)", attendu: m.kwh, calcul: `${qte(m.quantite)} × ${qte(KWH_PAR_ENCEINTE)} + ${qte(KWH_DU_BATIMENT_PAR_MOIS)} = ${qte(m.kwh)} kWh` },
-          { libelle: "Énergie par enceinte (kWh)", attendu: arrondi(m.valeurs.kwhParEnceinte, 2), tolerance: 0.01, calcul: `${qte(m.kwh)} ÷ ${qte(m.quantite)} = ${qte(m.valeurs.kwhParEnceinte, 4)} kWh` },
-          { libelle: "Émissions du mois (kg de CO2 équivalent)", attendu: m.co2, tolerance: 0.01, calcul: `${qte(m.kwh)} × ${qte(KG_CO2_PAR_KWH, 3)} = ${qte(m.co2)} kg` },
+          { libelle: "Énergie du mois (kWh)", nature: "grandeur", attendu: m.kwh, calcul: `${qte(m.quantite)} × ${qte(KWH_PAR_ENCEINTE)} + ${qte(KWH_DU_BATIMENT_PAR_MOIS)} = ${qte(m.kwh)} kWh` },
+          { libelle: "Énergie par enceinte (kWh)", nature: "grandeur", attendu: arrondi(m.valeurs.kwhParEnceinte, 2), calcul: `${qte(m.kwh)} ÷ ${qte(m.quantite)} = ${qte(m.valeurs.kwhParEnceinte)} kWh` },
+          { libelle: "Émissions du mois (kg de CO2 équivalent)", nature: "grandeur", attendu: m.co2, calcul: `${qte(m.kwh)} × ${coef(KG_CO2_PAR_KWH)} = ${qte(m.co2)} kg` },
         ];
       },
       explication: (c) => {
@@ -316,13 +323,13 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
         const x = durabiliteDuChapitre(c);
         const L = LEVIERS_DURABLES;
         return {
-          consigne: `Éteignez en février le voyant du résultat (au moins ${eur(0)}), celui de l'énergie (au plus ${qte(SEUILS_DE_DURABILITE.kwhParEnceinte)} kWh par enceinte) et celui des déchets (au moins ${pct(SEUILS_DE_DURABILITE.partValorisee, 0)} valorisés).`,
+          consigne: `Éteignez en février le voyant du résultat (au moins ${eur(0)}), celui de l'énergie (au plus ${qte(SEUILS_DE_DURABILITE.kwhParEnceinte)} kWh par enceinte) et celui des déchets (au moins ${pct(SEUILS_DE_DURABILITE.partValorisee)} valorisés).`,
           atteint: (p) => defiDurableAtteint(x.f, p),
           indice: (p) => {
             const r = laboratoireDurable(x.f, p);
             if (r.resultat < 0) return `Février perd ${eur(-r.resultat)} : il faut au moins ${qte(x.seuil)} enceintes pour couvrir les charges fixes.`;
             if (r.voyants.kwhParEnceinte) return `L'énergie fait ${qte(r.valeurs.kwhParEnceinte)} kWh par enceinte : vendez plus, ou réduisez ce que consomme la chaîne.`;
-            return `Seuls ${pct(r.valeurs.partValorisee, 0)} des déchets sont valorisés : il faut trouver une filière pour les mousses.`;
+            return `Seuls ${pct(r.valeurs.partValorisee)} des déchets sont valorisés : il faut trouver une filière pour les mousses.`;
           },
           solution: { quantite: Math.ceil(x.volumeDEnergie / L.quantite.pas - 1e-9) * L.quantite.pas, kwh: KWH_PAR_ENCEINTE, valorisee: SEUILS_DE_DURABILITE.partValorisee * 100 },
         };
@@ -352,8 +359,8 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
         const fixes = m.chargesFixes.loyer + m.chargesFixes.personnel + m.chargesFixes.amortissement;
         const marge = m.prix - m.coutVariable.composants - m.coutVariable.autres;
         return [
-          { libelle: "Volume qui éteint le voyant d'énergie (enceintes)", attendu: x.volumeDEnergie, calcul: `${qte(KWH_DU_BATIMENT_PAR_MOIS)} ÷ (${qte(SEUILS_DE_DURABILITE.kwhParEnceinte)} − ${qte(KWH_PAR_ENCEINTE)}) = ${qte(KWH_DU_BATIMENT_PAR_MOIS / (SEUILS_DE_DURABILITE.kwhParEnceinte - KWH_PAR_ENCEINTE))} enceintes` },
-          { libelle: "Seuil de rentabilité du mois (enceintes)", attendu: x.seuil, calcul: `${eur(fixes)} ÷ ${eur(marge)} = ${qte(fixes / marge)}, soit ${qte(x.seuil)} enceintes` },
+          { libelle: "Volume qui éteint le voyant d'énergie (enceintes)", nature: "quantite", attendu: x.volumeDEnergie, calcul: `${qte(KWH_DU_BATIMENT_PAR_MOIS)} ÷ (${qte(SEUILS_DE_DURABILITE.kwhParEnceinte)} − ${qte(KWH_PAR_ENCEINTE)}) = ${qte(KWH_DU_BATIMENT_PAR_MOIS / (SEUILS_DE_DURABILITE.kwhParEnceinte - KWH_PAR_ENCEINTE))} enceintes` },
+          { libelle: "Seuil de rentabilité du mois (enceintes)", nature: "quantite", attendu: x.seuil, calcul: `${eur(fixes)} ÷ ${eur(marge)} = ${qte(fixes / marge)}, arrondi à l'unité supérieure : ${qte(x.seuil)} enceintes` },
         ];
       },
       explication: (c) => {
@@ -373,7 +380,7 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
       question: (c) => {
         const x = durabiliteDuChapitre(c);
         const m = x.mars;
-        return `À vous, sans formule : remplissez les indicateurs de durabilité de mars. ${qte(m.quantite)} enceintes ; ${qte(KG_D_EMBALLAGE_PAR_ENCEINTE)} kg d'emballage par enceinte, ${pct(m.valeurs.partValorisee, 0)} valorisés ; ${qte(m.effectif)} opérateurs à ${qte(HEURES_LEGALES_PAR_MOIS)} heures payées, ${qte(m.absences)} heures d'absence, ${qte(m.accidents)} accident avec arrêt. Le taux de fréquence = accidents × 1 000 000 ÷ heures travaillées.`;
+        return `À vous, sans formule : remplissez les indicateurs de durabilité de mars. ${qte(m.quantite)} enceintes ; ${qte(KG_D_EMBALLAGE_PAR_ENCEINTE)} kg d'emballage par enceinte, ${pct(m.valeurs.partValorisee)} valorisés ; ${qte(m.effectif)} opérateurs à ${qte(HEURES_LEGALES_PAR_MOIS)} heures payées, ${qte(m.absences)} heures d'absence, ${qte(m.accidents)} accident avec arrêt. Le taux de fréquence = accidents × 1 000 000 ÷ heures travaillées.`;
       },
       grille: (c) => {
         const x = durabiliteDuChapitre(c);
@@ -383,12 +390,12 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
           colonnes: [m.nom],
           lignes: [
             { libelle: "Énergie du mois (kWh)", cellules: [aSaisir(m.kwh, `${qte(m.quantite)} × ${qte(KWH_PAR_ENCEINTE)} + ${qte(KWH_DU_BATIMENT_PAR_MOIS)} = ${qte(m.kwh)}`, { unite: "kWh", indice: "la chaîne, plus le bâtiment" })] },
-            { libelle: "Énergie par enceinte (kWh)", cellules: [aSaisir(arrondi(m.valeurs.kwhParEnceinte, 2), `${qte(m.kwh)} ÷ ${qte(m.quantite)} = ${qte(m.valeurs.kwhParEnceinte, 4)}`, { unite: "kWh", tolerance: 0.01 })] },
-            { libelle: "Émissions du mois (kg de CO2 équivalent)", cellules: [aSaisir(m.co2, `${qte(m.kwh)} × ${qte(KG_CO2_PAR_KWH, 3)} = ${qte(m.co2)}`, { unite: "kg", tolerance: 0.01 })] },
+            { libelle: "Énergie par enceinte (kWh)", cellules: [aSaisir(arrondi(m.valeurs.kwhParEnceinte, 2), `${qte(m.kwh)} ÷ ${qte(m.quantite)} = ${qte(m.valeurs.kwhParEnceinte)}`, { unite: "kWh", tolerance: 0.01 })] },
+            { libelle: "Émissions du mois (kg de CO2 équivalent)", cellules: [aSaisir(m.co2, `${qte(m.kwh)} × ${coef(KG_CO2_PAR_KWH)} = ${qte(m.co2)}`, { unite: "kg", tolerance: 0.01 })] },
             { libelle: "Déchets d'emballage (kg)", cellules: [aSaisir(m.dechets, `${qte(m.quantite)} × ${qte(KG_D_EMBALLAGE_PAR_ENCEINTE)} = ${qte(m.dechets)}`, { unite: "kg" })] },
-            { libelle: "Déchets valorisés (kg)", cellules: [aSaisir(m.valorises, `${qte(m.dechets)} × ${pct(m.valeurs.partValorisee, 0)} = ${qte(m.valorises)}`, { unite: "kg", tolerance: 0.01 })] },
-            { libelle: "Absentéisme (%)", cellules: [aSaisir(arrondi(m.valeurs.absenteisme * 100, 2), `${qte(m.absences)} ÷ (${qte(m.effectif)} × ${qte(HEURES_LEGALES_PAR_MOIS)}) = ${qte(m.absences)} ÷ ${qte(m.heuresPayees)} = ${pct(m.valeurs.absenteisme, 2)}`, { unite: "%", tolerance: 0.01 })] },
-            { libelle: "Taux de fréquence des accidents", cellules: [aSaisir(arrondi(m.valeurs.tauxDeFrequence, 1), `${qte(m.accidents)} × 1 000 000 ÷ (${qte(m.heuresPayees)} − ${qte(m.absences)}) = ${qte(m.valeurs.tauxDeFrequence, 1)}`, { unite: "", tolerance: 0.1, indice: "les heures travaillées sont les heures payées moins les absences" })] },
+            { libelle: "Déchets valorisés (kg)", cellules: [aSaisir(m.valorises, `${qte(m.dechets)} × ${pct(m.valeurs.partValorisee)} = ${qte(m.valorises)}`, { unite: "kg", tolerance: 0.01 })] },
+            { libelle: "Absentéisme (%)", cellules: [aSaisir(arrondi(m.valeurs.absenteisme * 100, 2), `${qte(m.absences)} ÷ (${qte(m.effectif)} × ${qte(HEURES_LEGALES_PAR_MOIS)}) = ${qte(m.absences)} ÷ ${qte(m.heuresPayees)} = ${pct(m.valeurs.absenteisme)}`, { unite: "%", tolerance: 0.01 })] },
+            { libelle: "Taux de fréquence des accidents", cellules: [aSaisir(arrondi(m.valeurs.tauxDeFrequence, 2), `${qte(m.accidents)} × 1 000 000 ÷ (${qte(m.heuresPayees)} − ${qte(m.absences)}) = ${qte(m.valeurs.tauxDeFrequence)}`, { unite: "", nature: "grandeur", indice: "les heures travaillées sont les heures payées moins les absences" })] },
           ],
         };
       },
@@ -396,7 +403,7 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
         const x = durabiliteDuChapitre(c);
         const m = x.mars;
         return [
-          `En ${m.nom}, l'énergie par enceinte retombe à ${qte(m.valeurs.kwhParEnceinte)} kWh, et l'absentéisme à ${pct(m.valeurs.absenteisme)}. Mais le taux de fréquence bondit à ${qte(m.valeurs.tauxDeFrequence, 1)} : un seul accident.`,
+          `En ${m.nom}, l'énergie par enceinte retombe à ${qte(m.valeurs.kwhParEnceinte)} kWh, et l'absentéisme à ${pct(m.valeurs.absenteisme)}. Mais le taux de fréquence bondit à ${qte(m.valeurs.tauxDeFrequence)} : un seul accident.`,
           "Chaque indicateur a sa base : l'enceinte pour l'énergie, le kilo d'emballage pour les déchets, l'heure payée pour l'absentéisme, l'heure travaillée pour les accidents. Une base mal choisie change ce que dit le chiffre.",
         ];
       },
@@ -409,7 +416,7 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
       notions: ["csr_index", "dashboard"],
       question: (c) => {
         const x = durabiliteDuChapitre(c);
-        return `Le taux de fréquence de mars, ${qte(x.mars.valeurs.tauxDeFrequence, 1)}, est des dizaines de fois celui d'une industrie ordinaire. Le président s'alarme : « Notre atelier est le plus dangereux de France ? »`;
+        return `Le taux de fréquence de mars, ${qte(x.mars.valeurs.tauxDeFrequence)}, est des dizaines de fois celui d'une industrie ordinaire. Le président s'alarme : « Notre atelier est le plus dangereux de France ? »`;
       },
       options: (c) => {
         const x = durabiliteDuChapitre(c);
@@ -418,7 +425,7 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
           {
             texte: "Non : un accident sur une base minuscule",
             juste: true,
-            retour: `Oui. Le taux de fréquence se rapporte au million d'heures travaillées ; ${x.f.entreprise} en travaille ${qte(x.mars.heuresTravaillees)} en un mois. Un seul accident y pèse comme des centaines dans une grande usine. Sur le semestre, le taux tombe à ${qte(s.tauxDeFrequence, 1)}, toujours sur un seul accident. Pour une petite équipe, le nombre d'accidents et leur cause disent plus que le taux.`,
+            retour: `Oui. Le taux de fréquence se rapporte au million d'heures travaillées ; ${x.f.entreprise} en travaille ${qte(x.mars.heuresTravaillees)} en un mois. Un seul accident y pèse comme des centaines dans une grande usine. Sur le semestre, le taux tombe à ${qte(s.tauxDeFrequence)}, toujours sur un seul accident. Pour une petite équipe, le nombre d'accidents et leur cause disent plus que le taux.`,
           },
           {
             texte: "Oui : le taux est fait pour comparer les entreprises entre elles",
@@ -447,9 +454,9 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
       champs: (c) => {
         const s = durabiliteDuChapitre(c).t.semestre;
         return [
-          { libelle: "Énergie par enceinte du semestre (kWh)", attendu: arrondi(s.kwhParEnceinte, 2), tolerance: 0.01, calcul: `${qte(s.kwh)} ÷ ${qte(s.quantite)} = ${qte(s.kwhParEnceinte, 4)} kWh` },
-          { libelle: "Part des déchets valorisés (%)", attendu: arrondi(s.partValorisee * 100, 2), tolerance: 0.01, calcul: `${qte(s.valorises)} ÷ ${qte(s.dechets)} = ${pct(s.partValorisee, 2)}` },
-          { libelle: "Émissions pour 1 000 € de chiffre d'affaires (kg)", attendu: arrondi(s.co2ParMilleEuros, 2), tolerance: 0.01, calcul: `${qte(s.co2)} ÷ ${eur(s.chiffreDAffaires)} × 1 000 = ${qte(s.co2ParMilleEuros, 4)} kg` },
+          { libelle: "Énergie par enceinte du semestre (kWh)", nature: "grandeur", attendu: arrondi(s.kwhParEnceinte, 2), calcul: `${qte(s.kwh)} ÷ ${qte(s.quantite)} = ${qte(s.kwhParEnceinte)} kWh` },
+          { libelle: "Part des déchets valorisés (%)", attendu: arrondi(s.partValorisee * 100, 2), tolerance: 0.01, calcul: `${qte(s.valorises)} ÷ ${qte(s.dechets)} = ${pct(s.partValorisee)}` },
+          { libelle: "Émissions pour 1 000 € de chiffre d'affaires (kg)", nature: "grandeur", attendu: arrondi(s.co2ParMilleEuros, 2), calcul: `${qte(s.co2)} ÷ ${eur(s.chiffreDAffaires)} × 1 000 = ${qte(s.co2ParMilleEuros)} kg` },
         ];
       },
       explication: (c) => {
@@ -500,7 +507,7 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
       notions: ["csr_index", "dashboard"],
       question: (c) => {
         const x = durabiliteDuChapitre(c);
-        return `À partir d'avril, la part valorisée des déchets passe de ${pct(PART_VALORISEE.avant, 0)} à ${pct(PART_VALORISEE.apres, 0)}, sans rien changer à l'atelier. Que dit ce progrès de la lecture d'un indicateur par centre, chez ${x.f.entreprise} ?`;
+        return `À partir d'avril, la part valorisée des déchets passe de ${pct(PART_VALORISEE.avant)} à ${pct(PART_VALORISEE.apres)}, sans rien changer à l'atelier. Que dit ce progrès de la lecture d'un indicateur par centre, chez ${x.f.entreprise} ?`;
       },
       options: () => [
         {

@@ -1,7 +1,6 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
-import { auCentime } from "../monde/amortissement";
 import { MOIS_DE_L_EXERCICE } from "../monde/exercice-de-nova";
 import {
   ARRIVEE_DU_CINQUIEME,
@@ -52,6 +51,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : le-budget-de-n-plus-1 et les-effets-de-la-variation sont des tableaux à compléter,
  *     le-controle-de-la-masse un calcul d'écarts sans formule ;
  *   · expert : lire-les-ecarts et la-note-a-la-direction, puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les salaires moyens prévus se donnent au centime, et les
+ * écarts de masse en repartent (monde/masse-salariale-de-nova.ts ; au dix-millième et à 5 centimes
+ * près, avant) : leur somme retombe sur l'écart total aux centimes près, et l'explication le dit ;
+ * la somme des indices est une grandeur au centième, le produit des effets un coefficient au
+ * dix-millième ; le salaire horaire se donne au centime.
  */
 
 /** Le chapitre se calcule sur l'équipe de NOVA. */
@@ -67,13 +73,11 @@ export const LEVIERS_DES_HAUSSES = {
 /** Le départ du laboratoire : une seule hausse de 4 % au 1er janvier, ce que demandent les opérateurs. */
 export const DEPART_DU_LABORATOIRE = { janvier: 4, mois: 10, seconde: 0 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Un taux en pour cent, au centième : « 2,51 % ». */
-const pct = (t: number) => `${(Math.round(t * 1e4) / 100 + 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+const pct = (t: number) => pourcent(t * 100);
 /** Un coefficient au dix-millième : « 1,0251 ». */
 const coef = (k: number) => (Math.round(k * 1e4) / 1e4).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
 const nomDuMois = (m: number) => MOIS_DE_L_EXERCICE[m - 1]!;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const lePremier = (m: number) => `le 1er ${nomDuMois(m)}`;
@@ -97,7 +101,7 @@ function calculerLeChapitre() {
   const deN = masseBruteDeN();
   const constant = masseAEffectifConstant();
   const [h1, h2] = HAUSSES_DE_N_PLUS_1 as readonly [(typeof HAUSSES_DE_N_PLUS_1)[number], (typeof HAUSSES_DE_N_PLUS_1)[number]];
-  const plafond = auCentime(deN * (1 + ENVELOPPE_DE_L_EFFET_DE_MASSE));
+  const plafond = arrondi2(deN * (1 + ENVELOPPE_DE_L_EFFET_DE_MASSE));
   const juillet = laboratoireDesHausses(h1.taux, 7, h2.taux);
   const plusBas = plusBasSalaireDeLAnnee();
   return {
@@ -112,9 +116,9 @@ function calculerLeChapitre() {
     juillet,
     premierMois: premierMoisDansLEnveloppe()!,
     /** La masse de N + 2 de l'équipe de décembre N, sans hausse en N + 2 : 12 × le salaire de décembre N + 1. */
-    masseDeNPlus2: auCentime(EFFECTIF_DE_DECEMBRE_N * SALAIRE_DE_DECEMBRE_N * 12 * effets.niveau),
-    salaireDeJanvier: auCentime(SALAIRE_DE_DECEMBRE_N * (1 + h1.taux)),
-    salaireDeDecembre: auCentime(SALAIRE_DE_DECEMBRE_N * effets.niveau),
+    masseDeNPlus2: arrondi2(EFFECTIF_DE_DECEMBRE_N * SALAIRE_DE_DECEMBRE_N * 12 * effets.niveau),
+    salaireDeJanvier: arrondi2(SALAIRE_DE_DECEMBRE_N * (1 + h1.taux)),
+    salaireDeDecembre: arrondi2(SALAIRE_DE_DECEMBRE_N * effets.niveau),
     marche: FICHE_RH.personnel.salaireDuMarche.nPlus1,
     seuil: FICHE_RH.personnel.seuilDeDemission,
     plusBas,
@@ -230,9 +234,9 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         const e = x.effets;
         const avant = x.h2.mois - 1;
         return [
-          { libelle: "Effet de niveau (%)", attendu: auCentieme((e.niveau - 1) * 100), tolerance: 0.01, calcul: `${qte(e.decembre)} ÷ 100 = ${coef(e.niveau)}, soit +${pct(e.niveau - 1)} (${coef(1 + x.h1.taux)} × ${coef(1 + x.h2.taux)})` },
-          { libelle: "Somme des douze indices", attendu: e.cumul, tolerance: 0.01, calcul: `${qte(avant)} × ${qte(e.indices[0]!)} + ${qte(12 - avant)} × ${qte(e.decembre)} = ${qte(e.cumul)}` },
-          { libelle: "Effet de masse (%)", attendu: auCentieme((e.masse - 1) * 100), tolerance: 0.01, calcul: `${qte(e.cumul)} ÷ 1 200 = ${coef(e.masse)}, soit +${pct(e.masse - 1)}` },
+          { libelle: "Effet de niveau (%)", attendu: arrondi2((e.niveau - 1) * 100), tolerance: 0.01, calcul: `${qte(e.decembre)} ÷ 100 = ${coef(e.niveau)}, soit +${pct(e.niveau - 1)} (${coef(1 + x.h1.taux)} × ${coef(1 + x.h2.taux)})` },
+          { libelle: "Somme des douze indices", nature: "grandeur", attendu: e.cumul, calcul: `${qte(avant)} × ${qte(e.indices[0]!)} + ${qte(12 - avant)} × ${qte(e.decembre)} = ${qte(e.cumul)}` },
+          { libelle: "Effet de masse (%)", attendu: arrondi2((e.masse - 1) * 100), tolerance: 0.01, calcul: `${qte(e.cumul)} ÷ 1 200 = ${coef(e.masse)}, soit +${pct(e.masse - 1)}` },
         ];
       },
       explication: (c) => {
@@ -288,7 +292,7 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         return [
           { libelle: "Masse brute de l'équipe en N + 1", montant: r.masseBrute },
           { libelle: "Enveloppe de la direction", montant: x.plafond },
-          { libelle: "Marge restante dans l'enveloppe", montant: auCentime(x.plafond - r.masseBrute), fort: true },
+          { libelle: "Marge restante dans l'enveloppe", montant: arrondi2(x.plafond - r.masseBrute), fort: true },
         ];
       },
       droites: (c) => {
@@ -301,7 +305,7 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         const r = laboratoireDesHausses(x.h1.taux, m, x.h2.taux);
         const avant = laboratoireDesHausses(x.h1.taux, m - 1, x.h2.taux);
         return [
-          `La seconde hausse tient dans l'enveloppe à partir ${dE(nomDuMois(m))} : ${eur(r.masseBrute)}, contre ${eur(avant.masseBrute)} un mois plus tôt. Chaque mois d'avance coûte ${eur(auCentime(avant.masseBrute - r.masseBrute))} bruts à l'équipe.`,
+          `La seconde hausse tient dans l'enveloppe à partir ${dE(nomDuMois(m))} : ${eur(r.masseBrute)}, contre ${eur(avant.masseBrute)} un mois plus tôt. Chaque mois d'avance coûte ${eur(arrondi2(avant.masseBrute - r.masseBrute))} bruts à l'équipe.`,
           `Le décembre N + 1 est le même quel que soit le mois : ${eur(x.salaireDeDecembre)}. Retarder une hausse ne change pas l'effet de niveau ; il baisse l'effet de masse de l'année, et reporte la dépense sur la suivante.`,
         ];
       },
@@ -321,8 +325,8 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         const e = x.effets;
         return [
           { libelle: "Masse brute de N + 2, sans hausse", attendu: x.masseDeNPlus2, calcul: `${qte(EFFECTIF_DE_DECEMBRE_N)} × ${eur(x.salaireDeDecembre)} × 12 = ${eur(x.masseDeNPlus2)}` },
-          { libelle: "Effet de report sur N + 2 (%)", attendu: auCentieme((e.report - 1) * 100), tolerance: 0.01, calcul: `12 × ${qte(e.decembre)} ÷ ${qte(e.cumul)} = ${coef(e.report)}, soit +${pct(e.report - 1)} (ou ${eur(x.masseDeNPlus2)} ÷ ${eur(x.constant)})` },
-          { libelle: "Effet de masse × effet de report", attendu: Math.round(e.masse * e.report * 1e4) / 1e4, tolerance: 0.0001, calcul: `${coef(e.masse)} × ${coef(e.report)} = ${coef(e.masse * e.report)}, l'effet de niveau` },
+          { libelle: "Effet de report sur N + 2 (%)", attendu: arrondi2((e.report - 1) * 100), tolerance: 0.01, calcul: `12 × ${qte(e.decembre)} ÷ ${qte(e.cumul)} = ${coef(e.report)}, soit +${pct(e.report - 1)} (ou ${eur(x.masseDeNPlus2)} ÷ ${eur(x.constant)})` },
+          { libelle: "Effet de masse × effet de report", nature: "coefficient", attendu: Math.round(e.masse * e.report * 1e4) / 1e4, tolerance: 0.0001, calcul: `${coef(e.masse)} × ${coef(e.report)} = ${coef(e.masse * e.report)}, l'effet de niveau` },
         ];
       },
       explication: (c) => {
@@ -387,9 +391,9 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         const d = laboratoireDuChapitre(DEPART_DU_LABORATOIRE);
         return [
           { libelle: "Salaire de janvier d'un opérateur", montant: r.salaireDeJanvier, reference: d.salaireDeJanvier },
-          { libelle: "Effet de niveau", montant: auCentieme((r.niveau - 1) * 100), unite: "%", reference: auCentieme((d.niveau - 1) * 100) },
-          { libelle: "Effet de masse", montant: auCentieme((r.masse - 1) * 100), unite: "%", reference: auCentieme((d.masse - 1) * 100) },
-          { libelle: "Effet de report sur N + 2", montant: auCentieme((r.report - 1) * 100), unite: "%", reference: auCentieme((d.report - 1) * 100) },
+          { libelle: "Effet de niveau", montant: arrondi2((r.niveau - 1) * 100), unite: "%", reference: arrondi2((d.niveau - 1) * 100) },
+          { libelle: "Effet de masse", montant: arrondi2((r.masse - 1) * 100), unite: "%", reference: arrondi2((d.masse - 1) * 100) },
+          { libelle: "Effet de report sur N + 2", montant: arrondi2((r.report - 1) * 100), unite: "%", reference: arrondi2((d.report - 1) * 100) },
           { libelle: "Masse brute de l'équipe en N + 1", montant: r.masseBrute, reference: d.masseBrute, fort: true },
         ];
       },
@@ -398,8 +402,8 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         levier: "mois",
         unite: "%",
         courbes: [
-          { libelle: "Effet de masse", valeur: (p) => auCentieme((laboratoireDuChapitre(p).masse - 1) * 100) },
-          { libelle: "Effet de report sur N + 2", valeur: (p) => auCentieme((laboratoireDuChapitre(p).report - 1) * 100) },
+          { libelle: "Effet de masse", valeur: (p) => arrondi2((laboratoireDuChapitre(p).masse - 1) * 100) },
+          { libelle: "Effet de report sur N + 2", valeur: (p) => arrondi2((laboratoireDuChapitre(p).report - 1) * 100) },
         ],
       }),
       defi: (c) => {
@@ -436,7 +440,7 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
       grille: (c) => {
         const x = masseDuChapitre(c);
         const b = x.budget;
-        const chargees = b.salaries.map((s) => auCentime(s.masse * (1 + TAUX_PATRONAL)));
+        const chargees = b.salaries.map((s) => arrondi2(s.masse * (1 + TAUX_PATRONAL)));
         const n = b.salaries.length;
         return {
           titre: "La masse salariale prévisionnelle de N + 1 · NOVA",
@@ -457,7 +461,7 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
               cellules: [
                 donnee(b.mois, { unite: "mois" }),
                 aSaisir(b.brute, `${b.salaries.map((s) => eur(s.masse)).join(" + ")} = ${eur(b.brute)}`),
-                aSaisir(auCentime(chargees.reduce((t, v) => t + v, 0)), `${eur(b.brute)} × 1,42 = ${eur(b.chargee)}`),
+                aSaisir(arrondi2(chargees.reduce((t, v) => t + v, 0)), `${eur(b.brute)} × 1,42 = ${eur(b.chargee)}`),
               ],
             },
           ],
@@ -486,8 +490,8 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         const x = masseDuChapitre(c);
         const h = x.horaire;
         return [
-          { libelle: "Salaire horaire brut d'une recrue", attendu: h.auCentime, calcul: `${eur(x.plusBas)} ÷ ${qte(HEURES_LEGALES_PAR_MOIS)} = ${qte(h.horaire, 4)} €, au centime ${eur(h.auCentime)}` },
-          { libelle: "Écart au SMIC horaire", attendu: auCentime(h.auCentime - SMIC_HORAIRE_BRUT), calcul: `${eur(h.auCentime)} − ${eur(SMIC_HORAIRE_BRUT)} = ${eur(auCentime(h.auCentime - SMIC_HORAIRE_BRUT))}` },
+          { libelle: "Salaire horaire brut d'une recrue", attendu: h.auCentime, calcul: `${eur(x.plusBas)} ÷ ${qte(HEURES_LEGALES_PAR_MOIS)} = ${eur(h.auCentime)}` },
+          { libelle: "Écart au SMIC horaire", attendu: arrondi2(h.auCentime - SMIC_HORAIRE_BRUT), calcul: `${eur(h.auCentime)} − ${eur(SMIC_HORAIRE_BRUT)} = ${eur(arrondi2(h.auCentime - SMIC_HORAIRE_BRUT))}` },
         ];
       },
       explication: (c) => {
@@ -528,13 +532,13 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
       notions: ["payroll", "staff_turnover"],
       question: (c) => {
         const x = masseDuChapitre(c);
-        return `À vous : rangez la hausse de la masse brute effet par effet. Les hausses générales se mesurent sur l'équipe de décembre N gardée toute l'année. Le GVT est ce que la promotion ajoute au salaire d'un stable ; la noria, ce que le remplaçant coûte de moins que le sortant depuis son arrivée. L'effectif, c'est le cinquième opérateur moins les mois où personne n'occupe le poste du sortant (${nomDuMois(DEPART.dernierMois + 1)} et ${nomDuMois(DEPART.arriveeDuRemplacant - 1)}). Un stable coûte ${eur(auCentime(x.constant / EFFECTIF_DE_DECEMBRE_N))} sur l'année.`;
+        return `À vous : rangez la hausse de la masse brute effet par effet. Les hausses générales se mesurent sur l'équipe de décembre N gardée toute l'année. Le GVT est ce que la promotion ajoute au salaire d'un stable ; la noria, ce que le remplaçant coûte de moins que le sortant depuis son arrivée. L'effectif, c'est le cinquième opérateur moins les mois où personne n'occupe le poste du sortant (${nomDuMois(DEPART.dernierMois + 1)} et ${nomDuMois(DEPART.arriveeDuRemplacant - 1)}). Un stable coûte ${eur(arrondi2(x.constant / EFFECTIF_DE_DECEMBRE_N))} sur l'année.`;
       },
       grille: (c) => {
         const x = masseDuChapitre(c);
         const b = x.budget;
         const e = b.effets;
-        const unStable = auCentime(x.constant / EFFECTIF_DE_DECEMBRE_N);
+        const unStable = arrondi2(x.constant / EFFECTIF_DE_DECEMBRE_N);
         return {
           titre: "La variation de la masse brute de N à N + 1 · NOVA",
           colonnes: ["Effet sur la masse brute"],
@@ -607,16 +611,16 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
         };
       },
       question: () =>
-        `L'année N + 1 est passée. Le remplaçant est arrivé ${lePremier(REALISE_DE_N_PLUS_1.arriveeDuRemplacant)}, un mois plus tôt que prévu, et le cinquième opérateur a négocié ${eur(REALISE_DE_N_PLUS_1.salaireDuCinquieme)} à l'embauche. Sans formule : calculez l'écart total sur la masse brute, puis ses trois composantes, au centime. Sur effectif, au salaire moyen prévu ; de structure, aux salaires prévus de chaque catégorie ; sur salaire, aux mois réels.`,
+        `L'année N + 1 est passée. Le remplaçant est arrivé ${lePremier(REALISE_DE_N_PLUS_1.arriveeDuRemplacant)}, un mois plus tôt que prévu, et le cinquième opérateur a négocié ${eur(REALISE_DE_N_PLUS_1.salaireDuCinquieme)} à l'embauche. Sans formule : calculez l'écart total sur la masse brute, puis ses trois composantes, au centime. Sur effectif, au salaire moyen prévu ; de structure, aux salaires prévus de chaque catégorie ; sur salaire, aux mois réels. Chaque terme se calcule en une ligne, mois × masse prévue ÷ mois prévus, au centime.`,
       champs: (c) => {
         const e = masseDuChapitre(c).ecarts;
         const p = e.prevu.categories;
         const r = e.reel.categories;
         return [
           { libelle: "Écart total sur la masse brute", attendu: e.total, calcul: `${eur(e.reel.brute)} − ${eur(e.prevu.brute)} = ${eur(e.total)} (défavorable)` },
-          { libelle: "Écart sur effectif", attendu: e.effectif, tolerance: 0.05, calcul: `(${qte(e.reel.mois)} − ${qte(e.prevu.mois)}) × ${eur(e.prevu.brute)} ÷ ${qte(e.prevu.mois)} = ${qte(e.reel.mois - e.prevu.mois)} × ${qte(e.prevu.moyen, 4)} € = ${eur(e.effectif)}` },
-          { libelle: "Écart de structure", attendu: e.structure, tolerance: 0.05, calcul: `${qte(r.anciens.mois)} × ${qte(p.anciens.moyen, 4)} + ${qte(r.recrues.mois)} × ${qte(p.recrues.moyen, 4)} − ${qte(e.reel.mois)} × ${qte(e.prevu.moyen, 4)} = ${eur(e.aStructureReelle)} − ${eur(e.aSalaireMoyenPrevu)} = ${eur(e.structure)}` },
-          { libelle: "Écart sur salaire", attendu: e.salaire, tolerance: 0.05, calcul: `les recrues : ${eur(r.recrues.masse)} − ${qte(r.recrues.mois)} × ${qte(p.recrues.moyen, 4)} = ${eur(e.salaireParCategorie.recrues)} ; les anciens : ${eur(e.salaireParCategorie.anciens)}` },
+          { libelle: "Écart sur effectif", attendu: e.effectif, calcul: `(${qte(e.reel.mois)} − ${qte(e.prevu.mois)}) × ${eur(e.prevu.brute)} ÷ ${qte(e.prevu.mois)} = ${eur(e.effectif)}` },
+          { libelle: "Écart de structure", attendu: e.structure, calcul: `${qte(r.anciens.mois)} × ${eur(p.anciens.masse)} ÷ ${qte(p.anciens.mois)} = ${eur(e.auMoyenDe("anciens"))} ; ${qte(r.recrues.mois)} × ${eur(p.recrues.masse)} ÷ ${qte(p.recrues.mois)} = ${eur(e.auMoyenDe("recrues"))} ; ${qte(e.reel.mois)} × ${eur(e.prevu.brute)} ÷ ${qte(e.prevu.mois)} = ${eur(e.aSalaireMoyenPrevu)} ; ${eur(e.aStructureReelle)} − ${eur(e.aSalaireMoyenPrevu)} = ${eur(e.structure)}` },
+          { libelle: "Écart sur salaire", attendu: e.salaire, calcul: `les recrues : ${eur(r.recrues.masse)} − ${eur(e.auMoyenDe("recrues"))} = ${eur(e.salaireParCategorie.recrues)} ; les anciens : ${eur(e.salaireParCategorie.anciens)} ; ensemble ${eur(e.salaire)}` },
         ];
       },
       explication: (c) => {
@@ -643,7 +647,7 @@ export const LA_MASSE_SALARIALE_PREVISIONNELLE: Chapitre = {
           {
             texte: "Du mois en plus payé à une recrue",
             juste: true,
-            retour: `Oui. Le mois réel en plus est celui d'une recrue, payée en moyenne ${eur(auCentime(e.prevu.categories.recrues.moyen))} au prix prévu, sous la moyenne de l'équipe (${eur(auCentime(e.prevu.moyen))}). L'écart sur effectif compte ce mois au salaire moyen ; l'écart de structure corrige : c'était un mois moins cher. C'est la noria, vue dans le contrôle.`,
+            retour: `Oui. Le mois réel en plus est celui d'une recrue, payée en moyenne ${eur(arrondi2(e.prevu.categories.recrues.moyen))} au prix prévu, sous la moyenne de l'équipe (${eur(arrondi2(e.prevu.moyen))}). L'écart sur effectif compte ce mois au salaire moyen ; l'écart de structure corrige : c'était un mois moins cher. C'est la noria, vue dans le contrôle.`,
           },
           {
             texte: "Du salaire négocié par le cinquième opérateur",

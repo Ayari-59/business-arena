@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { masseSalariale } from "../chapitres/effectif-et-masse-salariale";
 import { salaire } from "../chapitres/salaire-brut-net-cout";
@@ -22,6 +21,11 @@ import type { Situation } from "./types";
  *
  * CE QUI A CHANGÉ. Le cas lisait la paie et le mois de chaque entreprise de l'arène ; il se joue chez
  * NOVA : 7 987,50 € pour le contrat, 381 enceintes à vendre en plus, et une ligne déjà pleine à Noël.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de frais de personnel se donnent à deux décimales
+ * (au dixième, avant) ; les enceintes à vendre en plus sont une quantité, à l'unité supérieure, et
+ * le chiffre d'affaires qui en vient attend le centime.
  */
 
 /** Le contrat de saison : le trimestre de Noël, trois mois de salaire (octobre, novembre, décembre). */
@@ -31,11 +35,7 @@ export const TRIMESTRE_DE_LA_SAISON = 4;
 /** Les mois d'une année, pour l'erreur classique qui compte l'embauche sur l'année entière. */
 const MOIS_PAR_AN = 12;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const taux = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const auDessus = (x: number) => Math.ceil(x - 1e-9);
 
 /** L'opérateur de la saison, ce qu'il coûte, et les ventes qui le paient. */
@@ -44,10 +44,10 @@ export function embaucheDeSaison(_c?: Cas) {
   const m = masseSalariale();
   const f = FICHE_RH;
   const prix = f.enceinte.prix;
-  const coutVariable = auCentime(f.enceinte.coutVariable.composants + f.enceinte.coutVariable.autres);
+  const coutVariable = arrondi2(f.enceinte.coutVariable.composants + f.enceinte.coutVariable.autres);
   const margeDUneUnite = margeUnitaire(f);
-  const coutDeLaSaison = auCentime(s.cout * MOIS_DE_LA_SAISON);
-  const masseAvec = auCentime(m.masse + coutDeLaSaison);
+  const coutDeLaSaison = arrondi2(s.cout * MOIS_DE_LA_SAISON);
+  const masseAvec = arrondi2(m.masse + coutDeLaSaison);
   const ventesNecessaires = auDessus(coutDeLaSaison / margeDUneUnite);
   const noel = anneeDeProduction(f, { annee: "N+1" }).trimestres[TRIMESTRE_DE_LA_SAISON - 1]!;
   return {
@@ -57,10 +57,10 @@ export function embaucheDeSaison(_c?: Cas) {
     coutVariable,
     coutDeLaSaison,
     masseAvec,
-    tauxAvec: auDixieme((masseAvec / m.ventes) * 100),
+    tauxAvec: arrondi2((masseAvec / m.ventes) * 100),
     margeDUneUnite,
     ventesNecessaires,
-    caNecessaire: auCentime(ventesNecessaires * prix),
+    caNecessaire: arrondi2(ventesNecessaires * prix),
     noel,
     /** Ce que l'équipe monterait de plus à Noël avec l'opérateur de la saison, et ce que la ligne en laisse sortir. */
     equipeAvec: noel.capaciteEquipe + MOIS_DE_LA_SAISON * enceintesParOperateurEtParMois(f),
@@ -152,13 +152,13 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
       titre: "La masse salariale avec l'embauche",
       notions: ["payroll", "fixed_costs"],
       question: () =>
-        "Calculez la masse salariale de l'année avec l'embauche, puis le taux de frais de personnel (masse salariale ÷ ventes × 100, au dixième) sans l'embauche et avec, à ventes inchangées.",
+        "Calculez la masse salariale de l'année avec l'embauche, puis le taux de frais de personnel (masse salariale ÷ ventes × 100, à deux décimales) sans l'embauche et avec, à ventes inchangées.",
       champs: (c) => {
         const r = embaucheDeSaison(c);
         return [
           { libelle: "Masse salariale avec l'embauche", attendu: r.masseAvec, calcul: `${eur(r.m.masse)} + ${eur(r.coutDeLaSaison)} = ${eur(r.masseAvec)}` },
-          { libelle: "Taux de frais de personnel sans l'embauche (%)", attendu: r.m.tauxDeFraisDePersonnel, calcul: `${eur(r.m.masse)} ÷ ${eur(r.m.ventes)} × 100 = ${pct(r.m.tauxDeFraisDePersonnel)}`, tolerance: 0.1 },
-          { libelle: "Taux de frais de personnel avec l'embauche (%)", attendu: r.tauxAvec, calcul: `${eur(r.masseAvec)} ÷ ${eur(r.m.ventes)} × 100 = ${pct(r.tauxAvec)}`, tolerance: 0.1 },
+          { libelle: "Taux de frais de personnel sans l'embauche (%)", attendu: r.m.tauxDeFraisDePersonnel, calcul: `${eur(r.m.masse)} ÷ ${eur(r.m.ventes)} × 100 = ${pct(r.m.tauxDeFraisDePersonnel)}` },
+          { libelle: "Taux de frais de personnel avec l'embauche (%)", attendu: r.tauxAvec, calcul: `${eur(r.masseAvec)} ÷ ${eur(r.m.ventes)} × 100 = ${pct(r.tauxAvec)}` },
         ];
       },
       explication: (c) => {
@@ -179,8 +179,8 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
         const r = embaucheDeSaison(c);
         return [
           { libelle: "Marge d'une enceinte", attendu: r.margeDUneUnite, calcul: `${eur(r.prix)} − ${eur(r.coutVariable)} = ${eur(r.margeDUneUnite)}` },
-          { libelle: "Enceintes à vendre en plus", attendu: r.ventesNecessaires, calcul: `${eur(r.coutDeLaSaison)} ÷ ${eur(r.margeDUneUnite)} = ${qte(r.ventesNecessaires)} (arrondi au-dessus)` },
-          { libelle: "Chiffre d'affaires en plus", attendu: r.caNecessaire, calcul: `${qte(r.ventesNecessaires)} × ${eur(r.prix)} = ${eur(r.caNecessaire)}`, tolerance: 1 },
+          { libelle: "Enceintes à vendre en plus", nature: "quantite", attendu: r.ventesNecessaires, calcul: `${eur(r.coutDeLaSaison)} ÷ ${eur(r.margeDUneUnite)} = ${nombreAuCentieme(r.coutDeLaSaison / r.margeDUneUnite)}, arrondi au-dessus : ${qte(r.ventesNecessaires)} (une de moins ne paierait pas la saison)` },
+          { libelle: "Chiffre d'affaires en plus", attendu: r.caNecessaire, calcul: `${qte(r.ventesNecessaires)} × ${eur(r.prix)} = ${eur(r.caNecessaire)}` },
         ];
       },
       explication: (c) => {

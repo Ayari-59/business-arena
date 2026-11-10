@@ -253,11 +253,13 @@ describe("le coût par produit, chez NOVA du monde du cours", () => {
       "Coût complet : NOVA Studio": c(direct(studio) + auxHeures(studio)),
     });
     expect(Object.values(attendus(ch, "couts-complets"))).toEqual([6_475.45, 69_082.62, 22_993.93]);
-    // L'élève qui impute au coût de l'heure arrondi (68,30 €) trouve 1,22 € de moins sur One : la tolérance l'admet.
-    const arrondi = c(direct(one) + 348 * 68.3);
-    expect(c(69_082.62 - arrondi)).toBe(1.22);
-    expect(tolerances(ch, "couts-complets")["Coût complet : NOVA One"]).toBeGreaterThanOrEqual(1.3);
-    expect(Math.abs(arrondi - 69_082.62)).toBeLessThanOrEqual(tolerances(ch, "couts-complets")["Coût complet : NOVA One"]!);
+    // Deux décimales : la part de chaque référence se calcule au prorata, en une ligne arrondie au centime,
+    // et les trois parts font juste 33 578 €. Au coût de l'heure arrondi (68,30 €), One recevrait 1,22 € de moins,
+    // et la question dit de passer par le prorata ; la tolérance est d'un centime.
+    expect([auxHeures(go), auxHeures(one), auxHeures(studio)]).toEqual([2_397.45, 23_769.62, 7_410.93]);
+    expect(c(auxHeures(go) + auxHeures(one) + auxHeures(studio))).toBe(33_578);
+    expect(c(69_082.62 - c(direct(one) + 348 * 68.3))).toBe(1.22);
+    expect(tolerances(ch, "couts-complets")["Coût complet : NOVA One"]).toBe(0.01);
     // Plus de ligne « qualité » à 0 € : elle n'existe plus nulle part.
     for (const e of ch.etapes) for (const t of textesDe(e, cas, etatVide)) expect(t, e.id).not.toMatch(/qualité/i);
   });
@@ -266,9 +268,9 @@ describe("le coût par produit, chez NOVA du monde du cours", () => {
     const r = (x: typeof go) => c(ca(x) - direct(x) - auxHeures(x));
     expect(attendus(ch, "resultats")).toEqual({ "Résultat : NOVA Go": r(go), "Résultat : NOVA One": r(one), "Résultat : NOVA Studio": r(studio), "Résultat de la gamme": 4_511 });
     expect([r(go), r(one), r(studio)]).toEqual([154.55, -642.62, 4_999.07]);
-    // L'élève qui additionne ses trois résultats au coût de l'heure arrondi reste dans la tolérance.
-    const somme = c(6_630 - 4_078 - 35.1 * 68.3 + (68_440 - 45_313 - 348 * 68.3) + (27_993 - 15_583 - 108.5 * 68.3));
-    expect(Math.abs(somme - 4_511)).toBeLessThanOrEqual(tolerances(ch, "resultats")["Résultat de la gamme"]!);
+    // Les trois résultats, chacun au centime, font juste 4 511 € : les parts au prorata retombent sur leur total.
+    expect(c(r(go) + r(one) + r(studio))).toBe(4_511);
+    expect(tolerances(ch, "resultats")["Résultat de la gamme"]).toBe(0.01);
     for (const e of ch.etapes) for (const t of textesDe(e, cas, etatVide)) expect(t, e.id).not.toMatch(/4\s527/);
   });
 
@@ -449,9 +451,10 @@ describe("le cas : la clé contestée", () => {
     });
     expect([studioEnPlus, goEnPlus]).toEqual([1_709.21, -237.39]);
     expect(c(studioEnPlus + goEnPlus)).toBe(c(auxHeures(one) - auChiffre(one)));
-    // L'élève qui arrondit ses deux coûts d'unité d'œuvre reste dans la tolérance.
-    const arrondi = c(279.93 * 32.58 - 108.5 * 68.3);
-    expect(Math.abs(arrondi - studioEnPlus)).toBeLessThanOrEqual(tolerances(s, "qui-paie")["Charges en plus : NOVA Studio"]!);
+    // Deux décimales : les parts au prorata, au centime ; aux coûts d'unité d'œuvre arrondis, on trouverait
+    // 0,36 € de plus, et la question dit de passer par le prorata. La tolérance est d'un centime.
+    expect(c(studioEnPlus - c(279.93 * 32.58 - 108.5 * 68.3))).toBe(-0.36);
+    expect(tolerances(s, "qui-paie")["Charges en plus : NOVA Studio"]).toBe(0.01);
   });
 
   it("le curseur du cas, à rebours : 56 % aux heures au plus", () => {

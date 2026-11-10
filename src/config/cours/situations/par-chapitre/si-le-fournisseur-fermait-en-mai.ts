@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_BUDGETS, ficheDe } from "../../chapitres/des-ventes-aux-achats";
 import { SANS_STOCK, budgetsDeProduction } from "../../monde/budgets-operationnels";
@@ -25,9 +25,8 @@ import type { Situation } from "../types";
 /** Le mois où le fournisseur fermerait : mai (0 pour janvier). */
 export const MOIS_DE_FERMETURE = 4;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const auCentime = arrondi2;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -131,9 +130,9 @@ export const SI_LE_FOURNISSEUR_FERMAIT_EN_MAI: Situation = {
       champs: (c) => {
         const n = fermetureDeMai(c);
         return [
-          { libelle: `Stock final de jeux ${dE(n.nom(n.avant))}`, attendu: n.stockFinal, calcul: `la consommation ${dE(n.nom(n.k))} : ${qte(n.stockFinal)} jeux` },
-          { libelle: `Jeux achetés en ${n.nom(n.avant)}`, attendu: n.achatsDAvant, calcul: `${qte(n.consommation[n.avant]!)} + ${qte(n.stockFinal)} − 0 = ${qte(n.achatsDAvant)}` },
-          { libelle: `Jeux achetés en ${n.nom(n.k)}`, attendu: n.jeuxAchetes[n.k]!, calcul: `${qte(n.consommation[n.k]!)} + 0 − ${qte(n.stockFinal)} = ${qte(n.jeuxAchetes[n.k]!)}` },
+          { libelle: `Stock final de jeux ${dE(n.nom(n.avant))}`, nature: "quantite", attendu: n.stockFinal, calcul: `la consommation ${dE(n.nom(n.k))} : ${qte(n.stockFinal)} jeux` },
+          { libelle: `Jeux achetés en ${n.nom(n.avant)}`, nature: "quantite", attendu: n.achatsDAvant, calcul: `${qte(n.consommation[n.avant]!)} + ${qte(n.stockFinal)} − 0 = ${qte(n.achatsDAvant)}` },
+          { libelle: `Jeux achetés en ${n.nom(n.k)}`, nature: "quantite", attendu: n.jeuxAchetes[n.k]!, calcul: `${qte(n.consommation[n.k]!)} + 0 − ${qte(n.stockFinal)} = ${qte(n.jeuxAchetes[n.k]!)}` },
           { libelle: `Paiement au fournisseur en ${n.nom(n.k)}`, attendu: n.paiement, calcul: `${qte(n.achatsDAvant)} × ${eur(n.m.coutVariable.composants)} × ${qte(1 + n.tva)} = ${eur(n.paiement)}` },
         ];
       },

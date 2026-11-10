@@ -1,7 +1,6 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_CONDITIONS, conditionsDeKerval, ficheDe } from "../../chapitres/remises-et-conditions";
-import { auCentime } from "../../monde/amortissement";
 import { JOURS_DE_L_ANNEE_BANCAIRE } from "../../monde/delais-et-tva";
 import { affaireAuxConditions } from "../../monde/delais";
 import type { Situation } from "../types";
@@ -24,6 +23,10 @@ import type { Situation } from "../types";
  *
  * Le délai se finance hors taxes, comme au chapitre (une prestation de services ne doit sa TVA qu'à
  * l'encaissement). Le cas ne fait pas jouer l'escompte : la question est celle du volume.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la commande minimale au palier est une quantité, à l'unité
+ * supérieure ; les taux s'écrivent à deux décimales.
  */
 
 /**
@@ -41,9 +44,8 @@ export const COMMANDE_EN_PLUS = 0.2;
 /** Les bornes du curseur du cas, en journées commandées au palier. */
 export const JOURNEES_DU_PALIER = { min: 30, max: 60 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (part: number) => `${qte(Math.round(part * 10_000) / 100)} %`;
+const qte = nombreAuCentieme;
+const pct = (part: number) => pourcent(part * 100);
 
 /** Les deux commandes, et ce qui les sépare. */
 export function remiseParPalier(c: Pick<Cas, "code">) {
@@ -52,8 +54,8 @@ export function remiseParPalier(c: Pick<Cas, "code">) {
   const journees = Math.round(k.journees * (1 + COMMANDE_EN_PLUS));
   const p = affaireAuxConditions(f, { remise: REMISE_DU_PALIER, journees });
   // Une journée au palier, délai payé : son prix remisé, moins son coût variable, moins le crédit de ce prix.
-  const creditDUneJournee = auCentime((p.prixRemise * k.taux * k.delai) / JOURS_DE_L_ANNEE_BANCAIRE);
-  const resultatDUneJournee = auCentime(p.margeParJourneeRemisee - creditDUneJournee);
+  const creditDUneJournee = arrondi2((p.prixRemise * k.taux * k.delai) / JOURS_DE_L_ANNEE_BANCAIRE);
+  const resultatDUneJournee = arrondi2(p.margeParJourneeRemisee - creditDUneJournee);
   const commandeMinimale = Math.ceil(k.resultat / resultatDUneJournee - 1e-9);
   // À rebours : la remise la plus forte que la commande proposée paie, au centième de point inférieur.
   // Résultat = net commercial × (1 − taux × délai ÷ 360) − coûts variables ≥ résultat d'aujourd'hui.
@@ -78,14 +80,14 @@ export function remiseParPalier(c: Pick<Cas, "code">) {
     resultatDUneJournee,
     commandeMinimale,
     remiseLaPlusForte,
-    gain: auCentime(p.resultat - k.resultat),
-    sansCondition: { resultat: sansCondition.resultat, perte: auCentime(k.resultat - sansCondition.resultat) },
+    gain: arrondi2(p.resultat - k.resultat),
+    sansCondition: { resultat: sansCondition.resultat, perte: arrondi2(k.resultat - sansCondition.resultat) },
     // Les erreurs classiques : ne regarder que la remise, confondre la facture et le gain, oublier que le
     // délai porte sur une facture plus grosse.
-    remiseEnPlus: auCentime(p.facture.reductions[0]!.montant - k.montantDeLaRemise),
-    factureEnPlus: auCentime(p.facture.netCommercial - k.netCommercial),
-    margeEnPlus: auCentime(p.marge - k.marge),
-    creditEnPlus: auCentime(p.coutDuCredit - k.coutDuCredit),
+    remiseEnPlus: arrondi2(p.facture.reductions[0]!.montant - k.montantDeLaRemise),
+    factureEnPlus: arrondi2(p.facture.netCommercial - k.netCommercial),
+    margeEnPlus: arrondi2(p.marge - k.marge),
+    creditEnPlus: arrondi2(p.coutDuCredit - k.coutDuCredit),
   };
 }
 
@@ -216,9 +218,9 @@ export const LA_REMISE_PAR_PALIER: Situation = {
       lecture: (c, q) => {
         const r = remiseParPalier(c);
         return [
-          { libelle: "Marge au palier (HT)", montant: auCentime(q * r.margeParJournee) },
-          { libelle: "Coût du délai", montant: auCentime(q * r.creditDUneJournee) },
-          { libelle: "Résultat au palier, délai payé", montant: auCentime(q * r.resultatDUneJournee), fort: true },
+          { libelle: "Marge au palier (HT)", montant: arrondi2(q * r.margeParJournee) },
+          { libelle: "Coût du délai", montant: arrondi2(q * r.creditDUneJournee) },
+          { libelle: "Résultat au palier, délai payé", montant: arrondi2(q * r.resultatDUneJournee), fort: true },
           { libelle: "Résultat d'aujourd'hui", montant: r.k.resultat },
         ];
       },
@@ -234,7 +236,7 @@ export const LA_REMISE_PAR_PALIER: Situation = {
         const r = remiseParPalier(c);
         const avant = r.commandeMinimale - 1;
         return [
-          `Au palier, une journée rapporte ${eur(r.resultatDUneJournee)}, délai payé : ${eur(r.prixDuPalier)} moins ${eur(r.k.coutVariable)} de coût variable et ${eur(r.creditDUneJournee)} de crédit. À ${qte(avant)} journées, l'affaire ne rapporterait que ${eur(auCentime(avant * r.resultatDUneJournee))} ; à ${qte(r.commandeMinimale)}, ${eur(auCentime(r.commandeMinimale * r.resultatDUneJournee))}.`,
+          `Au palier, une journée rapporte ${eur(r.resultatDUneJournee)}, délai payé : ${eur(r.prixDuPalier)} moins ${eur(r.k.coutVariable)} de coût variable et ${eur(r.creditDUneJournee)} de crédit. À ${qte(avant)} journées, l'affaire ne rapporterait que ${eur(arrondi2(avant * r.resultatDUneJournee))} ; à ${qte(r.commandeMinimale)}, ${eur(arrondi2(r.commandeMinimale * r.resultatDUneJournee))}.`,
           `Le palier ne paie qu'à partir de ${qte(r.commandeMinimale)} journées. ${r.k.client} en propose ${qte(r.journees)} : la contrepartie dépasse la concession, à condition qu'elle soit tenue.`,
         ];
       },
@@ -250,7 +252,7 @@ export const LA_REMISE_PAR_PALIER: Situation = {
       },
       champs: (c) => {
         const r = remiseParPalier(c);
-        const necessaire = auCentime((r.k.resultat + r.coutsVariables) / (1 - (r.k.taux * r.k.delai) / JOURS_DE_L_ANNEE_BANCAIRE));
+        const necessaire = arrondi2((r.k.resultat + r.coutsVariables) / (1 - (r.k.taux * r.k.delai) / JOURS_DE_L_ANNEE_BANCAIRE));
         return [
           {
             libelle: "Résultat d'une journée au palier",
@@ -259,8 +261,9 @@ export const LA_REMISE_PAR_PALIER: Situation = {
           },
           {
             libelle: "Commande minimale au palier",
+            nature: "quantite",
             attendu: r.commandeMinimale,
-            calcul: `${eur(r.k.resultat)} ÷ ${eur(r.resultatDUneJournee)} = ${qte(auCentime(r.k.resultat / r.resultatDUneJournee))}, soit ${qte(r.commandeMinimale)} journées à la journée supérieure`,
+            calcul: `${eur(r.k.resultat)} ÷ ${eur(r.resultatDUneJournee)} = ${qte(arrondi2(r.k.resultat / r.resultatDUneJournee))}, soit ${qte(r.commandeMinimale)} journées à la journée supérieure`,
           },
           {
             libelle: `Remise la plus forte sur ${qte(r.journees)} journées (%)`,

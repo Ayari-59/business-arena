@@ -94,7 +94,7 @@ describe("l'énergie, refaite à la main", () => {
 });
 
 describe("mars, le semestre et les risques, refaits à la main", () => {
-  it("mars : 3 585,60 kWh, 2,06 kWh par enceinte, 186,45 kg, 608,30 kg dont 364,98 valorisés, 1,98 % d'absentéisme, un taux de fréquence de 1 681,6", () => {
+  it("mars : 3 585,60 kWh, 2,06 kWh par enceinte, 186,45 kg, 608,30 kg dont 364,98 valorisés, 1,98 % d'absentéisme, un taux de fréquence de 1 681,58", () => {
     const g = etape(ch, "le-tableau-de-mars", "a-completer").grille(NOVA);
     const heures = cent(4 * 151.67);
     expect(g.lignes.map((l) => l.cellules[0]!.valeur)).toEqual([
@@ -104,7 +104,7 @@ describe("mars, le semestre et les risques, refaits à la main", () => {
       cent(1_738 * 0.35),
       cent(608.3 * 0.6),
       cent((12 / heures) * 100),
-      Math.round((1_000_000 / (heures - 12)) * 10) / 10,
+      cent(1_000_000 / (heures - 12)),
     ]);
     expect(juste(ch, "le-taux-de-frequence")).toEqual(["Non : un accident sur une base minuscule"]);
   });
@@ -128,8 +128,8 @@ describe("le cas dédié : les indicateurs que demande CampusTech", () => {
     gardeDuCas(LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH, ch);
   });
 
-  it("le semestre : 2,03 kWh, 0,105 kg, 74 %, un taux de fréquence de 1 000 000 ÷ 3 556,08 = 281,2 ; le semestre entier, pas juin", () => {
-    expect(attendus(LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH, "les-indicateurs-du-semestre")).toEqual([2.03, Math.round((1_145.6 / 10_859) * 1000) / 1000, 74, 281.2]);
+  it("le semestre : 2,03 kWh, 105,50 g, 74 %, un taux de fréquence de 1 000 000 ÷ 3 556,08 = 281,21 ; le semestre entier, pas juin", () => {
+    expect(attendus(LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH, "les-indicateurs-du-semestre")).toEqual([2.03, cent((1_145.6 / 10_859) * 1000), 74, 281.21]);
     expect(cent(1_000_000 / 3_556.08)).toBeCloseTo(281.21, 2);
     const r = etape(LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH, "reponse", "choix").options(NOVA, VIDE);
     expect(r.filter((o) => o.juste).map((o) => o.texte)).toEqual(["Le semestre entier, avec ses bases de calcul"]);

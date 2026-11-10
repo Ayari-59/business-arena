@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   anneeDeProduction,
@@ -50,6 +50,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     variante chiffrée : la perte arrive 2 trimestres plus tard), a-rebours (retrouver le budget d'un
  *     trimestre à partir de la capacité d'un autre), ce-que-vaut-le-chiffre (une critique de la
  *     méthode) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les disponibilités se donnent à deux décimales (au dixième,
+ * avant), les capacités et les ventes perdues sont des quantités ; les défauts en plus et les
+ * ventes perdues par la qualité sont des espérances (taux × production), des grandeurs au centième,
+ * comme les points de disponibilité.
  */
 
 /** Le trimestre sans entretien : le premier de l'année, pour en voir toute la suite (la mission « jouez » le reprend). */
@@ -71,14 +77,13 @@ export const TRIMESTRE_A_REBOURS = 3;
 /** Le laboratoire : chaque budget trimestriel va de 0 à la référence, par 500 €. */
 export const PAS_DU_LABORATOIRE = 500;
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-/** Une part ou une disponibilité, en pourcentage au dixième. */
-const pct = (t: number) => `${qte(Math.round(t * 1000) / 10)} %`;
+const auCentime = arrondi2;
+const qte = nombreAuCentieme;
+/** Une part ou une disponibilité, en pourcentage à deux décimales. */
+const pct = (t: number) => pourcent(t * 100);
 /** Des points de disponibilité ou de taux de défaut. */
 const points = (t: number) => {
-  const n = Math.round(t * 1000) / 10;
+  const n = arrondi2(t * 100);
   return `${qte(n)} point${Math.abs(n) >= 2 ? "s" : ""}`;
 };
 
@@ -327,15 +332,14 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         const [, b, d] = x.sans.trimestres;
         const cap = x.f.ligne.capaciteParTrimestre;
         return [
-          { libelle: `Disponibilité au trimestre ${x.T + 1} (%)`, attendu: auCentime(b!.disponibilite * 100), calcul: `100 % − ${points(x.usure)} = ${pct(b!.disponibilite)}`, tolerance: 0.1 },
-          { libelle: `Capacité de la ligne au trimestre ${x.T + 1} (${x.f.unites})`, attendu: b!.capaciteOutil, calcul: `${qte(cap)} × ${pct(b!.disponibilite)} = ${qte(b!.capaciteOutil)}` },
+          { libelle: `Disponibilité au trimestre ${x.T + 1} (%)`, attendu: auCentime(b!.disponibilite * 100), calcul: `100 % − ${points(x.usure)} = ${pct(b!.disponibilite)}` },
+          { libelle: `Capacité de la ligne au trimestre ${x.T + 1} (${x.f.unites})`, nature: "quantite", attendu: b!.capaciteOutil, calcul: `${qte(cap)} × ${pct(b!.disponibilite)} = ${qte(b!.capaciteOutil)}` },
           {
             libelle: `Disponibilité au trimestre ${x.T + 2} (%)`,
             attendu: auCentime(d!.disponibilite * 100),
             calcul: `${pct(b!.disponibilite)} + ${points(x.reparation)} − ${points(x.usure)} = ${pct(d!.disponibilite)}`,
-            tolerance: 0.1,
           },
-          { libelle: `Capacité de la ligne au trimestre ${x.T + 2} (${x.f.unites})`, attendu: d!.capaciteOutil, calcul: `${qte(cap)} × ${pct(d!.disponibilite)} = ${qte(d!.capaciteOutil)}` },
+          { libelle: `Capacité de la ligne au trimestre ${x.T + 2} (${x.f.unites})`, nature: "quantite", attendu: d!.capaciteOutil, calcul: `${qte(cap)} × ${pct(d!.disponibilite)} = ${qte(d!.capaciteOutil)}` },
         ];
       },
       explication: (c) => {
@@ -432,8 +436,8 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
           return `la plus petite de ${qte(p.demande)} demandées et ${qte(j.capaciteOutil)} pour la ligne : ${qte(j.ventes)} vendues, pour ${qte(p.production)} au plan, soit ${qte(j.ventesPerdues)}`;
         };
         return [
-          { libelle: `Ventes perdues au trimestre ${x.T + 1} (${x.f.unites})`, attendu: s.trimestres[x.T]!.ventesPerdues, calcul: t(x.T) },
-          { libelle: `Ventes perdues au trimestre ${x.T + 2} (${x.f.unites})`, attendu: s.trimestres[x.T + 1]!.ventesPerdues, calcul: t(x.T + 1) },
+          { libelle: `Ventes perdues au trimestre ${x.T + 1} (${x.f.unites})`, nature: "quantite", attendu: s.trimestres[x.T]!.ventesPerdues, calcul: t(x.T) },
+          { libelle: `Ventes perdues au trimestre ${x.T + 2} (${x.f.unites})`, nature: "quantite", attendu: s.trimestres[x.T + 1]!.ventesPerdues, calcul: t(x.T + 1) },
           { libelle: "Marge perdue sur l'année", attendu: s.margePerdue, calcul: `${qte(s.ventesPerdues)} × ${eur(x.marge)} = ${eur(s.margePerdue)}` },
           { libelle: "Effet sur le résultat, sans les défauts", attendu: s.ecartParLaDisponibilite, calcul: `${eur(s.economie)} − ${eur(s.margePerdue)} = ${eur(s.ecartParLaDisponibilite)}` },
         ];
@@ -503,9 +507,10 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         const t = s.trimestres[x.T]!;
         const d = x.f.anneeN.demande[x.T]!;
         return [
-          { libelle: `Capacité restée libre au trimestre ${x.T + 1} (${x.f.unites})`, attendu: t.capaciteOutil - d, calcul: `${qte(t.capaciteOutil)} − ${qte(d)} demandées = ${qte(t.capaciteOutil - d)}` },
+          { libelle: `Capacité restée libre au trimestre ${x.T + 1} (${x.f.unites})`, nature: "quantite", attendu: t.capaciteOutil - d, calcul: `${qte(t.capaciteOutil)} − ${qte(d)} demandées = ${qte(t.capaciteOutil - d)}` },
           {
             libelle: `Ventes perdues sur l'année, demande de N (${x.f.unites})`,
+            nature: "quantite",
             attendu: s.ventesPerdues,
             calcul: `chaque trimestre, la ligne amoindrie (${s.trimestres.map((y) => qte(y.capaciteOutil)).join(", ")}) sert la demande de N (${x.f.anneeN.demande.map(qte).join(", ")}) : ${qte(s.ventesPerdues)}`,
           },
@@ -536,7 +541,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         const production = x.plan.trimestres[x.T - 1]!.production;
         const p = defautsEnPlusDeLEntretien(x.f, 0);
         return [
-          { libelle: "Défauts en plus", attendu: auCentime(s.defautsEnPlus), calcul: `${qte(production)} × ${pct(p)} = ${qte(auCentime(s.defautsEnPlus))}`, tolerance: 0.1 },
+          { libelle: "Défauts en plus", nature: "grandeur", attendu: auCentime(s.defautsEnPlus), calcul: `${qte(production)} × ${pct(p)} = ${qte(auCentime(s.defautsEnPlus))}` },
           {
             libelle: "Coût des défauts en plus",
             attendu: s.coutDesDefautsEnPlus,
@@ -544,9 +549,9 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
           },
           {
             libelle: "Ventes perdues par la qualité",
+            nature: "grandeur",
             attendu: auCentime(s.ventesPerduesParLaQualite),
             calcul: `${qte(auCentime(s.defautsEnPlus))} × ${pct(1 - x.detection)} livrés × ${qte(x.ventesParDefautLivre)} = ${qte(auCentime(s.ventesPerduesParLaQualite))}`,
-            tolerance: 0.1,
           },
           {
             libelle: "Effet sur le résultat, défauts compris",
@@ -683,11 +688,12 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         return [
           {
             libelle: `Ventes perdues au trimestre ${TRIMESTRE_DE_LA_VARIANTE + 2} (${x.f.unites})`,
+            nature: "quantite",
             attendu: t4.ventesPerdues,
             calcul: `${pct(t3.disponibilite)} + ${points(x.reparation)} − ${points(x.usure)} = ${pct(t4.disponibilite)}, soit ${qte(t4.capaciteOutil)} ${x.f.unites} pour ${qte(x.plan.trimestres[k + 2]!.production)} au plan : ${qte(t4.ventesPerdues)}`,
           },
           { libelle: "Effet sur le résultat, sans les défauts", attendu: v.ecartParLaDisponibilite, calcul: `${eur(v.economie)} − ${qte(v.ventesPerdues)} × ${eur(x.marge)} = ${eur(v.ecartParLaDisponibilite)}` },
-          { libelle: "Défauts en plus", attendu: auCentime(v.defautsEnPlus), calcul: `${qte(production)} × ${pct(defautsEnPlusDeLEntretien(x.f, 0))} = ${qte(auCentime(v.defautsEnPlus))}`, tolerance: 0.1 },
+          { libelle: "Défauts en plus", nature: "grandeur", attendu: auCentime(v.defautsEnPlus), calcul: `${qte(production)} × ${pct(defautsEnPlusDeLEntretien(x.f, 0))} = ${qte(auCentime(v.defautsEnPlus))}` },
           {
             libelle: "Effet sur le résultat, défauts compris",
             attendu: v.ecartDeResultat,
@@ -721,7 +727,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         const r = x.aRebours;
         const pointsPerdus = auCentime(x.pointsPerdusARebours * 100);
         return [
-          { libelle: "Points de disponibilité perdus", attendu: pointsPerdus, calcul: `100 % − ${pct(DISPONIBILITE_A_REBOURS)} = ${points(x.pointsPerdusARebours)}`, tolerance: 0.01 },
+          { libelle: "Points de disponibilité perdus", nature: "grandeur", attendu: pointsPerdus, calcul: `100 % − ${pct(DISPONIBILITE_A_REBOURS)} = ${points(x.pointsPerdusARebours)}`, tolerance: 0.01 },
           {
             libelle: `Budget d'entretien du trimestre ${TRIMESTRE_A_REBOURS}`,
             attendu: x.budgetARebours,

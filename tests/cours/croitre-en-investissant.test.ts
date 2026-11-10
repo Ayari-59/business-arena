@@ -46,7 +46,8 @@ const MARGE = 59 - 22 - 16;
 const DEMANDE = [5_800, 7_400, 6_200, 7_800];
 const OUTIL = 7_000;
 const EQUIPE = 4 * (180 / 0.3) * 3;
-const FACTEUR = (1 - 1.08 ** -6) / 0.08;
+/** Le facteur d'actualisation au dix-millième, tel que l'élève l'écrit (deux décimales, 10 novembre 2026) : 4,6229. */
+const FACTEUR = Math.round(((1 - 1.08 ** -6) / 0.08) * 10_000) / 10_000;
 const SALAIRE = 1_875 * 1.42 * 12;
 
 interface MachineALaMain {
@@ -73,7 +74,7 @@ function aLaMain(m: MachineALaMain, hausse = 0) {
   const interets = m.prix * 0.05;
   const charges = amortissement + interets + m.salaires + m.entretien;
   const flux = centime((gagnees * MARGE - m.salaires - m.entretien - amortissement) * 0.75 + amortissement);
-  const facteur = m.taux === undefined ? FACTEUR : (1 - (1 + m.taux) ** -6) / m.taux;
+  const facteur = m.taux === undefined ? FACTEUR : Math.round(((1 - (1 + m.taux) ** -6) / m.taux) * 10_000) / 10_000;
   const investissement = m.prix + m.recrutement;
   return { d, sans, avec, gagnees, marge: gagnees * MARGE, amortissement, interets, charges, resultat: gagnees * MARGE - charges, flux, investissement, van: centime(-investissement + flux * facteur) };
 }
@@ -316,7 +317,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
     });
     expect(poste.charges).toBe(39_700);
     expect(attendus(ch, "les-flux-et-la-van")).toEqual({ "Investissement du départ": 18_000, "Flux de chaque année": poste.flux, "VAN du poste avec son opérateur": poste.van });
-    expect([poste.flux, poste.van]).toEqual([-7_812.5, -54_116.25]);
+    expect([poste.flux, poste.van]).toEqual([-7_812.5, -54_116.41]);
   });
 
   it("les étapes autonomes : le résultat gagné, la VAN du poste seul", () => {
@@ -335,7 +336,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
       "VAN du poste seul": seul.van,
       "Délai de récupération (années)": centime(15_000 / seul.flux),
     });
-    expect([seul.flux, seul.van, centime(15_000 / seul.flux), seul.resultat]).toEqual([3_550, 1_411.22, 4.23, 650]);
+    expect([seul.flux, seul.van, centime(15_000 / seul.flux), seul.resultat]).toEqual([3_550, 1_411.29, 4.23, 650]);
   });
 
   it("les étapes d'expert : la variante à 5 %, puis le rebours de la VAN nulle à la demande", () => {
@@ -348,7 +349,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
       "VAN à 5 %": v.van,
       "Délai de récupération à 5 % (années)": centime(18_000 / v.flux),
     });
-    expect([v.gagnees, v.flux, v.van, centime(18_000 / v.flux)]).toEqual([1_960, 4_157.5, 1_219.62, 4.33]);
+    expect([v.gagnees, v.flux, v.van, centime(18_000 / v.flux)]).toEqual([1_960, 4_157.5, 1_219.71, 4.33]);
     // À rebours : le flux qui annule la VAN, le résultat avant impôt, les ventes, la hausse.
     const flux = centime(18_000 / FACTEUR);
     const resultat = centime((flux - 2_500) / 0.75);
@@ -359,7 +360,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
       "Ventes gagnées par an qui annulent la VAN": ventes,
       "Hausse de la demande qui annule la VAN (%)": hausse,
     });
-    expect([flux, resultat, ventes, hausse]).toEqual([3_893.68, 1_858.24, 1_944, 4.89]);
+    expect([flux, resultat, ventes, hausse]).toEqual([3_893.66, 1_858.21, 1_944, 4.89]);
     // Le rebours redonne la hausse du curseur, au dixième près : à 4,9 % la VAN est positive, à 4,8 % non.
     expect(aLaMain(POSTE, 0.049).van).toBeGreaterThan(0);
     expect(aLaMain(POSTE, 0.048).van).toBeLessThan(0);
@@ -372,9 +373,9 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
     expect(aLaMain(POSTE, 0.05).van).toBeLessThan(aLaMain(POSTE_SEUL, 0.05).van);
     // À 10 % : le résultat gagné de la première année, le « ratio » du collègue, la VAN et le délai.
     const k = aLaMain(POSTE, 0.1);
-    expect([k.gagnees, k.resultat, centime((k.resultat / 15_000) * 100), k.flux, k.van, centime(18_000 / k.flux)]).toEqual([2_720, 17_420, 116.13, 16_127.5, 56_555.49, 1.12]);
+    expect([k.gagnees, k.resultat, centime((k.resultat / 15_000) * 100), k.flux, k.van, centime(18_000 / k.flux)]).toEqual([2_720, 17_420, 116.13, 16_127.5, 56_555.82, 1.12]);
     const x = croissance(cas);
-    expect([x.rentabiliteDuCollegue, x.critique.van]).toEqual([116.13, 56_555.49]);
+    expect([x.rentabiliteDuCollegue, x.critique.van]).toEqual([116.13, 56_555.82]);
     // Le plan de l'emprunt : les intérêts changent le résultat, pas la VAN.
     expect(x.emprunt.map((l) => l.interets)).toEqual([750, 625, 500, 375, 250, 125]);
   });
@@ -386,7 +387,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
     expect(juste(ch, "les-interets")).toBe("Non : le taux de 8 % rémunère déjà l'argent engagé, emprunté ou non");
     expect(juste(ch, "la-rentabilite-d-une-annee")).toBe("Ce ratio ne juge rien : seule la VAN compte tous les flux de la durée, actualisés");
     expect(croissance(cas).verdict).toBe("attendre-la-demande");
-    expect(juste(ch, "verdict")).toBe("Pas sur la demande prévue : avec son opérateur, il lui faut 4,9 % de demande en plus, chaque année");
+    expect(juste(ch, "verdict")).toBe("Pas sur la demande prévue : avec son opérateur, il lui faut 4,90 % de demande en plus, chaque année");
   });
 
   it("le curseur du point mort : la marge des ventes gagnées face aux charges de l'année", () => {
@@ -408,7 +409,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
       droites: [centime(poste.van + 18_000), 18_000, centime(aLaMain(POSTE, 0.1).van + 18_000), 18_000],
       lecture: { "Marge gagnée sur l'année": a49.marge, "Flux de chaque année": a49.flux, "Flux actualisés sur la durée": centime(a49.van + 18_000), "VAN du poste avec son opérateur": a49.van },
     });
-    expect([a49.marge, a49.flux, a49.van]).toEqual([40_845, 3_921.25, 127.47]);
+    expect([a49.marge, a49.flux, a49.van]).toEqual([40_845, 3_921.25, 127.55]);
     // Jusqu'à 10 %, la VAN est une droite de la hausse : au milieu, elle vaut la moyenne des bornes, à l'arrondi près.
     expect(Math.abs(aLaMain(POSTE, 0.05).van - (poste.van + aLaMain(POSTE, 0.1).van) / 2)).toBeLessThan(10);
   });
@@ -429,7 +430,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
     });
     expect(l.auDepart).toEqual(lire(POSTE, poste));
     expect(l.aLaSolution).toEqual(lire(POSTE_SEUL, seul));
-    expect(Object.values(l.aLaSolution)).toEqual([8_750, 7_200, 400, 8_400, -7_750, 650, 1_411.22]);
+    expect(Object.values(l.aLaSolution)).toEqual([8_750, 7_200, 400, 8_400, -7_750, 650, 1_411.29]);
     // Le défi ne se relève qu'avec le poste seul : la ligne, avec ou sans opérateur, et le poste avec le sien échouent.
     for (const p of [
       { machine: 2, embauches: 0, hausse: 0, taux: 8 },
@@ -438,7 +439,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
       { machine: 1, embauches: 1, hausse: 10, taux: 8 },
     ])
       expect(l.d.atteint(p), JSON.stringify(p)).toBe(false);
-    expect([aLaMain(LIGNE).van, aLaMain(LIGNE_SEULE).van, aLaMain({ ...POSTE_SEUL, taux: 0.12 }).van]).toEqual([-95_649.09, -40_121.62, -404.5]);
+    expect([aLaMain(LIGNE).van, aLaMain(LIGNE_SEULE).van, aLaMain({ ...POSTE_SEUL, taux: 0.12 }).van]).toEqual([-95_649.23, -40_121.53, -404.53]);
     // Le levier à choix : les deux machines du catalogue.
     expect(l.e.leviers(cas).find((x) => x.code === "machine")!.choix).toEqual([
       { valeur: 1, libelle: "Un cinquième poste manuel" },
@@ -457,7 +458,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
       expect(point(1, h), `poste à ${h} %`).toEqual([aLaMain(POSTE, h / 100).van, aLaMain(POSTE_SEUL, h / 100).van]);
       expect(point(2, h), `ligne à ${h} %`).toEqual([aLaMain(LIGNE, h / 100).van, aLaMain(LIGNE_SEULE, h / 100).van]);
     }
-    expect(point(1, 20)).toEqual([145_384.12, 15_973.29]);
+    expect(point(1, 20)).toEqual([145_384.84, 15_973.43]);
     // Sans embauche, la VAN plafonne : l'équipe borne, quelle que soit la demande jusqu'à 10 %.
     expect(point(1, 0)[1]).toBe(point(1, 10)[1]);
   });
@@ -490,7 +491,7 @@ describe("le cas : voir plus grand", () => {
       "Ventes gagnées qui rendent l'année nulle": Math.ceil(ligne.charges / MARGE),
       "VAN de la ligne sur la demande prévue": ligne.van,
     });
-    expect([ligne.charges, Math.ceil(ligne.charges / MARGE), ligne.flux, ligne.van]).toEqual([50_950, 2_427, -7_062.5, -95_649.09]);
+    expect([ligne.charges, Math.ceil(ligne.charges / MARGE), ligne.flux, ligne.van]).toEqual([50_950, 2_427, -7_062.5, -95_649.23]);
   });
 
   it("le curseur du rattrapage : 571 ventes de plus que le poste", () => {
@@ -507,7 +508,7 @@ describe("le cas : voir plus grand", () => {
         "VAN de la ligne moins celle du poste": centime(-45_000 + fluxEnPlus(571) * FACTEUR),
       },
     });
-    expect([fluxEnPlus(571), centime(-45_000 + fluxEnPlus(571) * FACTEUR)]).toEqual([9_743.25, 41.87]);
+    expect([fluxEnPlus(571), centime(-45_000 + fluxEnPlus(571) * FACTEUR)]).toEqual([9_743.25, 42.07]);
     expect(-45_000 + fluxEnPlus(570) * FACTEUR).toBeLessThan(0);
   });
 
@@ -522,7 +523,7 @@ describe("le cas : voir plus grand", () => {
       "Ventes de plus que le poste qui égalisent les VAN": ventes,
       "Hausse de la demande où la ligne passe devant (%)": hausse,
     });
-    expect([flux, resultat, ventes, hausse]).toEqual([9_734.19, 2_978.92, 571, 18.89]);
+    expect([flux, resultat, ventes, hausse]).toEqual([9_734.15, 2_978.87, 571, 18.89]);
     // Le modèle le voit au ‰ près : à 18,9 %, la ligne passe devant ; à 18,8 %, pas encore.
     const v = voirPlusGrand(cas);
     expect(v.devant).toBe(0.189);
@@ -531,12 +532,12 @@ describe("le cas : voir plus grand", () => {
     expect(aLaMain(POSTE, 0.189).avec).toEqual([6_896, 8_750, 7_372, 8_750]);
     // Le tableau des VAN, refait à la main aux hausses de la fiche.
     expect(v.vanParHausse).toEqual([0, 0.05, 0.1, 0.25].map((h) => ({ hausse: h, petite: aLaMain(POSTE, h).van, grande: aLaMain(LIGNE, h).van })));
-    expect([aLaMain(POSTE, 0.25).van, aLaMain(LIGNE, 0.25).van, aLaMain(LIGNE, 0.25).gagnees, aLaMain(POSTE, 0.25).gagnees]).toEqual([186_157.92, 253_840.61, 6_000, 4_500]);
+    expect([aLaMain(POSTE, 0.25).van, aLaMain(LIGNE, 0.25).van, aLaMain(LIGNE, 0.25).gagnees, aLaMain(POSTE, 0.25).gagnees]).toEqual([186_158.82, 253_842.01, 6_000, 4_500]);
   });
 
   it("la réponse : aucune des deux sur la demande prévue", () => {
     expect(voirPlusGrand(cas).verdict).toBe("aucune");
-    expect(juste(s, "reponse")).toBe("Aucune des deux sur la demande prévue ; la ligne ne passe devant qu'à 18,9 % de demande en plus");
+    expect(juste(s, "reponse")).toBe("Aucune des deux sur la demande prévue ; la ligne ne passe devant qu'à 18,90 % de demande en plus");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

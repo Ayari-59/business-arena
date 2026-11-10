@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { coutCompletDuMois, coutCompletRationnel, imputationRationnelle, prestationsReciproques } from "../monde/couts-et-budgets";
@@ -41,6 +41,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     tableau-complet (une variante chiffrée : refaire toute la répartition sans clé dictée),
  *     a-rebours (retrouver les ventes et le coût de la sous-activité à partir d'un coût de revient) ;
  *     puis commande et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : chaque champ attend le centime (à 5 ou 10 centimes près,
+ * avant). Les prestations réciproques se résolvent en une ligne, (E₀ + e × A₀) ÷ (1 − a × e), qui
+ * tombe au centime sur la fiche : la chaîne des coûts retrouve le résultat de 2 207 €. Le
+ * coefficient d'imputation rationnelle se donne au dix-millième ; les ventes retrouvées à rebours
+ * sont une quantité, à l'unité la plus proche, et le corrigé dit pourquoi.
  */
 
 /** La commande supplémentaire de la dernière question : une part des ventes du mois. */
@@ -66,10 +73,8 @@ export const METHODES = { reel: 0, rationnel: 1 } as const;
 /** Le coût complet se calcule sur le mois de janvier de NOVA, avec ses centres d'analyse. */
 export const ENTREPRISES_DU_COUT_COMPLET: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number, d = 2) => `${qte(t * 100, d)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 const CENTRES: readonly CodeDeCentre[] = ["entretien", "administration", "approvisionnement", "production", "distribution"];
@@ -99,7 +104,7 @@ export function coutCompletDeJanvier(c: Pick<Cas, "code">) {
   const ir = coutCompletRationnel(f);
   const cles = f.centres;
   const coutVariableUnitaire = m.coutVariable.composants + m.coutVariable.autres;
-  const chargesVariables = auCentime(k.achats + k.autres);
+  const chargesVariables = arrondi2(k.achats + k.autres);
   /** La part que l'administration cède à l'entretien (e), et celle que l'entretien cède à l'administration (a). */
   const e = cles.secondaire.administration.entretien;
   const a = cles.secondaire.entretien.administration;
@@ -107,26 +112,26 @@ export function coutCompletDeJanvier(c: Pick<Cas, "code">) {
   const recalcul = (x: number) => r.primaire.entretien + e * (r.primaire.administration + a * x);
   const pointFixe = plafond((r.primaire.entretien + e * r.primaire.administration) / (1 - a * e));
   // L'erreur de méthode : l'entretien réparti d'abord, sans ce que l'administration lui rend.
-  const administrationEnCascade = auCentime(r.primaire.administration + a * r.primaire.entretien);
-  const perduEnCascade = auCentime(e * administrationEnCascade);
+  const administrationEnCascade = arrondi2(r.primaire.administration + a * r.primaire.entretien);
+  const perduEnCascade = arrondi2(e * administrationEnCascade);
   // Les unités d'œuvre, arrondies au centime comme l'élève les écrit.
-  const uo = Object.fromEntries(PRINCIPAUX.map((p) => [p, auCentime(k.coutDesUnitesDOeuvre[p])])) as Record<CentrePrincipal, number>;
+  const uo = Object.fromEntries(PRINCIPAUX.map((p) => [p, arrondi2(k.coutDesUnitesDOeuvre[p])])) as Record<CentrePrincipal, number>;
   // Le coût figé : le coût de revient d'une enceinte de janvier, appliqué à d'autres volumes.
-  const coutFige = auCentime(k.coutDeRevientUnitaire);
+  const coutFige = arrondi2(k.coutDeRevientUnitaire);
   const volumeDuCoutFige = plafond(r.total / (coutFige - coutVariableUnitaire));
-  const coutALaNormale = auCentime(coutCompletDuMois(f, { quantite: cles.activiteNormale }).coutDeRevientUnitaire);
+  const coutALaNormale = arrondi2(coutCompletDuMois(f, { quantite: cles.activiteNormale }).coutDeRevientUnitaire);
   // L'imputation rationnelle.
   const imputation = imputationRationnelle(r.total, m.quantite, cles.activiteNormale);
-  const coutRationnel = auCentime(ir.coutDeRevientUnitaire);
+  const coutRationnel = arrondi2(ir.coutDeRevientUnitaire);
   // La commande sous le coût complet : entre le coût variable et le coût de revient.
   const commande = Math.max(1, Math.round(m.quantite * PART_DE_LA_COMMANDE));
   const prixDeLaCommande = Math.round((coutVariableUnitaire + k.coutDeRevientUnitaire) / 2);
   // La variante : le contrat de maintenance, à la charge de l'entretien.
-  const primaireVariante = { ...r.primaire, entretien: auCentime(r.primaire.entretien + CONTRAT_DE_MAINTENANCE) };
+  const primaireVariante = { ...r.primaire, entretien: arrondi2(r.primaire.entretien + CONTRAT_DE_MAINTENANCE) };
   const totauxVariante = prestationsReciproques(f, primaireVariante);
-  const cessionVariante = (x: CentreAuxiliaire, vers: CodeDeCentre) => auCentime(totauxVariante[x] * cles.secondaire[x][vers]);
-  const productionVariante = auCentime(primaireVariante.production + cessionVariante("entretien", "production") + cessionVariante("administration", "production"));
-  const coutDeRevientVariante = auCentime(chargesVariables + r.total + CONTRAT_DE_MAINTENANCE);
+  const cessionVariante = (x: CentreAuxiliaire, vers: CodeDeCentre) => arrondi2(totauxVariante[x] * cles.secondaire[x][vers]);
+  const productionVariante = arrondi2(primaireVariante.production + cessionVariante("entretien", "production") + cessionVariante("administration", "production"));
+  const coutDeRevientVariante = arrondi2(chargesVariables + r.total + CONTRAT_DE_MAINTENANCE);
   const variante = {
     entretienPrimaire: primaireVariante.entretien,
     entretien: totauxVariante.entretien,
@@ -134,13 +139,13 @@ export function coutCompletDeJanvier(c: Pick<Cas, "code">) {
     production: productionVariante,
     cessionsALaProduction: [cessionVariante("entretien", "production"), cessionVariante("administration", "production")] as const,
     coutDeRevient: coutDeRevientVariante,
-    unitaire: auCentime(coutDeRevientVariante / m.quantite),
+    unitaire: arrondi2(coutDeRevientVariante / m.quantite),
   };
   // Le calcul à rebours : avril, dont on ne connaît que le coût de revient d'une enceinte.
   const ventesDuMois = (i: number) => f.semestre.clienteles.reduce((t, cl) => t + cl.quantites[i]!, 0);
   const ventesARebours = ventesDuMois(MOIS_A_REBOURS);
-  const coutARebours = auCentime(coutCompletDuMois(f, { quantite: ventesARebours }).coutDeRevientUnitaire);
-  const fixesParEnceinteARebours = auCentime(coutARebours - coutVariableUnitaire);
+  const coutARebours = arrondi2(coutCompletDuMois(f, { quantite: ventesARebours }).coutDeRevientUnitaire);
+  const fixesParEnceinteARebours = arrondi2(coutARebours - coutVariableUnitaire);
   const sousActiviteARebours = imputationRationnelle(r.total, ventesARebours, cles.activiteNormale).difference;
   return {
     f,
@@ -165,7 +170,7 @@ export function coutCompletDeJanvier(c: Pick<Cas, "code">) {
     coutRationnel,
     commande,
     prixDeLaCommande,
-    gainDeLaCommande: auCentime(commande * (prixDeLaCommande - coutVariableUnitaire)),
+    gainDeLaCommande: arrondi2(commande * (prixDeLaCommande - coutVariableUnitaire)),
     variante,
     moisARebours: f.semestre.mois[MOIS_A_REBOURS]!.nom,
     ventesARebours,
@@ -182,11 +187,11 @@ export function laboratoireDuCout(f: FicheDeGestion, ventes: number, methode: nu
   const reel = coutCompletDuMois(f, { quantite: ventes });
   const ir = coutCompletRationnel(f, { quantite: ventes });
   const rationnel = methode === METHODES.rationnel;
-  const imputees = auCentime(PRINCIPAUX.reduce((t, p) => t + ir.parCentre[p].imputees, 0));
+  const imputees = arrondi2(PRINCIPAUX.reduce((t, p) => t + ir.parCentre[p].imputees, 0));
   return {
     reelUnitaire: reel.coutDeRevientUnitaire,
     rationnelUnitaire: ir.coutDeRevientUnitaire,
-    unitaire: auCentime(rationnel ? ir.coutDeRevientUnitaire : reel.coutDeRevientUnitaire),
+    unitaire: arrondi2(rationnel ? ir.coutDeRevientUnitaire : reel.coutDeRevientUnitaire),
     incorporees: rationnel ? imputees : reel.centres.total,
     difference: rationnel ? ir.differences : 0,
     resultat: reel.resultat,
@@ -217,7 +222,7 @@ function tableauPrimaire(x: CoutCompletDeJanvier): TableauDeDonnees {
     colonnes: CHARGES.map((k) => LIBELLES_DES_CHARGES[k]),
     lignes: [
       { libelle: "À répartir", valeurs: CHARGES.map((k) => eur(x.m.chargesFixes[k])) },
-      ...CENTRES.map((cc) => ({ libelle: LIBELLES_DES_CENTRES[cc], valeurs: CHARGES.map((k) => pct(x.cles.primaire[k][cc], 0)) })),
+      ...CENTRES.map((cc) => ({ libelle: LIBELLES_DES_CENTRES[cc], valeurs: CHARGES.map((k) => pct(x.cles.primaire[k][cc])) })),
     ],
   };
 }
@@ -229,7 +234,7 @@ function tableauSecondaire(x: CoutCompletDeJanvier): TableauDeDonnees {
     colonnes: CENTRES.map((cc) => LIBELLES_DES_CENTRES[cc]),
     lignes: [
       { libelle: "Répartition primaire", valeurs: CENTRES.map((cc) => eur(x.r.primaire[cc])) },
-      ...AUXILIAIRES.map((au) => ({ libelle: `Ce que cède ${au === "entretien" ? "l'entretien" : "l'administration"}`, valeurs: CENTRES.map((cc) => pct(x.cles.secondaire[au][cc], 0)) })),
+      ...AUXILIAIRES.map((au) => ({ libelle: `Ce que cède ${au === "entretien" ? "l'entretien" : "l'administration"}`, valeurs: CENTRES.map((cc) => pct(x.cles.secondaire[au][cc])) })),
     ],
   };
 }
@@ -343,8 +348,7 @@ export const COUT_COMPLET: Chapitre = {
         return CENTRES.map((cc) => ({
           libelle: `Centre ${centre(cc)}`,
           attendu: x.r.primaire[cc],
-          tolerance: 0.05,
-          calcul: `${CHARGES.map((k) => `${eur(x.m.chargesFixes[k])} × ${pct(x.cles.primaire[k][cc], 0)}`).join(" + ")} = ${eur(x.r.primaire[cc])}`,
+          calcul: `${CHARGES.map((k) => `${eur(x.m.chargesFixes[k])} × ${pct(x.cles.primaire[k][cc])}`).join(" + ")} = ${eur(x.r.primaire[cc])}`,
         }));
       },
       explication: (c) => {
@@ -363,7 +367,7 @@ export const COUT_COMPLET: Chapitre = {
       tableau: (c) => tableauSecondaire(coutCompletDeJanvier(c)),
       question: (c) => {
         const { e, a } = coutCompletDeJanvier(c);
-        return `Avant de calculer, pariez. L'entretien cède ${pct(a, 0)} de son total à l'administration, et l'administration lui en cède ${pct(e, 0)} du sien (tableau). Le total que l'entretien doit répartir sera…`;
+        return `Avant de calculer, pariez. L'entretien cède ${pct(a)} de son total à l'administration, et l'administration lui en cède ${pct(e)} du sien (tableau). Le total que l'entretien doit répartir sera…`;
       },
       options: (c) => {
         const { r } = coutCompletDeJanvier(c);
@@ -383,7 +387,7 @@ export const COUT_COMPLET: Chapitre = {
       notions: ["full_unit_cost"],
       question: (c) => {
         const { r, e, a } = coutCompletDeJanvier(c);
-        return `Supposez un total de l'entretien, de ${eur(ENTRETIEN_DU_CURSEUR.min)} à ${eur(ENTRETIEN_DU_CURSEUR.max)}. L'administration en reçoit ${pct(a, 0)}, puis en rend ${pct(e, 0)} de son propre total à l'entretien. Une droite donne le total supposé, l'autre l'entretien recalculé : ses ${eur(r.primaire.entretien)}, plus ce que l'administration lui rend. Placez le curseur sur le plus petit total qui couvre son recalcul, puis validez.`;
+        return `Supposez un total de l'entretien, de ${eur(ENTRETIEN_DU_CURSEUR.min)} à ${eur(ENTRETIEN_DU_CURSEUR.max)}. L'administration en reçoit ${pct(a)}, puis en rend ${pct(e)} de son propre total à l'entretien. Une droite donne le total supposé, l'autre l'entretien recalculé : ses ${eur(r.primaire.entretien)}, plus ce que l'administration lui rend. Placez le curseur sur le plus petit total qui couvre son recalcul, puis validez.`;
       },
       grandeur: () => ({ libelle: "Total supposé de l'entretien", unite: "€" }),
       cible: (c) => ({ attendu: coutCompletDeJanvier(c).pointFixe, min: ENTRETIEN_DU_CURSEUR.min, max: ENTRETIEN_DU_CURSEUR.max }),
@@ -395,13 +399,13 @@ export const COUT_COMPLET: Chapitre = {
       montrer: "Montrer le croisement",
       lecture: (c, t) => {
         const { r, e, a, recalcul } = coutCompletDeJanvier(c);
-        const administration = auCentime(r.primaire.administration + a * t);
+        const administration = arrondi2(r.primaire.administration + a * t);
         return [
           { libelle: "Total supposé de l'entretien", montant: t },
           { libelle: "Administration, avec sa part de cet entretien", montant: administration },
-          { libelle: "Ce que l'administration rend à l'entretien", montant: auCentime(e * administration) },
-          { libelle: "Entretien recalculé", montant: auCentime(recalcul(t)) },
-          { libelle: "Différence", montant: auCentime(t - recalcul(t)), fort: true },
+          { libelle: "Ce que l'administration rend à l'entretien", montant: arrondi2(e * administration) },
+          { libelle: "Entretien recalculé", montant: arrondi2(recalcul(t)) },
+          { libelle: "Différence", montant: arrondi2(t - recalcul(t)), fort: true },
         ];
       },
       droites: (c) => {
@@ -412,7 +416,7 @@ export const COUT_COMPLET: Chapitre = {
         const { r, e, a } = coutCompletDeJanvier(c);
         return [
           `Les deux droites se croisent à ${eur(r.auxiliaires.entretien)} : c'est le seul total qui se retrouve lui-même, une fois l'administration servie. Le curseur, à l'euro, s'arrête juste au-dessus.`,
-          `La droite du recalcul est presque plate : chaque euro supposé en plus ne revient à l'entretien que pour ${pct(a * e, 0)} (${pct(a, 0)} × ${pct(e, 0)}). Le croisement est la solution d'un système de deux équations : c'est ce que l'étape suivante fait poser.`,
+          `La droite du recalcul est presque plate : chaque euro supposé en plus ne revient à l'entretien que pour ${pct(a * e)} (${pct(a)} × ${pct(e)}). Le croisement est la solution d'un système de deux équations : c'est ce que l'étape suivante fait poser.`,
         ];
       },
     },
@@ -433,24 +437,24 @@ export const COUT_COMPLET: Chapitre = {
           {
             libelle: "Total de l'entretien",
             attendu: r.auxiliaires.entretien,
-            calcul: `E = ${eur(E0)} + ${pct(e, 0)} × A et A = ${eur(A0)} + ${pct(a, 0)} × E, d'où E = (${eur(E0)} + ${pct(e, 0)} × ${eur(A0)}) ÷ (1 − ${pct(e, 0)} × ${pct(a, 0)}) = ${qte(E0 + e * A0, 3)} € ÷ ${qte(1 - a * e)} = ${eur(r.auxiliaires.entretien)}`,
+            calcul: `E = ${eur(E0)} + ${pct(e)} × A et A = ${eur(A0)} + ${pct(a)} × E, d'où E = (${eur(E0)} + ${pct(e)} × ${eur(A0)}) ÷ (1 − ${pct(e)} × ${pct(a)}) = ${qte(E0 + e * A0)} € ÷ ${qte(1 - a * e)} = ${eur(r.auxiliaires.entretien)}`,
           },
           {
             libelle: "Total de l'administration",
             attendu: r.auxiliaires.administration,
-            calcul: `A = ${eur(A0)} + ${pct(a, 0)} × ${eur(r.auxiliaires.entretien)} = ${eur(r.auxiliaires.administration)}`,
+            calcul: `A = ${eur(A0)} + ${pct(a)} × ${eur(r.auxiliaires.entretien)} = ${eur(r.auxiliaires.administration)}`,
           },
           {
             libelle: "Part de l'administration cédée à l'entretien",
             attendu: r.cessions.administration.entretien,
-            calcul: `${pct(e, 0)} × ${eur(r.auxiliaires.administration)} = ${eur(r.cessions.administration.entretien)}, et ${eur(E0)} + ${eur(r.cessions.administration.entretien)} = ${eur(r.auxiliaires.entretien)} : la première équation est satisfaite`,
+            calcul: `${pct(e)} × ${eur(r.auxiliaires.administration)} = ${eur(r.cessions.administration.entretien)}, et ${eur(E0)} + ${eur(r.cessions.administration.entretien)} = ${eur(r.auxiliaires.entretien)} : la première équation est satisfaite`,
           },
         ];
       },
       explication: (c) => {
         const { r } = coutCompletDeJanvier(c);
         return [
-          `L'entretien répartit ${eur(r.auxiliaires.entretien)}, et non ses ${eur(r.primaire.entretien)} : il porte aussi ce que l'administration a fait pour lui. Les deux totaux réunis, ${eur(auCentime(r.auxiliaires.entretien + r.auxiliaires.administration))}, dépassent leurs ${eur(auCentime(r.primaire.entretien + r.primaire.administration))} de charges primaires : ce qu'ils s'échangent est compté chez l'un puis chez l'autre, et ressort en cessions.`,
+          `L'entretien répartit ${eur(r.auxiliaires.entretien)}, et non ses ${eur(r.primaire.entretien)} : il porte aussi ce que l'administration a fait pour lui. Les deux totaux réunis, ${eur(arrondi2(r.auxiliaires.entretien + r.auxiliaires.administration))}, dépassent leurs ${eur(arrondi2(r.primaire.entretien + r.primaire.administration))} de charges primaires : ce qu'ils s'échangent est compté chez l'un puis chez l'autre, et ressort en cessions.`,
         ];
       },
     },
@@ -470,8 +474,7 @@ export const COUT_COMPLET: Chapitre = {
           return {
             libelle: `Total du centre ${centre(p)}`,
             attendu: r.principaux[p],
-            tolerance: 0.05,
-            calcul: `${eur(r.primaire[p])} + ${parts.map((au) => `${pct(cles.secondaire[au][p], 0)} × ${eur(r.auxiliaires[au])}`).join(" + ")} = ${eur(r.primaire[p])} + ${parts.map((au) => eur(r.cessions[au][p])).join(" + ")} = ${eur(r.principaux[p])}`,
+            calcul: `${eur(r.primaire[p])} + ${parts.map((au) => `${pct(cles.secondaire[au][p])} × ${eur(r.auxiliaires[au])}`).join(" + ")} = ${eur(r.primaire[p])} + ${parts.map((au) => eur(r.cessions[au][p])).join(" + ")} = ${eur(r.principaux[p])}`,
           };
         });
       },
@@ -498,7 +501,7 @@ export const COUT_COMPLET: Chapitre = {
           {
             texte: `Son tableau perd ${eur(perduEnCascade)} : les centres principaux ne retrouvent plus toutes les charges`,
             juste: true,
-            retour: `Oui. Ses centres principaux ne totalisent que ${eur(auCentime(r.total - perduEnCascade))}, pour ${eur(r.total)} de charges. Quand deux centres se rendent service, aucun ordre ne marche : il faut résoudre le système, ou l'on perd ce que chacun doit à l'autre.`,
+            retour: `Oui. Ses centres principaux ne totalisent que ${eur(arrondi2(r.total - perduEnCascade))}, pour ${eur(r.total)} de charges. Quand deux centres se rendent service, aucun ordre ne marche : il faut résoudre le système, ou l'on perd ce que chacun doit à l'autre.`,
           },
           { texte: "Rien ne change : l'ordre des centres ne déplace pas les charges", juste: false, retour: `Non : en cascade, la prestation de l'administration à l'entretien n'a plus de place. ${eur(perduEnCascade)} restent dans un centre déjà réparti.` },
           { texte: `Il compte ${eur(perduEnCascade)} deux fois, une fois dans chaque centre`, juste: false, retour: "Non : c'est l'inverse. La part rendue à l'entretien n'est comptée nulle part dans les centres principaux : elle manque." },
@@ -526,7 +529,6 @@ export const COUT_COMPLET: Chapitre = {
         return PRINCIPAUX.map((p) => ({
           libelle: `${LIBELLES_DES_CENTRES[p]} : coût de l'unité d'œuvre`,
           attendu: uo[p],
-          tolerance: 0.01,
           calcul: cles.unitesDOeuvre[p].nature === "quantite" ? `${eur(r.principaux[p])} ÷ ${nombre(p)} = ${eur(uo[p])}` : `${eur(r.principaux[p])} ÷ ${nombre(p)} = ${eur(r.principaux[p])} ÷ ${qte(k.activite[p])} = ${eur(uo[p])}`,
         }));
       },
@@ -547,22 +549,21 @@ export const COUT_COMPLET: Chapitre = {
       champs: (c) => {
         const { m, k, r } = coutCompletDeJanvier(c);
         return [
-          { libelle: "Coût d'achat", attendu: k.coutDAchat, tolerance: 0.05, calcul: `${qte(m.quantite)} × ${eur(m.coutVariable.composants)} + ${eur(r.principaux.approvisionnement)} = ${eur(k.achats)} + ${eur(r.principaux.approvisionnement)} = ${eur(k.coutDAchat)}` },
+          { libelle: "Coût d'achat", attendu: k.coutDAchat, calcul: `${qte(m.quantite)} × ${eur(m.coutVariable.composants)} + ${eur(r.principaux.approvisionnement)} = ${eur(k.achats)} + ${eur(r.principaux.approvisionnement)} = ${eur(k.coutDAchat)}` },
           {
             libelle: "Coût de production",
             attendu: k.coutDeProduction,
-            tolerance: 0.05,
             calcul: `${eur(k.coutDAchat)} + ${qte(m.quantite)} × ${eur(m.coutVariable.autres)} + ${eur(r.principaux.production)} = ${eur(k.coutDAchat)} + ${eur(k.autres)} + ${eur(r.principaux.production)} = ${eur(k.coutDeProduction)}`,
           },
-          { libelle: "Coût de revient", attendu: k.coutDeRevient, tolerance: 0.05, calcul: `${eur(k.coutDeProduction)} + ${eur(r.principaux.distribution)} = ${eur(k.coutDeRevient)}` },
-          { libelle: "Coût de revient d'une unité", attendu: auCentime(k.coutDeRevientUnitaire), tolerance: 0.01, calcul: `${eur(k.coutDeRevient)} ÷ ${qte(m.quantite)} = ${eur(auCentime(k.coutDeRevientUnitaire))}` },
-          { libelle: "Résultat analytique du mois", attendu: k.resultat, tolerance: 0.05, calcul: `${eur(k.chiffreDAffaires)} − ${eur(k.coutDeRevient)} = ${eur(k.resultat)}` },
+          { libelle: "Coût de revient", attendu: k.coutDeRevient, calcul: `${eur(k.coutDeProduction)} + ${eur(r.principaux.distribution)} = ${eur(k.coutDeRevient)}` },
+          { libelle: "Coût de revient d'une unité", attendu: arrondi2(k.coutDeRevientUnitaire), calcul: `${eur(k.coutDeRevient)} ÷ ${qte(m.quantite)} = ${eur(arrondi2(k.coutDeRevientUnitaire))}` },
+          { libelle: "Résultat analytique du mois", attendu: k.resultat, calcul: `${eur(k.chiffreDAffaires)} − ${eur(k.coutDeRevient)} = ${eur(k.resultat)}` },
         ];
       },
       explication: (c) => {
         const { f, m, k } = coutCompletDeJanvier(c);
         return [
-          `Chaque ${f.unite} ${accord(f, "vendu")} coûte ${eur(auCentime(k.coutDeRevientUnitaire))} tout compris, pour un prix de ${eur(m.prix)}. ${m.prix >= k.coutDeRevientUnitaire ? "Le prix couvre le coût complet" : "Le prix ne couvre pas le coût complet"}, et le mois laisse ${eur(k.resultat)}.`,
+          `Chaque ${f.unite} ${accord(f, "vendu")} coûte ${eur(arrondi2(k.coutDeRevientUnitaire))} tout compris, pour un prix de ${eur(m.prix)}. ${m.prix >= k.coutDeRevientUnitaire ? "Le prix couvre le coût complet" : "Le prix ne couvre pas le coût complet"}, et le mois laisse ${eur(k.resultat)}.`,
         ];
       },
     },
@@ -629,12 +630,12 @@ export const COUT_COMPLET: Chapitre = {
       montrer: "Montrer le croisement",
       lecture: (c, q) => {
         const { f, coutFige, coutVariableUnitaire, r } = coutCompletDeJanvier(c);
-        const reel = auCentime(coutVariableUnitaire * q + r.total);
+        const reel = arrondi2(coutVariableUnitaire * q + r.total);
         return [
-          { libelle: "Coût du mois au coût figé", montant: auCentime(coutFige * q) },
+          { libelle: "Coût du mois au coût figé", montant: arrondi2(coutFige * q) },
           { libelle: "Coût réel du mois", montant: reel },
-          { libelle: `Coût réel d'une ${f.unite}`, montant: auCentime(reel / q) },
-          { libelle: "Coût figé moins coût réel", montant: auCentime(coutFige * q - reel), fort: true },
+          { libelle: `Coût réel d'une ${f.unite}`, montant: arrondi2(reel / q) },
+          { libelle: "Coût figé moins coût réel", montant: arrondi2(coutFige * q - reel), fort: true },
         ];
       },
       droites: (c) => {
@@ -662,7 +663,7 @@ export const COUT_COMPLET: Chapitre = {
       champs: (c) => {
         const { m, r, cles, imputation } = coutCompletDeJanvier(c);
         return [
-          { libelle: "Coefficient d'imputation rationnelle", attendu: auCentime(imputation.coefficient), calcul: `${qte(m.quantite)} ÷ ${qte(cles.activiteNormale)} = ${qte(imputation.coefficient)}` },
+          { libelle: "Coefficient d'imputation rationnelle", nature: "coefficient", attendu: arrondi(imputation.coefficient, 4), calcul: `${qte(m.quantite)} ÷ ${qte(cles.activiteNormale)} = ${qte(imputation.coefficient)}` },
           { libelle: "Charges fixes imputées", attendu: imputation.imputees, calcul: `${eur(r.total)} × ${qte(imputation.coefficient)} = ${eur(imputation.imputees)}` },
           { libelle: "Coût de la sous-activité", attendu: imputation.difference, calcul: `${eur(r.total)} − ${eur(imputation.imputees)} = ${eur(imputation.difference)}` },
         ];
@@ -670,7 +671,7 @@ export const COUT_COMPLET: Chapitre = {
       explication: (c) => {
         const { f, imputation } = coutCompletDeJanvier(c);
         return [
-          `En janvier, ${f.entreprise} ne tourne qu'à ${pct(imputation.coefficient, 0)} de son activité normale. Les ${eur(imputation.difference)} de charges fixes que cette activité ne justifie pas ne chargent plus le coût des ${f.unites} : ils forment le coût de la sous-activité, une charge de la période, qui va directement au résultat.`,
+          `En janvier, ${f.entreprise} ne tourne qu'à ${pct(imputation.coefficient)} de son activité normale. Les ${eur(imputation.difference)} de charges fixes que cette activité ne justifie pas ne chargent plus le coût des ${f.unites} : ils forment le coût de la sous-activité, une charge de la période, qui va directement au résultat.`,
           "Au-dessus de l'activité normale, le coefficient dépasse 1 : on impute plus de charges fixes qu'il n'y en a, et la différence devient un boni de suractivité.",
         ];
       },
@@ -688,10 +689,10 @@ export const COUT_COMPLET: Chapitre = {
       champs: (c) => {
         const { m, k, ir, chargesVariables, imputation, coutRationnel } = coutCompletDeJanvier(c);
         return [
-          { libelle: "Coût de revient rationnel du mois", attendu: ir.coutDeRevient, tolerance: 0.05, calcul: `${eur(chargesVariables)} de charges directes + ${eur(imputation.imputees)} de charges fixes imputées = ${eur(ir.coutDeRevient)}` },
-          { libelle: "Coût de revient rationnel d'une unité", attendu: coutRationnel, tolerance: 0.01, calcul: `${eur(ir.coutDeRevient)} ÷ ${qte(m.quantite)} = ${eur(coutRationnel)}` },
-          { libelle: "Résultat avant le coût de la sous-activité", attendu: ir.resultatAvantDifferences, tolerance: 0.05, calcul: `${eur(k.chiffreDAffaires)} − ${eur(ir.coutDeRevient)} = ${eur(ir.resultatAvantDifferences)}` },
-          { libelle: "Résultat analytique après la sous-activité", attendu: ir.resultat, tolerance: 0.05, calcul: `${eur(ir.resultatAvantDifferences)} − ${eur(ir.differences)} = ${eur(ir.resultat)}` },
+          { libelle: "Coût de revient rationnel du mois", attendu: ir.coutDeRevient, calcul: `${eur(chargesVariables)} de charges directes + ${eur(imputation.imputees)} de charges fixes imputées = ${eur(ir.coutDeRevient)}` },
+          { libelle: "Coût de revient rationnel d'une unité", attendu: coutRationnel, calcul: `${eur(ir.coutDeRevient)} ÷ ${qte(m.quantite)} = ${eur(coutRationnel)}` },
+          { libelle: "Résultat avant le coût de la sous-activité", attendu: ir.resultatAvantDifferences, calcul: `${eur(k.chiffreDAffaires)} − ${eur(ir.coutDeRevient)} = ${eur(ir.resultatAvantDifferences)}` },
+          { libelle: "Résultat analytique après la sous-activité", attendu: ir.resultat, calcul: `${eur(ir.resultatAvantDifferences)} − ${eur(ir.differences)} = ${eur(ir.resultat)}` },
         ];
       },
       explication: (c) => {
@@ -747,8 +748,8 @@ export const COUT_COMPLET: Chapitre = {
         return {
           levier: "ventes",
           courbes: [
-            { libelle: `Coût complet réel d'une ${f.unite}`, valeur: (p) => auCentime(laboratoireDuCout(f, p.ventes!, METHODES.reel).reelUnitaire) },
-            { libelle: `Coût rationnel d'une ${f.unite}`, valeur: (p) => auCentime(laboratoireDuCout(f, p.ventes!, METHODES.rationnel).rationnelUnitaire) },
+            { libelle: `Coût complet réel d'une ${f.unite}`, valeur: (p) => arrondi2(laboratoireDuCout(f, p.ventes!, METHODES.reel).reelUnitaire) },
+            { libelle: `Coût rationnel d'une ${f.unite}`, valeur: (p) => arrondi2(laboratoireDuCout(f, p.ventes!, METHODES.rationnel).rationnelUnitaire) },
           ],
         };
       },
@@ -796,20 +797,17 @@ export const COUT_COMPLET: Chapitre = {
           {
             libelle: "Total de l'entretien, avec le contrat",
             attendu: variante.entretien,
-            tolerance: 0.05,
-            calcul: `(${eur(r.primaire.entretien)} + ${eur(CONTRAT_DE_MAINTENANCE)} + ${pct(e, 0)} × ${eur(A0)}) ÷ (1 − ${pct(e, 0)} × ${pct(a, 0)}) = ${qte(variante.entretienPrimaire + e * A0, 3)} € ÷ ${qte(1 - a * e)} = ${eur(variante.entretien)}`,
+            calcul: `(${eur(r.primaire.entretien)} + ${eur(CONTRAT_DE_MAINTENANCE)} + ${pct(e)} × ${eur(A0)}) ÷ (1 − ${pct(e)} × ${pct(a)}) = ${eur(variante.entretien)}, en une ligne`,
           },
-          { libelle: "Total de l'administration, avec le contrat", attendu: variante.administration, tolerance: 0.05, calcul: `${eur(A0)} + ${pct(a, 0)} × ${eur(variante.entretien)} = ${eur(variante.administration)}` },
+          { libelle: "Total de l'administration, avec le contrat", attendu: variante.administration, calcul: `${eur(A0)} + ${pct(a)} × ${eur(variante.entretien)} = ${eur(variante.administration)}` },
           {
             libelle: "Total du centre production, avec le contrat",
             attendu: variante.production,
-            tolerance: 0.1,
             calcul: `${eur(r.primaire.production)} + ${eur(variante.cessionsALaProduction[0])} de l'entretien + ${eur(variante.cessionsALaProduction[1])} de l'administration = ${eur(variante.production)}`,
           },
           {
             libelle: `Coût de revient d'une ${f.unite}, avec le contrat`,
             attendu: variante.unitaire,
-            tolerance: 0.01,
             calcul: `(${eur(chargesVariables)} + ${eur(r.total)} + ${eur(CONTRAT_DE_MAINTENANCE)}) ÷ ${qte(m.quantite)} = ${eur(variante.coutDeRevient)} ÷ ${qte(m.quantite)} = ${eur(variante.unitaire)}`,
           },
         ];
@@ -817,8 +815,8 @@ export const COUT_COMPLET: Chapitre = {
       explication: (c) => {
         const { f, k, r, variante } = coutCompletDeJanvier(c);
         return [
-          `Le contrat ne reste pas à l'entretien : par les prestations réciproques, il se répand sur les trois centres principaux. L'entretien répartit ${eur(auCentime(variante.entretien - r.auxiliaires.entretien))} de plus, un peu plus que le contrat, parce qu'une part lui revient par l'administration.`,
-          `Chaque ${f.unite} coûte ${eur(variante.unitaire)} tout compris, ${eur(auCentime(variante.unitaire - auCentime(k.coutDeRevientUnitaire)))} de plus qu'en janvier. Le coût de revient total monte exactement du contrat : les clés déplacent les charges, elles ne les créent pas.`,
+          `Le contrat ne reste pas à l'entretien : par les prestations réciproques, il se répand sur les trois centres principaux. L'entretien répartit ${eur(arrondi2(variante.entretien - r.auxiliaires.entretien))} de plus, un peu plus que le contrat, parce qu'une part lui revient par l'administration.`,
+          `Chaque ${f.unite} coûte ${eur(variante.unitaire)} tout compris, ${eur(arrondi2(variante.unitaire - arrondi2(k.coutDeRevientUnitaire)))} de plus qu'en janvier. Le coût de revient total monte exactement du contrat : les clés déplacent les charges, elles ne les créent pas.`,
         ];
       },
     },
@@ -836,12 +834,11 @@ export const COUT_COMPLET: Chapitre = {
         const { f, r, cles, coutVariableUnitaire, coutARebours, fixesParEnceinteARebours, ventesARebours, sousActiviteARebours } = coutCompletDeJanvier(c);
         return [
           { libelle: `Charges fixes portées par une ${f.unite}`, attendu: fixesParEnceinteARebours, calcul: `${eur(coutARebours)} − ${eur(coutVariableUnitaire)} de coût variable = ${eur(fixesParEnceinteARebours)}` },
-          { libelle: "Ventes du mois", attendu: ventesARebours, tolerance: 1, calcul: `${eur(r.total)} ÷ ${eur(fixesParEnceinteARebours)} = ${qte(r.total / fixesParEnceinteARebours)}, soit ${qte(ventesARebours)} ${f.unites}` },
+          { libelle: "Ventes du mois", nature: "quantite", attendu: ventesARebours, calcul: `${eur(r.total)} ÷ ${eur(fixesParEnceinteARebours)} = ${qte(r.total / fixesParEnceinteARebours)}, arrondi à l'unité la plus proche : ${qte(ventesARebours)} ${f.unites} (le coût de revient, arrondi au centime, décale le quotient de moins d'une ${f.unite})` },
           {
             libelle: "Coût de la sous-activité du mois",
             attendu: sousActiviteARebours,
-            tolerance: 0.05,
-            calcul: `${eur(r.total)} × (1 − ${qte(ventesARebours)} ÷ ${qte(cles.activiteNormale)}) = ${eur(r.total)} − ${eur(auCentime(r.total - sousActiviteARebours))} = ${eur(sousActiviteARebours)}`,
+            calcul: `${eur(r.total)} × ${qte(ventesARebours)} ÷ ${qte(cles.activiteNormale)} = ${eur(arrondi2(r.total - sousActiviteARebours))} imputés, puis ${eur(r.total)} − ${eur(arrondi2(r.total - sousActiviteARebours))} = ${eur(sousActiviteARebours)}`,
           },
         ];
       },
@@ -860,11 +857,11 @@ export const COUT_COMPLET: Chapitre = {
       notions: ["full_unit_cost", "contribution_margin"],
       question: (c) => {
         const { f, k, commande, prixDeLaCommande, coutVariableUnitaire } = coutCompletDeJanvier(c);
-        return `Un client propose d'acheter ${qte(commande)} ${f.unites} de plus ce mois-ci, à ${eur(prixDeLaCommande)} l'unité : moins que le coût de revient (${eur(auCentime(k.coutDeRevientUnitaire))}), plus que le coût variable (${eur(coutVariableUnitaire)}). ${f.entreprise} peut les servir sans rien ajouter à ses charges fixes. Faut-il accepter ?`;
+        return `Un client propose d'acheter ${qte(commande)} ${f.unites} de plus ce mois-ci, à ${eur(prixDeLaCommande)} l'unité : moins que le coût de revient (${eur(arrondi2(k.coutDeRevientUnitaire))}), plus que le coût variable (${eur(coutVariableUnitaire)}). ${f.entreprise} peut les servir sans rien ajouter à ses charges fixes. Faut-il accepter ?`;
       },
       options: (c) => {
         const { commande, prixDeLaCommande, coutVariableUnitaire, gainDeLaCommande } = coutCompletDeJanvier(c);
-        const marge = auCentime(prixDeLaCommande - coutVariableUnitaire);
+        const marge = arrondi2(prixDeLaCommande - coutVariableUnitaire);
         return [
           {
             texte: "Non : vendre sous le coût de revient fait perdre de l'argent.",
@@ -889,7 +886,7 @@ export const COUT_COMPLET: Chapitre = {
       texte: (c) => {
         const { f, k, r, coutRationnel, imputation } = coutCompletDeJanvier(c);
         return [
-          `En janvier, une ${f.unite} ${f.entreprise} coûte ${eur(auCentime(k.coutDeRevientUnitaire))} tout compris : les ${eur(r.total)} de charges indirectes, passés par cinq centres, l'entretien et l'administration réglés par un système de deux équations, puis imputés par les unités d'œuvre. En imputation rationnelle, elle coûte ${eur(coutRationnel)}, et ${eur(imputation.difference)} de sous-activité vont au résultat.`,
+          `En janvier, une ${f.unite} ${f.entreprise} coûte ${eur(arrondi2(k.coutDeRevientUnitaire))} tout compris : les ${eur(r.total)} de charges indirectes, passés par cinq centres, l'entretien et l'administration réglés par un système de deux équations, puis imputés par les unités d'œuvre. En imputation rationnelle, elle coûte ${eur(coutRationnel)}, et ${eur(imputation.difference)} de sous-activité vont au résultat.`,
           "Trois pièges. Deux centres qui se rendent service ne se répartissent pas en cascade : il faut résoudre le système. Le coût complet d'une unité ne vaut qu'au volume où on l'a calculé. Et une commande sous le coût complet peut rapporter : c'est la marge sur coût variable qui décide d'une vente de plus.",
           "Au niveau de l'examen, vous savez dresser un tableau de répartition complet, prestations réciproques comprises, calculer le coût des unités d'œuvre et la chaîne des coûts, chiffrer l'imputation rationnelle et le coût de la sous-activité, et remonter d'un coût de revient aux ventes.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

@@ -1,3 +1,4 @@
+import { arrondi2, nombreAuCentieme, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_BASE, NOTES_DES_AVIS, moyenneDesAvis } from "../../monde/base-de-donnees-de-nova";
 import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
@@ -9,9 +10,12 @@ import type { Situation } from "../types";
  * Le chapitre lisait et adaptait le schéma de la base du site ; le cas y fait entrer les avis des
  * clients : une relation nouvelle, sa clé, sa clé étrangère et la contrainte de domaine de la note.
  * Hypothèses : monde/base-de-donnees-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les lignes, les cases, les enceintes et les agrégats entiers
+ * sont des quantités ; une moyenne est une grandeur au centième (au dixième près, avant).
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 const premiersAvis = (): TableauDeDonnees => ({
   titre: "Les premiers avis reçus",
@@ -58,8 +62,8 @@ export const RANGER_LES_AVIS_DES_CLIENTS: Situation = {
       type: "montants",
       titre: "La note moyenne",
       tableau: premiersAvis,
-      question: () => "Voici les premiers avis enregistrés. Calculez la note moyenne, au dixième.",
-      champs: () => [{ libelle: "Note moyenne", attendu: moyenneDesAvis(), tolerance: 0.1, calcul: `(${NOTES_DES_AVIS.map(qte).join(" + ")}) ÷ ${qte(NOTES_DES_AVIS.length)} = ${moyenneDesAvis().toLocaleString("fr-FR")}` }],
+      question: () => "Voici les premiers avis enregistrés. Calculez la note moyenne, au centième.",
+      champs: () => [{ libelle: "Note moyenne", nature: "grandeur", attendu: arrondi2(moyenneDesAvis()), calcul: `(${NOTES_DES_AVIS.map(qte).join(" + ")}) ÷ ${qte(NOTES_DES_AVIS.length)} = ${nombreAuCentieme(moyenneDesAvis())}` }],
       explication: () => ["Dans la base, une requête la calcule : SELECT AVG(Note) FROM Avis."],
     },
     {

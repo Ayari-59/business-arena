@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   CLIENTS,
@@ -31,10 +31,12 @@ import { tableClient, tableCommande } from "./la-base-de-donnees-relationnelle";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA, sur la base de « La base de données relationnelle » :
  * monde/base-de-donnees-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les lignes, les cases, les enceintes et les agrégats entiers
+ * sont des quantités ; une moyenne est une grandeur au centième (au dixième près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 const JOINTURE = "WHERE Client.NumClient = Commande.NumClient";
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -58,7 +60,7 @@ function regroupementACompleter(): TableauACompleter {
         libelle: x.ville,
         cellules: [{ valeur: x.enceintes, saisir: true, unite: "enceintes", calcul: `Les quantités des commandes ${dE(x.ville)}, additionnées : ${qte(x.enceintes)}`, indice: "Additionnez les quantités des lignes de la ville." }],
       })),
-      { libelle: "Total", fort: true, totalDe: { plus: v.map((_, i) => i) }, cellules: [{ valeur: agregats().somme, saisir: true, unite: "enceintes", calcul: `La somme des villes : ${qte(agregats().somme)}, toutes les commandes` }] },
+      { libelle: "Total", fort: true, totalDe: { plus: v.map((_, i) => i) }, cellules: [{ valeur: agregats().somme, saisir: true, unite: "enceintes", nature: "quantite", calcul: `La somme des villes, toutes les commandes : ${qte(agregats().somme)}` }] },
     ],
   };
 }
@@ -100,8 +102,8 @@ export const INTERROGER_LA_BASE_EN_SQL: Chapitre = {
       tableau: tableClient,
       question: () => "Combien de lignes renvoient ces requêtes ? D'abord : SELECT Nom FROM Client WHERE Ville = 'Grenoble'. Puis : SELECT Nom FROM Client WHERE Ville <> 'Lyon'.",
       champs: () => [
-        { libelle: "Lignes de la première requête", attendu: CLIENTS.filter((c) => c.ville === "Grenoble").length, calcul: `${et(nomsDe("Grenoble"))} : ${qte(CLIENTS.filter((c) => c.ville === "Grenoble").length)}` },
-        { libelle: "Lignes de la seconde requête", attendu: CLIENTS.filter((c) => c.ville !== "Lyon").length, calcul: `Tous les clients sauf ${et(nomsDe("Lyon"))} : ${qte(CLIENTS.filter((c) => c.ville !== "Lyon").length)}` },
+        { libelle: "Lignes de la première requête", nature: "quantite", attendu: CLIENTS.filter((c) => c.ville === "Grenoble").length, calcul: `${et(nomsDe("Grenoble"))} : ${qte(CLIENTS.filter((c) => c.ville === "Grenoble").length)}` },
+        { libelle: "Lignes de la seconde requête", nature: "quantite", attendu: CLIENTS.filter((c) => c.ville !== "Lyon").length, calcul: `Tous les clients sauf ${et(nomsDe("Lyon"))} : ${qte(CLIENTS.filter((c) => c.ville !== "Lyon").length)}` },
       ],
       explication: () => ["L'opérateur = garde les lignes égales ; <> garde celles qui sont différentes. Les autres opérateurs relationnels comparent : <, >, <=, >=."],
     },
@@ -129,8 +131,8 @@ export const INTERROGER_LA_BASE_EN_SQL: Chapitre = {
         const et = COMMANDES.filter((c) => c.quantite >= 2 && c.quantite <= 3);
         const ou = COMMANDES.filter((c) => c.quantite === 1 || c.quantite === 5);
         return [
-          { libelle: "Lignes avec AND", attendu: et.length, calcul: `Les 2 conditions à la fois : ${et.map((c) => qte(c.numCommande)).join(", ")}, soit ${qte(et.length)}` },
-          { libelle: "Lignes avec OR", attendu: ou.length, calcul: `L'une ou l'autre : ${ou.map((c) => qte(c.numCommande)).join(", ")}, soit ${qte(ou.length)}` },
+          { libelle: "Lignes avec AND", nature: "quantite", attendu: et.length, calcul: `Les 2 conditions à la fois : ${et.map((c) => qte(c.numCommande)).join(", ")}, soit ${qte(et.length)}` },
+          { libelle: "Lignes avec OR", nature: "quantite", attendu: ou.length, calcul: `L'une ou l'autre : ${ou.map((c) => qte(c.numCommande)).join(", ")}, soit ${qte(ou.length)}` },
         ];
       },
       explication: () => ["AND garde les lignes qui remplissent les 2 conditions ; OR celles qui en remplissent au moins une ; NOT inverse une condition. Une condition avec AND renvoie moins de lignes, une avec OR davantage."],
@@ -158,8 +160,8 @@ export const INTERROGER_LA_BASE_EN_SQL: Chapitre = {
       champs: () => {
         const k = commandesDeLaVille("Lyon");
         return [
-          { libelle: "Lignes du résultat", attendu: k.lignes, calcul: `Les commandes de ${et(nomsDe("Lyon"))} : ${qte(k.lignes)}` },
-          { libelle: "Enceintes de ces lignes", attendu: k.enceintes, calcul: `Leurs quantités additionnées : ${qte(k.enceintes)}` },
+          { libelle: "Lignes du résultat", nature: "quantite", attendu: k.lignes, calcul: `Les commandes de ${et(nomsDe("Lyon"))} : ${qte(k.lignes)}` },
+          { libelle: "Enceintes de ces lignes", nature: "quantite", attendu: k.enceintes, calcul: `Leurs quantités additionnées : ${qte(k.enceintes)}` },
         ];
       },
       explication: () => ["La condition sur la ville porte sur Client ; le résultat montre des commandes. Sans la jointure, la base ne saurait pas quelle commande vient de Lyon."],
@@ -174,10 +176,10 @@ export const INTERROGER_LA_BASE_EN_SQL: Chapitre = {
       champs: () => {
         const k = agregats();
         return [
-          { libelle: "COUNT(*)", attendu: k.nombre, calcul: `Le nombre de lignes : ${qte(k.nombre)}` },
-          { libelle: "SUM(Quantite)", attendu: k.somme, calcul: `La somme des quantités : ${qte(k.somme)}` },
-          { libelle: "AVG(Quantite)", attendu: k.moyenne, tolerance: 0.01, calcul: `${qte(k.somme)} ÷ ${qte(k.nombre)} = ${k.moyenne.toLocaleString("fr-FR")}` },
-          { libelle: "MAX(Quantite)", attendu: k.max, calcul: `La plus grande quantité : ${qte(k.max)}` },
+          { libelle: "COUNT(*)", nature: "quantite", attendu: k.nombre, calcul: `Le nombre de lignes : ${qte(k.nombre)}` },
+          { libelle: "SUM(Quantite)", nature: "quantite", attendu: k.somme, calcul: `La somme des quantités : ${qte(k.somme)}` },
+          { libelle: "AVG(Quantite)", nature: "grandeur", attendu: arrondi2(k.moyenne), calcul: `${qte(k.somme)} ÷ ${qte(k.nombre)} = ${nombreAuCentieme(k.moyenne)}` },
+          { libelle: "MAX(Quantite)", nature: "quantite", attendu: k.max, calcul: `La plus grande quantité : ${qte(k.max)}` },
         ];
       },
       explication: () => [`Une requête d'agrégat réduit toute une table à une ligne : ${qte(agregats().somme)} enceintes vendues sur cet extrait, soit ${eur(chiffreDeLExtrait())} hors taxes.`],

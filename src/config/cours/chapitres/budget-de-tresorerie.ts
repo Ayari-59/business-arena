@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { budgetDeTresorerie, investissementDeLaFiche, leviersDeBase, moisDeDecalage, tableauDeBord, type LeviersDuSemestre } from "../monde/couts-et-budgets";
 import { DELAI_CONVENU_DE_CAMPUSTECH, GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
@@ -40,6 +40,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     minimum de ventes, à rebours, et ce qu'il fait sortir le mois suivant), la-tva-du-banc (la TVA
  *     à décaisser avec un investissement), la-tva-de-campustech (la TVA due à la livraison, pas à
  *     l'encaissement) ; puis que-faire-du-decouvert et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le délai le plus long, les enceintes à vendre en plus et les
+ * ventes minimales sont des quantités ; le corrigé écrit le quotient à deux décimales, puis l'unité
+ * supérieure et sa raison ; les taux s'écrivent à deux décimales.
  */
 
 /** Le mois que le chapitre bâtit pas à pas : avril, le mois du banc (celui de la fiche). */
@@ -67,10 +72,8 @@ export const LEVIERS_DU_LABORATOIRE = {
 /** Le budget de trésorerie se calcule sur la fiche de gestion du cours : celle de NOVA. */
 export const ENTREPRISES_DU_BUDGET: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 /** « d'avril », « de mai » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -145,10 +148,10 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const s = f.semestre;
   const tva = s.tauxDeTva;
   const m = f.moisDeReference;
-  const prixTtc = auCentime(m.prix * (1 + tva));
-  const composantsTtc = auCentime(m.coutVariable.composants * (1 + tva));
-  const autresTtc = auCentime(m.coutVariable.autres * (1 + tva));
-  const tvaParEnceinte = auCentime((m.prix - m.coutVariable.composants - m.coutVariable.autres) * tva);
+  const prixTtc = arrondi2(m.prix * (1 + tva));
+  const composantsTtc = arrondi2(m.coutVariable.composants * (1 + tva));
+  const autresTtc = arrondi2(m.coutVariable.autres * (1 + tva));
+  const tvaParEnceinte = arrondi2((m.prix - m.coutVariable.composants - m.coutVariable.autres) * tva);
   const ct = s.clienteles.find((x) => x.code === "campustech")!;
   const part = s.clienteles.find((x) => x.code === "particuliers")!;
   const base = budgetDeTresorerie(f);
@@ -159,7 +162,7 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const mars = base.mois[k - 1]!;
   const a = base.mois[MOIS_AUTONOME]!;
   const decalage = moisDeDecalage(ct.jourDeFacturation, ct.delai, s.joursDuMoisCommercial);
-  const factureCampusTech = auCentime(ct.quantites[0]! * prixTtc);
+  const factureCampusTech = arrondi2(ct.quantites[0]! * prixTtc);
   const resultats = tableauDeBord(f).mois.map((x) => x.resultat);
 
   // Le curseur du décalage : le plus long qui laisse le 30 juin sans découvert.
@@ -170,11 +173,11 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const auPari = budgetDeTresorerie(f, { delais: { ...leviersDeBase(f).delais, campustech: DELAI_DU_PARI } });
 
   // Le minimum de ventes d'avril, banc acheté : ce qu'une enceinte de plus laisse en banque fin avril.
-  const netParEnceinte = auCentime(prixTtc - autresTtc);
+  const netParEnceinte = arrondi2(prixTtc - autresTtc);
   const manque = -avecLeBanc.mois[k]!.tresorerieFin;
   const enPlus = Math.ceil(manque / netParEnceinte - 1e-9);
   const ventesMinimales = part.quantites[k]! + enPlus;
-  const sortiesDuMoisSuivant = auCentime(enPlus * (composantsTtc + tvaParEnceinte));
+  const sortiesDuMoisSuivant = arrondi2(enPlus * (composantsTtc + tvaParEnceinte));
 
   // Le laboratoire : ce que chaque levier seul doit valoir pour passer le banc.
   const depart = { campustech: ct.delai, fournisseur: s.fournisseur.delai, hausse: 0, achat: inv.mois };
@@ -201,7 +204,7 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
     base,
     avecLeBanc,
     inv,
-    invTtc: auCentime(inv.montantHt * (1 + tva)),
+    invTtc: arrondi2(inv.montantHt * (1 + tva)),
     k,
     avril,
     mars,
@@ -605,7 +608,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const b = budgetAuDecalage(x.f, d);
         return [
-          { libelle: "Encaissements de CampusTech sur le semestre", montant: auCentime(b.mois.reduce((t, m) => t + m.encaissements.campustech, 0)) },
+          { libelle: "Encaissements de CampusTech sur le semestre", montant: arrondi2(b.mois.reduce((t, m) => t + m.encaissements.campustech, 0)) },
           { libelle: "Créances sur CampusTech au 30 juin", montant: b.fin.creancesClients },
           { libelle: "Trésorerie la plus basse du semestre", montant: b.plusBas.tresorerie },
           { libelle: "Trésorerie au 30 juin", montant: b.tresorerieFin, fort: true },
@@ -641,6 +644,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         return [
           {
             libelle: "Délai le plus long accordable, en jours",
+            nature: "quantite",
             attendu: x.delaiMax,
             calcul: `le jour ${x.ct.jourDeFacturation} + d doit tomber au plus le dernier jour du ${x.decalageMax + 1}e mois, celui de la facture compris : ${x.ct.jourDeFacturation} + d ≤ ${x.decalageMax + 1} × ${x.s.joursDuMoisCommercial}, d ≤ ${x.delaiMax}`,
           },
@@ -660,7 +664,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const b = x.auMax.plusBas;
         return [
-          `À ${x.delaiMax} jours, CampusTech ne paierait dans le semestre que ${eur(x.auMax.mois.reduce((t, m) => t + m.encaissements.campustech, 0))} : ses ventes TTC du semestre, ${eur(auCentime(x.ct.quantites.reduce((t, q) => t + q, 0) * x.prixTtc))}, moins les créances de fin, ${eur(x.auMax.fin.creancesClients)}. Un jour de plus, et la facture de janvier glisse en juillet.`,
+          `À ${x.delaiMax} jours, CampusTech ne paierait dans le semestre que ${eur(x.auMax.mois.reduce((t, m) => t + m.encaissements.campustech, 0))} : ses ventes TTC du semestre, ${eur(arrondi2(x.ct.quantites.reduce((t, q) => t + q, 0) * x.prixTtc))}, moins les créances de fin, ${eur(x.auMax.fin.creancesClients)}. Un jour de plus, et la facture de janvier glisse en juillet.`,
           `Le budget tient, mais de justesse : ${b.nom} tomberait à ${eur(b.tresorerie)}, sous le matelas de ${eur(x.f.seuilsDAlerte.tresorerie)} que le dirigeant veut garder. Subir le retard d'un client, c'est lui prêter : le budget dit combien, et jusqu'à quand.`,
         ];
       },
@@ -760,10 +764,11 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
           },
           {
             libelle: "Enceintes à vendre en plus",
+            nature: "quantite",
             attendu: x.enPlus,
-            calcul: `${eur(x.manque)} ÷ ${eur(x.netParEnceinte)} = ${qte(auCentime(x.manque / x.netParEnceinte))}, soit ${qte(x.enPlus)} à l'unité supérieure`,
+            calcul: `${eur(x.manque)} ÷ ${eur(x.netParEnceinte)} = ${qte(x.manque / x.netParEnceinte)}, arrondi à l'unité supérieure : ${qte(x.enPlus)} (une enceinte de moins laisserait le découvert)`,
           },
-          { libelle: `Ventes minimales ${dE(n)} aux particuliers`, attendu: x.ventesMinimales, calcul: `${qte(x.part.quantites[x.k]!)} + ${qte(x.enPlus)} = ${qte(x.ventesMinimales)}` },
+          { libelle: `Ventes minimales ${dE(n)} aux particuliers`, nature: "quantite", attendu: x.ventesMinimales, calcul: `${qte(x.part.quantites[x.k]!)} + ${qte(x.enPlus)} = ${qte(x.ventesMinimales)}` },
           {
             libelle: `Ce que ces enceintes font sortir en ${x.nom(x.k + 1)}`,
             attendu: x.sortiesDuMoisSuivant,
@@ -883,7 +888,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
           {
             libelle: `TVA déductible ${dE(n)}, banc compris`,
             attendu: t.deductible,
-            calcul: `${qte(x.avril.quantite)} × (${eur(x.m.coutVariable.composants)} + ${eur(x.m.coutVariable.autres)}) × ${pct(x.tva)} + ${eur(x.inv.montantHt)} × ${pct(x.tva)} = ${eur(auCentime(t.deductible - x.inv.montantHt * x.tva))} + ${eur(auCentime(x.inv.montantHt * x.tva))} = ${eur(t.deductible)}`,
+            calcul: `${qte(x.avril.quantite)} × (${eur(x.m.coutVariable.composants)} + ${eur(x.m.coutVariable.autres)}) × ${pct(x.tva)} + ${eur(x.inv.montantHt)} × ${pct(x.tva)} = ${eur(arrondi2(t.deductible - x.inv.montantHt * x.tva))} + ${eur(arrondi2(x.inv.montantHt * x.tva))} = ${eur(t.deductible)}`,
           },
           { libelle: `TVA à décaisser en ${x.nom(x.k + 1)}`, attendu: t.solde, calcul: `${eur(t.collectee)} − ${eur(t.deductible)} = ${eur(t.solde)}` },
           {
@@ -897,8 +902,8 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
         return [
-          `La TVA du banc, ${eur(auCentime(x.inv.montantHt * x.tva))}, ${x.f.entreprise} l'avance en ${n} et la retrouve en ${x.nom(x.k + 1)}, en moins sur sa déclaration : la TVA ne coûte rien, mais elle décale. Si la TVA déductible avait dépassé la TVA collectée, la déclaration aurait donné un crédit de TVA, reporté sur la suivante.`,
-          `Le découvert ${dE(n)} ne vient donc pas du prix du banc, mais de son calendrier : ${eur(x.invTtc)} sortent en ${n}, ${eur(auCentime(x.inv.montantHt * x.tva))} reviennent en ${x.nom(x.k + 1)}.`,
+          `La TVA du banc, ${eur(arrondi2(x.inv.montantHt * x.tva))}, ${x.f.entreprise} l'avance en ${n} et la retrouve en ${x.nom(x.k + 1)}, en moins sur sa déclaration : la TVA ne coûte rien, mais elle décale. Si la TVA déductible avait dépassé la TVA collectée, la déclaration aurait donné un crédit de TVA, reporté sur la suivante.`,
+          `Le découvert ${dE(n)} ne vient donc pas du prix du banc, mais de son calendrier : ${eur(x.invTtc)} sortent en ${n}, ${eur(arrondi2(x.inv.montantHt * x.tva))} reviennent en ${x.nom(x.k + 1)}.`,
         ];
       },
     },
@@ -910,7 +915,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       notions: ["vat_payable", "payment_terms"],
       question: (c) => {
         const x = budgetDuChapitre(c);
-        const tvaJanvier = auCentime(x.ct.quantites[0]! * x.m.prix * x.tva);
+        const tvaJanvier = arrondi2(x.ct.quantites[0]! * x.m.prix * x.tva);
         return `En janvier, ${x.f.entreprise} vend ${qte(x.ct.quantites[0]!)} enceintes à CampusTech : ${eur(tvaJanvier)} de TVA collectée. CampusTech ne paiera qu'en ${x.nom(x.decalage)}. Quand ${x.f.entreprise} reverse-t-elle cette TVA à l'État ?`;
       },
       options: (c) => {

@@ -71,8 +71,8 @@ describe("le coût cible et l'analyse de la valeur, refaits à la main", () => {
     expect(juste(ch, "predire-le-prix").map((t) => t.replace(/\s/g, " "))).toEqual(["Entre 36 et 40 €"]);
   });
 
-  it("le coût cible de « Piloter un centre » : 19 €, 4,50 € d'écart, 19,1 % de baisse", () => {
-    expect(attendus(ch, "le-cout-cible-de-la-go")).toEqual([19, 4.5, 19.1]);
+  it("le coût cible de « Piloter un centre » : 19 €, 4,50 € d'écart, 19,15 % de baisse", () => {
+    expect(attendus(ch, "le-cout-cible-de-la-go")).toEqual([19, 4.5, 19.15]);
     expect(attendus(PILOTER_UN_CENTRE, "le-cout-cible").slice(0, 2)).toEqual([19, 4.5]);
   });
 

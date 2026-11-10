@@ -83,7 +83,7 @@ describe("le contrôle de gestion dans l'organisation : le chapitre", () => {
 });
 
 describe("le monde : la chaîne de valeur, les centres, la contrôlabilité", () => {
-  it("la chaîne de valeur : 1 600,80 € et 3 609,15 € de soutien, 25 973,05 € d'activités principales, 16,7 % des 31 183 €", () => {
+  it("la chaîne de valeur : 1 600,80 € et 3 609,15 € de soutien, 25 973,05 € d'activités principales, 16,71 % des 31 183 €", () => {
     const k = chaineDeValeur(NOVA_GESTION);
     // L'entretien : 5 % du loyer et de la paie, 10 % de l'usure ; l'administration : 10 %, 15 % et 5 %.
     const entretien = c(0.05 * 19_700 + 0.05 * 10_650 + 0.1 * 833);
@@ -92,8 +92,8 @@ describe("le monde : la chaîne de valeur, les centres, la contrôlabilité", ()
     expect(k.soutien).toBe(c(entretien + administration));
     expect(k.principales).toBe(c(31_183 - entretien - administration));
     expect(k.total).toBe(31_183);
-    expect(Math.round(k.partDuSoutien * 1_000) / 10).toBe(16.7);
-    expect(attendus(ch, "le-poids-du-soutien")).toEqual([5_209.95, 25_973.05, 16.7]);
+    expect(c(k.partDuSoutien * 100)).toBe(16.71);
+    expect(attendus(ch, "le-poids-du-soutien")).toEqual([5_209.95, 25_973.05, 16.71]);
     expect(triDe(ch, "la-chaine-de-valeur")).toEqual({
       "Approvisionnement : commander et recevoir les composants": "principale",
       "Production : monter et tester les enceintes": "principale",
@@ -155,10 +155,10 @@ describe("le critère du service commercial : le prix qu'il fait choisir", () =>
 });
 
 describe("la performance : efficacité, efficience, durabilité", () => {
-  it("janvier : 26,5 % de part de marché et 19,61 € de charges fixes par enceinte ; juin : 23,4 % et 14,50 €", () => {
+  it("janvier : 26,50 % de part de marché et 19,61 € de charges fixes par enceinte ; juin : 23,38 % et 14,50 €", () => {
     expect(performanceDuMois(NOVA_GESTION, 0)).toMatchObject({ partDeMarche: 1_590 / 6_000, objectifAtteint: true, chargesFixesParEnceinte: c(31_183 / 1_590), resultat: 2_207 });
     expect(performanceDuMois(NOVA_GESTION, 5)).toMatchObject({ partDeMarche: 2_151 / 9_200, objectifAtteint: false, chargesFixesParEnceinte: c(31_183 / 2_151), resultat: 13_988 });
-    expect(attendus(ch, "efficacite-et-efficience")).toEqual([26.5, 23.4, 19.61, 14.5]);
+    expect(attendus(ch, "efficacite-et-efficience")).toEqual([26.5, 23.38, 19.61, 14.5]);
   });
 
   it("le salaire : 96,15 % du marché en N, 93,75 % en N + 1 ; 1 900 € gardent le seuil, 142 € de plus par mois, 1 704 € par an, face à 3 000 € par recrutement", () => {

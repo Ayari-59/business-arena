@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SEUIL_ALEATOIRE, ficheDe } from "../../chapitres/le-seuil-en-avenir-aleatoire";
 import { T_DE_LA_TABLE, arrondi, lectureDeLaTable } from "../../monde/loi-normale";
@@ -19,18 +19,23 @@ import type { Situation } from "../types";
  * la probabilité d'une perte, celle de l'objectif, le mois redouté. La réponse demande un jugement :
  * la campagne rapporte plus en moyenne, mais elle ne rend pas NOVA plus sûre, elle la rend un peu
  * moins sûre. C'est un choix de risque, que l'espérance seule ne tranche pas.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les probabilités sont des coefficients au dix-millième, à un
+ * dix-millième près (au deux-millième, avant) ; le seuil de profitabilité en enceintes est une
+ * grandeur au centième ; les résultats redoutés attendent le centime (à 20 € près, avant).
  */
 
 /** La campagne proposée : son coût par mois, les ventes qu'elle ajoute en moyenne, l'écart-type des ventes avec elle (hypothèses du cas). */
 export const CAMPAGNE = { coutParMois: 1_600, ventesEnPlus: 100, ecartType: 190 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const pr = (p: number) => (p + 0).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 const tt = (t: number) => (t + 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 3 }).replace(/^-/, "−");
-const pct = (p: number) => `${qte(p * 100, 1)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const TOLERANCE_D_UNE_PROBABILITE = 0.002;
+const pct = (p: number) => pourcent(p * 100);
+const auCentime = arrondi2;
+/** Une probabilité lue à la table se donne au dix-millième, comme la table (au deux-millième près, avant). */
+const TOLERANCE_D_UNE_PROBABILITE = 0.0001;
 
 /** Les chiffres du cas, sans et avec la campagne. */
 export function campagneIncertaine(c: Pick<Cas, "code">) {
@@ -112,7 +117,7 @@ export const UNE_CAMPAGNE_AU_SUCCES_INCERTAIN: Situation = {
         const n = campagneIncertaine(c);
         const a = n.avec;
         return [
-          { libelle: "Seuil de profitabilité avec la campagne, en enceintes", attendu: auCentime(a.seuil!), tolerance: 0.05, calcul: `${eur(a.chargesFixes)} ÷ ${eur(a.marge)} = ${qte(a.seuil!)}` },
+          { libelle: "Seuil de profitabilité avec la campagne, en enceintes", nature: "grandeur", attendu: auCentime(a.seuil!), calcul: `${eur(a.chargesFixes)} ÷ ${eur(a.marge)} = ${qte(a.seuil!)}` },
           { libelle: "Espérance du résultat", attendu: a.resultat.esperance, calcul: `${eur(a.marge)} × ${qte(a.moyenne)} − ${eur(a.chargesFixes)} = ${eur(a.resultat.esperance)}` },
           { libelle: "Écart-type du résultat", attendu: a.resultat.ecartType, calcul: `${eur(a.marge)} × ${qte(a.ecartType)} = ${eur(a.resultat.ecartType)}` },
         ];
@@ -133,10 +138,11 @@ export const UNE_CAMPAGNE_AU_SUCCES_INCERTAIN: Situation = {
         const s = n.sans;
         const a = n.avec;
         return [
-          { libelle: "Probabilité d'une perte, sans la campagne", attendu: s.perteLue, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `t = (${qte(s.seuil!)} − ${qte(s.moyenne)}) ÷ ${qte(s.ecartType)} = ${tt(s.tLu)} ; Π(${tt(s.tLu)}) = ${pr(s.perteLue)}` },
-          { libelle: "Probabilité d'une perte, avec la campagne", attendu: a.perteLue, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `t = (${qte(a.seuil!)} − ${qte(a.moyenne)}) ÷ ${qte(a.ecartType)} = ${tt(a.tLu)} ; Π(${tt(a.tLu)}) = ${pr(a.perteLue)}` },
+          { libelle: "Probabilité d'une perte, sans la campagne", nature: "coefficient", attendu: s.perteLue, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `t = (${qte(s.seuil!)} − ${qte(s.moyenne)}) ÷ ${qte(s.ecartType)} = ${tt(s.tLu)} ; Π(${tt(s.tLu)}) = ${pr(s.perteLue)}` },
+          { libelle: "Probabilité d'une perte, avec la campagne", nature: "coefficient", attendu: a.perteLue, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `t = (${qte(a.seuil!)} − ${qte(a.moyenne)}) ÷ ${qte(a.ecartType)} = ${tt(a.tLu)} ; Π(${tt(a.tLu)}) = ${pr(a.perteLue)}` },
           {
             libelle: `Probabilité d'atteindre ${eur(OBJECTIF_DU_DIRIGEANT)}, avec la campagne`,
+            nature: "coefficient",
             attendu: n.objectifAvec.lu,
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `t = (${eur(OBJECTIF_DU_DIRIGEANT)} − ${eur(a.resultat.esperance)}) ÷ ${eur(a.resultat.ecartType)} = ${tt(n.objectifAvec.t)} ; 1 − Π(${tt(n.objectifAvec.t)}) = ${pr(n.objectifAvec.lu)}, contre ${pr(n.objectifSans.lu)} sans elle`,
@@ -157,8 +163,8 @@ export const UNE_CAMPAGNE_AU_SUCCES_INCERTAIN: Situation = {
         const n = campagneIncertaine(c);
         const t = T_DE_LA_TABLE.unCoteA95;
         return [
-          { libelle: "Résultat dépassé 95 fois sur 100, sans la campagne", attendu: n.redouteSans, tolerance: 20, calcul: `${eur(n.sans.resultat.esperance)} − ${tt(t)} × ${eur(n.sans.resultat.ecartType)} = ${eur(n.redouteSans)}` },
-          { libelle: "Résultat dépassé 95 fois sur 100, avec la campagne", attendu: n.redouteAvec, tolerance: 20, calcul: `${eur(n.avec.resultat.esperance)} − ${tt(t)} × ${eur(n.avec.resultat.ecartType)} = ${eur(n.redouteAvec)}` },
+          { libelle: "Résultat dépassé 95 fois sur 100, sans la campagne", attendu: n.redouteSans, calcul: `${eur(n.sans.resultat.esperance)} − ${tt(t)} × ${eur(n.sans.resultat.ecartType)} = ${eur(n.redouteSans)}` },
+          { libelle: "Résultat dépassé 95 fois sur 100, avec la campagne", attendu: n.redouteAvec, calcul: `${eur(n.avec.resultat.esperance)} − ${tt(t)} × ${eur(n.avec.resultat.ecartType)} = ${eur(n.redouteAvec)}` },
         ];
       },
       explication: (c) => {

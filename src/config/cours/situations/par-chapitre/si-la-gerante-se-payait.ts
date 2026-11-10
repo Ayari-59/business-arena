@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur } from "../../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter } from "../../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_CONCORDANCE, concordanceDeNova } from "../../chapitres/la-concordance-des-resultats";
@@ -6,7 +6,6 @@ import { impotSurLesSocietes } from "../../monde/cloture";
 import { REMUNERATION_DE_LA_GERANTE } from "../../monde/comptabilite-de-gestion";
 import { EXERCICE_DE_NOVA } from "../../monde/exercice-de-nova";
 import type { Situation } from "../types";
-import { auCentime } from "../../monde/amortissement";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LA CONCORDANCE DES RÉSULTATS » : SI LE PRÉSIDENT SE PAYAIT (contrôle de
@@ -21,9 +20,12 @@ import { auCentime } from "../../monde/amortissement";
  *
  * HYPOTHÈSE DU CAS : le salaire, charges comprises, est exactement la charge supplétive (4 200 € par
  * mois) ; il est déductible du résultat fiscal ; rien d'autre de l'exercice ne change.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'impôt et le résultat net attendent le centime de leur
+ * calcul (à l'euro près, avant), l'impôt restant arrondi à l'euro comme la règle fiscale le veut.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
 const enSuite = (x: number) => `${x < 0 ? "−" : "+"} ${eur(Math.abs(x))}`;
 
 const donnee = (valeur: number): CelluleACompleter => ({ valeur });
@@ -33,15 +35,15 @@ const aSaisir = (valeur: number, calcul: string, autres: Partial<CelluleAComplet
 export function siLaGeranteSePayait(c: Pick<Cas, "code">) {
   const x = concordanceDeNova(c);
   const { k } = x;
-  const salaire = auCentime(12 * REMUNERATION_DE_LA_GERANTE);
-  const avantImpot = auCentime(k.cg.resultatAvantImpot - salaire);
+  const salaire = arrondi2(12 * REMUNERATION_DE_LA_GERANTE);
+  const avantImpot = arrondi2(k.cg.resultatAvantImpot - salaire);
   const impot = impotSurLesSocietes(avantImpot, EXERCICE_DE_NOVA.impot);
-  const net = auCentime(avantImpot - impot.impot);
+  const net = arrondi2(avantImpot - impot.impot);
   const impotDeLaFiche = k.nonIncorporees.find((n) => n.compte === "695")!.montant;
-  const nonIncorporees = auCentime(-(x.totalNonIncorporees - impotDeLaFiche + impot.impot));
+  const nonIncorporees = arrondi2(-(x.totalNonIncorporees - impotDeLaFiche + impot.impot));
   const l = k.lignes;
   const lignes = [0, l.produitsNonIncorpores, nonIncorporees, l.differenceDIncorporation, l.boniDInventaire, l.evaluationDuStock, l.arrondis];
-  return { x, salaire, avantImpot, impot, net, impotDeLaFiche, nonIncorporees, lignes, retrouve: auCentime(k.exercice.resultatAnalytique + lignes.reduce((t, v) => t + v, 0)), baisseDuNet: auCentime(k.resultatGeneral - net) };
+  return { x, salaire, avantImpot, impot, net, impotDeLaFiche, nonIncorporees, lignes, retrouve: arrondi2(k.exercice.resultatAnalytique + lignes.reduce((t, v) => t + v, 0)), baisseDuNet: arrondi2(k.resultatGeneral - net) };
 }
 
 export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
@@ -88,7 +90,7 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
             { libelle: "Charges supplétives (le travail du président)", valeurs: [eur(k.lignes.supletives)] },
             { libelle: "Charges non incorporées, impôt compris", valeurs: [eur(x.totalNonIncorporees)] },
             { libelle: "Produits non incorporés", valeurs: [eur(k.lignes.produitsNonIncorpores)] },
-            { libelle: "Différence d'incorporation, boni, évaluation du stock et arrondis", valeurs: [eur(auCentime(k.lignes.differenceDIncorporation + k.lignes.boniDInventaire + k.lignes.evaluationDuStock + k.lignes.arrondis))] },
+            { libelle: "Différence d'incorporation, boni, évaluation du stock et arrondis", valeurs: [eur(arrondi2(k.lignes.differenceDIncorporation + k.lignes.boniDInventaire + k.lignes.evaluationDuStock + k.lignes.arrondis))] },
           ],
         };
       },
@@ -108,16 +110,15 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
           {
             libelle: "Impôt sur les sociétés",
             attendu: n.impot.impot,
-            tolerance: 1,
             calcul: `${b.tauxReduit * 100} % × ${eur(n.impot.baseAuTauxReduit)} + ${b.tauxNormal * 100} % × ${eur(n.impot.baseAuTauxNormal)} = ${eur(n.impot.aTauxReduit)} + ${eur(n.impot.aTauxNormal)} = ${eur(n.impot.exact)}, soit ${eur(n.impot.impot)} à l'euro`,
           },
-          { libelle: "Résultat net, avec le salaire", attendu: n.net, tolerance: 1, calcul: `${eur(n.avantImpot)} − ${eur(n.impot.impot)} = ${eur(n.net)}` },
+          { libelle: "Résultat net, avec le salaire", attendu: n.net, calcul: `${eur(n.avantImpot)} − ${eur(n.impot.impot)} = ${eur(n.net)}` },
         ];
       },
       explication: (c) => {
         const n = siLaGeranteSePayait(c);
         return [
-          `Le résultat net baisse de ${eur(n.baisseDuNet)}, et non des ${eur(n.salaire)} du salaire : l'impôt en reprend ${eur(auCentime(n.impotDeLaFiche - n.impot.impot))}. Une charge réelle et déductible coûte moins que son montant.`,
+          `Le résultat net baisse de ${eur(n.baisseDuNet)}, et non des ${eur(n.salaire)} du salaire : l'impôt en reprend ${eur(arrondi2(n.impotDeLaFiche - n.impot.impot))}. Une charge réelle et déductible coûte moins que son montant.`,
         ];
       },
     },
@@ -170,7 +171,7 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
           {
             texte: `Les comptes perdraient ${eur(n.baisseDuNet)}, la gestion rien`,
             juste: true,
-            retour: `Oui. La gestion comptait déjà ce travail : son résultat reste ${eur(n.x.k.exercice.resultatAnalytique)}. Les comptes portent maintenant le salaire, ${eur(n.salaire)}, dont l'impôt reprend ${eur(auCentime(n.impotDeLaFiche - n.impot.impot))} ; le résultat net tombe à ${eur(n.net)}.`,
+            retour: `Oui. La gestion comptait déjà ce travail : son résultat reste ${eur(n.x.k.exercice.resultatAnalytique)}. Les comptes portent maintenant le salaire, ${eur(n.salaire)}, dont l'impôt reprend ${eur(arrondi2(n.impotDeLaFiche - n.impot.impot))} ; le résultat net tombe à ${eur(n.net)}.`,
           },
           { texte: `Les deux résultats perdraient ${eur(n.salaire)}, le salaire de 12 mois`, juste: false, retour: "Non : la gestion comptait déjà ce travail, en charge supplétive. Le salaire ne change pas son coût, il ne change que les comptes." },
           { texte: `Les comptes perdraient ${eur(n.salaire)}, et la gestion ne bougerait pas`, juste: false, retour: `Non : le salaire est déductible, l'impôt baisse. Le résultat net ne perd que ${eur(n.baisseDuNet)}.` },

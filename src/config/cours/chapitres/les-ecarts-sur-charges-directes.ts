@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { controleBudgetaire } from "../monde/ecarts";
 import type { Chapitre, EtapeChoix, EtapeCurseur, EtapeSimulation, TableauDeDonnees } from "../types";
@@ -35,6 +35,10 @@ import { ENTREPRISES_DES_ECARTS, ceQueSupposeLaSimulation, ecartDit, ficheDe, se
  *
  * Le modèle ne connaît pas les causes, seulement les écarts : quand une étape suppose une cause
  * (des cadences accélérées), elle la présente comme une hypothèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les kilos et les heures préétablis ou consommés sont des
+ * grandeurs au centième ; les écarts attendent le centime.
  */
 
 /**
@@ -44,9 +48,7 @@ import { ENTREPRISES_DES_ECARTS, ceQueSupposeLaSimulation, ecartDit, ficheDe, se
  */
 export const VARIANTE_A_REBOURS = { ecartSurQuantite: -1_500, ecartSurPrix: 5_370 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100;
+const qte = nombreAuCentieme;
 /** Un montant retranché ou ajouté dans un calcul : entre parenthèses s'il est négatif. */
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 
@@ -56,24 +58,24 @@ export function ecartsDirects(c: Pick<Cas, "code">) {
   const e = controleBudgetaire(f);
   const r = f.realise;
   const modeles = f.modeles.map((m) => ({ m, reelle: r.ventes[m.code].quantite }));
-  const dPrix = auCentime(r.matiere.prixDuKilo - f.prixStandardDuKilo);
-  const dKilos = auCentime(r.matiere.kilos - e.preetabliDuReel.kilos);
-  const dTaux = auCentime(r.mainDOeuvre.tauxHoraire - f.tauxHoraireStandard);
-  const dHeures = auCentime(r.mainDOeuvre.heures - e.preetabliDuReel.heures);
+  const dPrix = arrondi2(r.matiere.prixDuKilo - f.prixStandardDuKilo);
+  const dKilos = arrondi2(r.matiere.kilos - e.preetabliDuReel.kilos);
+  const dTaux = arrondi2(r.mainDOeuvre.tauxHoraire - f.tauxHoraireStandard);
+  const dHeures = arrondi2(r.mainDOeuvre.heures - e.preetabliDuReel.heures);
 
   // L'écart mixte : la part de l'écart sur prix qui ne porte que sur les kilos consommés en trop.
-  const prixPur = auCentime(dPrix * e.preetabliDuReel.kilos);
-  const mixte = auCentime(dPrix * dKilos);
+  const prixPur = arrondi2(dPrix * e.preetabliDuReel.kilos);
+  const mixte = arrondi2(dPrix * dKilos);
 
   // La variante à rebours : kilos réels par l'écart sur quantité, prix réel par l'écart sur prix.
   const v = VARIANTE_A_REBOURS;
-  const kilosRebours = auCentime(e.preetabliDuReel.kilos + v.ecartSurQuantite / f.prixStandardDuKilo);
-  const prixRebours = auCentime(f.prixStandardDuKilo + v.ecartSurPrix / kilosRebours);
+  const kilosRebours = arrondi2(e.preetabliDuReel.kilos + v.ecartSurQuantite / f.prixStandardDuKilo);
+  const prixRebours = arrondi2(f.prixStandardDuKilo + v.ecartSurPrix / kilosRebours);
   const rebours = {
     kilos: kilosRebours,
     prix: prixRebours,
-    global: auCentime(v.ecartSurQuantite + v.ecartSurPrix),
-    coutReel: auCentime(kilosRebours * prixRebours),
+    global: arrondi2(v.ecartSurQuantite + v.ecartSurPrix),
+    coutReel: arrondi2(kilosRebours * prixRebours),
   };
 
   const quatre = [e.matiere.prix, e.matiere.quantite, e.mainDOeuvre.taux, e.mainDOeuvre.temps];
@@ -90,11 +92,11 @@ export function ecartsDirects(c: Pick<Cas, "code">) {
     mixte,
     rebours,
     /** La somme des quatre écarts, chacun avec son signe : l'écart global sur charges directes. */
-    totalDirect: auCentime(quatre.reduce((t, x) => t + x, 0)),
+    totalDirect: arrondi2(quatre.reduce((t, x) => t + x, 0)),
     /** L'erreur de l'étudiant qui additionne les montants sans leur signe. */
-    totalSansSigne: auCentime(quatre.reduce((t, x) => t + Math.abs(x), 0)),
+    totalSansSigne: arrondi2(quatre.reduce((t, x) => t + Math.abs(x), 0)),
     /** L'effet net, pour l'atelier, de ses deux écarts : quantité de matière et temps. */
-    netAtelier: auCentime(e.matiere.quantite + e.mainDOeuvre.temps),
+    netAtelier: arrondi2(e.matiere.quantite + e.mainDOeuvre.temps),
   };
 }
 
@@ -140,17 +142,17 @@ export function experiencesDirectes(c: Pick<Cas, "code">) {
   const e = d.e;
   const matiere = {
     auPlus: Math.floor(e.preetabliDuReel.matiere / d.r.matiere.prixDuKilo + 1e-9),
-    reel: (k: number) => auCentime(k * d.r.matiere.prixDuKilo),
-    prix: (k: number) => auCentime(d.dPrix * k),
-    quantite: (k: number) => auCentime((k - e.preetabliDuReel.kilos) * d.f.prixStandardDuKilo),
+    reel: (k: number) => arrondi2(k * d.r.matiere.prixDuKilo),
+    prix: (k: number) => arrondi2(d.dPrix * k),
+    quantite: (k: number) => arrondi2((k - e.preetabliDuReel.kilos) * d.f.prixStandardDuKilo),
     min: e.preetabliDuReel.kilos - 1_500,
     max: e.preetabliDuReel.kilos + 1_000,
   };
   const mainDOeuvre = {
     auPlus: Math.floor(e.preetabliDuReel.mainDOeuvre / d.r.mainDOeuvre.tauxHoraire + 1e-9),
-    reel: (h: number) => auCentime(h * d.r.mainDOeuvre.tauxHoraire),
-    taux: (h: number) => auCentime(d.dTaux * h),
-    temps: (h: number) => auCentime((h - e.preetabliDuReel.heures) * d.f.tauxHoraireStandard),
+    reel: (h: number) => arrondi2(h * d.r.mainDOeuvre.tauxHoraire),
+    taux: (h: number) => arrondi2(d.dTaux * h),
+    temps: (h: number) => arrondi2((h - e.preetabliDuReel.heures) * d.f.tauxHoraireStandard),
     min: e.preetabliDuReel.heures - 1_000,
     max: e.preetabliDuReel.heures + 500,
   };
@@ -209,7 +211,7 @@ const ETAPE_DE_LA_MATIERE: EtapeCurseur = {
       { libelle: "Coût préétabli de la matière", montant: d.e.preetabliDuReel.matiere },
       { libelle: "Écart sur prix", montant: m.prix(k) },
       { libelle: "Écart sur quantité", montant: m.quantite(k) },
-      { libelle: "Écart global sur matière", montant: auCentime(m.reel(k) - d.e.preetabliDuReel.matiere), fort: true },
+      { libelle: "Écart global sur matière", montant: arrondi2(m.reel(k) - d.e.preetabliDuReel.matiere), fort: true },
     ];
   },
   droites: (c) => {
@@ -276,7 +278,7 @@ const ETAPE_DE_LA_MAIN_D_OEUVRE: EtapeCurseur = {
       { libelle: "Coût préétabli de la main-d'œuvre directe", montant: d.e.preetabliDuReel.mainDOeuvre },
       { libelle: "Écart sur taux", montant: m.taux(h) },
       { libelle: "Écart sur temps", montant: m.temps(h) },
-      { libelle: "Écart global sur main-d'œuvre directe", montant: auCentime(m.reel(h) - d.e.preetabliDuReel.mainDOeuvre), fort: true },
+      { libelle: "Écart global sur main-d'œuvre directe", montant: arrondi2(m.reel(h) - d.e.preetabliDuReel.mainDOeuvre), fort: true },
     ];
   },
   droites: (c) => {
@@ -325,14 +327,14 @@ export function laboratoireDesChargesDirectes(c: Pick<Cas, "code">) {
   const v = (p: Readonly<Record<string, number>>, k: string) => p[k] ?? leviers.find((l) => l.code === k)!.depart;
   /** Les quatre écarts sur charge (positif défavorable), et leur total. */
   const ecarts = (p: Readonly<Record<string, number>>) => {
-    const prix = auCentime((v(p, "prix") - f.prixStandardDuKilo) * v(p, "kilos"));
-    const quantite = auCentime((v(p, "kilos") - e.preetabliDuReel.kilos) * f.prixStandardDuKilo);
-    const taux = auCentime((v(p, "taux") - f.tauxHoraireStandard) * v(p, "heures"));
-    const temps = auCentime((v(p, "heures") - e.preetabliDuReel.heures) * f.tauxHoraireStandard);
-    const reel = auCentime(v(p, "prix") * v(p, "kilos") + v(p, "taux") * v(p, "heures"));
-    return { prix, quantite, taux, temps, reel, total: auCentime(prix + quantite + taux + temps) };
+    const prix = arrondi2((v(p, "prix") - f.prixStandardDuKilo) * v(p, "kilos"));
+    const quantite = arrondi2((v(p, "kilos") - e.preetabliDuReel.kilos) * f.prixStandardDuKilo);
+    const taux = arrondi2((v(p, "taux") - f.tauxHoraireStandard) * v(p, "heures"));
+    const temps = arrondi2((v(p, "heures") - e.preetabliDuReel.heures) * f.tauxHoraireStandard);
+    const reel = arrondi2(v(p, "prix") * v(p, "kilos") + v(p, "taux") * v(p, "heures"));
+    return { prix, quantite, taux, temps, reel, total: arrondi2(prix + quantite + taux + temps) };
   };
-  return { d, leviers, v, ecarts, preetabli: auCentime(e.preetabliDuReel.matiere + e.preetabliDuReel.mainDOeuvre) };
+  return { d, leviers, v, ecarts, preetabli: arrondi2(e.preetabliDuReel.matiere + e.preetabliDuReel.mainDOeuvre) };
 }
 
 const LABORATOIRE_DES_CHARGES_DIRECTES: EtapeSimulation = {
@@ -446,8 +448,8 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
       champs: (c) => {
         const d = ecartsDirects(c);
         return [
-          { libelle: "Kilos préétablis de la production réelle", attendu: d.e.preetabliDuReel.kilos, calcul: kilosPreetablis(d) },
-          { libelle: "Heures préétablies de la production réelle", attendu: d.e.preetabliDuReel.heures, calcul: heuresPreetablies(d) },
+          { libelle: "Kilos préétablis de la production réelle", nature: "grandeur", attendu: d.e.preetabliDuReel.kilos, calcul: kilosPreetablis(d) },
+          { libelle: "Heures préétablies de la production réelle", nature: "grandeur", attendu: d.e.preetabliDuReel.heures, calcul: heuresPreetablies(d) },
         ];
       },
       explication: (c) => {
@@ -664,8 +666,8 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
           { libelle: "Écart mixte", attendu: d.mixte, calcul: `${eur(d.dPrix)} × ${qte(d.dKilos)} = ${eur(d.mixte)}` },
           {
             libelle: "Prix pur, quantité et mixte réunis",
-            attendu: auCentime(d.prixPur + e.matiere.quantite + d.mixte),
-            calcul: `${eur(d.prixPur)} + ${eur(e.matiere.quantite)} + ${eur(d.mixte)} = ${eur(auCentime(d.prixPur + e.matiere.quantite + d.mixte))}`,
+            attendu: arrondi2(d.prixPur + e.matiere.quantite + d.mixte),
+            calcul: `${eur(d.prixPur)} + ${eur(e.matiere.quantite)} + ${eur(d.mixte)} = ${eur(arrondi2(d.prixPur + e.matiere.quantite + d.mixte))}`,
           },
         ];
       },
@@ -704,7 +706,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
           {
             texte: "Il faudrait le compter dans les deux écarts, puisque chacun en est la cause",
             juste: false,
-            retour: `Non : compté deux fois, il ferait ${eur(auCentime(e.matiere.prix + e.matiere.quantite + d.mixte))} au lieu de ${eur(e.matiere.global)}, et la décomposition ne retomberait plus sur l'écart global. ${fond}`,
+            retour: `Non : compté deux fois, il ferait ${eur(arrondi2(e.matiere.prix + e.matiere.quantite + d.mixte))} au lieu de ${eur(e.matiere.global)}, et la décomposition ne retomberait plus sur l'écart global. ${fond}`,
           },
         ];
       },
@@ -727,8 +729,9 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
         return [
           {
             libelle: "Kilos réellement consommés",
+            nature: "grandeur",
             attendu: d.rebours.kilos,
-            calcul: `${qte(d.e.preetabliDuReel.kilos)} + ${entre(v.ecartSurQuantite)} ÷ ${eur(s)} = ${qte(d.e.preetabliDuReel.kilos)} ${v.ecartSurQuantite < 0 ? "−" : "+"} ${qte(Math.abs(auCentime(v.ecartSurQuantite / s)))} = ${qte(d.rebours.kilos)} kg`,
+            calcul: `${qte(d.e.preetabliDuReel.kilos)} + ${entre(v.ecartSurQuantite)} ÷ ${eur(s)} = ${qte(d.e.preetabliDuReel.kilos)} ${v.ecartSurQuantite < 0 ? "−" : "+"} ${qte(Math.abs(arrondi2(v.ecartSurQuantite / s)))} = ${qte(d.rebours.kilos)} kg`,
           },
           { libelle: "Prix réel du kilo", attendu: d.rebours.prix, calcul: `${eur(s)} + ${eur(v.ecartSurPrix)} ÷ ${qte(d.rebours.kilos)} = ${eur(d.rebours.prix)}` },
           {
@@ -759,8 +762,8 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
         const d = ecartsDirects(c);
         const e = d.e;
         return [
-          { libelle: "Écart sur temps en heures", attendu: d.dHeures, calcul: `${qte(d.r.mainDOeuvre.heures)} − ${qte(e.preetabliDuReel.heures)} = ${qte(d.dHeures)} heures` },
-          { libelle: "Kilos consommés en trop", attendu: d.dKilos, calcul: `${qte(d.r.matiere.kilos)} − ${qte(e.preetabliDuReel.kilos)} = ${qte(d.dKilos)} kg` },
+          { libelle: "Écart sur temps en heures", nature: "grandeur", attendu: d.dHeures, calcul: `${qte(d.r.mainDOeuvre.heures)} − ${qte(e.preetabliDuReel.heures)} = ${qte(d.dHeures)} heures` },
+          { libelle: "Kilos consommés en trop", nature: "grandeur", attendu: d.dKilos, calcul: `${qte(d.r.matiere.kilos)} − ${qte(e.preetabliDuReel.kilos)} = ${qte(d.dKilos)} kg` },
           { libelle: "Effet net de l'atelier", attendu: d.netAtelier, calcul: `${eur(e.matiere.quantite)} + ${entre(e.mainDOeuvre.temps)} = ${eur(d.netAtelier)}` },
         ];
       },

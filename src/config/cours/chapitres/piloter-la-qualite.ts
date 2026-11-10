@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { margeUnitaire } from "../monde/capacite";
@@ -57,6 +57,16 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     selon le réglage, en U) ;
  *   · expert : la-pesee-a-rebours, lire-l-intervalle, la-taille-de-l-echantillon, les-limites ; puis la
  *     synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts du Pareto attendent le centième (à 0,1 point près,
+ * avant), et la part cumulée se calcule sur les défauts cumulés, en une ligne ; les probabilités
+ * lues à la table sont des coefficients au dix-millième, à un dix-millième près (au deux-millième,
+ * avant) ; les enceintes hors tolérance sont des espérances, des grandeurs au centième, et leurs
+ * coûts attendent le centime (à 80 ou 150 € près, avant) ; les poids, écarts-types, demi-largeurs
+ * et bornes sont des grandeurs au centième de gramme, les bornes partant de la demi-largeur
+ * arrondie ; les seuils de défauts et les tailles d'échantillon sont des quantités, à l'unité
+ * supérieure.
  */
 
 /** Les entreprises du chapitre : NOVA, la seule fiche de capacité du monde du cours. */
@@ -88,14 +98,14 @@ export const LEVIERS_DE_LA_LIGNE = {
 /** Le défi du laboratoire : au plus 100 défauts de poids par an, et une moyenne estimée à 1,5 g près. */
 export const DEFI_DE_LA_LIGNE = { defautsAuPlus: 100, precisionAuPlus: 1.5 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const pr = (p: number) => (p + 0).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 const tt = (t: number) => (t + 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 3 }).replace(/^-/, "−");
-const g = (x: number, d = 2) => `${qte(x, d)} g`;
-const pct = (p: number, d = 2) => `${qte(p * 100, d)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const TOLERANCE_D_UNE_PROBABILITE = 0.002;
+const g = (x: number) => `${qte(x)} g`;
+const pct = (p: number) => pourcent(p * 100);
+const auCentime = arrondi2;
+/** Une probabilité lue à la table se donne au dix-millième, comme la table (au deux-millième près, avant). */
+const TOLERANCE_D_UNE_PROBABILITE = 0.0001;
 
 /** La fiche de capacité de l'entreprise du cas. */
 export function ficheDe(c: Pick<Cas, "code">): FicheDeLaCapacite {
@@ -204,12 +214,12 @@ export function tableauDeLaLigne(c: Pick<Cas, "code">): TableauDeDonnees {
     colonnes: ["Donnée"],
     lignes: [
       { libelle: "Enceintes fabriquées dans l'année", valeurs: [qte(x.volume)] },
-      { libelle: "Défauts de l'année, au budget de prévention actuel", valeurs: [`${qte(x.pareto.total)}, soit ${pct(x.pareto.total / x.volume, 1)}`] },
-      { libelle: "Part des défauts que trouve le contrôle final", valeurs: [pct(x.q.controleFinal.tauxDeDetection, 0)] },
+      { libelle: "Défauts de l'année, au budget de prévention actuel", valeurs: [`${qte(x.pareto.total)}, soit ${pct(x.pareto.total / x.volume)}`] },
+      { libelle: "Part des défauts que trouve le contrôle final", valeurs: [pct(x.q.controleFinal.tauxDeDetection)] },
       { libelle: "Un défaut trouvé : la retouche", valeurs: [eur(x.q.coutDUnDefautDetecte)] },
       { libelle: "Un défaut livré : le retour sous garantie", valeurs: [`${eur(x.q.coutDUnDefautLivre)}, et ${qte(x.q.ventesPerduesParDefautLivre)} ventes perdues à ${eur(x.m)} de marge`] },
       { libelle: "Ce que coûte un défaut, ventes perdues comprises", valeurs: [eur(x.coutTout)] },
-      { libelle: "Poids d'une enceinte au cahier des charges", valeurs: [`${g(x.P.cible, 0)}, à ${g(x.P.tolerance, 0)} près`] },
+      { libelle: "Poids d'une enceinte au cahier des charges", valeurs: [`${g(x.P.cible)}, à ${g(x.P.tolerance)} près`] },
       { libelle: "Poids d'une enceinte, ligne bien réglée", valeurs: [`loi normale N(${qte(x.P.cible)} ; ${qte(x.P.ecartType)})`] },
     ],
   };
@@ -222,7 +232,6 @@ export function grilleDuPareto(c: Pick<Cas, "code">): TableauACompleter {
   return {
     titre: `Les ${qte(x.pareto.total)} défauts de l'année, classés du plus fréquent au moins fréquent`,
     colonnes: ["Défauts relevés", "Part des défauts, en %", "Part cumulée, en %"],
-    tolerance: 0.1,
     lignes: [
       ...causes.map((k, i) => ({
         libelle: k.libelle,
@@ -234,8 +243,8 @@ export function grilleDuPareto(c: Pick<Cas, "code">): TableauACompleter {
             saisir: true,
             unite: "%",
             horsTotal: true,
-            calcul: i === 0 ? `la première cause : ${pct(k.cumul)}` : `${pct(causes[i - 1]!.cumul)} + ${pct(k.part)} = ${pct(k.cumul)}`,
-            indice: "la part de cette cause, plus celles des causes classées avant elle",
+            calcul: i === 0 ? `la première cause : ${pct(k.cumul)}` : `(${causes.slice(0, i + 1).map((y) => qte(y.nombre)).join(" + ")}) ÷ ${qte(x.pareto.total)} = ${pct(k.cumul)}`,
+            indice: "les défauts de cette cause et des causes classées avant elle, rapportés à tous les défauts",
           },
         ],
       })),
@@ -295,7 +304,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const x = qualiteDuChapitre(c);
         const [a, b] = x.pareto.causes;
         return [
-          `Les 2 premières causes, sur ${qte(x.pareto.causes.length)}, font ${pct(b!.cumul, 1)} des défauts : c'est la loi des 20/80, un petit nombre de causes pour l'essentiel des effets. Le diagramme les montre en barres décroissantes, sous la courbe des parts cumulées.`,
+          `Les 2 premières causes, sur ${qte(x.pareto.causes.length)}, font ${pct(b!.cumul)} des défauts : c'est la loi des 20/80, un petit nombre de causes pour l'essentiel des effets. Le diagramme les montre en barres décroissantes, sous la courbe des parts cumulées.`,
           `Le poids hors tolérance vient en tête, ${qte(a!.nombre)} défauts. Il fera l'objet de la suite du chapitre.`,
         ];
       },
@@ -312,9 +321,9 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const derniere = x.pareto.causes.at(-1)!;
         return [
           {
-            texte: `Traiter d'abord le poids : ${pct(a!.part, 1)} des défauts`,
+            texte: `Traiter d'abord le poids : ${pct(a!.part)} des défauts`,
             juste: true,
-            retour: `Oui. Avec la soudure, ${pct(b!.cumul, 1)} des défauts ; un chantier sur le poids en évite au plus ${qte(a!.nombre)}, ${eur(auCentime(a!.nombre * x.coutTout))} par an. Encore faut-il en connaître les causes : c'est le rôle du diagramme d'Ishikawa.`,
+            retour: `Oui. Avec la soudure, ${pct(b!.cumul)} des défauts ; un chantier sur le poids en évite au plus ${qte(a!.nombre)}, ${eur(auCentime(a!.nombre * x.coutTout))} par an. Encore faut-il en connaître les causes : c'est le rôle du diagramme d'Ishikawa.`,
           },
           {
             texte: "Traiter un peu chaque cause, pour ne rien laisser de côté",
@@ -324,7 +333,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
           {
             texte: `Traiter « ${derniere.libelle} » : la cause la moins connue, donc la plus inquiétante`,
             juste: false,
-            retour: `Non : elle pèse ${pct(derniere.part, 1)} des défauts. Ce qui inquiète n'est pas ce qui coûte.`,
+            retour: `Non : elle pèse ${pct(derniere.part)} des défauts. Ce qui inquiète n'est pas ce qui coûte.`,
           },
         ];
       },
@@ -363,16 +372,16 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       titre: "Les enceintes hors du poids",
       question: (c) => {
         const x = qualiteDuChapitre(c);
-        return `Ligne bien réglée, le poids X d'une enceinte suit N(${qte(x.P.cible)} ; ${qte(x.P.ecartType)}). Une enceinte est hors tolérance sous ${g(x.bas, 0)} ou au-dessus de ${g(x.haut, 0)}. Calculez P(X < ${qte(x.bas)}) = Π((${qte(x.bas)} − ${qte(x.P.cible)}) ÷ ${qte(x.P.ecartType)}), la part hors tolérance (les deux côtés), le nombre d'enceintes hors tolérance sur ${qte(x.volume)}, et leur coût par an à ${eur(x.coutTout)} le défaut.`;
+        return `Ligne bien réglée, le poids X d'une enceinte suit N(${qte(x.P.cible)} ; ${qte(x.P.ecartType)}). Une enceinte est hors tolérance sous ${g(x.bas)} ou au-dessus de ${g(x.haut)}. Calculez P(X < ${qte(x.bas)}) = Π((${qte(x.bas)} − ${qte(x.P.cible)}) ÷ ${qte(x.P.ecartType)}), la part hors tolérance (les deux côtés), le nombre d'enceintes hors tolérance sur ${qte(x.volume)}, et leur coût par an à ${eur(x.coutTout)} le défaut.`;
       },
       champs: (c) => {
         const x = qualiteDuChapitre(c);
         const t = (x.bas - x.P.cible) / x.P.ecartType;
         return [
-          { libelle: `P(X < ${qte(x.bas)})`, attendu: x.regle.sous, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `Π(${tt(t)}) = 1 − Π(${tt(-t)}) = 1 − ${pr(lectureDeLaTable(-t))} = ${pr(x.regle.sous)}` },
-          { libelle: "Part hors tolérance", attendu: x.regle.hors, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `la loi est symétrique autour de ${qte(x.P.cible)} : ${pr(x.regle.sous)} + ${pr(x.regle.dessus)} = ${pr(x.regle.hors)}` },
-          { libelle: "Enceintes hors tolérance dans l'année", attendu: x.regle.nombre, tolerance: 1.5, calcul: `${qte(x.volume)} × ${pr(x.regle.hors)} = ${qte(x.regle.nombre)}` },
-          { libelle: "Coût de ces défauts dans l'année", attendu: x.regle.cout, tolerance: 80, calcul: `${qte(x.regle.nombre)} × ${eur(x.coutTout)} = ${eur(x.regle.cout)}` },
+          { libelle: `P(X < ${qte(x.bas)})`, nature: "coefficient", attendu: x.regle.sous, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `Π(${tt(t)}) = 1 − Π(${tt(-t)}) = 1 − ${pr(lectureDeLaTable(-t))} = ${pr(x.regle.sous)}` },
+          { libelle: "Part hors tolérance", nature: "coefficient", attendu: x.regle.hors, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `la loi est symétrique autour de ${qte(x.P.cible)} : ${pr(x.regle.sous)} + ${pr(x.regle.dessus)} = ${pr(x.regle.hors)}` },
+          { libelle: "Enceintes hors tolérance dans l'année", nature: "grandeur", attendu: x.regle.nombre, calcul: `${qte(x.volume)} × ${pr(x.regle.hors)} = ${qte(x.regle.nombre)}` },
+          { libelle: "Coût de ces défauts dans l'année", attendu: x.regle.cout, calcul: `${qte(x.regle.nombre)} × ${eur(x.coutTout)} = ${eur(x.regle.cout)}` },
         ];
       },
       explication: (c) => {
@@ -389,7 +398,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       titre: "Pariez sur le dérèglement",
       question: (c) => {
         const x = qualiteDuChapitre(c);
-        return `Avant de calculer, pariez. La buse de colle s'encrasse : le poids moyen monte de ${g(x.P.cible, 0)} à ${g(POIDS_DERIVE, 0)}, l'écart-type ne change pas, et la tolérance reste de ${g(x.bas, 0)} à ${g(x.haut, 0)}. La part des enceintes hors tolérance…`;
+        return `Avant de calculer, pariez. La buse de colle s'encrasse : le poids moyen monte de ${g(x.P.cible)} à ${g(POIDS_DERIVE)}, l'écart-type ne change pas, et la tolérance reste de ${g(x.bas)} à ${g(x.haut)}. La part des enceintes hors tolérance…`;
       },
       options: (c) => {
         const x = qualiteDuChapitre(c);
@@ -409,7 +418,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       titre: "La ligne déréglée",
       question: (c) => {
         const x = qualiteDuChapitre(c);
-        return `À vous, sans formule : le poids suit maintenant N(${qte(POIDS_DERIVE)} ; ${qte(x.P.ecartType)}). Calculez la part des enceintes au-dessus de ${g(x.haut, 0)}, celle sous ${g(x.bas, 0)}, le nombre d'enceintes hors tolérance dans l'année, puis ce que le dérèglement coûte de plus par an.`;
+        return `À vous, sans formule : le poids suit maintenant N(${qte(POIDS_DERIVE)} ; ${qte(x.P.ecartType)}). Calculez la part des enceintes au-dessus de ${g(x.haut)}, celle sous ${g(x.bas)}, le nombre d'enceintes hors tolérance dans l'année, puis ce que le dérèglement coûte de plus par an.`;
       },
       champs: (c) => {
         const x = qualiteDuChapitre(c);
@@ -417,16 +426,16 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const tH = (x.haut - POIDS_DERIVE) / x.P.ecartType;
         const tB = (x.bas - POIDS_DERIVE) / x.P.ecartType;
         return [
-          { libelle: `P(X > ${qte(x.haut)})`, attendu: d.dessus, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `1 − Π((${qte(x.haut)} − ${qte(POIDS_DERIVE)}) ÷ ${qte(x.P.ecartType)}) = 1 − Π(${tt(tH)}) = ${pr(d.dessus)}` },
-          { libelle: `P(X < ${qte(x.bas)})`, attendu: d.sous, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `Π(${tt(tB)}) = 1 − Π(${tt(-tB)}) = ${pr(d.sous)}` },
-          { libelle: "Enceintes hors tolérance dans l'année", attendu: d.nombre, tolerance: 4, calcul: `${qte(x.volume)} × (${pr(d.dessus)} + ${pr(d.sous)}) = ${qte(d.nombre)}` },
-          { libelle: "Coût du dérèglement en plus, par an", attendu: x.surcout, tolerance: 150, calcul: `(${qte(d.nombre)} − ${qte(x.regle.nombre)}) × ${eur(x.coutTout)} = ${eur(x.surcout)}` },
+          { libelle: `P(X > ${qte(x.haut)})`, nature: "coefficient", attendu: d.dessus, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `1 − Π((${qte(x.haut)} − ${qte(POIDS_DERIVE)}) ÷ ${qte(x.P.ecartType)}) = 1 − Π(${tt(tH)}) = ${pr(d.dessus)}` },
+          { libelle: `P(X < ${qte(x.bas)})`, nature: "coefficient", attendu: d.sous, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `Π(${tt(tB)}) = 1 − Π(${tt(-tB)}) = ${pr(d.sous)}` },
+          { libelle: "Enceintes hors tolérance dans l'année", nature: "grandeur", attendu: d.nombre, calcul: `${qte(x.volume)} × (${pr(d.dessus)} + ${pr(d.sous)}) = ${qte(d.nombre)}` },
+          { libelle: "Coût du dérèglement en plus, par an", attendu: x.surcout, calcul: `(${qte(d.nombre)} − ${qte(x.regle.nombre)}) × ${eur(x.coutTout)} = ${eur(x.surcout)}` },
         ];
       },
       explication: (c) => {
         const x = qualiteDuChapitre(c);
         return [
-          `Un décalage de ${g(POIDS_DERIVE - x.P.cible, 0)}, invisible à l'œil, coûte ${eur(x.surcout)} par an. Le côté haut se rapproche de la moyenne et gagne beaucoup ; le côté bas s'en éloigne et ne perd presque rien. Centrer la machine est la première économie de la qualité.`,
+          `Un décalage de ${g(POIDS_DERIVE - x.P.cible)}, invisible à l'œil, coûte ${eur(x.surcout)} par an. Le côté haut se rapproche de la moyenne et gagne beaucoup ; le côté bas s'en éloigne et ne perd presque rien. Centrer la machine est la première économie de la qualité.`,
         ];
       },
     },
@@ -474,14 +483,14 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       type: "montants",
       titre: "Peser tout, ou régler la machine",
       question: () => {
-        return `Sans formule : calculez ce que la balance évite par défaut de poids, le nombre de défauts à partir duquel elle paie, puis son gain net par an si la ligne reste déréglée à ${g(POIDS_DERIVE, 0)}.`;
+        return `Sans formule : calculez ce que la balance évite par défaut de poids, le nombre de défauts à partir duquel elle paie, puis son gain net par an si la ligne reste déréglée à ${g(POIDS_DERIVE)}.`;
       },
       champs: (c) => {
         const x = qualiteDuChapitre(c);
         return [
           { libelle: "Ce que la balance évite par défaut de poids", attendu: x.economie, calcul: `${eur(x.coutTout)} − ${eur(x.q.coutDUnDefautDetecte)} de retouche = ${eur(x.economie)}` },
-          { libelle: "Défauts de poids à partir desquels elle paie", attendu: x.seuilPesee, calcul: `${eur(PESEE_EN_BOUT_DE_LIGNE)} ÷ ${eur(x.economie)} = ${qte(PESEE_EN_BOUT_DE_LIGNE / x.economie)}, soit ${qte(x.seuilPesee)} à l'unité supérieure` },
-          { libelle: "Gain net de la balance, ligne déréglée", attendu: x.gainDeLaPesee, tolerance: 120, calcul: `${qte(x.derive.nombre)} × ${eur(x.economie)} − ${eur(PESEE_EN_BOUT_DE_LIGNE)} = ${eur(x.gainDeLaPesee)}` },
+          { libelle: "Défauts de poids à partir desquels elle paie", nature: "quantite", attendu: x.seuilPesee, calcul: `${eur(PESEE_EN_BOUT_DE_LIGNE)} ÷ ${eur(x.economie)} = ${qte(PESEE_EN_BOUT_DE_LIGNE / x.economie)}, arrondi à l'unité supérieure : ${qte(x.seuilPesee)} à l'unité supérieure` },
+          { libelle: "Gain net de la balance, ligne déréglée", attendu: x.gainDeLaPesee, calcul: `${qte(x.derive.nombre)} × ${eur(x.economie)} − ${eur(PESEE_EN_BOUT_DE_LIGNE)} = ${eur(x.gainDeLaPesee)}` },
         ];
       },
       explication: (c) => {
@@ -498,14 +507,14 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       titre: "Pariez sur l'échantillon",
       question: (c) => {
         const x = qualiteDuChapitre(c);
-        return `Avant de calculer, pariez. Chaque heure, le contrôleur pèse ${qte(ECHANTILLON_HORAIRE)} enceintes prises au hasard et calcule leur poids moyen. Le poids d'une enceinte a un écart-type de ${g(x.P.ecartType, 0)}. D'une heure à l'autre, le poids moyen de l'échantillon varie…`;
+        return `Avant de calculer, pariez. Chaque heure, le contrôleur pèse ${qte(ECHANTILLON_HORAIRE)} enceintes prises au hasard et calcule leur poids moyen. Le poids d'une enceinte a un écart-type de ${g(x.P.ecartType)}. D'une heure à l'autre, le poids moyen de l'échantillon varie…`;
       },
       options: (c) => {
         const x = qualiteDuChapitre(c);
         const k = x.P.ecartType / x.sigmaMoyenne;
         const voir = "L'étape suivante le calcule.";
         return [
-          { texte: `${qte(k, 0)} fois moins qu'une enceinte`, juste: Math.abs(k - Math.sqrt(ECHANTILLON_HORAIRE)) < 1e-9, retour: `Bon pari. ${voir}` },
+          { texte: `${qte(k)} fois moins qu'une enceinte`, juste: Math.abs(k - Math.sqrt(ECHANTILLON_HORAIRE)) < 1e-9, retour: `Bon pari. ${voir}` },
           { texte: `${qte(ECHANTILLON_HORAIRE)} fois moins qu'une enceinte, une par enceinte pesée`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Autant qu'une enceinte : ce sont les mêmes enceintes", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -518,17 +527,18 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       titre: "La loi de la moyenne d'un échantillon",
       question: (c) => {
         const x = qualiteDuChapitre(c);
-        return `Si le poids X suit N(m ; σ), la moyenne X̄ d'un échantillon de n enceintes suit N(m ; σ ÷ √n). Ligne bien réglée, m = ${qte(x.P.cible)}, σ = ${qte(x.P.ecartType)}, n = ${qte(ECHANTILLON_HORAIRE)}. Calculez l'écart-type de X̄, les bornes de l'intervalle centré sur ${qte(x.P.cible)} où tombe X̄ 95 fois sur 100 (t = ${tt(x.T.centreA95)}), puis la probabilité que X̄ dépasse sa borne haute si la ligne dérive à ${g(POIDS_DERIVE, 0)}.`;
+        return `Si le poids X suit N(m ; σ), la moyenne X̄ d'un échantillon de n enceintes suit N(m ; σ ÷ √n). Ligne bien réglée, m = ${qte(x.P.cible)}, σ = ${qte(x.P.ecartType)}, n = ${qte(ECHANTILLON_HORAIRE)}. Calculez l'écart-type de X̄, les bornes de l'intervalle centré sur ${qte(x.P.cible)} où tombe X̄ 95 fois sur 100 (t = ${tt(x.T.centreA95)}), puis la probabilité que X̄ dépasse sa borne haute si la ligne dérive à ${g(POIDS_DERIVE)}.`;
       },
       champs: (c) => {
         const x = qualiteDuChapitre(c);
         const f = x.fourchette;
         return [
-          { libelle: "Écart-type de la moyenne de l'échantillon", attendu: x.sigmaMoyenne, calcul: `${qte(x.P.ecartType)} ÷ √${qte(ECHANTILLON_HORAIRE)} = ${g(x.sigmaMoyenne)}` },
-          { libelle: "Borne basse, en grammes", attendu: auCentime(f.bas), tolerance: 0.02, calcul: `${qte(x.P.cible)} − ${tt(x.T.centreA95)} × ${qte(x.sigmaMoyenne)} = ${g(f.bas)}` },
-          { libelle: "Borne haute, en grammes", attendu: auCentime(f.haut), tolerance: 0.02, calcul: `${qte(x.P.cible)} + ${tt(x.T.centreA95)} × ${qte(x.sigmaMoyenne)} = ${g(f.haut)}` },
+          { libelle: "Écart-type de la moyenne de l'échantillon", nature: "grandeur", attendu: x.sigmaMoyenne, calcul: `${qte(x.P.ecartType)} ÷ √${qte(ECHANTILLON_HORAIRE)} = ${g(x.sigmaMoyenne)}` },
+          { libelle: "Borne basse, en grammes", nature: "grandeur", attendu: auCentime(f.bas), calcul: `${qte(x.P.cible)} − ${tt(x.T.centreA95)} × ${qte(x.sigmaMoyenne)} = ${g(f.bas)}` },
+          { libelle: "Borne haute, en grammes", nature: "grandeur", attendu: auCentime(f.haut), calcul: `${qte(x.P.cible)} + ${tt(x.T.centreA95)} × ${qte(x.sigmaMoyenne)} = ${g(f.haut)}` },
           {
             libelle: "Probabilité de dépasser la borne haute, ligne déréglée",
+            nature: "coefficient",
             attendu: x.alerte,
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `X̄ suit N(${qte(POIDS_DERIVE)} ; ${qte(x.sigmaMoyenne)}) : 1 − Π((${qte(auCentime(f.haut))} − ${qte(POIDS_DERIVE)}) ÷ ${qte(x.sigmaMoyenne)}) = Π(${tt(x.tAlerte)}) = ${pr(x.alerte)}`,
@@ -538,7 +548,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       explication: (c) => {
         const x = qualiteDuChapitre(c);
         return [
-          `Une moyenne varie √n fois moins qu'une enceinte : les écarts se compensent. Une moyenne au-dessus de ${g(auCentime(x.fourchette.haut))} n'arrive que ${qte(((1 - CONFIANCE_DE_L_ESTIMATION) / 2) * 100, 1)} fois sur 100 à une ligne bien réglée ; elle arrive ${pct(x.alerte, 1)} des fois à une ligne déréglée.`,
+          `Une moyenne varie √n fois moins qu'une enceinte : les écarts se compensent. Une moyenne au-dessus de ${g(auCentime(x.fourchette.haut))} n'arrive que ${qte(((1 - CONFIANCE_DE_L_ESTIMATION) / 2) * 100)} fois sur 100 à une ligne bien réglée ; elle arrive ${pct(x.alerte)} des fois à une ligne déréglée.`,
           `Peser ${qte(ECHANTILLON_HORAIRE)} enceintes par heure suffit donc à voir le dérèglement en quelques heures, sans tout peser. Même loi, deux usages : prévoir l'échantillon quand on connaît la production, et, à l'inverse, estimer la production à partir de l'échantillon.`,
         ];
       },
@@ -562,12 +572,12 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const x = qualiteDuChapitre(c);
         const r = x.r;
         return [
-          { libelle: "Poids moyen de l'échantillon, en grammes", attendu: arrondi(r.moyenne, 2), tolerance: 0.05, calcul: `Σ (effectif × centre) ÷ ${qte(r.n)} = ${g(r.moyenne)}` },
-          { libelle: "Écart-type de l'échantillon, en grammes", attendu: arrondi(r.ecartTypeObserve, 2), tolerance: 0.05, calcul: `√(Σ effectif × (centre − ${qte(r.moyenne)})² ÷ ${qte(r.n)}) = ${g(r.ecartTypeObserve)}` },
+          { libelle: "Poids moyen de l'échantillon, en grammes", nature: "grandeur", attendu: arrondi(r.moyenne, 2), calcul: `Σ (effectif × centre) ÷ ${qte(r.n)} = ${g(r.moyenne)}` },
+          { libelle: "Écart-type de l'échantillon, en grammes", nature: "grandeur", attendu: arrondi(r.ecartTypeObserve, 2), calcul: `√(Σ effectif × (centre − ${qte(r.moyenne)})² ÷ ${qte(r.n)}) = ${g(r.ecartTypeObserve)}` },
           {
             libelle: "Estimation de l'écart-type de la production, en grammes",
+            nature: "grandeur",
             attendu: arrondi(r.estimationDeLEcartType, 2),
-            tolerance: 0.05,
             calcul: `s = ${qte(r.ecartTypeObserve)} × √(${qte(r.n)} ÷ ${qte(r.n - 1)}) = ${g(r.estimationDeLEcartType)}`,
           },
         ];
@@ -586,21 +596,21 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       titre: "L'intervalle de confiance, écart-type connu",
       question: (c) => {
         const x = qualiteDuChapitre(c);
-        return `Un poids moyen à ${g(x.r.moyenne)} ne dit pas où est vraiment celui de la production. Supposez l'écart-type de la production connu, ${g(x.P.ecartType, 0)}. L'intervalle de confiance à 95 % de la moyenne m est x̄ ± ${tt(x.T.centreA95)} × σ ÷ √n. Calculez sa demi-largeur, puis ses deux bornes.`;
+        return `Un poids moyen à ${g(x.r.moyenne)} ne dit pas où est vraiment celui de la production. Supposez l'écart-type de la production connu, ${g(x.P.ecartType)}. L'intervalle de confiance à 95 % de la moyenne m est x̄ ± ${tt(x.T.centreA95)} × σ ÷ √n. Calculez sa demi-largeur, puis ses deux bornes.`;
       },
       champs: (c) => {
         const x = qualiteDuChapitre(c);
         const i = x.icConnu;
         return [
-          { libelle: "Demi-largeur, en grammes", attendu: arrondi(i.demi, 2), tolerance: 0.02, calcul: `${tt(x.T.centreA95)} × ${qte(x.P.ecartType)} ÷ √${qte(x.r.n)} = ${g(i.demi)}` },
-          { libelle: "Borne basse, en grammes", attendu: arrondi(i.bas, 2), tolerance: 0.03, calcul: `${qte(x.r.moyenne)} − ${qte(arrondi(i.demi, 2))} = ${g(i.bas)}` },
-          { libelle: "Borne haute, en grammes", attendu: arrondi(i.haut, 2), tolerance: 0.03, calcul: `${qte(x.r.moyenne)} + ${qte(arrondi(i.demi, 2))} = ${g(i.haut)}` },
+          { libelle: "Demi-largeur, en grammes", nature: "grandeur", attendu: arrondi(i.demi, 2), calcul: `${tt(x.T.centreA95)} × ${qte(x.P.ecartType)} ÷ √${qte(x.r.n)} = ${g(i.demi)}` },
+          { libelle: "Borne basse, en grammes", nature: "grandeur", attendu: auCentime(x.r.moyenne - arrondi(i.demi, 2)), calcul: `${qte(x.r.moyenne)} − ${qte(arrondi(i.demi, 2))} = ${g(x.r.moyenne - arrondi(i.demi, 2))}` },
+          { libelle: "Borne haute, en grammes", nature: "grandeur", attendu: auCentime(x.r.moyenne + arrondi(i.demi, 2)), calcul: `${qte(x.r.moyenne)} + ${qte(arrondi(i.demi, 2))} = ${g(x.r.moyenne + arrondi(i.demi, 2))}` },
         ];
       },
       explication: (c) => {
         const x = qualiteDuChapitre(c);
         return [
-          `Avec 95 chances sur 100, le poids moyen de la production est entre ${g(x.icConnu.bas)} et ${g(x.icConnu.haut)}. ${g(x.P.cible, 0)}, la cible, n'y est pas.`,
+          `Avec 95 chances sur 100, le poids moyen de la production est entre ${g(x.icConnu.bas)} et ${g(x.icConnu.haut)}. ${g(x.P.cible)}, la cible, n'y est pas.`,
         ];
       },
     },
@@ -617,9 +627,9 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const x = qualiteDuChapitre(c);
         const i = x.icInconnu;
         return [
-          { libelle: "Demi-largeur, en grammes", attendu: arrondi(i.demi, 2), tolerance: 0.03, calcul: `${tt(x.T.centreA95)} × ${qte(x.r.estimationDeLEcartType)} ÷ √${qte(x.r.n)} = ${g(i.demi)}` },
-          { libelle: "Borne basse, en grammes", attendu: arrondi(i.bas, 2), tolerance: 0.05, calcul: `${qte(x.r.moyenne)} − ${qte(arrondi(i.demi, 2))} = ${g(i.bas)}` },
-          { libelle: "Borne haute, en grammes", attendu: arrondi(i.haut, 2), tolerance: 0.05, calcul: `${qte(x.r.moyenne)} + ${qte(arrondi(i.demi, 2))} = ${g(i.haut)}` },
+          { libelle: "Demi-largeur, en grammes", nature: "grandeur", attendu: arrondi(i.demi, 2), calcul: `${tt(x.T.centreA95)} × ${qte(x.r.estimationDeLEcartType)} ÷ √${qte(x.r.n)} = ${g(i.demi)}` },
+          { libelle: "Borne basse, en grammes", nature: "grandeur", attendu: auCentime(x.r.moyenne - arrondi(i.demi, 2)), calcul: `${qte(x.r.moyenne)} − ${qte(arrondi(i.demi, 2))} = ${g(x.r.moyenne - arrondi(i.demi, 2))}` },
+          { libelle: "Borne haute, en grammes", nature: "grandeur", attendu: auCentime(x.r.moyenne + arrondi(i.demi, 2)), calcul: `${qte(x.r.moyenne)} + ${qte(arrondi(i.demi, 2))} = ${g(x.r.moyenne + arrondi(i.demi, 2))}` },
         ];
       },
       explication: (c) => {
@@ -643,7 +653,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const dedans = x.icInconnu.bas <= x.P.cible && x.P.cible <= x.icInconnu.haut;
         return [
           {
-            texte: `La moyenne a quitté ${g(x.P.cible, 0)} : la buse est à revoir`,
+            texte: `La moyenne a quitté ${g(x.P.cible)} : la buse est à revoir`,
             juste: !dedans,
             retour: `Oui. La cible est hors de l'intervalle : avec 95 chances sur 100, la production pèse en moyenne plus de ${g(x.icInconnu.bas)}. Le réglage a dérivé, il faut nettoyer la buse avant que les défauts ne s'accumulent.`,
           },
@@ -713,7 +723,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       defi: (c) => {
         const x = qualiteDuChapitre(c);
         return {
-          consigne: `Ramenez les défauts de poids à ${qte(DEFI_DE_LA_LIGNE.defautsAuPlus)} au plus dans l'année, et estimez le poids moyen à ${g(DEFI_DE_LA_LIGNE.precisionAuPlus, 1)} près au plus.`,
+          consigne: `Ramenez les défauts de poids à ${qte(DEFI_DE_LA_LIGNE.defautsAuPlus)} au plus dans l'année, et estimez le poids moyen à ${g(DEFI_DE_LA_LIGNE.precisionAuPlus)} près au plus.`,
           atteint: (p) => defiDeLaLigne(x.f, p),
           indice: (p) => {
             const l = laboratoireDeLaLigne(x.f, p);
@@ -727,7 +737,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const l = laboratoireDeLaLigne(x.f, p);
         return [
           `Défi relevé : ${qte(arrondi(l.nombre, 0))} défauts de poids, ${eur(l.cout)} par an, et une moyenne connue à ${g(arrondi(l.demi, 2))} près.`,
-          `Centrer la machine ne suffit pas : à ${g(x.P.ecartType, 0)} d'écart-type, il reste ${qte(arrondi(x.regle.nombre, 0))} défauts. Il faut aussi réduire la dispersion, par l'entretien et la méthode. La précision, elle, vient de la taille de l'échantillon : elle progresse comme √n, et chaque point de confiance de plus la fait reculer.`,
+          `Centrer la machine ne suffit pas : à ${g(x.P.ecartType)} d'écart-type, il reste ${qte(arrondi(x.regle.nombre, 0))} défauts. Il faut aussi réduire la dispersion, par l'entretien et la méthode. La précision, elle, vient de la taille de l'échantillon : elle progresse comme √n, et chaque point de confiance de plus la fait reculer.`,
         ];
       },
     },
@@ -738,13 +748,13 @@ export const PILOTER_LA_QUALITE: Chapitre = {
       titre: "Combien d'enceintes peser",
       question: (c) => {
         const x = qualiteDuChapitre(c);
-        return `Le directeur de production veut connaître le poids moyen à ${g(PRECISION_VOULUE, 0)} près. L'écart-type de la production vaut ${g(x.P.ecartType, 0)}. Sans formule : combien d'enceintes faut-il peser au moins, à 95 %, puis à 99 % de confiance ?`;
+        return `Le directeur de production veut connaître le poids moyen à ${g(PRECISION_VOULUE)} près. L'écart-type de la production vaut ${g(x.P.ecartType)}. Sans formule : combien d'enceintes faut-il peser au moins, à 95 %, puis à 99 % de confiance ?`;
       },
       champs: (c) => {
         const x = qualiteDuChapitre(c);
         return [
-          { libelle: "Enceintes à peser, à 95 %", attendu: x.taille95, tolerance: 1, calcul: `${tt(x.T.centreA95)} × ${qte(x.P.ecartType)} ÷ √n ≤ ${qte(PRECISION_VOULUE)} : n ≥ (${tt(x.T.centreA95)} × ${qte(x.P.ecartType)} ÷ ${qte(PRECISION_VOULUE)})² = ${qte((x.T.centreA95 * x.P.ecartType) ** 2)}, soit ${qte(x.taille95)}` },
-          { libelle: "Enceintes à peser, à 99 %", attendu: x.taille99, tolerance: 3, calcul: `n ≥ (${tt(x.T.centreA99)} × ${qte(x.P.ecartType)} ÷ ${qte(PRECISION_VOULUE)})² = ${qte((x.T.centreA99 * x.P.ecartType) ** 2)}, soit ${qte(x.taille99)}` },
+          { libelle: "Enceintes à peser, à 95 %", nature: "quantite", attendu: x.taille95, calcul: `${tt(x.T.centreA95)} × ${qte(x.P.ecartType)} ÷ √n ≤ ${qte(PRECISION_VOULUE)} : n ≥ (${tt(x.T.centreA95)} × ${qte(x.P.ecartType)} ÷ ${qte(PRECISION_VOULUE)})² = ${qte((x.T.centreA95 * x.P.ecartType) ** 2)}, arrondi à l'unité supérieure : ${qte(x.taille95)} (une de moins laisserait la précision au-dessus de ${g(PRECISION_VOULUE)})` },
+          { libelle: "Enceintes à peser, à 99 %", nature: "quantite", attendu: x.taille99, calcul: `n ≥ (${tt(x.T.centreA99)} × ${qte(x.P.ecartType)} ÷ ${qte(PRECISION_VOULUE)})² = ${qte((x.T.centreA99 * x.P.ecartType) ** 2)}, arrondi à l'unité supérieure : ${qte(x.taille99)}` },
         ];
       },
       explication: (c) => {
@@ -788,7 +798,7 @@ export const PILOTER_LA_QUALITE: Chapitre = {
         const x = qualiteDuChapitre(c);
         const [a, b] = x.pareto.causes;
         return [
-          `Le diagramme de Pareto a désigné la priorité : le poids hors tolérance et la soudure, ${pct(b!.cumul, 1)} des ${qte(x.pareto.total)} défauts ; le diagramme d'Ishikawa en a rangé les causes selon les 5 M. La loi normale a chiffré le poids : ${qte(x.regle.nombre)} enceintes hors tolérance par an, ligne bien réglée, ${qte(x.derive.nombre)} déréglée de ${g(POIDS_DERIVE - x.P.cible, 0)}, ${eur(x.surcout)} de plus.`,
+          `Le diagramme de Pareto a désigné la priorité : le poids hors tolérance et la soudure, ${pct(b!.cumul)} des ${qte(x.pareto.total)} défauts ; le diagramme d'Ishikawa en a rangé les causes selon les 5 M. La loi normale a chiffré le poids : ${qte(x.regle.nombre)} enceintes hors tolérance par an, ligne bien réglée, ${qte(x.derive.nombre)} déréglée de ${g(POIDS_DERIVE - x.P.cible)}, ${eur(x.surcout)} de plus.`,
           `Tout peser ne paie qu'à partir de ${qte(x.seuilPesee)} défauts de poids ; surveiller le réglage par échantillon coûte moins. La moyenne de ${qte(ECHANTILLON_HORAIRE)} enceintes varie √${qte(ECHANTILLON_HORAIRE)} fois moins qu'une enceinte ; le relevé du jour estime le poids moyen entre ${g(x.icInconnu.bas)} et ${g(x.icInconnu.haut)}, à 95 %, et ${qte(a!.nombre)} défauts de poids rappellent ce qu'une dérive coûte.`,
           "Au niveau de l'examen, vous savez bâtir un Pareto, ranger des causes selon les 5 M et calculer une part hors tolérance. Vous savez décrire la loi d'une moyenne d'échantillon, estimer une moyenne par un intervalle de confiance, dimensionner un échantillon, et dire ce que ces outils supposent.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

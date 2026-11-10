@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { controleBudgetaire, coutPreetabli } from "../monde/ecarts";
 import { USINES_DU_COURS, type FicheDeLUsine, type ModeleDeNova } from "../monde/nova-usine";
@@ -39,6 +39,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     lectures du volume), le-mix-qui-masque (un mix favorable sur un volume en baisse),
  *     une-autre-composition (une variante de la composition prévue), a-rebours (retrouver un prix
  *     de vente réel à partir de l'écart sur prix) ; puis qui-doit-agir et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes à la composition prévue sont des quantités ; les
+ * écarts attendent le centime, les taux s'écrivent à deux décimales.
  */
 
 /**
@@ -78,13 +82,11 @@ export const SOLUTION_DU_LABORATOIRE = { qa: 10_300, pa: 57, qb: 5_300, pb: 121 
 /** Le contrôle budgétaire se calcule sur une production : l'usine de NOVA. */
 export const ENTREPRISES_DES_VENTES: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+const pct = (t: number) => pourcent(t * 100);
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const auCentime = (x: number) => Math.round(x * 100) / 100;
 /** Le sens d'un écart sur un produit ou une marge : positif, favorable. */
 const sens = (x: number) => (x > 0 ? "favorable" : x < 0 ? "défavorable" : "nul");
 const ecartDit = (x: number) => `${eur(x)} ${sens(x)}`;
@@ -118,24 +120,24 @@ export function ventesEtMarge(c: Pick<Cas, "code">) {
       qr,
       pp,
       pr,
-      part: auCentime(qp / v.qTotalePrevue),
+      part: arrondi2(qp / v.qTotalePrevue),
       coutPreetabli: cout.total,
       margePreetablie: cout.marge,
-      margeReelleUnitaire: auCentime(pr - cout.total),
-      caPrevu: auCentime(qp * pp),
-      caReel: auCentime(qr * pr),
-      prix: auCentime((pr - pp) * qr),
-      quantitesSurCa: auCentime((qr - qp) * pp),
-      margePrevue: auCentime(qp * cout.marge),
-      margeReelle: auCentime(qr * (pr - cout.total)),
-      volume: auCentime((qr - qp) * cout.marge),
+      margeReelleUnitaire: arrondi2(pr - cout.total),
+      caPrevu: arrondi2(qp * pp),
+      caReel: arrondi2(qr * pr),
+      prix: arrondi2((pr - pp) * qr),
+      quantitesSurCa: arrondi2((qr - qp) * pp),
+      margePrevue: arrondi2(qp * cout.marge),
+      margeReelle: arrondi2(qr * (pr - cout.total)),
+      volume: arrondi2((qr - qp) * cout.marge),
       auMixPrevu,
-      quantiteGlobale: auCentime((auMixPrevu - qp) * cout.marge),
-      composition: auCentime((qr - auMixPrevu) * cout.marge),
+      quantiteGlobale: arrondi2((auMixPrevu - qp) * cout.marge),
+      composition: arrondi2((qr - auMixPrevu) * cout.marge),
     };
   });
-  const margeReelle = auCentime(parModele.reduce((t, m) => t + m.margeReelle, 0));
-  const ecartSurMarge = auCentime(margeReelle - v.margePrevue);
+  const margeReelle = arrondi2(parModele.reduce((t, m) => t + m.margeReelle, 0));
+  const ecartSurMarge = arrondi2(margeReelle - v.margePrevue);
   // La variante de composition.
   const fv = ficheAUneAutreComposition(f);
   const ev = controleBudgetaire(fv).ventes;
@@ -150,9 +152,9 @@ export function ventesEtMarge(c: Pick<Cas, "code">) {
   };
   // Le calcul à rebours : le prix de la Salon qui donne l'écart sur prix total remonté.
   const [a, b] = parModele;
-  const partDeLaNomadeARebours = auCentime((PRIX_DE_LA_NOMADE_A_REBOURS - a!.pp) * a!.qr);
-  const partDeLaSalonARebours = auCentime(ECART_SUR_PRIX_A_REBOURS - partDeLaNomadeARebours);
-  const prixDeLaSalonARebours = auCentime(b!.pp + partDeLaSalonARebours / b!.qr);
+  const partDeLaNomadeARebours = arrondi2((PRIX_DE_LA_NOMADE_A_REBOURS - a!.pp) * a!.qr);
+  const partDeLaSalonARebours = arrondi2(ECART_SUR_PRIX_A_REBOURS - partDeLaNomadeARebours);
+  const prixDeLaSalonARebours = arrondi2(b!.pp + partDeLaSalonARebours / b!.qr);
   // Les curseurs : le plus petit prix de la Nomade qui tient la marge prévue, puis le chiffre d'affaires
   // prévu ; le plus petit nombre de Salon, sur le total vendu, qui tient la marge prévue.
   const prixQuiTientLaMarge = Math.ceil((v.margePrevue - b!.margeReelle) / a!.qr + a!.coutPreetabli - 1e-9);
@@ -196,16 +198,16 @@ export function laboratoireDesVentes(x: VentesEtMarge, p: Readonly<Record<string
     { m: b!, q: p.qb!, prix: p.pb! },
   ];
   const total = ventes.reduce((t, v) => t + v.q, 0);
-  const somme = (g: (v: (typeof ventes)[number]) => number) => auCentime(ventes.reduce((t, v) => t + g(v), 0));
+  const somme = (g: (v: (typeof ventes)[number]) => number) => arrondi2(ventes.reduce((t, v) => t + g(v), 0));
   const marge = somme((v) => v.q * (v.prix - v.m.coutPreetabli));
   return {
     total,
     chiffreDAffaires: somme((v) => v.q * v.prix),
     marge,
     prix: somme((v) => (v.prix - v.m.pp) * v.q),
-    quantiteGlobale: auCentime((total - x.qTotalePrevue) * x.margeMoyennePrevue),
+    quantiteGlobale: arrondi2((total - x.qTotalePrevue) * x.margeMoyennePrevue),
     composition: somme((v) => (v.q - (total * v.m.qp) / x.qTotalePrevue) * v.m.margePreetablie),
-    ecartSurMarge: auCentime(marge - x.margePrevue),
+    ecartSurMarge: arrondi2(marge - x.margePrevue),
   };
 }
 
@@ -225,7 +227,7 @@ export function tableauDesVentes(c: Pick<Cas, "code">): TableauDeDonnees {
 
 /** La décomposition complète de l'écart sur marge, modèle par modèle. */
 function tableauDeLaMarge(x: VentesEtMarge): TableauDeDonnees {
-  const total = (g: (m: VentesEtMarge["parModele"][number]) => number) => auCentime(x.parModele.reduce((t, m) => t + g(m), 0));
+  const total = (g: (m: VentesEtMarge["parModele"][number]) => number) => arrondi2(x.parModele.reduce((t, m) => t + g(m), 0));
   const ligne = (libelle: string, g: (m: VentesEtMarge["parModele"][number]) => number) => ({ libelle, valeurs: [...x.parModele.map((m) => eur(g(m))), eur(total(g))] });
   return {
     titre: `L'écart sur marge à l'usine ${dE(x.f.entreprise)}, modèle par modèle`,
@@ -235,7 +237,7 @@ function tableauDeLaMarge(x: VentesEtMarge): TableauDeDonnees {
       ligne("Écart sur quantité globale", (m) => m.quantiteGlobale),
       ligne("Écart sur composition des ventes", (m) => m.composition),
       ligne("Écart sur volume", (m) => m.volume),
-      ligne("Écart sur marge", (m) => auCentime(m.margeReelle - m.margePrevue)),
+      ligne("Écart sur marge", (m) => arrondi2(m.margeReelle - m.margePrevue)),
     ],
   };
 }
@@ -434,12 +436,12 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
       lecture: (c, p) => {
         const x = ventesEtMarge(c);
         const [a, b] = x.parModele;
-        const marge = auCentime(a!.qr * (p - a!.coutPreetabli) + b!.margeReelle);
+        const marge = arrondi2(a!.qr * (p - a!.coutPreetabli) + b!.margeReelle);
         return [
-          { libelle: `Écart sur prix de la ${a!.nom}`, montant: auCentime((p - a!.pp) * a!.qr) },
-          { libelle: "Écart sur chiffre d'affaires", montant: auCentime(a!.qr * p + b!.caReel - x.caPrevu) },
+          { libelle: `Écart sur prix de la ${a!.nom}`, montant: arrondi2((p - a!.pp) * a!.qr) },
+          { libelle: "Écart sur chiffre d'affaires", montant: arrondi2(a!.qr * p + b!.caReel - x.caPrevu) },
           { libelle: "Marge au coût préétabli", montant: marge },
-          { libelle: "Écart sur marge", montant: auCentime(marge - x.margePrevue), fort: true },
+          { libelle: "Écart sur marge", montant: arrondi2(marge - x.margePrevue), fort: true },
         ];
       },
       droites: (c) => {
@@ -558,10 +560,10 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
         const x = ventesEtMarge(c);
         const [a, b] = x.parModele;
         const voir = "Déplacez le curseur à l'étape suivante : la marge des ventes réagit à chaque enceinte qui change de modèle.";
-        const ecart = auCentime(b!.margePreetablie - a!.margePreetablie);
+        const ecart = arrondi2(b!.margePreetablie - a!.margePreetablie);
         return [
           { texte: `Gagne ${eur(ecart)}, l'écart entre les deux marges`, juste: true, retour: `Bon pari. ${voir}` },
-          { texte: `Gagne ${eur(auCentime(b!.pp - a!.pp))}, l'écart entre les deux prix`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `Gagne ${eur(arrondi2(b!.pp - a!.pp))}, l'écart entre les deux prix`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Ne bouge pas : le total vendu est le même", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -591,12 +593,12 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
       lecture: (c, s) => {
         const x = ventesEtMarge(c);
         const [a, b] = x.parModele;
-        const marge = auCentime((x.qTotaleReelle - s) * a!.margePreetablie + s * b!.margePreetablie);
+        const marge = arrondi2((x.qTotaleReelle - s) * a!.margePreetablie + s * b!.margePreetablie);
         return [
           { libelle: "Marge préétablie des ventes", montant: marge },
           { libelle: "Écart sur quantité globale", montant: x.quantiteGlobale },
-          { libelle: "Écart sur composition des ventes", montant: auCentime((x.qTotaleReelle - s - a!.auMixPrevu) * a!.margePreetablie + (s - b!.auMixPrevu) * b!.margePreetablie) },
-          { libelle: "Écart sur volume", montant: auCentime(marge - x.margePrevue), fort: true },
+          { libelle: "Écart sur composition des ventes", montant: arrondi2((x.qTotaleReelle - s - a!.auMixPrevu) * a!.margePreetablie + (s - b!.auMixPrevu) * b!.margePreetablie) },
+          { libelle: "Écart sur volume", montant: arrondi2(marge - x.margePrevue), fort: true },
         ];
       },
       droites: (c) => {
@@ -612,7 +614,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
         const x = ventesEtMarge(c);
         const [, b] = x.parModele;
         return [
-          `Pendant que le curseur bouge, une ligne ne change pas : l'écart sur quantité globale, ${eur(x.quantiteGlobale)}. Il ne dépend que du total vendu. Tout le reste passe par la composition : chaque ${b!.nom} vendue à la place d'une ${x.parModele[0]!.nom} apporte ${eur(auCentime(b!.margePreetablie - x.parModele[0]!.margePreetablie))}.`,
+          `Pendant que le curseur bouge, une ligne ne change pas : l'écart sur quantité globale, ${eur(x.quantiteGlobale)}. Il ne dépend que du total vendu. Tout le reste passe par la composition : chaque ${b!.nom} vendue à la place d'une ${x.parModele[0]!.nom} apporte ${eur(arrondi2(b!.margePreetablie - x.parModele[0]!.margePreetablie))}.`,
           `Il fallait ${qte(x.salonsQuiTiennentLaMarge)} ${b!.nom} pour un écart sur volume nul ; l'usine en a vendu ${qte(b!.qr)}. Le mix a presque rattrapé la quantité globale perdue, sans y parvenir. Les deux étapes suivantes font calculer ces deux écarts.`,
         ];
       },
@@ -658,6 +660,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
         return [
           ...x.parModele.map((m) => ({
             libelle: `${m.nom} à la composition prévue`,
+            nature: "quantite",
             attendu: m.auMixPrevu,
             calcul: `${qte(x.qTotaleReelle)} × ${qte(m.qp)} ÷ ${qte(x.qTotalePrevue)} = ${qte(m.auMixPrevu)}`,
           })),
@@ -796,7 +799,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
             const l = laboratoireDesVentes(x, p);
             return l.total >= x.qTotalePrevue
               ? `Vous vendez ${qte(l.total)} enceintes : le défi en demande moins de ${qte(x.qTotalePrevue)}.`
-              : `La marge est de ${eur(l.marge)}, ${eur(auCentime(x.margePrevue - l.marge))} sous la marge prévue. Une ${b!.nom} à ${eur(p.pb!)} marge ${eur(auCentime(p.pb! - b!.coutPreetabli))}, une ${a!.nom} à ${eur(p.pa!)}, ${eur(auCentime(p.pa! - a!.coutPreetabli))} : jouez sur le partage ou sur les prix.`;
+              : `La marge est de ${eur(l.marge)}, ${eur(arrondi2(x.margePrevue - l.marge))} sous la marge prévue. Une ${b!.nom} à ${eur(p.pb!)} marge ${eur(arrondi2(p.pb! - b!.coutPreetabli))}, une ${a!.nom} à ${eur(p.pa!)}, ${eur(arrondi2(p.pa! - a!.coutPreetabli))} : jouez sur le partage ou sur les prix.`;
           },
           solution: SOLUTION_DU_LABORATOIRE,
         };

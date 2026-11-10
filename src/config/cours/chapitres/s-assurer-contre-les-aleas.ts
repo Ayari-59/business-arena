@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   aleaDe,
@@ -53,6 +53,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     réserve comprise), la-regle (le choix, face aux erreurs des étudiants : le coût moyen seul, le
  *     pire seul, l'ancienne règle), croitre-et-s-assurer (une variante : la ligne automatisée payée
  *     comptant fait changer de formule) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes perdues en moyenne sur les scénarios sont une
+ * espérance, une grandeur au centième ; celles d'une panne à un trimestre donné, une quantité ; les
+ * taux s'écrivent à deux décimales.
  */
 
 /** Les entreprises où le chapitre se joue : NOVA, la seule fiche de capacité du monde du cours. */
@@ -70,11 +75,9 @@ export const COMPTE_COURANT_DU_CURSEUR = { min: 0, max: 160_000 } as const;
  */
 export const LABORATOIRE_DE_L_ASSURANCE = { incendie: { min: 1, max: 60 }, compte: { enMoins: 100_000, enPlus: 200_000, pas: 5_000 } } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(Math.round(t * 10_000) / 100)} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const pm = (t: number) => `${qte(Math.round(t * 100_000) / 100)} ‰`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -113,15 +116,15 @@ export function assuranceDeNova(c: Pick<Cas, "code">) {
   const lIncendieAvecLaReserve = encaisser(f, incendie.cout, { compterLaReserve: true });
   const laPanneMajeure = encaisser(f, aleasDeLAnnee(f).aleas.find((a) => a.code === "panne-majeure")!.cout);
   // Le curseur de la probabilité : la plus petite probabilité (en ‰ entier) où la Basique rembourse sa prime en moyenne.
-  const rembourseHorsIncendie = auCentime(basique.primePure - incendie.probabilite * basique.lignes.find((l) => l.code === "incendie")!.rembourse);
+  const rembourseHorsIncendie = arrondi2(basique.primePure - incendie.probabilite * basique.lignes.find((l) => l.code === "incendie")!.rembourse);
   const rembourseDeLIncendie = basique.lignes.find((l) => l.code === "incendie")!.rembourse;
   const probabiliteQuiRentabilise = Math.ceil(((basique.prime - rembourseHorsIncendie) / rembourseDeLIncendie) * 1000 - 1e-9);
   // Le curseur du compte courant : le plus petit compte où le pire reste à charge de la Basique s'encaisse.
   const compteQuiGardeLaBasique = Math.ceil(absorption.matelas + basique.pireResteACharge - 1e-9);
-  const plusGrosAchatComptant = auCentime(absorption.compteCourant - compteQuiGardeLaBasique);
+  const plusGrosAchatComptant = arrondi2(absorption.compteCourant - compteQuiGardeLaBasique);
   // La variante : la ligne automatisée payée comptant, sur le compte courant.
   const ligne = machineDe(f, "ligne-automatisee");
-  const compteApresLAchat = auCentime(absorption.compteCourant - ligne.prix);
+  const compteApresLAchat = arrondi2(absorption.compteCourant - ligne.prix);
   const apresLAchat = choisirUneAssurance(f, { compteCourant: compteApresLAchat });
   const retenueApresLAchat = apresLAchat.options.find((o) => o.choix === apresLAchat.retenue)!;
   const retenue = choix.options.find((o) => o.choix === choix.retenue)!;
@@ -158,9 +161,9 @@ export function assuranceDeNova(c: Pick<Cas, "code">) {
     compteApresLAchat,
     capaciteApresLAchat: apresLAchat.capacite,
     retenueApresLAchat,
-    surcoutApresLAchat: auCentime(retenueApresLAchat.coutMoyen - retenue.coutMoyen),
+    surcoutApresLAchat: arrondi2(retenueApresLAchat.coutMoyen - retenue.coutMoyen),
     /** Le compte courant au-delà duquel les capitaux propres, et non plus la trésorerie, bornent la capacité. */
-    compteOuLesCapitauxPrennentLeRelais: auCentime(absorption.matelas + absorption.parLesCapitaux),
+    compteOuLesCapitauxPrennentLeRelais: arrondi2(absorption.matelas + absorption.parLesCapitaux),
   };
 }
 
@@ -183,7 +186,7 @@ export const optionsDuLaboratoire = (f: FicheDeLaCapacite): readonly (CodeDeForm
  */
 export function laboratoireDeLAssurance(f: FicheDeLaCapacite, p: PositionDeLAssurance) {
   const fiche = ficheAvecIncendie(f, p.incendie / 1000);
-  const compteCourant = auCentime(p.compte);
+  const compteCourant = arrondi2(p.compte);
   const code = optionsDuLaboratoire(f)[p.formule] ?? null;
   const o = formuleDAssurance(fiche, code);
   const capacite = capaciteDAbsorption(fiche, { compteCourant }).capacite;
@@ -197,7 +200,7 @@ export function laboratoireDeLAssurance(f: FicheDeLaCapacite, p: PositionDeLAssu
     coutMoyen: o.coutMoyen,
     pire: o.pireResteACharge,
     capacite,
-    resteApresLePire: auCentime(capacite - o.pireResteACharge),
+    resteApresLePire: arrondi2(capacite - o.pireResteACharge),
     retenue: choix.retenue,
     nomDeLaRetenue: nomDe(f, choix.retenue),
     pireDeLaBasique: formuleDAssurance(fiche, "basique").pireResteACharge,
@@ -291,6 +294,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         return [
           {
             libelle: "Enceintes perdues, en moyenne",
+            nature: "grandeur",
             attendu: a.incendie.enceintesPerdues,
             calcul: `(${a.incendie.parTrimestre.map((t) => qte(t.enceintesPerdues)).join(" + ")}) ÷ 4 = ${qte(a.incendie.enceintesPerdues)}`,
           },
@@ -333,8 +337,8 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         const t = a.panne.parTrimestre;
         const cap = a.plan.trimestres[0]!.capaciteOutil * (1 - a.panne.perteDeCapacite);
         return [
-          { libelle: "Enceintes perdues, panne au trimestre 1", attendu: t[0]!.enceintesPerdues, calcul: `${qte(a.plan.trimestres[0]!.production)} − min(${qte(a.plan.trimestres[0]!.demande)} ; ${qte(cap)}) = ${qte(t[0]!.enceintesPerdues)}` },
-          { libelle: "Enceintes perdues, panne au trimestre 2", attendu: t[1]!.enceintesPerdues, calcul: `${qte(a.plan.trimestres[1]!.production)} − min(${qte(a.plan.trimestres[1]!.demande)} ; ${qte(cap)}) = ${qte(t[1]!.enceintesPerdues)}` },
+          { libelle: "Enceintes perdues, panne au trimestre 1", nature: "quantite", attendu: t[0]!.enceintesPerdues, calcul: `${qte(a.plan.trimestres[0]!.production)} − min(${qte(a.plan.trimestres[0]!.demande)} ; ${qte(cap)}) = ${qte(t[0]!.enceintesPerdues)}` },
+          { libelle: "Enceintes perdues, panne au trimestre 2", nature: "quantite", attendu: t[1]!.enceintesPerdues, calcul: `${qte(a.plan.trimestres[1]!.production)} − min(${qte(a.plan.trimestres[1]!.demande)} ; ${qte(cap)}) = ${qte(t[1]!.enceintesPerdues)}` },
           {
             libelle: "Coût moyen de la panne",
             attendu: a.panne.cout,
@@ -418,12 +422,12 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
       montrer: "Montrer le croisement",
       lecture: (c, q) => {
         const a = assuranceDeNova(c);
-        const rembourse = auCentime(a.rembourseHorsIncendie + (q / 1000) * a.rembourseDeLIncendie);
+        const rembourse = arrondi2(a.rembourseHorsIncendie + (q / 1000) * a.rembourseDeLIncendie);
         return [
-          { libelle: "Espérance de l'incendie", montant: auCentime((q / 1000) * a.incendie.cout) },
+          { libelle: "Espérance de l'incendie", montant: arrondi2((q / 1000) * a.incendie.cout) },
           { libelle: "Remboursé en moyenne par la formule", montant: rembourse },
           { libelle: "Prime de l'année", montant: a.basique.prime },
-          { libelle: "Chargement : prime moins remboursé en moyenne", montant: auCentime(a.basique.prime - rembourse), fort: true },
+          { libelle: "Chargement : prime moins remboursé en moyenne", montant: arrondi2(a.basique.prime - rembourse), fort: true },
         ];
       },
       droites: (c) => {
@@ -510,7 +514,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         const e = a.etendue;
         const t = a.tousRisques;
         return [
-          `L'${e.nom} rembourse en moyenne ${eur(e.primePure)} pour ${eur(e.prime)} de prime : un chargement de ${eur(e.chargement)}, et un coût moyen de ${eur(e.coutMoyen)}, ${eur(auCentime(e.coutMoyen - a.basique.coutMoyen))} de plus que la ${a.basique.nom}. Les ${t.nom} coûtent en moyenne ${eur(t.coutMoyen)}. Plus la formule couvre, plus elle coûte en moyenne : le chargement monte avec la couverture.`,
+          `L'${e.nom} rembourse en moyenne ${eur(e.primePure)} pour ${eur(e.prime)} de prime : un chargement de ${eur(e.chargement)}, et un coût moyen de ${eur(e.coutMoyen)}, ${eur(arrondi2(e.coutMoyen - a.basique.coutMoyen))} de plus que la ${a.basique.nom}. Les ${t.nom} coûtent en moyenne ${eur(t.coutMoyen)}. Plus la formule couvre, plus elle coûte en moyenne : le chargement monte avec la couverture.`,
           `En échange, elle réduit le pire. Avec l'${e.nom}, le plus lourd sinistre que ${a.f.entreprise} garderait est ${eur(e.pireResteACharge)} ; avec la ${a.basique.nom}, ${eur(a.basique.pireResteACharge)} ; sans assurance, ${eur(a.sans.pireResteACharge)}.`,
         ];
       },
@@ -566,7 +570,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
             choix: optionsDuLaboratoire(a.f).map((code, i) => ({ valeur: i, libelle: nomDe(a.f, code ?? "sans-assurance") })),
           },
           { code: "incendie", libelle: "Probabilité d'incendie dans l'année", unite: "‰", min: l.incendie.min, max: l.incendie.max, pas: 1, depart: Math.round(a.incendie.probabilite * 1000) },
-          { code: "compte", libelle: "Compte courant au 1er janvier", unite: "€", min: auCentime(cc - l.compte.enMoins), max: auCentime(cc + l.compte.enPlus), pas: l.compte.pas, depart: cc },
+          { code: "compte", libelle: "Compte courant au 1er janvier", unite: "€", min: arrondi2(cc - l.compte.enMoins), max: arrondi2(cc + l.compte.enPlus), pas: l.compte.pas, depart: cc },
         ];
       },
       lecture: (c, p) => {
@@ -616,7 +620,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         const a = assuranceDeNova(c);
         const r = laboratoireDeLAssurance(a.f, p as unknown as PositionDeLAssurance);
         return [
-          `À ${eur(auCentime(p.compte!))} de compte courant, ${a.f.entreprise} ne peut plus encaisser que ${eur(r.capacite)} d'un coup : la ${a.pireDeLaBasique}, que la ${a.basique.nom} lui laisse (${eur(r.pireDeLaBasique)}), ne passerait plus. La règle retient alors la formule « ${r.nomDeLaRetenue} », ${eur(r.coutMoyen)} en moyenne. Payer comptant une machine de ${eur(a.ligne.prix)}, c'est vider le compte courant d'autant, et il faut alors acheter plus de protection.`,
+          `À ${eur(arrondi2(p.compte!))} de compte courant, ${a.f.entreprise} ne peut plus encaisser que ${eur(r.capacite)} d'un coup : la ${a.pireDeLaBasique}, que la ${a.basique.nom} lui laisse (${eur(r.pireDeLaBasique)}), ne passerait plus. La règle retient alors la formule « ${r.nomDeLaRetenue} », ${eur(r.coutMoyen)} en moyenne. Payer comptant une machine de ${eur(a.ligne.prix)}, c'est vider le compte courant d'autant, et il faut alors acheter plus de protection.`,
           `Montez le compte courant au-delà de ${eur(a.compteOuLesCapitauxPrennentLeRelais)} : la capacité cesse de monter, les capitaux propres prennent le relais. Et faites varier la probabilité d'incendie : les coûts moyens bougent, le choix non. La gravité face à la capacité écarte une formule ; la moyenne départage celles qui restent.`,
         ];
       },
@@ -722,7 +726,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
           {
             texte: `La ${r.nom} : la moins chère en moyenne des options dont le pire s'encaisse`,
             juste: true,
-            retour: `Oui. ${ecartees.map((o) => `${o.choix === "sans-assurance" ? "Garder tous les risques" : `La ${o.nom}`} laisse au pire ${eur(o.pireResteACharge)}`).join(" ; ")}, plus que les ${eur(a.absorption.capacite)} que ${a.f.entreprise} peut encaisser : écarté. Parmi les options qui restent, la ${r.nom} coûte le moins en moyenne, ${eur(r.coutMoyen)}. Son pire, ${eur(r.pireResteACharge)}, passe, avec ${eur(auCentime(a.absorption.capacite - r.pireResteACharge))} de marge : c'est juste, et un dirigeant prudent peut préférer l'${a.etendue.nom}, pour ${eur(auCentime(a.etendue.coutMoyen - r.coutMoyen))} de plus par an.`,
+            retour: `Oui. ${ecartees.map((o) => `${o.choix === "sans-assurance" ? "Garder tous les risques" : `La ${o.nom}`} laisse au pire ${eur(o.pireResteACharge)}`).join(" ; ")}, plus que les ${eur(a.absorption.capacite)} que ${a.f.entreprise} peut encaisser : écarté. Parmi les options qui restent, la ${r.nom} coûte le moins en moyenne, ${eur(r.coutMoyen)}. Son pire, ${eur(r.pireResteACharge)}, passe, avec ${eur(arrondi2(a.absorption.capacite - r.pireResteACharge))} de marge : c'est juste, et un dirigeant prudent peut préférer l'${a.etendue.nom}, pour ${eur(arrondi2(a.etendue.coutMoyen - r.coutMoyen))} de plus par an.`,
           },
           {
             texte: "Garder les risques : c'est l'option la moins chère en moyenne",
@@ -799,7 +803,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
           { libelle: "Capacité par la trésorerie", montant: k.parLaTresorerie },
           { libelle: "Capacité par les capitaux propres", montant: k.parLesCapitaux },
           { libelle: "Pire reste à charge avec la Basique", montant: a.basique.pireResteACharge },
-          { libelle: "Capacité qui reste après ce sinistre", montant: auCentime(k.capacite - a.basique.pireResteACharge), fort: true },
+          { libelle: "Capacité qui reste après ce sinistre", montant: arrondi2(k.capacite - a.basique.pireResteACharge), fort: true },
         ];
       },
       droites: (c) => {

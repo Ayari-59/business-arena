@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   anneeDeProduction,
@@ -48,6 +48,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     des ventes), la-demande-de-n (la même variante sur la demande de N : un poste vide ne coûte
  *     que si l'équipe devient le goulot), a-rebours (retrouver les ventes perdues à partir du coût
  *     d'un départ), ce-que-le-calcul-ne-compte-pas (une critique de la méthode) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les capacités de l'équipe, les ventes, les mois de poste vide
+ * et les enceintes perdues sont des quantités ; le rapport du coût du départ à celui de
+ * l'augmentation est une grandeur au centième ; les parts du marché payées attendent le centième (à
+ * 0,05 point près, avant).
  */
 
 /** Le départ se chiffre sur l'atelier de NOVA, la PME industrielle de la comptabilité et du contrôle de gestion. */
@@ -96,11 +102,9 @@ export const TRIMESTRE_DE_LA_BAISSE = 1;
 /** @deprecated Le tour de l'arène où la mission « jouez » recrute le remplaçant ; le chapitre n'en sert plus. */
 export const TRIMESTRE_DU_RECRUTEMENT = 2;
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Une part, en pourcentage au centième. */
-const pct = (t: number) => `${qte(auCentime(t * 100))} %`;
+const pct = (t: number) => pourcent(t * 100);
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] as const;
 const nomDuMois = (m: number) => MOIS[m - 1]!;
 /** Les mois de `de` à `a`, nommés : « avril, mai et juin ». */
@@ -137,7 +141,7 @@ export function departDUnOperateur(c: Pick<Cas, "code">) {
   const surNDesLAnnonce = departDuModele(f, { debutDuRecrutement: annonce }, { demande: f.anneeN.demande });
   const enJanvier = departDuModele(f, { debutDuRecrutement: 1 });
   // L'augmentation de chaque opérateur au-delà de laquelle garder l'équipe coûterait plus, sur un an, que le départ.
-  const parEuroDAugmentation = auCentime((1 + taux) * 12 * operateurs);
+  const parEuroDAugmentation = arrondi2((1 + taux) * 12 * operateurs);
   const augmentationMaximale = Math.floor(auDepart.coutDuDepart / parEuroDAugmentation + 1e-9);
   const moisDuTrimestre = auDepart.equipe.mois.slice(k * 3, k * 3 + 3);
   return {
@@ -168,7 +172,7 @@ export function departDUnOperateur(c: Pick<Cas, "code">) {
     surNDesLAnnonce,
     demandeDuTrimestreEnN: f.anneeN.demande[k]!,
     /** Combien de fois le départ coûte l'augmentation qui l'aurait évité. */
-    rapport: auCentime(auDepart.coutDuDepart / p.coutDeLAugmentationParAn),
+    rapport: arrondi2(auDepart.coutDuDepart / p.coutDeLAugmentationParAn),
     parEuroDAugmentation,
     augmentationMaximale,
   };
@@ -185,18 +189,18 @@ export type DepartDUnOperateur = ReturnType<typeof departDUnOperateur>;
  */
 export function laboratoireDuDepart(x: DepartDUnOperateur, part: number, lancement: number, demande: number) {
   const f = x.f;
-  const salaire = auCentime((part / 100) * f.personnel.salaireDuMarche.nPlus1);
+  const salaire = arrondi2((part / 100) * f.personnel.salaireDuMarche.nPlus1);
   const p = partDuMarche(f, { salaire });
   const coutMensuel = coutEmployeurMensuel(f, salaire);
   const moisDuPlan = 12 * x.operateurs;
-  const hausse = auCentime(-(coutMensuel - x.coutMensuel) * moisDuPlan);
+  const hausse = arrondi2(-(coutMensuel - x.coutMensuel) * moisDuPlan);
   const demandeDeLAnnee = demande === DEMANDES_DU_LABORATOIRE.n ? f.anneeN.demande : f.anneeNPlus1.demande;
   if (!p.sousLeSeuil) {
     return { salaire, part, demissions: 0, moisVacants: 0, equipe: x.equipeDuPlan, ventesPerdues: 0, margePerdue: 0, recrutement: 0, nonVerses: 0, hausse, effetDuDepart: 0, effet: hausse };
   }
   const d = departDuModele(f, { debutDuRecrutement: lancement === 0 ? null : lancement }, { demande: demandeDeLAnnee });
-  const nonVerses = auCentime((moisDuPlan - d.equipe.moisPayes) * coutMensuel);
-  const effetDuDepart = auCentime(-d.margePerdue - d.recrutement + nonVerses);
+  const nonVerses = arrondi2((moisDuPlan - d.equipe.moisPayes) * coutMensuel);
+  const effetDuDepart = arrondi2(-d.margePerdue - d.recrutement + nonVerses);
   return {
     salaire,
     part,
@@ -209,7 +213,7 @@ export function laboratoireDuDepart(x: DepartDUnOperateur, part: number, lanceme
     nonVerses,
     hausse,
     effetDuDepart,
-    effet: auCentime(hausse + effetDuDepart),
+    effet: arrondi2(hausse + effetDuDepart),
   };
 }
 
@@ -319,11 +323,11 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       montrer: "Montrer le seuil de démission",
       lecture: (c, s) => {
         const x = departDUnOperateur(c);
-        const augmentation = auCentime(s - x.f.operateurs.salaireBrutMensuel);
+        const augmentation = arrondi2(s - x.f.operateurs.salaireBrutMensuel);
         return [
-          { libelle: "Salaire au seuil de démission", montant: auCentime(x.p.marche * x.p.seuil) },
+          { libelle: "Salaire au seuil de démission", montant: arrondi2(x.p.marche * x.p.seuil) },
           { libelle: "Augmentation mensuelle d'un opérateur", montant: augmentation },
-          { libelle: "Hausse de la masse salariale sur un an, cotisations comprises", montant: auCentime(augmentation * x.parEuroDAugmentation), fort: true },
+          { libelle: "Hausse de la masse salariale sur un an, cotisations comprises", montant: arrondi2(augmentation * x.parEuroDAugmentation), fort: true },
         ];
       },
       droites: (c) => {
@@ -356,15 +360,13 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         return [
           {
             libelle: "Part du marché payée en N (%)",
-            attendu: auCentime(x.pN.part * 100),
+            attendu: arrondi2(x.pN.part * 100),
             calcul: `${eur(f.operateurs.salaireBrutMensuel)} ÷ ${eur(f.personnel.salaireDuMarche.n)} = ${pct(x.pN.part)}`,
-            tolerance: 0.05,
           },
           {
             libelle: "Part du marché payée en N + 1 (%)",
-            attendu: auCentime(x.p.part * 100),
+            attendu: arrondi2(x.p.part * 100),
             calcul: `${eur(f.operateurs.salaireBrutMensuel)} ÷ ${eur(x.p.marche)} = ${pct(x.p.part)}`,
-            tolerance: 0.05,
           },
           { libelle: "Salaire au seuil de démission", attendu: x.p.salaireAuSeuil, calcul: `${eur(x.p.marche)} × ${pct(x.p.seuil)} = ${eur(x.p.salaireAuSeuil)}` },
           {
@@ -399,9 +401,10 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
             ? `(${qte(m.anciens)} + ${qte(m.productiviteDuNouveau)}) × ${qte(x.parMois)} = ${qte(m.capacite)}`
             : `${qte(m.anciens)} × ${qte(x.parMois)} = ${qte(m.capacite)}`;
         return [
-          ...x.moisDuTrimestre.map((m) => ({ libelle: `Capacité de l'équipe en ${nomDuMois(m.mois)} (${x.f.unites})`, attendu: m.capacite, calcul: calcul(m) })),
+          ...x.moisDuTrimestre.map((m) => ({ libelle: `Capacité de l'équipe en ${nomDuMois(m.mois)} (${x.f.unites})`, nature: "quantite", attendu: m.capacite, calcul: calcul(m) })),
           {
             libelle: `Capacité de l'équipe au trimestre ${x.trimestre} (${x.f.unites})`,
+            nature: "quantite",
             attendu: x.auDepart.equipe.trimestres[x.trimestre - 1]!,
             calcul: `${x.moisDuTrimestre.map((m) => qte(m.capacite)).join(" + ")} = ${qte(x.auDepart.equipe.trimestres[x.trimestre - 1]!)}`,
           },
@@ -431,11 +434,13 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         return [
           {
             libelle: `Ventes du trimestre ${x.trimestre} (${x.f.unites})`,
+            nature: "quantite",
             attendu: t.ventes,
             calcul: `la plus petite de ${qte(t.demande)} demandées, ${qte(t.capaciteOutil)} pour l'outil et ${qte(t.equipe)} pour l'équipe : ${qte(t.ventes)}`,
           },
           {
             libelle: `Ventes perdues par le départ (${x.f.unites})`,
+            nature: "quantite",
             attendu: x.auDepart.ventesPerdues,
             calcul: `${qte(t.ventesDuPlan)} au plan − ${qte(t.ventes)} = ${qte(x.auDepart.ventesPerdues)}`,
           },
@@ -473,6 +478,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
           },
           {
             libelle: "Coût du départ ÷ coût de l'augmentation",
+            nature: "grandeur",
             attendu: x.rapport,
             calcul: `${eur(d.coutDuDepart)} ÷ ${eur(x.p.coutDeLAugmentationParAn)} = ${qte(x.rapport)}`,
             tolerance: 0.01,
@@ -565,11 +571,11 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       montrer: "Montrer la limite",
       lecture: (c, a) => {
         const x = departDUnOperateur(c);
-        const hausse = auCentime(a * x.parEuroDAugmentation);
+        const hausse = arrondi2(a * x.parEuroDAugmentation);
         return [
           { libelle: "Hausse de la masse salariale sur un an", montant: hausse },
           { libelle: "Coût du départ, recruté au départ", montant: x.auDepart.coutDuDepart },
-          { libelle: "Ce que garder l'équipe fait gagner", montant: auCentime(x.auDepart.coutDuDepart - hausse), fort: true },
+          { libelle: "Ce que garder l'équipe fait gagner", montant: arrondi2(x.auDepart.coutDuDepart - hausse), fort: true },
         ];
       },
       droites: (c) => {
@@ -579,7 +585,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       explication: (c) => {
         const x = departDUnOperateur(c);
         return [
-          `Jusqu'à ${eur(x.augmentationMaximale)} par mois et par opérateur, garder l'équipe coûte moins que le départ sur un an : ${eur(x.augmentationMaximale)} × ${qte(1 + x.taux)} × 12 × ${qte(x.operateurs)} = ${eur(auCentime(x.augmentationMaximale * x.parEuroDAugmentation))}. ${x.f.entreprise} n'a besoin que de ${eur(x.p.augmentationParMois)}.`,
+          `Jusqu'à ${eur(x.augmentationMaximale)} par mois et par opérateur, garder l'équipe coûte moins que le départ sur un an : ${eur(x.augmentationMaximale)} × ${qte(1 + x.taux)} × 12 × ${qte(x.operateurs)} = ${eur(arrondi2(x.augmentationMaximale * x.parEuroDAugmentation))}. ${x.f.entreprise} n'a besoin que de ${eur(x.p.augmentationParMois)}.`,
           "L'écart est si grand parce que le départ ne se paie pas en salaires : il se paie en ventes, celles d'une équipe devenue le goulot. Il resterait à savoir ce qu'il coûte si l'on recrute plus tôt, ou si la demande est moins forte.",
         ];
       },
@@ -617,7 +623,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       leviers: (c) => {
         const x = departDUnOperateur(c);
         return [
-          { code: "part", libelle: "Salaire, en part du marché de N + 1", unite: "%", min: PARTS_DU_LABORATOIRE.min, max: PARTS_DU_LABORATOIRE.max, pas: PARTS_DU_LABORATOIRE.pas, depart: auCentime(x.p.part * 100) },
+          { code: "part", libelle: "Salaire, en part du marché de N + 1", unite: "%", min: PARTS_DU_LABORATOIRE.min, max: PARTS_DU_LABORATOIRE.max, pas: PARTS_DU_LABORATOIRE.pas, depart: arrondi2(x.p.part * 100) },
           {
             code: "lancement",
             libelle: "Lancement du recrutement",
@@ -646,7 +652,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       lecture: (c, p) => {
         const x = departDUnOperateur(c);
         const l = laboratoireDuDepart(x, p.part!, p.lancement!, p.demande!);
-        const d = laboratoireDuDepart(x, auCentime(x.p.part * 100), x.fiche.debutDuRecrutement!, DEMANDES_DU_LABORATOIRE.nPlus1);
+        const d = laboratoireDuDepart(x, arrondi2(x.p.part * 100), x.fiche.debutDuRecrutement!, DEMANDES_DU_LABORATOIRE.nPlus1);
         return [
           { libelle: "Salaire brut mensuel d'un opérateur", montant: l.salaire, reference: d.salaire },
           { libelle: "Démissions", montant: l.demissions, unite: "démission", reference: d.demissions },
@@ -689,15 +695,15 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
               return `${qte(l.ventesPerdues)} ${x.f.unites} perdues : au trimestre ${x.trimestre}, l'équipe ne monte que ${qte(l.equipe)} ${x.f.unites} pour ${qte(x.outilDuTrimestre)} que la ligne peut monter.`;
             return `Aucune vente perdue, mais l'année coûte ${eur(-l.effet)} : cherchez moins cher.`;
           },
-          solution: { part: auCentime(x.p.seuil * 100), lancement: x.fiche.debutDuRecrutement!, demande: DEMANDES_DU_LABORATOIRE.nPlus1 },
+          solution: { part: arrondi2(x.p.seuil * 100), lancement: x.fiche.debutDuRecrutement!, demande: DEMANDES_DU_LABORATOIRE.nPlus1 },
         };
       },
       explication: (c, p) => {
         const x = departDUnOperateur(c);
         const l = laboratoireDuDepart(x, p.part!, p.lancement!, p.demande!);
-        const janvier = laboratoireDuDepart(x, auCentime(x.p.part * 100), 1, DEMANDES_DU_LABORATOIRE.nPlus1);
-        const fevrier = laboratoireDuDepart(x, auCentime(x.p.part * 100), MOIS_DE_LA_VARIANTE, DEMANDES_DU_LABORATOIRE.nPlus1);
-        const surN = laboratoireDuDepart(x, auCentime(x.p.part * 100), x.annonce, DEMANDES_DU_LABORATOIRE.n);
+        const janvier = laboratoireDuDepart(x, arrondi2(x.p.part * 100), 1, DEMANDES_DU_LABORATOIRE.nPlus1);
+        const fevrier = laboratoireDuDepart(x, arrondi2(x.p.part * 100), MOIS_DE_LA_VARIANTE, DEMANDES_DU_LABORATOIRE.nPlus1);
+        const surN = laboratoireDuDepart(x, arrondi2(x.p.part * 100), x.annonce, DEMANDES_DU_LABORATOIRE.n);
         return [
           `Au seuil, ${eur(l.salaire)}, l'opérateur reste : l'année coûte ${eur(-l.effet)}, aucune vente ne se perd, et la date du recrutement ne compte plus. Recruter en janvier, avant l'annonce, ne perd aucune vente non plus, mais coûte ${eur(-janvier.effet)} : le recrutement et un mois de salaire en double, quand le remplaçant et le partant se croisent. En février, l'intégration à ${pct(x.f.personnel.integration.productivite)} fait encore perdre ${qte(fevrier.ventesPerdues)} ${x.f.unites}.`,
           `Sur la demande de N, plus faible, recruter dès l'annonce suffisait : aucune vente perdue, ${eur(-surN.effet)} pour l'année. Le graphique le montre : sous le seuil, l'effet tombe d'un coup ; au-dessus, chaque quart de point de plus coûte un peu. Un poste vide ne coûte cher que si l'équipe devient le goulot.`,
@@ -721,10 +727,11 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         return [
           {
             libelle: `Capacité de l'équipe au trimestre ${x.trimestre} (${x.f.unites})`,
+            nature: "quantite",
             attendu: d.equipe.trimestres[x.trimestre - 1]!,
             calcul: `${mois.map((m) => qte(m.capacite)).join(" + ")} = ${qte(d.equipe.trimestres[x.trimestre - 1]!)} (le remplaçant arrive le 1er ${nomDuMois(d.arrivee!)}, à ${pct(x.f.personnel.integration.productivite)} ce mois-là)`,
           },
-          { libelle: `Ventes perdues (${x.f.unites})`, attendu: d.ventesPerdues, calcul: `${qte(x.ventesDuPlan)} − ${qte(d.equipe.trimestres[x.trimestre - 1]!)} = ${qte(d.ventesPerdues)}` },
+          { libelle: `Ventes perdues (${x.f.unites})`, nature: "quantite", attendu: d.ventesPerdues, calcul: `${qte(x.ventesDuPlan)} − ${qte(d.equipe.trimestres[x.trimestre - 1]!)} = ${qte(d.ventesPerdues)}` },
           { libelle: "Salaires non versés", attendu: d.salairesNonVerses, calcul: `${qte(d.moisVacants)} mois de poste vide × ${eur(x.coutMensuel)} = ${eur(d.salairesNonVerses)}` },
           {
             libelle: "Coût du départ",
@@ -760,6 +767,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         return [
           {
             libelle: `Ventes perdues, recrutement lancé au départ (${x.f.unites})`,
+            nature: "quantite",
             attendu: a.ventesPerdues,
             calcul: `${qte(t.ventesDuPlan)} demandées et servies au plan − ${qte(t.equipe)} pour l'équipe = ${qte(a.ventesPerdues)}`,
           },
@@ -802,6 +810,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         return [
           {
             libelle: "Mois de poste vide",
+            nature: "quantite",
             attendu: d.moisVacants,
             calcul: `le remplaçant arrive le 1er ${nomDuMois(d.arrivee!)}, ${qte(x.f.personnel.delaiDeRecrutementEnMois)} mois après le lancement : le poste est vide en ${listeDesMois(x.fiche.dernierMois + 1, d.arrivee! - 1)}, ${qte(d.moisVacants)} mois`,
           },
@@ -811,7 +820,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
             attendu: d.margePerdue,
             calcul: `${eur(d.coutDuDepart)} − ${eur(d.recrutement)} + ${eur(d.salairesNonVerses)} = ${eur(d.margePerdue)}`,
           },
-          { libelle: `${x.f.unites.charAt(0).toUpperCase()}${x.f.unites.slice(1)} perdues`, attendu: d.ventesPerdues, calcul: `${eur(d.margePerdue)} ÷ ${eur(x.marge)} = ${qte(d.ventesPerdues)}` },
+          { libelle: `${x.f.unites.charAt(0).toUpperCase()}${x.f.unites.slice(1)} perdues`, nature: "quantite", attendu: d.ventesPerdues, calcul: `${eur(d.margePerdue)} ÷ ${eur(x.marge)} = ${qte(d.ventesPerdues)}` },
         ];
       },
       explication: (c) => {

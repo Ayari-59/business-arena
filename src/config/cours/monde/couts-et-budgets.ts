@@ -9,6 +9,7 @@ import type {
   FicheDeGestion,
   ReferenceDeLaGamme,
 } from "./nova-gestion";
+import { arrondi, arrondi2, taux2 } from "../../../pedagogy/cours/deux-decimales";
 
 /**
  * LE MODÈLE DU CONTRÔLE DE GESTION DU COURS : coûts, décisions, budgets.
@@ -38,8 +39,17 @@ import type {
  *      trésorerie de fin de mois.
  *   6. LE TABLEAU DE BORD : les indicateurs de chaque mois et du semestre, et leurs voyants.
  *
- * CONVENTIONS : les montants sont au centime ; les taux et les coefficients ne sont pas arrondis
- * (c'est l'affichage qui arrondit). Un résultat négatif est une perte.
+ * CONVENTIONS : les montants sont au centime ; les coefficients ne sont pas arrondis (c'est
+ * l'affichage qui arrondit). Un résultat négatif est une perte.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge sur coût variable se donne à deux décimales
+ * (35,59 %), et le seuil en valeur se calcule sur ce taux arrondi, comme l'élève sur sa copie
+ * (31 183 € ÷ 35,59 % = 87 617,31 €, et non 87 609,38 € sur le taux exact) ; la marge de sécurité,
+ * l'indice de sécurité (à deux décimales) et le point mort en repartent. Le seuil en quantité reste
+ * à l'unité supérieure du quotient exact : vendre 0,9 enceinte de moins ne couvre pas les charges.
+ * Les prestations réciproques se résolvent en une ligne, (E₀ + e × A₀) ÷ (1 − a × e), qui tombe au
+ * centime sur la fiche : la chaîne des coûts retrouve le résultat de 2 207 €.
  */
 
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
@@ -76,22 +86,37 @@ export function donneesDuMois(f: FicheDeGestion, leviers: Partial<DonneesDuSeuil
 }
 
 /**
- * Le compte de résultat différentiel et le seuil. Le seuil en valeur se calcule sur le taux de marge
- * exact (marge unitaire ÷ prix), pas sur un taux arrondi. Sans marge unitaire positive, il n'y a pas
- * de seuil (null) ; sans résultat, pas de levier opérationnel (null).
+ * Le seuil en valeur sur le taux de marge arrondi à deux décimales, comme l'élève : le taux (en %),
+ * puis charges fixes ÷ taux, au centime. Sans taux positif, il n'y a pas de seuil (null).
+ */
+export function seuilAuTauxArrondi(chargesFixes: number, tauxExact: number) {
+  const tauxPct = arrondi2(tauxExact * 100);
+  return { tauxPct, seuilValeur: tauxPct > 0 ? arrondi2((chargesFixes * 100) / tauxPct) : null };
+}
+
+/**
+ * Le compte de résultat différentiel et le seuil. Le taux de marge se donne à deux décimales (en %,
+ * `tauxDeMargePct` ; `tauxDeMarge` en est la fraction), et le seuil en valeur se calcule sur ce taux
+ * arrondi ; l'indice de sécurité se donne à deux décimales, et le point mort se date sur le quotient
+ * au centième. Sans marge unitaire positive, il n'y a pas de seuil (null) ; sans résultat, pas de
+ * levier opérationnel (null).
  */
 export function seuilDeRentabilite(d: DonneesDuSeuil) {
   const chiffreDAffaires = auCentime(d.quantite * d.prix);
   const chargesVariables = auCentime(d.quantite * d.coutVariableUnitaire);
   const marge = auCentime(chiffreDAffaires - chargesVariables);
   const margeUnitaire = auCentime(d.prix - d.coutVariableUnitaire);
-  const tauxDeMarge = margeUnitaire / d.prix;
   const resultat = auCentime(marge - d.chargesFixes);
   const aUnSeuil = margeUnitaire > 0;
+  const { tauxPct: tauxDeMargePct, seuilValeur: seuilAuTaux } = seuilAuTauxArrondi(d.chargesFixes, margeUnitaire / d.prix);
+  const tauxDeMarge = arrondi(tauxDeMargePct / 100, 4);
   /** Le seuil en quantité, avant l'arrondi : charges fixes ÷ marge unitaire. */
   const seuilExact = aUnSeuil ? d.chargesFixes / margeUnitaire : null;
-  const seuilValeur = aUnSeuil ? auCentime(d.chargesFixes / tauxDeMarge) : null;
+  const seuilValeur = aUnSeuil ? seuilAuTaux : null;
   const margeDeSecurite = seuilValeur === null ? null : auCentime(chiffreDAffaires - seuilValeur);
+  const indiceDeSecuritePct = margeDeSecurite === null ? null : taux2(margeDeSecurite, chiffreDAffaires);
+  /** Le jour du point mort avant l'arrondi, au centième : seuil ÷ chiffre d'affaires × jours. */
+  const pointMortExact = seuilValeur === null || seuilValeur > chiffreDAffaires ? null : arrondi2((seuilValeur / chiffreDAffaires) * d.jours);
   return {
     ...d,
     chiffreDAffaires,
@@ -99,37 +124,43 @@ export function seuilDeRentabilite(d: DonneesDuSeuil) {
     marge,
     margeUnitaire,
     tauxDeMarge,
+    tauxDeMargePct,
     resultat,
     seuilExact,
     seuilQuantite: seuilExact === null ? null : plafond(seuilExact),
     seuilValeur,
     margeDeSecurite,
-    indiceDeSecurite: margeDeSecurite === null ? null : margeDeSecurite / chiffreDAffaires,
+    indiceDeSecuritePct,
+    indiceDeSecurite: indiceDeSecuritePct === null ? null : arrondi(indiceDeSecuritePct / 100, 4),
     levierOperationnel: resultat === 0 ? null : marge / resultat,
-    /** Le jour de la période où le seuil est atteint, ou null s'il ne l'est pas. */
-    pointMort: seuilValeur === null || seuilValeur > chiffreDAffaires ? null : plafond((seuilValeur / chiffreDAffaires) * d.jours),
+    pointMortExact,
+    /** Le jour de la période où le seuil est atteint (le jour commencé), ou null s'il ne l'est pas. */
+    pointMort: pointMortExact === null ? null : plafond(pointMortExact),
   };
 }
 
 /**
  * Le seuil de plusieurs produits vendus ensemble, à composition constante : les charges fixes
- * divisées par le taux de marge moyen (marge totale ÷ chiffre d'affaires total). En quantités, chaque
- * produit garde sa part des ventes.
+ * divisées par le taux de marge moyen (marge totale ÷ chiffre d'affaires total, à deux décimales).
+ * En quantités, chaque produit garde sa part des ventes.
  */
 export function seuilMultiProduits(produits: readonly { code: string; quantite: number; prix: number; coutVariableUnitaire: number }[], chargesFixes: number) {
   const chiffreDAffaires = somme(produits.map((p) => p.quantite * p.prix));
   const marge = somme(produits.map((p) => p.quantite * (p.prix - p.coutVariableUnitaire)));
-  const tauxDeMarge = marge / chiffreDAffaires;
-  const seuilValeur = auCentime(chargesFixes / tauxDeMarge);
+  const { tauxPct: tauxDeMargePct, seuilValeur: seuil } = seuilAuTauxArrondi(chargesFixes, marge / chiffreDAffaires);
+  const seuilValeur = seuil!;
   const part = seuilValeur / chiffreDAffaires;
+  const indiceDeSecuritePct = taux2(auCentime(chiffreDAffaires - seuilValeur), chiffreDAffaires);
   return {
     chiffreDAffaires,
     marge,
     chargesFixes,
-    tauxDeMarge,
+    tauxDeMarge: arrondi(tauxDeMargePct / 100, 4),
+    tauxDeMargePct,
     resultat: auCentime(marge - chargesFixes),
     seuilValeur,
-    indiceDeSecurite: (chiffreDAffaires - seuilValeur) / chiffreDAffaires,
+    indiceDeSecuritePct,
+    indiceDeSecurite: arrondi(indiceDeSecuritePct / 100, 4),
     /** Les quantités du seuil, produit par produit, à la composition des ventes (non arrondies). */
     seuilParProduit: produits.map((p) => ({ code: p.code, quantite: p.quantite * part, chiffreDAffaires: auCentime(p.quantite * p.prix * part) })),
   };
@@ -720,9 +751,10 @@ export function tableauDeBord(f: FicheDeGestion, leviers: Partial<LeviersDuSemes
   const inv = l.investissement;
   const usureDeLInvestissement = inv ? auCentime(inv.montantHt / f.semestre.investissement.dureeDAmortissementMois) : 0;
   const indicateurs = (chiffreDAffaires: number, marge: number, chargesFixes: number) => {
-    const tauxDeMarge = marge / chiffreDAffaires;
-    const seuil = auCentime(chargesFixes / tauxDeMarge);
-    return { chiffreDAffaires, marge, chargesFixes, tauxDeMarge, resultat: auCentime(marge - chargesFixes), seuil, indiceDeSecurite: (chiffreDAffaires - seuil) / chiffreDAffaires };
+    const { tauxPct: tauxDeMargePct, seuilValeur } = seuilAuTauxArrondi(chargesFixes, marge / chiffreDAffaires);
+    const seuil = seuilValeur!;
+    const indiceDeSecuritePct = taux2(auCentime(chiffreDAffaires - seuil), chiffreDAffaires);
+    return { chiffreDAffaires, marge, chargesFixes, tauxDeMarge: arrondi(tauxDeMargePct / 100, 4), tauxDeMargePct, resultat: auCentime(marge - chargesFixes), seuil, indiceDeSecuritePct, indiceDeSecurite: arrondi(indiceDeSecuritePct / 100, 4) };
   };
   const mois = budget.mois.map((b, k) => {
     const chargesFixes = auCentime(fixes + l.budgetMarketing + (inv && k >= inv.mois ? usureDeLInvestissement : 0));

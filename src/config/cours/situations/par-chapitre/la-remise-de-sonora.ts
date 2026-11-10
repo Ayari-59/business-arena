@@ -1,8 +1,7 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter } from "../../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_METHODE_ABC } from "../../chapitres/les-couts-a-base-d-activites";
-import { auCentime } from "../../monde/amortissement";
 import { methodeABC, venteAuxCoutsDeJanvier } from "../../monde/couts-par-activites";
 import { FACTURE_SONORA_DE_SEPTEMBRE, MONTANTS_DES_FACTURES_SONORA, SONORA } from "../../monde/exercice-de-nova";
 import { OPERATEURS } from "../../monde/nova-capacite";
@@ -21,10 +20,14 @@ import type { Situation } from "../types";
  * HYPOTHÈSES DU CAS : la commande est livrée en un seul envoi ; les coûts des inducteurs et des unités
  * d'œuvre sont ceux de janvier ; l'escompte que Sonora a pris est un produit financier cédé, que le
  * coût de revient n'incorpore pas.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les volumes consommés sont des grandeurs au centième ; le
+ * résultat par les centres d'analyse attend le centime (à 1 € près, avant), et la demande donne le
+ * coût de revient de la commande par les centres.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 /** La commande de Sonora : 1 commande, 1 envoi (hypothèse du cas). */
 export const ENVOIS_DE_SONORA = 1;
@@ -35,7 +38,7 @@ const aSaisir = (valeur: number, calcul: string, autres: Partial<CelluleAComplet
 /** Les chiffres du cas. */
 export function remiseDeSonora(_c?: Pick<Cas, "code">) {
   const enceintes = SONORA.premiereCommande.enceintes;
-  const prix = auCentime(MONTANTS_DES_FACTURES_SONORA.septembre.netCommercial / enceintes);
+  const prix = arrondi2(MONTANTS_DES_FACTURES_SONORA.septembre.netCommercial / enceintes);
   const v = venteAuxCoutsDeJanvier({ enceintes, prix, commandes: 1, envois: ENVOIS_DE_SONORA });
   return { enceintes, prix, v, abc: methodeABC(), remise: FACTURE_SONORA_DE_SEPTEMBRE.reductions[0]!.taux };
 }
@@ -67,7 +70,7 @@ export const LA_REMISE_DE_SONORA: Situation = {
       texte: () => {
         const { enceintes, prix, v, remise } = remiseDeSonora();
         return [
-          `« En septembre, vous avez vendu ${qte(enceintes)} enceintes à Sonora avec ${qte(remise * 100)} % de remise, ${eur(prix)} l'enceinte. Vos centres d'analyse disent ${eur(auCentime(v.centres.unitaire))} de coût de revient à ce prix : vous avez vendu à perte. »`,
+          `« En septembre, vous avez vendu ${qte(enceintes)} enceintes à Sonora avec ${qte(remise * 100)} % de remise, ${eur(prix)} l'enceinte. Vos centres d'analyse disent ${eur(arrondi2(v.centres.unitaire))} de coût de revient à ce prix, ${eur(v.centres.coutDeRevient)} pour la commande : vous avez vendu à perte. »`,
           `Pas de cours cette fois : vous avez les coûts d'inducteurs de janvier, le dernier calcul fait par la méthode ABC. La commande de Sonora a été ${qte(1)} commande et ${qte(ENVOIS_DE_SONORA)} envoi. L'escompte que Sonora a pris est financier : le coût de revient ne le compte pas.`,
         ];
       },
@@ -81,7 +84,7 @@ export const LA_REMISE_DE_SONORA: Situation = {
             { libelle: "Enceintes de la commande", valeurs: [qte(enceintes)] },
             { libelle: "Prix d'une enceinte après la remise, hors taxes", valeurs: [eur(prix)] },
             { libelle: "Heures de montage d'une enceinte", valeurs: [qte(OPERATEURS.heuresParEnceinte)] },
-            { libelle: "Charges directes d'une enceinte (composants et autres coûts)", valeurs: [eur(auCentime(remiseDeSonora().v.directes / enceintes))] },
+            { libelle: "Charges directes d'une enceinte (composants et autres coûts)", valeurs: [eur(arrondi2(remiseDeSonora().v.directes / enceintes))] },
           ],
         };
       },
@@ -109,7 +112,7 @@ export const LA_REMISE_DE_SONORA: Situation = {
             ...v.imputations.map((x) => ({
               libelle: x.libelle,
               cellules: [
-                aSaisir(x.volume, volume[x.code]!, { horsTotal: true, indice: "ce que la commande demande de l'inducteur : ses enceintes, ses heures, son envoi, sa commande, son chiffre d'affaires" }),
+                aSaisir(x.volume, volume[x.code]!, { nature: "grandeur", horsTotal: true, indice: "ce que la commande demande de l'inducteur : ses enceintes, ses heures, son envoi, sa commande, son chiffre d'affaires" }),
                 { ...donnee(x.coutDeLInducteur), horsTotal: true },
                 aSaisir(x.montant, `${qte(x.volume)} × ${eur(x.coutDeLInducteur)} = ${eur(x.montant)}`),
               ],
@@ -121,7 +124,7 @@ export const LA_REMISE_DE_SONORA: Situation = {
       explication: () => {
         const { v } = remiseDeSonora();
         const e = v.imputations.filter((x) => x.code === "expedier" || x.code === "commandes");
-        return [`La commande et son envoi ne coûtent que ${eur(auCentime(e.reduce((t, x) => t + x.montant, 0)))} : c'est le montage et l'approvisionnement qui pèsent, comme pour toute enceinte.`];
+        return [`La commande et son envoi ne coûtent que ${eur(arrondi2(e.reduce((t, x) => t + x.montant, 0)))} : c'est le montage et l'approvisionnement qui pèsent, comme pour toute enceinte.`];
       },
     },
     {
@@ -135,12 +138,12 @@ export const LA_REMISE_DE_SONORA: Situation = {
         return [
           { libelle: "Coût de revient de la commande, méthode ABC", attendu: v.coutDeRevient, calcul: `${eur(v.indirectes)} + ${eur(v.directes)} = ${eur(v.coutDeRevient)}` },
           { libelle: "Résultat de la commande, méthode ABC", attendu: v.resultat, calcul: `${eur(v.chiffreDAffaires)} − ${eur(v.coutDeRevient)} = ${eur(v.resultat)}` },
-          { libelle: "Résultat de la commande, centres d'analyse", attendu: v.centres.resultat, tolerance: 1, calcul: `${eur(v.chiffreDAffaires)} − ${eur(v.centres.coutDeRevient)} = ${eur(v.centres.resultat)}` },
+          { libelle: "Résultat de la commande, centres d'analyse", attendu: v.centres.resultat, calcul: `${eur(v.chiffreDAffaires)} − ${eur(v.centres.coutDeRevient)} = ${eur(v.centres.resultat)}` },
         ];
       },
       explication: () => {
         const { v } = remiseDeSonora();
-        return [`Par la méthode ABC, une enceinte de Sonora revient à ${eur(auCentime(v.unitaire))} ; par les centres, à ${eur(auCentime(v.centres.unitaire))}. L'écart vient des commandes et des colis : les centres font payer à Sonora sa part de ceux de la vente en ligne.`];
+        return [`Par la méthode ABC, une enceinte de Sonora revient à ${eur(arrondi2(v.unitaire))} ; par les centres, à ${eur(arrondi2(v.centres.unitaire))}. L'écart vient des commandes et des colis : les centres font payer à Sonora sa part de ceux de la vente en ligne.`];
       },
     },
     {
@@ -152,7 +155,7 @@ export const LA_REMISE_DE_SONORA: Situation = {
       options: () => {
         const { v } = remiseDeSonora();
         return [
-          { texte: `Non : la commande laisse ${eur(v.resultat)}`, juste: true, retour: `Oui. Par la méthode ABC, la commande consomme peu des activités qui coûtent cher en ligne : ${eur(auCentime(v.unitaire))} par enceinte, sous le prix accordé. Le coût des centres, ${eur(auCentime(v.centres.unitaire))}, lui faisait porter une part des colis des particuliers.` },
+          { texte: `Non : la commande laisse ${eur(v.resultat)}`, juste: true, retour: `Oui. Par la méthode ABC, la commande consomme peu des activités qui coûtent cher en ligne : ${eur(arrondi2(v.unitaire))} par enceinte, sous le prix accordé. Le coût des centres, ${eur(arrondi2(v.centres.unitaire))}, lui faisait porter une part des colis des particuliers.` },
           { texte: `Oui : elle perd ${eur(-v.centres.resultat)}, le coût de revient le dit`, juste: false, retour: `Non : ce coût de revient est celui des centres d'analyse, qui répartissent les commandes et les colis selon le chiffre d'affaires. Une commande de ${qte(v.vente.enceintes)} enceintes en ${qte(ENVOIS_DE_SONORA)} envoi ne les consomme presque pas.` },
           { texte: "Oui : toute remise sous le coût moyen d'une enceinte est une perte", juste: false, retour: "Non : le coût moyen mêle des ventes qui ne coûtent pas la même chose. Celui que la commande consomme vraiment est plus bas que le prix accordé." },
           { texte: "On ne peut pas savoir sans le coût variable de la commande", juste: false, retour: "Non : la question porte sur le coût complet, et la méthode ABC le donne, aux coûts d'inducteurs de janvier. Le coût variable dirait autre chose : si la commande valait mieux que rien." },

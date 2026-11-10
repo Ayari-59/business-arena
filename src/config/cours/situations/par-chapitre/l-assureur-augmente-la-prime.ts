@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_ASSURANCE, assuranceDeNova } from "../../chapitres/s-assurer-contre-les-aleas";
 import { choisirUneAssurance, primePlafond } from "../../monde/capacite";
@@ -20,6 +20,10 @@ import type { Situation } from "../types";
  * chiffres sont ceux d'`assuranceDeNova` et de `primePlafond`, sur la fiche de NOVA. La hausse est une
  * hypothèse de l'histoire. L'ancienne règle (« une année de prime sous le pire sinistre ») a disparu :
  * elle disait oui à toutes les formules.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la hausse que la formule supporte se donne à deux décimales
+ * (à 0,1 point près, avant) ; les taux s'écrivent à deux décimales.
  */
 
 /** La hausse annoncée au renouvellement : un cinquième de la prime. Une hypothèse du cours. */
@@ -28,10 +32,8 @@ export const HAUSSE_DE_LA_PRIME = 0.2;
 /** Les bornes du curseur de la prime d'un trimestre, en euros. */
 export const PRIME_DU_CURSEUR = { min: 1_500, max: 3_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(Math.round(t * 10_000) / 100)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type Verdict = "renouveler" | "changer" | "ne-plus-s-assurer";
@@ -40,8 +42,8 @@ export type Verdict = "renouveler" | "changer" | "ne-plus-s-assurer";
 export function primeAugmentee(c: Pick<Cas, "code">) {
   const a = assuranceDeNova(c);
   const b = a.basique;
-  const nouvellePrime = auCentime(b.primeParTrimestre * (1 + HAUSSE_DE_LA_PRIME));
-  const nouvellePrimeDeLAnnee = auCentime(nouvellePrime * 4);
+  const nouvellePrime = arrondi2(b.primeParTrimestre * (1 + HAUSSE_DE_LA_PRIME));
+  const nouvellePrimeDeLAnnee = arrondi2(nouvellePrime * 4);
   const choix = choisirUneAssurance(a.f, { primes: { basique: nouvellePrime } });
   const renouvelee = choix.options.find((o) => o.choix === "basique")!;
   const plafond = primePlafond(a.f, "basique");
@@ -53,16 +55,16 @@ export function primeAugmentee(c: Pick<Cas, "code">) {
     a,
     nouvellePrime,
     nouvellePrimeDeLAnnee,
-    hausseDeLAnnee: auCentime(nouvellePrimeDeLAnnee - b.prime),
+    hausseDeLAnnee: arrondi2(nouvellePrimeDeLAnnee - b.prime),
     coutMoyenRenouvele: renouvelee.coutMoyen,
     chargementRenouvele: renouvelee.chargement,
     seEncaisseToujours: renouvelee.seEncaisse,
-    resteApresLePire: auCentime(a.absorption.capacite - renouvelee.pireResteACharge),
+    resteApresLePire: arrondi2(a.absorption.capacite - renouvelee.pireResteACharge),
     rivale,
     primeDeLAnneePlafond: plafond.primeDeLAnnee!,
     primeParTrimestrePlafond: plafond.primeParTrimestre!,
     /** La hausse de la prime d'un trimestre que la Basique supporte encore, en % de la prime actuelle. */
-    hausseSupportable: auCentime((plafond.primeParTrimestre! / b.primeParTrimestre - 1) * 100),
+    hausseSupportable: arrondi2((plafond.primeParTrimestre! / b.primeParTrimestre - 1) * 100),
     primeAuCurseur,
     retenue: choix.retenue,
     verdict,
@@ -194,12 +196,12 @@ export const L_ASSUREUR_AUGMENTE_LA_PRIME: Situation = {
       montrer: "Montrer le plafond",
       lecture: (c, q) => {
         const p = primeAugmentee(c);
-        const cout = auCentime(q * 4 + p.a.basique.resteEspere);
+        const cout = arrondi2(q * 4 + p.a.basique.resteEspere);
         return [
           { libelle: "Prime de l'année", montant: q * 4 },
           { libelle: "Coût moyen de l'année avec la Basique", montant: cout },
           { libelle: "Coût moyen de l'année avec l'Étendue", montant: p.rivale.coutMoyen },
-          { libelle: "Avance de la Basique sur l'Étendue", montant: auCentime(p.rivale.coutMoyen - cout), fort: true },
+          { libelle: "Avance de la Basique sur l'Étendue", montant: arrondi2(p.rivale.coutMoyen - cout), fort: true },
         ];
       },
       droites: (c) => {
@@ -239,8 +241,7 @@ export const L_ASSUREUR_AUGMENTE_LA_PRIME: Situation = {
           {
             libelle: "Hausse que la formule supporte encore, en %",
             attendu: p.hausseSupportable,
-            calcul: `(${eur(p.primeParTrimestrePlafond)} ÷ ${eur(b.primeParTrimestre)} − 1) × 100 = ${qte(p.hausseSupportable)} %`,
-            tolerance: 0.1,
+            calcul: `(${eur(p.primeParTrimestrePlafond)} ÷ ${eur(b.primeParTrimestre)} − 1) × 100 = ${pourcent(p.hausseSupportable)}`,
           },
         ];
       },

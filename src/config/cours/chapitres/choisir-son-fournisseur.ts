@@ -1,6 +1,5 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
-import { auCentime } from "../monde/amortissement";
 import { coutsDeLaQualite } from "../monde/capacite";
 import { DELAI_MAXIMAL_CONVENU, JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DU_TRIMESTRE, NOVA_DELAIS, type CodeDOffre, type FicheDesDelaisDeNova } from "../monde/delais-et-tva";
 import { choisirUneOffre, comparerAvecLHabituelle, encoursAuDelai, escompteDuFournisseur, offreDe } from "../monde/delais";
@@ -42,6 +41,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     trésorerie), europarts-et-la-qualite (une variante chiffrée, la qualité comptée), le
  *     laboratoire des offres (le fournisseur au choix, son délai, le stock gardé), puis
  *     resultat-ou-tresorerie (un jugement) et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes perdues en moyenne sur l'année sont une
+ * espérance, une grandeur au centième ; le délai qui annule l'écart de trésorerie, une grandeur au
+ * centième de jour ; les taux s'écrivent à deux décimales.
  */
 
 /**
@@ -65,9 +69,9 @@ export const ENTREPRISES_DES_FOURNISSEURS: readonly string[] = [NOVA_DELAIS.code
 /** @deprecated Les entreprises où le chapitre se joue : NOVA seule. Voir ENTREPRISES_DES_FOURNISSEURS. */
 export const ENTREPRISES_A_UN_CATALOGUE = ENTREPRISES_DES_FOURNISSEURS;
 
-const eur = (x: number) => montantEcrit(auCentime(x)).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 /** « de NOVA », « d'AsiaComponents », « d'Électro-Composants Lyon » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** « que NOVA », « qu'AsiaComponents ». */
@@ -118,14 +122,14 @@ export function choixDuFournisseur(c: Pick<Cas, "code">) {
 
   // Le premier curseur : le délai qui ferait rattraper à AsiaComponents l'offre habituelle en trésorerie.
   const achatsT4Asia = t4(asia.o.code).achatsHT;
-  const aRattraper = auCentime(-asia.x.ecartDeTresorerie);
+  const aRattraper = arrondi2(-asia.x.ecartDeTresorerie);
   const delaiExact = (aRattraper * JOURS_DU_TRIMESTRE) / achatsT4Asia;
   const delaiQuiRattrape = Math.ceil(delaiExact - 1e-9);
   const aCeDelai = comparerAvecLHabituelle(f, asia.o.code, { delaiDePaiement: delaiQuiRattrape });
 
   // Le second curseur : les jours d'avance que paie l'escompte du fournisseur habituel.
   const escompte = escompteDuFournisseur(f, habituelle.code)!;
-  const avanceHT = auCentime(ref.achatsHT - escompte.escompteGagne);
+  const avanceHT = arrondi2(ref.achatsHT - escompte.escompteGagne);
   const coutDUnJourDAvance = (avanceHT * escompte.tauxDuDecouvert) / JOURS_DE_L_ANNEE_BANCAIRE;
   const joursQuePaieLEscompte = Math.floor(escompte.escompteGagne / coutDUnJourDAvance + 1e-9);
 
@@ -135,9 +139,9 @@ export function choixDuFournisseur(c: Pick<Cas, "code">) {
   const sans = coutsDeLaQualite(capacite);
   const avec = coutsDeLaQualite(capacite, { baisseDuTaux: euro.o.baisseDuTauxDeDefaut });
   const defautsEvites = Math.round(sans.defauts - avec.defauts);
-  const coutsEvites = auCentime(sans.total - avec.total);
+  const coutsEvites = arrondi2(sans.total - avec.total);
   const ventesGardees = Math.round(sans.ventesPerdues - avec.ventesPerdues);
-  const margeGardee = auCentime(sans.margePerdue - avec.margePerdue);
+  const margeGardee = arrondi2(sans.margePerdue - avec.margePerdue);
 
   return {
     f,
@@ -153,20 +157,20 @@ export function choixDuFournisseur(c: Pick<Cas, "code">) {
     meilleureEnResultat: de(choix.meilleureEnResultat),
     achatsT4Asia,
     aRattraper,
-    parJourDeDelai: auCentime(achatsT4Asia / JOURS_DU_TRIMESTRE),
-    delaiExact: auCentime(delaiExact),
+    parJourDeDelai: arrondi2(achatsT4Asia / JOURS_DU_TRIMESTRE),
+    delaiExact: arrondi2(delaiExact),
     delaiQuiRattrape,
     aCeDelai,
     escompte,
     avanceHT,
-    coutDUnJourDAvance: auCentime(coutDUnJourDAvance),
+    coutDUnJourDAvance: arrondi2(coutDUnJourDAvance),
     joursQuePaieLEscompte,
     qualite,
     defautsEvites,
     coutsEvites,
     ventesGardees,
     margeGardee,
-    margeDeLaFicheDeQualite: ventesGardees > 0 ? auCentime(margeGardee / ventesGardees) : 0,
+    margeDeLaFicheDeQualite: ventesGardees > 0 ? arrondi2(margeGardee / ventesGardees) : 0,
   };
 }
 
@@ -283,6 +287,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
           { libelle: `Marge d'une enceinte avec ${a.o.nom}`, attendu: a.x.offre.margeUnitaire, calcul: `${eur(k.f.prixHT)} − ${eur(a.o.prixHT)} − ${eur(k.f.autresCoutsVariablesHT)} = ${eur(a.x.offre.margeUnitaire)}` },
           {
             libelle: "Enceintes perdues en moyenne sur l'année",
+            nature: "grandeur",
             attendu: Math.round(a.x.offre.ventesPerdues),
             calcul: `${k.f.ventes.length} × ${pct(a.o.risqueDeRupture)} × ${qte(a.o.ventesPerduesParRupture)} = ${qte(Math.round(a.x.offre.ventesPerdues))}`,
           },
@@ -538,11 +543,11 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
       montrer: "Montrer la limite",
       lecture: (c, j) => {
         const k = choixDuFournisseur(c);
-        const decouvert = auCentime((k.avanceHT * k.escompte.tauxDuDecouvert * j) / JOURS_DE_L_ANNEE_BANCAIRE);
+        const decouvert = arrondi2((k.avanceHT * k.escompte.tauxDuDecouvert * j) / JOURS_DE_L_ANNEE_BANCAIRE);
         return [
           { libelle: "Escompte gagné sur l'année", montant: k.escompte.escompteGagne },
           { libelle: "Coût du découvert pour payer plus tôt", montant: decouvert },
-          { libelle: "Gain net de l'escompte", montant: auCentime(k.escompte.escompteGagne - decouvert), fort: true },
+          { libelle: "Gain net de l'escompte", montant: arrondi2(k.escompte.escompteGagne - decouvert), fort: true },
         ];
       },
       droites: (c) => {
@@ -580,8 +585,8 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
         return [
           {
             libelle: "Taux annuel de l'escompte (%)",
-            attendu: auCentime(e.tauxAnnuel * 100),
-            calcul: `${pct(t)} ÷ ${pct(1 - t)} × ${JOURS_DE_L_ANNEE_BANCAIRE} ÷ ${e.joursDAvance} = ${pct(auCentime(e.tauxAnnuel * 100) / 100)}`,
+            attendu: arrondi2(e.tauxAnnuel * 100),
+            calcul: `${pct(t)} ÷ ${pct(1 - t)} × ${JOURS_DE_L_ANNEE_BANCAIRE} ÷ ${e.joursDAvance} = ${pct(arrondi2(e.tauxAnnuel * 100) / 100)}`,
             tolerance: 0.01,
           },
           {
@@ -600,7 +605,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
         const k = choixDuFournisseur(c);
         const e = k.escompte;
         return [
-          `Refuser l'escompte, c'est emprunter à ${k.habituelle.nom} à ${pct(auCentime(e.tauxAnnuel * 100) / 100)} l'an, quand le découvert coûte ${pct(e.tauxDuDecouvert)} : mieux vaut payer tôt, même à découvert. Le résultat gagne ${eur(e.gainNet)}.`,
+          `Refuser l'escompte, c'est emprunter à ${k.habituelle.nom} à ${pct(arrondi2(e.tauxAnnuel * 100) / 100)} l'an, quand le découvert coûte ${pct(e.tauxDuDecouvert)} : mieux vaut payer tôt, même à découvert. Le résultat gagne ${eur(e.gainNet)}.`,
           `La trésorerie du 31 décembre, elle, perd ${eur(e.detteQuiFondHT)} de crédit fournisseur : la même tension que chez ${k.asia.o.nom}, en plus petit. Ce qui améliore le résultat peut creuser la trésorerie ; c'est à la trésorerie de dire si on peut se le permettre.`,
         ];
       },
@@ -627,6 +632,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
           },
           {
             libelle: "Délai qui annule l'écart de trésorerie (jours)",
+            nature: "grandeur",
             attendu: k.delaiExact,
             calcul: `${eur(k.aRattraper)} × ${JOURS_DU_TRIMESTRE} ÷ ${eur(k.achatsT4Asia)} = ${qte(k.delaiExact)} jours`,
             tolerance: 0.01,
@@ -841,7 +847,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
       texte: (c) => {
         const k = choixDuFournisseur(c);
         return [
-          `Chez ${k.f.entreprise}, ${k.asia.o.nom} donne le meilleur résultat (${eur(k.asia.x.ecartDeResultat)} de plus) et creuse la trésorerie du 31 décembre de ${eur(-k.asia.x.ecartDeTresorerie)} ; ${k.euro.o.nom} fait l'inverse. Un délai de ${k.delaiQuiRattrape} jours suffirait à ${k.asia.o.nom} pour rattraper l'offre habituelle en trésorerie, et l'escompte ${dE(k.habituelle.nom)}, ${pct(auCentime(k.escompte.tauxAnnuel * 100) / 100)} l'an, vaut d'être pris.`,
+          `Chez ${k.f.entreprise}, ${k.asia.o.nom} donne le meilleur résultat (${eur(k.asia.x.ecartDeResultat)} de plus) et creuse la trésorerie du 31 décembre de ${eur(-k.asia.x.ecartDeTresorerie)} ; ${k.euro.o.nom} fait l'inverse. Un délai de ${k.delaiQuiRattrape} jours suffirait à ${k.asia.o.nom} pour rattraper l'offre habituelle en trésorerie, et l'escompte ${dE(k.habituelle.nom)}, ${pct(arrondi2(k.escompte.tauxAnnuel * 100) / 100)} l'an, vaut d'être pris.`,
           "Choisir un fournisseur, c'est arbitrer : le prix, les ruptures et la qualité font le résultat ; le délai et le stock font, en plus, la trésorerie. L'écart de trésorerie s'explique par l'écart de résultat, moins l'écart de stock, plus l'écart de dettes. Un escompte se juge en taux annuel, face au coût du découvert.",
           "Au niveau de l'examen, vous savez calculer la dette fournisseurs et le stock qu'une offre laisse au bilan, hors taxes et toutes taxes comprises, expliquer un écart de trésorerie, retrouver à rebours le délai qui fait rattraper une offre, ramener un escompte à son taux annuel, et trancher entre résultat et trésorerie en finançant le besoin.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import {
@@ -44,6 +44,11 @@ import { auCentime } from "../monde/amortissement";
  *   · autonome : repartition-secondaire, cout-d-achat, fiche-de-stock, cout-de-production,
  *     cout-de-revient, variante-de-decembre, resultat-par-produit : des tableaux à compléter, sans
  *     formule ; le calcul de chaque case se lit une fois le tableau rempli.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les coûts unitaires (d'un jeu, d'une enceinte produite, de
+ * revient, le résultat par enceinte) se donnent au centime (au dix-millième, avant : 23,7798 €) ;
+ * les totaux du résultat par produit écrivent leur somme.
  */
 
 /** Le coût complet pas à pas se calcule sur le mois de décembre de NOVA. */
@@ -60,9 +65,8 @@ export const METHODES_DU_LABORATOIRE: readonly { valeur: number; methode: Method
 ];
 export const PRIX_DU_GROSSISTE = { min: 22, max: 25, pas: 0.5 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t * 100, 0)} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 
 const CENTRES: readonly CodeDeCentre[] = ["entretien", "administration", "approvisionnement", "production", "distribution"];
 const PRINCIPAUX: readonly CentrePrincipal[] = ["approvisionnement", "production", "distribution"];
@@ -246,7 +250,7 @@ function grilleDesUnites(x: CoutCompletDeDecembre): TableauACompleter {
       { libelle: "Nombre d'unités d'œuvre", cellules: PRINCIPAUX.map((p) => aSaisir(d.nombre[p], nombre(p), { unite: "UO", indice: "ce que le centre a fait dans le mois, mesuré dans son unité" })) },
       {
         libelle: "Coût de l'unité d'œuvre",
-        cellules: PRINCIPAUX.map((p) => aSaisir(d.cout[p], `${eur(r.principaux[p])} ÷ ${qte(d.nombre[p])} = ${qte(r.principaux[p] / d.nombre[p], 4)} €, arrondi au centime : ${eur(d.cout[p])}`, { indice: "le total du centre divisé par son nombre d'unités d'œuvre, au centime" })),
+        cellules: PRINCIPAUX.map((p) => aSaisir(d.cout[p], `${eur(r.principaux[p])} ÷ ${eur(d.nombre[p])} = ${qte(r.principaux[p] / d.nombre[p])}, arrondi au centime : ${eur(d.cout[p])}`, { indice: "le total du centre divisé par son nombre d'unités d'œuvre, au centime" })),
       },
     ],
   };
@@ -279,7 +283,7 @@ function grilleDuCoutDAchat(x: CoutCompletDeDecembre): TableauACompleter {
       },
       {
         libelle: "Coût d'achat d'un jeu",
-        cellules: [...lots.map((l) => aSaisir(l.coutUnitaire, `${eur(l.coutDAchat)} ÷ ${qte(l.quantite)} = ${qte(l.coutUnitaire, 4)} €`, { indice: "le coût d'achat de la livraison divisé par ses jeux" })), VIDE],
+        cellules: [...lots.map((l) => aSaisir(l.coutUnitaire, `${eur(l.coutDAchat)} ÷ ${qte(l.quantite)} = ${eur(l.coutUnitaire)}`, { indice: "le coût d'achat de la livraison divisé par ses jeux" })), VIDE],
       },
     ],
   };
@@ -303,7 +307,7 @@ function grilleDeLaFiche(x: CoutCompletDeDecembre): TableauACompleter {
         totalDe: { plus: [0, 1, 2] },
         cellules: [
           aSaisir(q, `${qte(lot10.quantite)} + ${qte(lot18.quantite)} = ${qte(q)} jeux`, { unite: "jeux" }),
-          aSaisir(cmup, `${eur(s.disponible)} ÷ ${qte(q)} = ${qte(s.disponible / q, 5)} €, arrondi au centime : ${eur(cmup)}`, { horsTotal: true, indice: "le montant disponible divisé par les jeux disponibles, au centime" }),
+          aSaisir(cmup, `${eur(s.disponible)} ÷ ${qte(q)} = ${qte(s.disponible / q)} €, arrondi au centime : ${eur(cmup)}`, { horsTotal: true, indice: "le montant disponible divisé par les jeux disponibles, au centime" }),
           aSaisir(s.disponible, `${eur(lot10.coutDAchat)} + ${eur(lot18.coutDAchat)} = ${eur(s.disponible)}`),
         ],
       },
@@ -350,7 +354,7 @@ function grilleDeProduction(x: CoutCompletDeDecembre): TableauACompleter {
         totalDe: { plus: [0, 1, 2] },
         cellules: [
           { ...donnee(d.livrees, "enceintes"), horsTotal: true },
-          aSaisir(d.coutDeProductionUnitaire, `${eur(d.coutDeProduction)} ÷ ${qte(d.livrees)} = ${qte(d.coutDeProductionUnitaire, 4)} €`, { horsTotal: true, indice: "le coût de production divisé par les enceintes produites" }),
+          aSaisir(d.coutDeProductionUnitaire, `${eur(d.coutDeProduction)} ÷ ${qte(d.livrees)} = ${eur(d.coutDeProductionUnitaire)}`, { horsTotal: true, indice: "le coût de production divisé par les enceintes produites" }),
           aSaisir(d.coutDeProduction, `${eur(d.matieres)} + ${eur(d.autres)} + ${eur(d.imputees.production)} = ${eur(d.coutDeProduction)}`),
         ],
       },
@@ -361,7 +365,7 @@ function grilleDeProduction(x: CoutCompletDeDecembre): TableauACompleter {
 /** Le coût de revient et le résultat analytique de décembre, à remplir. */
 function grilleDeRevient(x: CoutCompletDeDecembre): TableauACompleter {
   const { d, f } = x;
-  const unitaire = (v: number) => v / d.livrees;
+  const unitaire = (v: number) => auCentime(v / d.livrees);
   return {
     titre: `Le coût de revient et le résultat de décembre · ${f.entreprise}`,
     colonnes: ["Quantité", "Coût unitaire", "Montant"],
@@ -374,7 +378,7 @@ function grilleDeRevient(x: CoutCompletDeDecembre): TableauACompleter {
         totalDe: { plus: [0, 1] },
         cellules: [
           { ...donnee(d.livrees, "enceintes"), horsTotal: true },
-          aSaisir(unitaire(d.coutDeRevient), `${eur(d.coutDeRevient)} ÷ ${qte(d.livrees)} = ${qte(unitaire(d.coutDeRevient), 4)} €`, { horsTotal: true, indice: "le coût de revient divisé par les enceintes livrées" }),
+          aSaisir(unitaire(d.coutDeRevient), `${eur(d.coutDeRevient)} ÷ ${qte(d.livrees)} = ${eur(unitaire(d.coutDeRevient))}`, { horsTotal: true, indice: "le coût de revient divisé par les enceintes livrées" }),
           aSaisir(d.coutDeRevient, `${eur(d.coutDeProduction)} + ${eur(d.imputees.distribution)} = ${eur(d.coutDeRevient)}`),
         ],
       },
@@ -385,7 +389,7 @@ function grilleDeRevient(x: CoutCompletDeDecembre): TableauACompleter {
         totalDe: { plus: [3], moins: [2] },
         cellules: [
           { ...donnee(d.livrees, "enceintes"), horsTotal: true },
-          aSaisir(unitaire(d.resultat), `${eur(d.resultat)} ÷ ${qte(d.livrees)} = ${qte(unitaire(d.resultat), 4)} €`, { horsTotal: true, indice: "le résultat divisé par les enceintes livrées" }),
+          aSaisir(unitaire(d.resultat), `${eur(d.resultat)} ÷ ${qte(d.livrees)} = ${eur(unitaire(d.resultat))}`, { horsTotal: true, indice: "le résultat divisé par les enceintes livrées" }),
           aSaisir(d.resultat, `${eur(d.chiffreDAffaires)} − ${eur(d.coutDeRevient)} = ${eur(d.resultat)}`, { indice: "le chiffre d'affaires moins le coût de revient" }),
         ],
       },
@@ -412,7 +416,7 @@ function grilleDeLaVariante(x: CoutCompletDeDecembre): TableauACompleter {
         totalDe: { plus: [0, 1, 2, 3, 4] },
         cellules: [aSaisir(v.coutDeProduction, `${eur(d.coutDeProduction)} + ${eur(v.rebuts)} + ${eur(v.evacuation)} − ${eur(v.dechetsVendables)} − ${eur(v.valeurDeRealisation)} = ${eur(v.coutDeProduction)}`)],
       },
-      { libelle: "Coût de production d'une bonne enceinte", cellules: [aSaisir(v.coutDeProductionUnitaire, `${eur(v.coutDeProduction)} ÷ ${qte(d.livrees)} = ${qte(v.coutDeProductionUnitaire, 4)} €`, { indice: "le coût de production des bonnes enceintes divisé par leur nombre" })] },
+      { libelle: "Coût de production d'une bonne enceinte", cellules: [aSaisir(v.coutDeProductionUnitaire, `${eur(v.coutDeProduction)} ÷ ${qte(d.livrees)} = ${eur(v.coutDeProductionUnitaire)}`, { indice: "le coût de production des bonnes enceintes divisé par leur nombre" })] },
     ],
   };
 }
@@ -431,7 +435,7 @@ function grilleParProduit(x: CoutCompletDeDecembre): TableauACompleter {
         cellules: [
           aSaisir(d.chiffreDAffaires, `${qte(d.livrees)} × ${eur(f.moisDeReference.prix)} = ${eur(d.chiffreDAffaires)}`),
           aSaisir(v.ventesDuSousProduit, `${qte(v.grilles)} × ${eur(VARIANTE_DE_DECEMBRE.sousProduit.prix)} = ${eur(v.ventesDuSousProduit)}`),
-          aSaisir(total(d.chiffreDAffaires, v.ventesDuSousProduit), `${eur(d.chiffreDAffaires)} + ${eur(v.ventesDuSousProduit)}`),
+          aSaisir(total(d.chiffreDAffaires, v.ventesDuSousProduit), `${eur(d.chiffreDAffaires)} + ${eur(v.ventesDuSousProduit)} = ${eur(total(d.chiffreDAffaires, v.ventesDuSousProduit))}`),
         ],
       },
       {
@@ -439,7 +443,7 @@ function grilleParProduit(x: CoutCompletDeDecembre): TableauACompleter {
         cellules: [
           aSaisir(v.coutDeProduction, `le coût des bonnes enceintes, variante comprise : ${eur(v.coutDeProduction)}`, { indice: "le coût de production des bonnes enceintes de la variante" }),
           aSaisir(v.valeurDeRealisation, `les grilles reprennent leur valeur de réalisation, ôtée des enceintes : ${eur(v.valeurDeRealisation)}`, { indice: "ce que le coût des enceintes a cédé aux grilles" }),
-          aSaisir(total(v.coutDeProduction, v.valeurDeRealisation), `${eur(v.coutDeProduction)} + ${eur(v.valeurDeRealisation)}`),
+          aSaisir(total(v.coutDeProduction, v.valeurDeRealisation), `${eur(v.coutDeProduction)} + ${eur(v.valeurDeRealisation)} = ${eur(total(v.coutDeProduction, v.valeurDeRealisation))}`),
         ],
       },
       {
@@ -447,7 +451,7 @@ function grilleParProduit(x: CoutCompletDeDecembre): TableauACompleter {
         cellules: [
           aSaisir(d.imputees.distribution, `le centre distribution, comme sans la variante : ${eur(d.imputees.distribution)}`),
           aSaisir(v.fraisDuSousProduit, `${qte(v.grilles)} × ${eur(VARIANTE_DE_DECEMBRE.sousProduit.fraisParGrille)} + ${eur(VARIANTE_DE_DECEMBRE.sousProduit.fraisDuMois)} = ${eur(v.fraisDuSousProduit)}`, { indice: "les frais de conditionnement et d'expédition, et ceux du mois" }),
-          aSaisir(total(d.imputees.distribution, v.fraisDuSousProduit), `${eur(d.imputees.distribution)} + ${eur(v.fraisDuSousProduit)}`),
+          aSaisir(total(d.imputees.distribution, v.fraisDuSousProduit), `${eur(d.imputees.distribution)} + ${eur(v.fraisDuSousProduit)} = ${eur(total(d.imputees.distribution, v.fraisDuSousProduit))}`),
         ],
       },
       {
@@ -457,7 +461,7 @@ function grilleParProduit(x: CoutCompletDeDecembre): TableauACompleter {
         cellules: [
           aSaisir(v.coutDeRevient, `${eur(v.coutDeProduction)} + ${eur(d.imputees.distribution)} = ${eur(v.coutDeRevient)}`),
           aSaisir(v.sousProduit.cout, `${eur(v.valeurDeRealisation)} + ${eur(v.fraisDuSousProduit)} = ${eur(v.sousProduit.cout)}`),
-          aSaisir(total(v.coutDeRevient, v.sousProduit.cout), `${eur(v.coutDeRevient)} + ${eur(v.sousProduit.cout)}`),
+          aSaisir(total(v.coutDeRevient, v.sousProduit.cout), `${eur(v.coutDeRevient)} + ${eur(v.sousProduit.cout)} = ${eur(total(v.coutDeRevient, v.sousProduit.cout))}`),
         ],
       },
       {
@@ -467,7 +471,7 @@ function grilleParProduit(x: CoutCompletDeDecembre): TableauACompleter {
         cellules: [
           aSaisir(v.resultat, `${eur(d.chiffreDAffaires)} − ${eur(v.coutDeRevient)} = ${eur(v.resultat)}`, { indice: "le chiffre d'affaires moins le coût de revient" }),
           aSaisir(v.sousProduit.resultat, `${eur(v.ventesDuSousProduit)} − ${eur(v.sousProduit.cout)} = ${eur(v.sousProduit.resultat)}`, { indice: "les ventes des grilles moins leur coût de revient" }),
-          aSaisir(total(v.resultat, v.sousProduit.resultat), `${eur(v.resultat)} + ${eur(v.sousProduit.resultat)}`),
+          aSaisir(total(v.resultat, v.sousProduit.resultat), `${eur(v.resultat)} + ${eur(v.sousProduit.resultat)} = ${eur(total(v.resultat, v.sousProduit.resultat))}`),
         ],
       },
     ],
@@ -571,7 +575,7 @@ export const LE_COUT_COMPLET_PAS_A_PAS: Chapitre = {
           {
             libelle: "Total de l'entretien",
             attendu: r.auxiliaires.entretien,
-            calcul: `E = ${eur(E0)} + ${pct(e)} × A et A = ${eur(A0)} + ${pct(a)} × E, d'où E = (${eur(E0)} + ${pct(e)} × ${eur(A0)}) ÷ (1 − ${pct(e)} × ${pct(a)}) = ${qte(E0 + e * A0, 3)} € ÷ ${qte(1 - a * e)} = ${eur(r.auxiliaires.entretien)}`,
+            calcul: `E = ${eur(E0)} + ${pct(e)} × A et A = ${eur(A0)} + ${pct(a)} × E, d'où E = (${eur(E0)} + ${pct(e)} × ${eur(A0)}) ÷ (1 − ${pct(e)} × ${pct(a)}) = ${qte(E0 + e * A0)} € ÷ ${qte(1 - a * e)} = ${eur(r.auxiliaires.entretien)}`,
           },
           { libelle: "Total de l'administration", attendu: r.auxiliaires.administration, calcul: `A = ${eur(A0)} + ${pct(a)} × ${eur(r.auxiliaires.entretien)} = ${eur(r.auxiliaires.administration)}` },
         ];

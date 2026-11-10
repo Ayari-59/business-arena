@@ -1,3 +1,4 @@
+import { qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   ENTREPRISES_DU_RESEAU,
   LIGNE,
@@ -28,9 +29,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez ATLAS CONSEIL, dont les consultants travaillent chez les
  * clients et à distance : monde/reseau-d-atlas.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la taille du rapport et le temps d'envoi sont des grandeurs
+ * au centième (au dixième près, avant) ; les adresses sont des quantités.
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const mbits = (n: number) => `${n.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} Mbit/s`;
 
 const configurationDuPoste = (): TableauDeDonnees => ({
@@ -123,8 +127,8 @@ export const RESEAUX_ET_INFORMATIQUE_EN_NUAGE: Chapitre = {
       titre: "Le temps d'un envoi",
       question: () => `La ligne du bureau envoie ${mbits(LIGNE.envoiMbits)}. Un rapport de fin de mission pèse ${qte(RAPPORT.mo)} Mo. Convertissez sa taille en mégabits, puis calculez le temps de son envoi, en secondes, si la ligne lui est toute réservée.`,
       champs: () => [
-        { libelle: "Taille du rapport (Mbit)", attendu: RAPPORT.mo * 8, calcul: `${qte(RAPPORT.mo)} × 8 = ${qte(RAPPORT.mo * 8)}` },
-        { libelle: "Temps d'envoi (secondes)", attendu: secondesPourLeRapport(), tolerance: 0.1, calcul: `${qte(RAPPORT.mo * 8)} ÷ ${qte(LIGNE.envoiMbits)} = ${qte(secondesPourLeRapport())}` },
+        { libelle: "Taille du rapport (Mbit)", nature: "grandeur", attendu: RAPPORT.mo * 8, calcul: `${qte(RAPPORT.mo)} × 8 = ${qte(RAPPORT.mo * 8)}` },
+        { libelle: "Temps d'envoi (secondes)", nature: "grandeur", attendu: secondesPourLeRapport(), calcul: `${qte(RAPPORT.mo * 8)} ÷ ${qte(LIGNE.envoiMbits)} = ${qte(secondesPourLeRapport())}` },
       ],
       explication: () => [`${qte(secondesPourLeRapport() / 60)} minutes pour un seul rapport, et la ligne est prise pendant ce temps. Le débit se partage entre tout ce qui circule en même temps.`],
     },
@@ -219,8 +223,8 @@ export const RESEAUX_ET_INFORMATIQUE_EN_NUAGE: Chapitre = {
       titre: "Combien de postes ?",
       question: () => `Le dernier nombre de l'adresse, celui du poste, est codé sur ${qte(POSTE.bitsDHote)} bits. Combien d'adresses donne-t-il, et combien peuvent aller à des postes, sachant que la première désigne le réseau et la dernière sert à la diffusion ?`,
       champs: () => [
-        { libelle: "Adresses du réseau", attendu: 2 ** POSTE.bitsDHote, calcul: `2 puissance ${qte(POSTE.bitsDHote)} = ${qte(2 ** POSTE.bitsDHote)}` },
-        { libelle: "Adresses de postes", attendu: adressesDePostes(), calcul: `${qte(2 ** POSTE.bitsDHote)} − 2 = ${qte(adressesDePostes())}` },
+        { libelle: "Adresses du réseau", nature: "quantite", attendu: 2 ** POSTE.bitsDHote, calcul: `2 puissance ${qte(POSTE.bitsDHote)} = ${qte(2 ** POSTE.bitsDHote)}` },
+        { libelle: "Adresses de postes", nature: "quantite", attendu: adressesDePostes(), calcul: `${qte(2 ** POSTE.bitsDHote)} − 2 = ${qte(adressesDePostes())}` },
       ],
       explication: () => [`Le réseau du bureau peut accueillir ${qte(adressesDePostes())} hôtes : de quoi brancher tous les postes, les imprimantes et les téléphones du cabinet.`],
     },

@@ -514,10 +514,10 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
     const caTTC = 7_000 * 59 * 1.2;
     expect(attendus(ch, "le-delai-moyen")).toEqual({
       "Chiffre d'affaires du dernier trimestre (TTC)": caTTC,
-      "Délai moyen de paiement des clients (jours)": Math.round(((3 * TTC) / caTTC) * 90 * 10) / 10,
+      "Délai moyen de paiement des clients (jours)": centime(((3 * TTC) / caTTC) * 90),
       "Part de CampusTech dans le chiffre d'affaires (%)": centime(((3 * HT) / (7_000 * 59)) * 100),
     });
-    expect([caTTC, Math.round(((3 * TTC) / caTTC) * 90 * 10) / 10, centime(((3 * HT) / (7_000 * 59)) * 100)]).toEqual([495_600, 12.3, 13.71]);
+    expect([caTTC, centime(((3 * TTC) / caTTC) * 90), centime(((3 * HT) / (7_000 * 59)) * 100)]).toEqual([495_600, 12.34, 13.71]);
     // NOVA vend des biens : elle finance le TTC, la TVA comprise.
     expect(attendus(ch, "le-cout-du-credit")).toEqual({
       "Coût du crédit convenu d'une facture": centime((TTC * 0.12 * 60) / 360),
@@ -594,11 +594,11 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
     // À 60 jours, la facture d'octobre (jour 20) est payée au jour 80 : restent novembre et décembre.
     expect(attendus(ch, "a-l-echeance")).toEqual({
       "Créances clients au 31 décembre, à l'échéance (TTC)": 2 * TTC,
-      "Délai moyen de paiement à l'échéance (jours)": Math.round(((2 * TTC) / 495_600) * 90 * 10) / 10,
+      "Délai moyen de paiement à l'échéance (jours)": centime(((2 * TTC) / 495_600) * 90),
       "Ce que le retard laisse en plus au bilan (TTC)": TTC,
     });
-    expect([2 * TTC, Math.round(((2 * TTC) / 495_600) * 90 * 10) / 10]).toEqual([45_312, 8.2]);
-    // Le relevé : 453,12 € = 226,56 € d'escompte + j × 7,552 € de découvert.
+    expect([2 * TTC, centime(((2 * TTC) / 495_600) * 90)]).toEqual([45_312, 8.23]);
+    // Le relevé : 453,12 € = 226,56 € d'escompte + j × 7,55 € de découvert (le coût d'un jour, au centime).
     expect(COUT_RELEVE_A_REBOURS).toBe(453.12);
     const retard = (453.12 - 226.56) / parJour;
     expect(retard).toBeCloseTo(30, 9);

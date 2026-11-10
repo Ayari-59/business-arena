@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import {
@@ -44,6 +44,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     un graphique du point bas selon le stock de jeux ;
  *   · expert : ce-que-coute-le-stock (à rebours), le-controle-de-vraisemblance, l-interdependance ;
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes, les jeux et les productions sont des quantités
+ * : le corrigé écrit le stock de la politique à deux décimales, puis l'unité supérieure ; les taux
+ * s'écrivent à deux décimales.
  */
 
 /** Les budgets opérationnels se bâtissent sur le semestre de NOVA. */
@@ -68,10 +73,8 @@ export const LEVIERS_DU_LABORATOIRE = {
 /** La commande que CampusTech annonce en février pour mai, hypothèse de l'étape sur l'interdépendance. */
 export const COMMANDE_ANNONCEE = { mois: 4, enceintes: 100 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const NOMS_APRES_JUIN = ["juillet", "août"] as const;
@@ -132,7 +135,7 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const part = s.clienteles.find((x) => x.code === "particuliers")!;
   const ct = s.clienteles.find((x) => x.code === "campustech")!;
   const t2 = [k, k + 1, k + 2];
-  const chiffreDuTrimestre = auCentime(t2.reduce((t, i) => t + ventes.valeurs[i]!, 0));
+  const chiffreDuTrimestre = arrondi2(t2.reduce((t, i) => t + ventes.valeurs[i]!, 0));
 
   // Le curseur : le plus fort stock de jeux (en %) qui garde le point bas au matelas, enceintes à la politique.
   const positions = Array.from({ length: STOCK_DE_JEUX_DU_CURSEUR.max - STOCK_DE_JEUX_DU_CURSEUR.min + 1 }, (_, i) => STOCK_DE_JEUX_DU_CURSEUR.min + i);
@@ -500,7 +503,7 @@ export const DES_VENTES_AUX_ACHATS: Chapitre = {
         const x = budgetsDuChapitre(c);
         const a = x.stock.mois[x.k]!;
         return [
-          `Les achats TTC sont la porte d'entrée du budget de trésorerie : les ${eur(a.achatsTtc)} ${dE(a.nom)} se paient en ${x.nom(x.mai)}. Leur TVA, ${eur(auCentime(a.achatsHt * x.tva))}, se déduit sur la déclaration ${dE(a.nom)}, payée en ${x.nom(x.mai)} elle aussi.`,
+          `Les achats TTC sont la porte d'entrée du budget de trésorerie : les ${eur(a.achatsTtc)} ${dE(a.nom)} se paient en ${x.nom(x.mai)}. Leur TVA, ${eur(arrondi2(a.achatsHt * x.tva))}, se déduit sur la déclaration ${dE(a.nom)}, payée en ${x.nom(x.mai)} elle aussi.`,
         ];
       },
     },
@@ -521,11 +524,11 @@ export const DES_VENTES_AUX_ACHATS: Chapitre = {
         const fe = x.stock.mois[1]!;
         const paye = x.tStock.mois[1]!.decaissements.fournisseur;
         return [
-          { libelle: "Stock final d'enceintes de janvier", attendu: j.enceintes.final, calcul: `${pct(x.P.enceintes)} × ${qte(fe.ventes)} = ${qte(x.P.enceintes * fe.ventes)}, soit ${qte(j.enceintes.final)}` },
-          { libelle: "Production de janvier", attendu: j.production, calcul: `${qte(j.ventes)} + ${qte(j.enceintes.final)} − 0 = ${qte(j.production)}` },
-          { libelle: "Production de février", attendu: fe.production, calcul: `${qte(fe.ventes)} + ${qte(fe.enceintes.final)} − ${qte(fe.enceintes.initial)} = ${qte(fe.production)}` },
-          { libelle: "Stock final de jeux de janvier", attendu: j.jeux.final, calcul: `${pct(x.P.jeux)} × ${qte(fe.production)} = ${qte(x.P.jeux * fe.production)}, soit ${qte(j.jeux.final)}` },
-          { libelle: "Jeux achetés en janvier", attendu: j.achats, calcul: `${qte(j.consommation)} + ${qte(j.jeux.final)} − 0 = ${qte(j.achats)}` },
+          { libelle: "Stock final d'enceintes de janvier", nature: "quantite", attendu: j.enceintes.final, calcul: `${pct(x.P.enceintes)} × ${qte(fe.ventes)} = ${qte(x.P.enceintes * fe.ventes)}, arrondi à l'unité supérieure : ${qte(j.enceintes.final)}` },
+          { libelle: "Production de janvier", nature: "quantite", attendu: j.production, calcul: `${qte(j.ventes)} + ${qte(j.enceintes.final)} − 0 = ${qte(j.production)}` },
+          { libelle: "Production de février", nature: "quantite", attendu: fe.production, calcul: `${qte(fe.ventes)} + ${qte(fe.enceintes.final)} − ${qte(fe.enceintes.initial)} = ${qte(fe.production)}` },
+          { libelle: "Stock final de jeux de janvier", nature: "quantite", attendu: j.jeux.final, calcul: `${pct(x.P.jeux)} × ${qte(fe.production)} = ${qte(x.P.jeux * fe.production)}, arrondi à l'unité supérieure : ${qte(j.jeux.final)} (un jeu de moins laisserait le stock sous sa politique)` },
+          { libelle: "Jeux achetés en janvier", nature: "quantite", attendu: j.achats, calcul: `${qte(j.consommation)} + ${qte(j.jeux.final)} − 0 = ${qte(j.achats)}` },
           { libelle: "Paiement au fournisseur en février", attendu: paye, calcul: `${qte(j.achats)} × ${eur(x.m.coutVariable.composants)} × ${qte(1 + x.tva)} = ${eur(paye)}` },
         ];
       },
@@ -555,7 +558,7 @@ export const DES_VENTES_AUX_ACHATS: Chapitre = {
         const sans = x.fiche.mois[x.k]!;
         const p = x.tStock.mois[x.mai]!.decaissements;
         const q = x.tFiche.mois[x.mai]!.decaissements;
-        const enPlus = auCentime(p.fournisseur + p.tva - q.fournisseur - q.tva);
+        const enPlus = arrondi2(p.fournisseur + p.tva - q.fournisseur - q.tva);
         return [
           { libelle: `Paiement au fournisseur en ${x.nom(x.mai)}`, attendu: p.fournisseur, calcul: `les jeux ${dE(a.nom)} : ${qte(a.achats)} × ${eur(x.m.coutVariable.composants)} × ${qte(1 + x.tva)} = ${eur(p.fournisseur)}` },
           {
@@ -701,6 +704,7 @@ export const DES_VENTES_AUX_ACHATS: Chapitre = {
         return [
           {
             libelle: "Jeux achetés en plus de janvier à mai",
+            nature: "quantite",
             attendu: x.ecart.jeuxEnPlusJusquEnMai,
             calcul: `ce sont les stocks du 31 mai, partis de zéro : ${qte(mai.enceintes.final)} enceintes, un jeu chacune, et ${qte(mai.jeux.final)} jeux, soit ${qte(x.ecart.jeuxEnPlusJusquEnMai)}`,
           },

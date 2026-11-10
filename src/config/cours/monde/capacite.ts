@@ -1,3 +1,4 @@
+import { arrondi, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import type {
   AleaDeNova,
   AnneeDeNova,
@@ -758,7 +759,8 @@ export function machineEnPlus(f: FicheDeLaCapacite, code: CodeDeMachine, leviers
   const fluxAnnuel = auCentime(resultatAvantImpot * (1 - impot) + amortissement);
   const recrutements = embauches * f.personnel.coutDUnRecrutement;
   const investissement = auCentime(prix + recrutements);
-  const facteur = facteurDActualisation(taux, duree);
+  // Le facteur d'actualisation au dix-millième, tel que l'élève l'écrit (deux décimales, 10 novembre 2026).
+  const facteur = arrondi(facteurDActualisation(taux, duree), 4);
   return {
     machine,
     hausseDeLaDemande: hausse,
@@ -796,7 +798,7 @@ export function machineEnPlus(f: FicheDeLaCapacite, code: CodeDeMachine, leviers
     tauxDActualisation: taux,
     facteurDActualisation: facteur,
     van: auCentime(-investissement + fluxAnnuel * facteur),
-    delaiDeRecuperation: fluxAnnuel > 0 ? investissement / fluxAnnuel : null,
+    delaiDeRecuperation: fluxAnnuel > 0 ? arrondi2(investissement / fluxAnnuel) : null,
   };
 }
 

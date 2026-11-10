@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   ENTREPRISES_DE_LA_FONCTION_SI,
@@ -27,12 +27,14 @@ import type { Chapitre } from "../types";
  * fausse » la qualité des données.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/fonction-si-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de disponibilité, la part des incidents résolus en
+ * moins de 4 heures et le délai moyen de résolution se donnent à deux décimales (au dixième, avant
+ * ; monde/fonction-si-de-nova.ts).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const heures = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} heures`;
+const heures = (t: number) => `${nombreAuCentieme(t)} heures`;
 
 function budgetACompleter(): TableauACompleter {
   const b = budgetDuSi();
@@ -228,13 +230,13 @@ export const LA_FONCTION_SYSTEME_D_INFORMATION: Chapitre = {
       type: "montants",
       titre: "Le tableau de bord du service",
       question: () =>
-        `En mars (${qte(MARS.jours)} jours de 24 heures), le site a été arrêté ${heures(MARS.heuresDArret)}. Le prestataire a traité ${qte(MARS.incidents)} incidents, en ${qte(MARS.heuresDeResolution)} heures au total, dont ${qte(MARS.resolusEnMoinsDe4Heures)} en moins de 4 heures. Calculez le taux de disponibilité du site (en %, au dixième), le délai moyen de résolution (en heures, au dixième), et la part des incidents résolus en moins de 4 heures (en %, au dixième).`,
+        `En mars (${qte(MARS.jours)} jours de 24 heures), le site a été arrêté ${heures(MARS.heuresDArret)}. Le prestataire a traité ${qte(MARS.incidents)} incidents, en ${qte(MARS.heuresDeResolution)} heures au total, dont ${qte(MARS.resolusEnMoinsDe4Heures)} en moins de 4 heures. Calculez le taux de disponibilité du site (en %, à deux décimales), le délai moyen de résolution (en heures, à deux décimales), et la part des incidents résolus en moins de 4 heures (en %, à deux décimales).`,
       champs: () => {
         const k = tableauDeBordDeMars();
         return [
-          { libelle: "Taux de disponibilité (%)", attendu: k.disponibilitePct, tolerance: 0.1, calcul: `(${qte(k.heures)} − ${qte(MARS.heuresDArret)}) ÷ ${qte(k.heures)} × 100 = ${pct(k.disponibilitePct)}` },
-          { libelle: "Délai moyen de résolution (heures)", attendu: k.delaiMoyen, tolerance: 0.1, calcul: `${qte(MARS.heuresDeResolution)} ÷ ${qte(MARS.incidents)} = ${heures(k.delaiMoyen)}` },
-          { libelle: "Incidents résolus en moins de 4 heures (%)", attendu: k.partEn4HeuresPct, tolerance: 0.1, calcul: `${qte(MARS.resolusEnMoinsDe4Heures)} ÷ ${qte(MARS.incidents)} × 100 = ${pct(k.partEn4HeuresPct)}` },
+          { libelle: "Taux de disponibilité (%)", attendu: k.disponibilitePct, calcul: `(${qte(k.heures)} − ${qte(MARS.heuresDArret)}) ÷ ${qte(k.heures)} × 100 = ${pct(k.disponibilitePct)}` },
+          { libelle: "Délai moyen de résolution (heures)", nature: "grandeur", attendu: k.delaiMoyen, calcul: `${qte(MARS.heuresDeResolution)} ÷ ${qte(MARS.incidents)} = ${heures(k.delaiMoyen)}` },
+          { libelle: "Incidents résolus en moins de 4 heures (%)", attendu: k.partEn4HeuresPct, calcul: `${qte(MARS.resolusEnMoinsDe4Heures)} ÷ ${qte(MARS.incidents)} × 100 = ${pct(k.partEn4HeuresPct)}` },
         ];
       },
       explication: () => ["Chaque indicateur mesure un critère de performance : la disponibilité, la rapidité, la régularité du service. Un tableau de bord opérationnel en garde peu, suivis chaque mois."],

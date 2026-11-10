@@ -94,14 +94,14 @@ describe("la corrélation, refaite à la main", () => {
 });
 
 describe("les ajustements, refaits à la main", () => {
-  it("la puissance : ln y = a ln t + ln b, a = 1,1137 ÷ 6,2842 = 0,1772, b = e^9,5849 = 14 543, 22 912 enceintes au rang 13", () => {
+  it("la puissance : ln y = a ln t + ln b, a = 1,1137 ÷ 6,2842 = 0,1772, b = e^9,5849 = 14 543,51, 22 912 enceintes au rang 13", () => {
     const p = ajustementPuissance();
     const X = Y.map((_, i) => Math.log(i + 1));
     const L = Y.map((y) => Math.log(y));
     expect(p.r).toBeCloseTo(pearson(X, L), 12);
     expect(p.a).toBeCloseTo(0.1772, 4);
     expect(p.lnB).toBeCloseTo(9.5849, 4);
-    expect(attendus(ch, "l-ajustement-puissance")).toEqual([0.1772, 9.5849, 14_543, 22_912]);
+    expect(attendus(ch, "l-ajustement-puissance")).toEqual([0.1772, 9.5849, 14_543.51, 22_912]);
   });
 
   it("les coefficients des trois ajustements : la puissance est la plus faible sur les deux séries", () => {
@@ -136,8 +136,9 @@ describe("le lissage exponentiel, refait à la main", () => {
       let p = P[0]!;
       let s = 0;
       for (let m = 1; m < P.length; m++) {
-        s += (P[m]! - p) ** 2;
-        p = a * P[m]! + (1 - a) * p;
+        // Deux décimales : l'erreur et chaque prévision s'arrondissent au centième, et la suivante en repart.
+        s += Math.round((P[m]! - p) * 100) ** 2 / 10_000;
+        p = Math.round((a * P[m]! + (1 - a) * p) * 100) / 100;
       }
       return s;
     };
@@ -169,6 +170,6 @@ describe("le cas dédié : janvier est tombé", () => {
     expect(attendus(JANVIER_EST_TOMBE, "fevrier-au-alpha-retenu")).toEqual([-514.12, 1_554.24]);
     expect(attendus(JANVIER_EST_TOMBE, "fevrier-au-alpha-prudent")).toEqual([1_400 - 1_734.54, 1_634.18].map((v) => Math.round(v * 100) / 100));
     expect(x.sommes.prudent).toBeGreaterThan(x.sommes.retenu);
-    expect(juste(JANVIER_EST_TOMBE, "reponse")[0]!.replace(/\s/g, " ")).toBe("1 554 colis, le lissage à α = 0,7");
+    expect(juste(JANVIER_EST_TOMBE, "reponse")[0]!.replace(/\s/g, " ")).toBe("1 554 colis, le lissage à α = 0,70");
   });
 });

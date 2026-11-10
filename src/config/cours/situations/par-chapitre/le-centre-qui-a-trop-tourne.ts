@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_CONTROLE_BUDGETAIRE, HEURES_DU_CURSEUR, centreDeMontage, tableauDuCentre } from "../../chapitres/les-ecarts-sur-charges-indirectes";
 import type { Situation } from "../types";
@@ -18,12 +18,14 @@ import type { Situation } from "../types";
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de `centreDeMontage`. L'explication du responsable est une hypothèse de
  * l'histoire : le modèle ne connaît pas les causes, seulement les écarts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures-machine (préétablies, perdues) sont des grandeurs
+ * au centième.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const auCentime = (x: number) => Math.round(x * 100) / 100;
 
 export type Verdict = "le-volume-n-explique-pas" | "le-volume-explique";
 
@@ -36,9 +38,9 @@ export function centreQuiATropTourne(c: Pick<Cas, "code">) {
     x,
     verdict,
     /** L'erreur du responsable : les heures en plus au coût standard complet, part fixe comprise. */
-    heuresEnPlusAuStandard: auCentime(x.auDelaDeLaNormale * x.cHm),
+    heuresEnPlusAuStandard: arrondi2(x.auDelaDeLaNormale * x.cHm),
     /** L'erreur de signe : les heures en plus additionnées en rendement et en activité, sans leur signe. */
-    sansLesSignes: auCentime(x.rendement + Math.abs(x.activite)),
+    sansLesSignes: arrondi2(x.rendement + Math.abs(x.activite)),
   };
 }
 
@@ -90,10 +92,11 @@ export const LE_CENTRE_QUI_A_TROP_TOURNE: Situation = {
         return [
           {
             libelle: "Activité préétablie de la production réelle",
+            nature: "grandeur",
             attendu: x.heuresPreetablies,
             calcul: `${x.parModele.map((m) => `${qte(m.quantite)} × ${qte(m.parUnite)}`).join(" + ")} = ${qte(x.heuresPreetablies)}`,
           },
-          { libelle: "Heures-machine perdues", attendu: x.perdues, calcul: `${qte(x.heuresReelles)} − ${qte(x.heuresPreetablies)} = ${qte(x.perdues)}` },
+          { libelle: "Heures-machine perdues", nature: "grandeur", attendu: x.perdues, calcul: `${qte(x.heuresReelles)} − ${qte(x.heuresPreetablies)} = ${qte(x.perdues)}` },
         ];
       },
       explication: (c) => {
@@ -151,11 +154,11 @@ export const LE_CENTRE_QUI_A_TROP_TOURNE: Situation = {
       montrer: "Montrer la limite",
       lecture: (c, h) => {
         const { x } = centreQuiATropTourne(c);
-        const cout = auCentime(x.k.chargesFixes + x.k.coutVariableParHeure * h + x.budget);
+        const cout = arrondi2(x.k.chargesFixes + x.k.coutVariableParHeure * h + x.budget);
         return [
           { libelle: "Coût du centre, à la même dépense", montant: cout },
           { libelle: "Coût préétabli de la production réelle", montant: x.preetabliDeLaProduction },
-          { libelle: "Dépassement", montant: auCentime(cout - x.preetabliDeLaProduction), fort: true },
+          { libelle: "Dépassement", montant: arrondi2(cout - x.preetabliDeLaProduction), fort: true },
         ];
       },
       droites: (c) => {
@@ -239,7 +242,7 @@ export const LE_CENTRE_QUI_A_TROP_TOURNE: Situation = {
           {
             texte: `Oui : les heures en plus pèsent ${eur(x.rendement)} de rendement et ${eur(Math.abs(x.activite))} d'activité, soit ${eur(k.sansLesSignes)}`,
             juste: false,
-            retour: `Non : c'est additionner des écarts sans leur signe. ${eur(x.rendement)} + ${entre(x.activite)} = ${eur(auCentime(x.rendement + x.activite))} : une partie de ce que l'écart sur rendement compte revient en écart sur activité favorable.`,
+            retour: `Non : c'est additionner des écarts sans leur signe. ${eur(x.rendement)} + ${entre(x.activite)} = ${eur(arrondi2(x.rendement + x.activite))} : une partie de ce que l'écart sur rendement compte revient en écart sur activité favorable.`,
           },
         ];
       },
