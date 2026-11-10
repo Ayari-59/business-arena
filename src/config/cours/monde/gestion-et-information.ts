@@ -1,3 +1,4 @@
+import { aLUnite, produit2, quotient2, somme2, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { anneeAvec, anneeDuMarche, type AnneeDuMarche } from "./attractivite";
 import { capaciteDeLEquipe } from "./capacite";
@@ -272,8 +273,9 @@ export function margeDuMois(f: FicheDeGestion = FICHE_DE_GESTION, leviers: Parti
     autresCoutsVariables: m.autresCoutsVariables,
     cout,
     marge,
-    tauxDeMarge: auDixieme((marge / cout) * 100),
-    tauxDeMarque: auDixieme((marge / prix) * 100),
+    // À deux décimales (décision du propriétaire, 10 novembre 2026) : 21 € ÷ 38 € × 100 = 55,26 %.
+    tauxDeMarge: taux2(marge, cout),
+    tauxDeMarque: taux2(marge, prix),
     quantite,
     margeDuMois: margeTotale,
     chargesFixes,
@@ -1055,12 +1057,13 @@ export function outilNumerique(f: FicheDeLaCapacite = FICHE_DE_CAPACITE, adoptio
   const depart = MISE_EN_PLACE + formation;
   const coutPremiereAnnee = abonnement + depart;
   const ventesManquees = info.ventesPerdues;
-  const ventesRetrouvees = Math.round(ventesManquees * PART_DES_VENTES_RETROUVEES);
+  // Chaque ligne arrondie : les ventes retrouvées à l'unité (des enceintes), puis le gain qu'elles rapportent.
+  const ventesRetrouvees = aLUnite(ventesManquees * PART_DES_VENTES_RETROUVEES);
   const marge = info.aJour.marge;
-  const gain = auCentime(ventesRetrouvees * marge);
-  const gainNet = auCentime(gain - abonnement);
-  const gainAdopte = auCentime(gain * adoption);
-  const gainNetAdopte = auCentime(gainAdopte - abonnement);
+  const gain = produit2(ventesRetrouvees, marge);
+  const gainNet = somme2(gain, -abonnement);
+  const gainAdopte = produit2(gain, adoption);
+  const gainNetAdopte = somme2(gainAdopte, -abonnement);
   return {
     utilisateurs,
     ventesManquees,
@@ -1072,12 +1075,13 @@ export function outilNumerique(f: FicheDeLaCapacite = FICHE_DE_CAPACITE, adoptio
     ventesRetrouvees,
     gain,
     gainNet,
-    delai: auDixieme((depart / gainNet) * MOIS_PAR_AN),
-    seuilDAdoption: auDixieme((abonnement / gain) * 100),
+    // À deux décimales (décision du propriétaire, 10 novembre 2026) : 3,79 mois, 14,09 %.
+    delai: quotient2(depart * MOIS_PAR_AN, gainNet),
+    seuilDAdoption: taux2(abonnement, gain),
     adoption,
     gainAdopte,
     gainNetAdopte,
-    delaiAdopte: gainNetAdopte > 0 ? auDixieme((depart / gainNetAdopte) * MOIS_PAR_AN) : null,
+    delaiAdopte: gainNetAdopte > 0 ? quotient2(depart * MOIS_PAR_AN, gainNetAdopte) : null,
     soldePremiereAnneeAdopte: auCentime(gainAdopte - coutPremiereAnnee),
     verdict: (gainNetAdopte <= 0 ? "ne-couvre-pas-l-abonnement" : gainAdopte >= coutPremiereAnnee ? "rembourse-dans-l-annee" : "rembourse-en-plus-d-un-an") as VerdictDeLOutil,
   };
