@@ -226,7 +226,7 @@ export async function quitterClasse(userId: string): Promise<void> {
   await db.delete(coursEleves).where(eq(coursEleves.userId, userId));
 }
 
-/** La classe d'un élève, s'il en suit une. */
+/** La classe d'un élève, s'il en suit une ; son parcours dit à la page d'un chapitre quel diplôme il prépare. */
 export async function classeDeLEleve(userId: string) {
   const [m] = await db
     .select({
@@ -234,6 +234,7 @@ export async function classeDeLEleve(userId: string) {
       classe: coursClasses.nom,
       eleve: coursEleves.nom,
       entreprise: coursClasses.entreprise,
+      parcours: coursClasses.parcours,
       closeLe: coursClasses.closeLe,
       sansCalculatrice: coursClasses.sansCalculatrice,
     })

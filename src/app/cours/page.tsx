@@ -93,6 +93,8 @@ async function CoursPage({
     [...lignesDuParcours.map((l) => l.chapitre), ...trouves],
   );
   const vueParDefaut = !programme && !motCle;
+  // Le diplôme choisi, que les liens du chapitre libre portent aussi (config/cours/competences-affichees.ts).
+  const duDiplome = programme ? `&diplome=${programme.formation.code}` : "";
   return (
     <>
       <main id="main">
@@ -234,7 +236,7 @@ async function CoursPage({
                 {programme ? ` dans le ${programme.formation.sigle}` : ""}
               </h2>
               {trouves.length > 0 ? (
-                <ListeDeChapitres chapitres={trouves} imposee={imposee?.code} ouverts={ouverts} />
+                <ListeDeChapitres chapitres={trouves} imposee={imposee?.code} ouverts={ouverts} diplome={programme?.formation.code} />
               ) : (
                 <p className="text-sm text-slate-400">
                   Essayez un autre mot, ou{" "}
@@ -323,7 +325,7 @@ async function CoursPage({
                           ) : null}
                           <ol className="grid gap-3">
                             {b.chapitres.map((l) => (
-                              <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} />
+                              <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} diplome={programme.formation.code} />
                             ))}
                           </ol>
                         </>
@@ -368,7 +370,7 @@ async function CoursPage({
               {programme.situations.length > 0 ? (
                 <div className="grid gap-2">
                   <h3 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">Cas de synthèse</h3>
-                  <ListeDeSituations situations={programme.situations} imposee={imposee?.code} />
+                  <ListeDeSituations situations={programme.situations} imposee={imposee?.code} diplome={programme.formation.code} />
                 </div>
               ) : null}
 
@@ -398,13 +400,13 @@ async function CoursPage({
               <p className="max-w-3xl text-base leading-relaxed text-slate-300">{pilote.accroche}</p>
             </div>
             <p className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
-              <Link href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}`} className={bouton({ taille: "m" })}>
+              <Link href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}${duDiplome}`} className={bouton({ taille: "m" })}>
                 Commencer avec {ENTREPRISES[0]!.nom}
               </Link>
               {/* Projeter s'adresse à l'enseignant : l'élève d'une classe ne le voit pas. */}
               {classe ? null : (
                 <Link
-                  href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}&classe`}
+                  href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}&classe${duDiplome}`}
                   className={bouton({ variante: "secondaire", taille: "m" })}
                 >
                   Projeter en classe
@@ -422,7 +424,7 @@ async function CoursPage({
                 {ENTREPRISES.map((e) => (
                   <li key={e.code}>
                     <Link
-                      href={`/cours/${pilote.code}?entreprise=${e.code}`}
+                      href={`/cours/${pilote.code}?entreprise=${e.code}${duDiplome}`}
                       style={{ borderLeftColor: `var(--secteur-${e.teinte})` }}
                       className="flex min-h-14 flex-col justify-center rounded-lg border border-l-4 border-white/10 px-3 py-2 transition hover:border-white/30"
                     >
@@ -582,14 +584,14 @@ function Acces({ chapitre, ouvert }: { chapitre: Chapitre; ouvert?: boolean }) {
  * son palier et son public, sa durée et son accès ; ses prérequis en une ligne, et ses
  * objectifs repliés.
  */
-function ChapitreDuParcours({ ligne, imposee, ouvert }: { ligne: ChapitreDuDiplome; imposee?: string; ouvert: boolean }) {
+function ChapitreDuParcours({ ligne, imposee, ouvert, diplome }: { ligne: ChapitreDuDiplome; imposee?: string; ouvert: boolean; diplome?: string }) {
   const c = ligne.chapitre;
   return (
     <li data-chapitre={c.code} data-rang={ligne.rang} data-approfondissement={ligne.approfondissement ? "" : undefined} className="grid gap-x-3 gap-y-1 sm:grid-cols-[2rem_1fr_auto] sm:items-baseline">
       <span className="text-sm font-semibold tabular-nums text-slate-400">{ligne.rang}.</span>
       <span className="grid min-w-0 gap-0.5">
         <Link
-          href={lienDuChapitre(c, imposee)}
+          href={lienDuChapitre(c, imposee, diplome)}
           className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline"
         >
           {c.titre}
@@ -611,7 +613,7 @@ function ChapitreDuParcours({ ligne, imposee, ouvert }: { ligne: ChapitreDuDiplo
             Prérequis : {ligne.prerequis.map((p) => p.titre).join(", ")}
           </span>
         ) : null}
-        <CasDuChapitre chapitre={c.code} imposee={imposee} />
+        <CasDuChapitre chapitre={c.code} imposee={imposee} diplome={diplome} />
         <details className="group text-xs" data-objectifs="">
           <summary className="cursor-pointer list-none text-slate-300 [&::-webkit-details-marker]:hidden">
             <span aria-hidden className="mr-1 inline-block transition-transform group-open:rotate-90">
@@ -641,11 +643,15 @@ function publicDuChapitre(c: Chapitre): string {
   return parcours?.publics?.[c.palier] ?? PALIERS.find((p) => p.palier === c.palier)!.public;
 }
 
-/** Le lien d'un chapitre : dans l'entreprise imposée à la classe, ou la première où il se joue. */
-function lienDuChapitre(c: Chapitre, imposee?: string): string {
+/**
+ * Le lien d'un chapitre : dans l'entreprise imposée à la classe, ou la première où il se joue. Depuis
+ * la vue d'un diplôme, il porte ce diplôme (`&diplome=`) : la page du chapitre n'annonce que ses
+ * compétences (config/cours/competences-affichees.ts).
+ */
+function lienDuChapitre(c: Chapitre, imposee?: string, diplome?: string): string {
   const voulue = imposee ?? ENTREPRISES[0]!.code;
   const entreprise = c.entreprises && !c.entreprises.codes.includes(voulue) ? c.entreprises.codes[0] : voulue;
-  return `/cours/${c.code}?entreprise=${entreprise}`;
+  return `/cours/${c.code}?entreprise=${entreprise}${diplome ? `&diplome=${diplome}` : ""}`;
 }
 
 /**
@@ -657,11 +663,14 @@ function ListeDeChapitres({
   chapitres,
   imposee,
   ouverts,
+  diplome,
 }: {
   chapitres: readonly Chapitre[];
   imposee?: string;
   /** Ce qui est ouvert à ce visiteur ; absent (le catalogue entier), l'accès se dit « licence ». */
   ouverts?: ReadonlySet<string>;
+  /** Le diplôme choisi, que les liens portent. */
+  diplome?: string;
 }) {
   return (
     <ol className="grid gap-2.5">
@@ -670,13 +679,13 @@ function ListeDeChapitres({
           <span className="text-xs tabular-nums text-slate-400">Palier {c.palier}</span>
           <span className="grid min-w-0">
             <Link
-              href={lienDuChapitre(c, imposee)}
+              href={lienDuChapitre(c, imposee, diplome)}
               className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline"
             >
               {c.titre}
             </Link>
             <span className="text-xs text-slate-400">{publicDuChapitre(c)}</span>
-            <CasDuChapitre chapitre={c.code} imposee={imposee} />
+            <CasDuChapitre chapitre={c.code} imposee={imposee} diplome={diplome} />
           </span>
           <span className="whitespace-nowrap text-xs tabular-nums text-slate-400">
             {dureeEnClair(dureeDuChapitre(c))}
@@ -693,13 +702,13 @@ function ListeDeChapitres({
  * LE CAS PRATIQUE DU CHAPITRE, sous son titre : la même notion, sans guide, sur
  * une question neuve. Chaque chapitre a le sien (garde du catalogue).
  */
-function CasDuChapitre({ chapitre, imposee }: { chapitre: string; imposee?: string }) {
+function CasDuChapitre({ chapitre, imposee, diplome }: { chapitre: string; imposee?: string; diplome?: string }) {
   const cas = casDuChapitre(chapitre);
   if (!cas) return null;
   return (
     <>
       <Link
-        href={lienDuChapitre(cas, imposee)}
+        href={lienDuChapitre(cas, imposee, diplome)}
         data-cas-du-chapitre={cas.code}
         className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
       >
@@ -747,7 +756,7 @@ function CasDuChapitre({ chapitre, imposee }: { chapitre: string; imposee?: stri
  * calculs de chapitres déjà vus. La ligne dit lesquels, pour que l'enseignant la
  * place après eux.
  */
-function ListeDeSituations({ situations, imposee }: { situations: readonly Situation[]; imposee?: string }) {
+function ListeDeSituations({ situations, imposee, diplome }: { situations: readonly Situation[]; imposee?: string; diplome?: string }) {
   return (
     <ul className="grid gap-2.5">
       {situations.map((s) => (
@@ -755,7 +764,7 @@ function ListeDeSituations({ situations, imposee }: { situations: readonly Situa
           <span className="text-xs tabular-nums text-slate-400">Palier {s.palier}</span>
           <span className="grid min-w-0">
             <Link
-              href={lienDuChapitre(s, imposee)}
+              href={lienDuChapitre(s, imposee, diplome)}
               className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline"
             >
               {s.titre}

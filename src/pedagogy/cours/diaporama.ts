@@ -4,6 +4,7 @@ import { bureauxDuChapitre } from "../../config/cours/bureaux";
 import { casDuChapitre } from "../../config/cours/situations";
 import type { Chapitre, OptionDeChoix, TableauDeDonnees } from "../../config/cours/types";
 import { montantEcrit } from "./correcteur";
+import type { CompetencesAffichees } from "../../config/cours/competences-affichees";
 import { servirLeChapitre, solutionDuLaboratoire, type EtapeServie, type LectureDuLaboratoire } from "./chapitre-servi";
 import { nombreEcrit, valeurEcrite, type TableauACompleter } from "./tableau-a-completer";
 
@@ -259,9 +260,13 @@ function diapositivesDeLEtape(
   }
 }
 
-/** Le plan du diaporama d'un chapitre, pour le cas d'une entreprise : des diapositives, mises en pages. */
-export function planDuDiaporama(chapitre: Chapitre, cas: Cas): Diapositive[] {
-  const servi = servirLeChapitre(chapitre, cas);
+/**
+ * Le plan du diaporama d'un chapitre, pour le cas d'une entreprise : des diapositives, mises en pages.
+ * `competences` (config/cours/competences-affichees.ts) réduit la diapositive de titre aux compétences
+ * du diplôme choisi, comme la page du chapitre (décision du propriétaire, novembre 2026).
+ */
+export function planDuDiaporama(chapitre: Chapitre, cas: Cas, competences?: Pick<CompetencesAffichees, "libelle" | "blocs">): Diapositive[] {
+  const servi = servirLeChapitre(chapitre, cas, competences);
   const pratique = casDuChapitre(chapitre.code);
   const bureaux = bureauxDuChapitre(chapitre.code);
   const suite = [
@@ -274,7 +279,7 @@ export function planDuDiaporama(chapitre: Chapitre, cas: Cas): Diapositive[] {
       disposition: "TITRE",
       role: "titre",
       titre: servi.titre,
-      blocs: [texte([`${servi.parcours} · palier ${servi.palier}`, ...servi.blocs, cas.entreprise])],
+      blocs: [texte([`${servi.parcours} · palier ${servi.palier}`, ...(competences ? [servi.referentiel] : []), ...servi.blocs, cas.entreprise])],
       notes: [chapitre.accroche, ...(servi.prerequis.length ? [`À avoir vu avant : ${servi.prerequis.map((p) => p.titre).join(" ; ")}.`] : []), ...suite],
     },
     {
@@ -578,8 +583,8 @@ function poserLeBloc(slide: PptxGenJS.Slide, b: Bloc, y: number, sombre: boolean
 }
 
 /** Le diaporama d'un chapitre, pour le cas d'une entreprise : le fichier .pptx. */
-export async function diaporamaDuChapitre(chapitre: Chapitre, cas: Cas): Promise<Buffer> {
-  const plan = planDuDiaporama(chapitre, cas);
+export async function diaporamaDuChapitre(chapitre: Chapitre, cas: Cas, competences?: Pick<CompetencesAffichees, "libelle" | "blocs">): Promise<Buffer> {
+  const plan = planDuDiaporama(chapitre, cas, competences);
   const pres = new PptxGenJS();
   pres.layout = "LAYOUT_WIDE";
   pres.theme = { headFontFace: POLICE, bodyFontFace: POLICE };

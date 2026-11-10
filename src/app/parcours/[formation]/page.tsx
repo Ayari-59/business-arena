@@ -266,7 +266,7 @@ async function PageDuDiplome({
                                 {approfondissementsALaFin(code, c.chapitres, (ch) => ch.code).map((ch) => (
                                   <li key={ch.code}>
                                     <Link
-                                      href={`/cours/${ch.code}`}
+                                      href={`/cours/${ch.code}?diplome=${code}`}
                                       className="underline-offset-4 hover:text-amber-300 hover:underline"
                                     >
                                       {ch.titre}
@@ -386,7 +386,7 @@ async function PageDuDiplome({
                           Palier {ch.palier}
                         </span>
                         <Link
-                          href={`/cours/${ch.code}`}
+                          href={`/cours/${ch.code}?diplome=${code}`}
                           className="text-slate-200 underline underline-offset-4 hover:text-amber-300"
                         >
                           {ch.titre}

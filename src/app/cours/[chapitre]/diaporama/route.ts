@@ -1,6 +1,7 @@
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { TYPE_PPTX, aSonDiaporama, fichierDuDiaporama } from "@/config/cours/diaporamas";
 import { chapitreParCode } from "@/config/cours/registre";
+import { competencesAffichees, diplomeDeLAdresse } from "@/config/cours/competences-affichees";
 import { diaporamaDuChapitre } from "@/pedagogy/cours/diaporama";
 import { diaporamaPermis } from "../../acces";
 import { ENTREPRISES } from "../../entreprises";
@@ -25,9 +26,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ chap
     });
   }
   const possibles = ENTREPRISES.filter((e) => !chapitre.entreprises || chapitre.entreprises.codes.includes(e.code));
-  const demandee = new URL(request.url).searchParams.get("entreprise");
+  const adresse = new URL(request.url).searchParams;
+  const demandee = adresse.get("entreprise");
   const entreprise = possibles.find((e) => e.code === demandee) ?? possibles[0]!;
-  const fichier = await diaporamaDuChapitre(chapitre, casDeLEntreprise(entreprise.code));
+  // Les compétences du diplôme d'où vient l'enseignant (`?diplome=`), sinon celles du diplôme du
+  // chapitre, comme sur sa page (config/cours/competences-affichees.ts).
+  const competences = competencesAffichees(chapitre, { demande: diplomeDeLAdresse(adresse.get("diplome")) });
+  const fichier = await diaporamaDuChapitre(chapitre, casDeLEntreprise(entreprise.code), competences);
   return new Response(new Uint8Array(fichier), {
     status: 200,
     headers: {
