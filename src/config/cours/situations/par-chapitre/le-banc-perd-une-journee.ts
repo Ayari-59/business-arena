@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_PROGRAMMATION } from "../../chapitres/programmer-la-production";
 import { BANC_DE_MESURE, LA_ONE, LA_STUDIO, formeCanonique, programmeOptimal } from "../../monde/programmation-de-nova";
@@ -16,6 +16,9 @@ import type { Situation } from "../types";
  *
  * HYPOTHÈSES DU CAS : la révision prend 8 heures de banc (JOURNEE_DE_REVISION) ; l'opérateur
  * accepte de travailler un samedi de 8 heures pour 600 €, cotisations comprises (SAMEDI_DE_L_OPERATEUR).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les quantités du programme sont des quantités.
  */
 
 /** La révision du banc : une journée de 8 heures. */
@@ -24,8 +27,7 @@ export const JOURNEE_DE_REVISION = 8;
 /** Le samedi que l'opérateur propose : 8 heures de banc rendues, pour 600 € cotisations comprises. */
 export const SAMEDI_DE_L_OPERATEUR = { heures: 8, cout: 600 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 /** Les chiffres du cas. */
 export function bancReduit(_c?: Pick<Cas, "code">) {
@@ -103,9 +105,9 @@ export const LE_BANC_PERD_UNE_JOURNEE: Situation = {
         const x = bancReduit();
         const r = x.reduit.optimal;
         return [
-          { libelle: "One au croisement des deux ressources", attendu: x.xCroisement, calcul: `y = (${qte(x.m)} × ${qte(x.banc.c)} − ${qte(x.hm.c)}) ÷ (${qte(x.m)} × ${qte(x.banc.b)} − ${qte(x.hm.b)}) = ${qte(x.yCroisement)}, puis x = (${qte(x.hm.c)} − ${qte(x.hm.b)} × ${qte(x.yCroisement)}) ÷ ${qte(x.hm.a)} = ${qte(x.xCroisement)}` },
-          { libelle: "One du programme optimal", attendu: r.x, calcul: `le croisement demande ${qte(x.xCroisement)} One, plus que les ${qte(LA_ONE.demandeDuMoisDePointe)} demandées : la demande de la One est saturée, x = ${qte(r.x)}` },
-          { libelle: "Studio du programme optimal", attendu: r.y, calcul: `sur la droite du banc, à x = ${qte(r.x)} : (${qte(x.banc.c)} − ${qte(x.banc.a)} × ${qte(r.x)}) ÷ ${qte(x.banc.b)} = ${qte(r.y)}` },
+          { libelle: "One au croisement des deux ressources", nature: "quantite", attendu: x.xCroisement, calcul: `y = (${qte(x.m)} × ${qte(x.banc.c)} − ${qte(x.hm.c)}) ÷ (${qte(x.m)} × ${qte(x.banc.b)} − ${qte(x.hm.b)}) = ${qte(x.yCroisement)}, puis x = (${qte(x.hm.c)} − ${qte(x.hm.b)} × ${qte(x.yCroisement)}) ÷ ${qte(x.hm.a)} = ${qte(x.xCroisement)}` },
+          { libelle: "One du programme optimal", nature: "quantite", attendu: r.x, calcul: `le croisement demande ${qte(x.xCroisement)} One, plus que les ${qte(LA_ONE.demandeDuMoisDePointe)} demandées : la demande de la One est saturée, x = ${qte(r.x)}` },
+          { libelle: "Studio du programme optimal", nature: "quantite", attendu: r.y, calcul: `sur la droite du banc, à x = ${qte(r.x)} : (${qte(x.banc.c)} − ${qte(x.banc.a)} × ${qte(r.x)}) ÷ ${qte(x.banc.b)} = ${qte(r.y)}` },
         ];
       },
       explication: () => {

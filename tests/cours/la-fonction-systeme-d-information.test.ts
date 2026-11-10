@@ -40,8 +40,8 @@ describe("métiers, infogérance, budget et tableau de bord", () => {
     expect(attendusT(CH, "par-poste")).toEqual([2_520]);
   });
 
-  it("le tableau de bord de mars : 99,5 %, 2,5 heures, 83,3 %", () => {
-    expect(attendusT(CH, "le-tableau-de-bord")).toEqual([99.5, 2.5, 83.3]);
+  it("le tableau de bord de mars : 99,50 %, 2,50 heures, 83,33 %", () => {
+    expect(attendusT(CH, "le-tableau-de-bord")).toEqual([99.5, 2.5, 83.33]);
   });
 
   it("les tris et les choix", () => {

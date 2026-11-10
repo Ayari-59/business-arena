@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { donneesDuMois, investissementDeLaFiche, leviersDeBase, tableauDeBord, type LeviersDuSemestre } from "../monde/couts-et-budgets";
 import { DELAI_CONVENU_DE_CAMPUSTECH, GESTION_DU_COURS, type CodeDIndicateur, type FicheDeGestion } from "../monde/nova-gestion";
@@ -38,6 +38,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     l-alerte (où placer un seuil d'alerte), du-resultat-a-la-tresorerie (le passage du résultat à
  *     la variation de trésorerie d'un mois), les-limites (ce que le tableau de bord ne voit pas) ;
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge se donne à deux décimales (au dixième,
+ * avant), le seuil du mois se calcule sur ce taux, au centime (le taux exact et une tolérance de
+ * quelques centaines d'euros, avant), l'indice de sécurité à deux décimales ; les ventes du seuil
+ * d'alerte et de la cible sont des quantités, à l'enceinte supérieure du chiffre d'affaires au
+ * centime.
  */
 
 /** Le mois que l'élève calcule pas à pas : février, le mois court et calme, sous le seuil. */
@@ -65,15 +72,11 @@ export const LEVIERS_DES_VOYANTS = {
 /** Le tableau de bord se calcule sur la fiche de gestion du cours : celle de NOVA. */
 export const ENTREPRISES_DU_TABLEAU_DE_BORD: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-// « + 0 » : un arrondi à zéro ne s'écrit pas « −0,0 % ».
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-/** Un taux en pourcentage, au dixième : « 35,6 % ». */
-const pct = (t: number) => `${auDixieme(t * 100).toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
+const qte = nombreAuCentieme;
+/** Un taux en pourcentage, à deux décimales : « 35,59 % ». */
+const pct = (t: number) => pourcent(t * 100);
 /** Un niveau sans décimale inutile : « 20 % ». */
-const niveau = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const niveau = pct;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const plafond = (x: number) => Math.ceil(x - 1e-9);
@@ -100,7 +103,7 @@ export const ficheDe = (c: Pick<Cas, "code">): FicheDeGestion => GESTION_DU_COUR
 /** Une position du laboratoire, lue en leviers du modèle (banc : 0 pour ne pas l'acheter, sinon son mois). */
 export function leviersDesVoyants(f: FicheDeGestion, p: Readonly<Record<string, number>>): Partial<LeviersDuSemestre> {
   return {
-    prix: auCentime(p.prix!),
+    prix: arrondi2(p.prix!),
     budgetMarketing: p.publicite!,
     delais: { ...leviersDeBase(f).delais, campustech: p.campustech! },
     investissement: p.banc! > 0 ? { mois: p.banc!, montantHt: f.semestre.investissement.montantHt } : null,
@@ -128,15 +131,16 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const d = donneesDuMois(f);
   const alerte = f.seuilsDAlerte;
   const fev = mois[MOIS_GUIDE]!;
-  const margeUnitaire = auCentime(d.prix - d.coutVariableUnitaire);
+  const margeUnitaire = arrondi2(d.prix - d.coutVariableUnitaire);
   const seuil = fev.seuil;
   /** Le seuil de rentabilité en quantité : sous lui, le résultat du mois est négatif. */
   const seuilEnQuantite = plafond(d.chargesFixes / margeUnitaire);
   // L'indicateur construit à rebours : le chiffre d'affaires qui donne l'indice d'alerte, puis la cible.
-  const chiffreDAlerte = auCentime(seuil / (1 - alerte.indiceDeSecurite));
-  const ventesDAlerte = plafond(seuil / (1 - alerte.indiceDeSecurite) / d.prix);
-  const chiffreDeLaCible = auCentime(seuil / (1 - CIBLE_DE_L_INDICE));
-  const ventesDeLaCible = plafond(seuil / (1 - CIBLE_DE_L_INDICE) / d.prix);
+  // Chaque ligne arrondie : les ventes partent du chiffre d'affaires au centime, à l'unité supérieure.
+  const chiffreDAlerte = arrondi2(seuil / (1 - alerte.indiceDeSecurite));
+  const ventesDAlerte = plafond(chiffreDAlerte / d.prix);
+  const chiffreDeLaCible = arrondi2(seuil / (1 - CIBLE_DE_L_INDICE));
+  const ventesDeLaCible = plafond(chiffreDeLaCible / d.prix);
   const allumes = (k: number) => (Object.keys(mois[k]!.voyants) as CodeDIndicateur[]).filter((v) => mois[k]!.voyants[v]);
   const premierEnGagnant = mois.findIndex((m, k) => allumes(k).length > 0 && m.resultat >= 0);
   // Le premier passage d'un mois au suivant où le résultat et la trésorerie vont en sens contraires.
@@ -147,19 +151,19 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const usure = f.moisDeReference.chargesFixes.amortissement;
   const passage = {
     resultat: mois[k]!.resultat,
-    avantLesDelais: auCentime(mois[k]!.resultat + usure),
-    creances: auCentime(b[k]!.ventesTtc - b[k]!.encaissements.total),
-    fournisseur: auCentime(b[k]!.achatsTtc - b[k]!.decaissements.fournisseur),
-    tva: auCentime(b[k]!.tva.solde - b[k]!.decaissements.tva),
-    sociales: auCentime(f.semestre.paie.cotisations - b[k]!.decaissements.cotisations),
+    avantLesDelais: arrondi2(mois[k]!.resultat + usure),
+    creances: arrondi2(b[k]!.ventesTtc - b[k]!.encaissements.total),
+    fournisseur: arrondi2(b[k]!.achatsTtc - b[k]!.decaissements.fournisseur),
+    tva: arrondi2(b[k]!.tva.solde - b[k]!.decaissements.tva),
+    sociales: arrondi2(f.semestre.paie.cotisations - b[k]!.decaissements.cotisations),
     emprunt: b[k]!.decaissements.emprunt,
-    variation: auCentime(b[k]!.tresorerieFin - b[k]!.tresorerieDebut),
+    variation: arrondi2(b[k]!.tresorerieFin - b[k]!.tresorerieDebut),
   };
   // Le laboratoire : le départ, et ce qui allume le voyant de trésorerie sans celui du résultat.
   const depart = { prix: d.prix, publicite: 0, campustech: f.semestre.clienteles.find((x) => x.code === "campustech")!.delai, banc: 0 };
   const inv = investissementDeLaFiche(f);
   const L = LEVIERS_DES_VOYANTS;
-  const grille = (g: { min: number; max: number; pas: number }) => Array.from({ length: Math.round((g.max - g.min) / g.pas) + 1 }, (_, i) => auCentime(g.min + i * g.pas));
+  const grille = (g: { min: number; max: number; pas: number }) => Array.from({ length: Math.round((g.max - g.min) / g.pas) + 1 }, (_, i) => arrondi2(g.min + i * g.pas));
   const allumeSansLeResultat = (p: Record<string, number>) => {
     const s = semestreDuLaboratoire(f, p);
     return s.voyants.tresorerie && !s.voyants.resultat;
@@ -291,7 +295,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
       question: (c) => {
         const x = tableauDuChapitre(c);
         const n = x.fev.nom;
-        return `En ${n}, ${x.f.entreprise} vend ${qte(x.fev.quantite)} enceintes à ${eur(x.d.prix)} HT ; une enceinte lui coûte ${eur(x.d.coutVariableUnitaire)} de coût variable, et ses charges fixes du mois font ${eur(x.fev.chargesFixes)}. Calculez le taux de marge sur coût variable (en %, au dixième), le seuil de rentabilité du mois, l'indice de sécurité (en %, au dixième, négatif sous le seuil), puis le résultat du mois (négatif pour une perte).`;
+        return `En ${n}, ${x.f.entreprise} vend ${qte(x.fev.quantite)} enceintes à ${eur(x.d.prix)} HT ; une enceinte lui coûte ${eur(x.d.coutVariableUnitaire)} de coût variable, et ses charges fixes du mois font ${eur(x.fev.chargesFixes)}. Calculez le taux de marge sur coût variable (en %, à deux décimales) et le seuil de rentabilité du mois sur ce taux, au centime. Calculez ensuite l'indice de sécurité (en %, à deux décimales, négatif sous le seuil), puis le résultat du mois (négatif pour une perte).`;
       },
       champs: (c) => {
         const x = tableauDuChapitre(c);
@@ -299,28 +303,23 @@ export const TABLEAU_DE_BORD: Chapitre = {
         return [
           {
             libelle: "Taux de marge sur coût variable (%)",
-            attendu: auDixieme(m.tauxDeMarge * 100),
-            calcul: `${eur(m.marge)} ÷ ${eur(m.chiffreDAffaires)} = ${pct(m.tauxDeMarge)}, soit ${eur(x.margeUnitaire)} ÷ ${eur(x.d.prix)}`,
-            tolerance: 0.1,
+            attendu: m.tauxDeMargePct,
+            calcul: `${eur(m.marge)} ÷ ${eur(m.chiffreDAffaires)} × 100 = ${pourcent(m.tauxDeMargePct)}, soit ${eur(x.margeUnitaire)} ÷ ${eur(x.d.prix)}`,
           },
           {
             libelle: "Seuil de rentabilité du mois",
             attendu: m.seuil,
-            calcul: `${eur(m.chargesFixes)} ÷ (${eur(m.marge)} ÷ ${eur(m.chiffreDAffaires)}) = ${eur(m.seuil)}, avec le taux exact ; avec ${pct(m.tauxDeMarge)}, on trouve à peu près le même seuil`,
-            // Le taux arrondi au dixième que l'élève emploie déplace le seuil d'environ un millième.
-            tolerance: Math.max(2, Math.round(m.seuil * 0.003)),
+            calcul: `${eur(m.chargesFixes)} ÷ ${pourcent(m.tauxDeMargePct)} = ${eur(m.seuil)}, sur le taux à deux décimales`,
           },
           {
             libelle: "Indice de sécurité (%)",
-            attendu: auDixieme(m.indiceDeSecurite * 100),
-            calcul: `(${eur(m.chiffreDAffaires)} − ${eur(m.seuil)}) ÷ ${eur(m.chiffreDAffaires)} = ${pct(m.indiceDeSecurite)}`,
-            tolerance: 0.2,
+            attendu: m.indiceDeSecuritePct,
+            calcul: `(${eur(m.chiffreDAffaires)} − ${eur(m.seuil)}) ÷ ${eur(m.chiffreDAffaires)} × 100 = ${pourcent(m.indiceDeSecuritePct)}`,
           },
           {
             libelle: "Résultat du mois",
             attendu: m.resultat,
             calcul: `${eur(m.marge)} − ${eur(m.chargesFixes)} = ${eur(m.resultat)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -330,7 +329,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
         return [
           m.indiceDeSecurite >= 0
             ? `${majuscule(m.nom)} est au-dessus du seuil : son chiffre d'affaires pourrait baisser de ${pct(m.indiceDeSecurite)} avant que ${x.f.entreprise} ne perde de l'argent.`
-            : `${majuscule(m.nom)} est sous le seuil : il manque ${eur(auCentime(m.seuil - m.chiffreDAffaires))} de chiffre d'affaires pour ne pas perdre d'argent. ${x.allumes(MOIS_GUIDE).length} voyants s'allument, ${liste(x.allumes(MOIS_GUIDE).map((v) => NOMS_DES_VOYANTS[v]))}.`,
+            : `${majuscule(m.nom)} est sous le seuil : il manque ${eur(arrondi2(m.seuil - m.chiffreDAffaires))} de chiffre d'affaires pour ne pas perdre d'argent. ${x.allumes(MOIS_GUIDE).length} voyants s'allument, ${liste(x.allumes(MOIS_GUIDE).map((v) => NOMS_DES_VOYANTS[v]))}.`,
           `Le seuil, ${eur(m.seuil)}, est le même chaque mois du semestre : le prix, le coût variable et les charges fixes ne bougent pas. Ce sont les ventes qui font varier l'indice.`,
         ];
       },
@@ -446,12 +445,12 @@ export const TABLEAU_DE_BORD: Chapitre = {
       montrer: "Montrer le seuil d'alerte",
       lecture: (c, q) => {
         const x = tableauDuChapitre(c);
-        const ca = auCentime(q * x.d.prix);
+        const ca = arrondi2(q * x.d.prix);
         return [
           { libelle: "Chiffre d'affaires du mois", montant: ca },
-          { libelle: "Marge de sécurité", montant: auCentime(ca - x.seuil) },
-          { libelle: `${niveau(x.alerte.indiceDeSecurite)} du chiffre d'affaires`, montant: auCentime(ca * x.alerte.indiceDeSecurite) },
-          { libelle: "Résultat du mois", montant: auCentime(q * x.margeUnitaire - x.d.chargesFixes), fort: true },
+          { libelle: "Marge de sécurité", montant: arrondi2(ca - x.seuil) },
+          { libelle: `${niveau(x.alerte.indiceDeSecurite)} du chiffre d'affaires`, montant: arrondi2(ca * x.alerte.indiceDeSecurite) },
+          { libelle: "Résultat du mois", montant: arrondi2(q * x.margeUnitaire - x.d.chargesFixes), fort: true },
         ];
       },
       droites: (c) => {
@@ -464,7 +463,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
       },
       explication: (c) => {
         const x = tableauDuChapitre(c);
-        const r = auCentime(x.ventesDAlerte * x.margeUnitaire - x.d.chargesFixes);
+        const r = arrondi2(x.ventesDAlerte * x.margeUnitaire - x.d.chargesFixes);
         return [
           `Le voyant de l'indice s'allume sous ${qte(x.ventesDAlerte)} enceintes, ${qte(x.ventesDAlerte - x.seuilEnQuantite)} de plus que le seuil de rentabilité (${qte(x.seuilEnQuantite)}). À ${qte(x.ventesDAlerte)}, ${x.f.entreprise} gagne encore ${eur(r)} : le voyant prévient avant la perte, c'est son rôle.`,
           "Un seuil d'alerte se place avant le seuil de la catastrophe, pour laisser le temps d'agir. L'étape suivante le construit à rebours, avec une cible.",
@@ -489,20 +488,18 @@ export const TABLEAU_DE_BORD: Chapitre = {
             libelle: "Chiffre d'affaires du mois au seuil d'alerte",
             attendu: x.chiffreDAlerte,
             calcul: `l'indice vaut 1 − seuil ÷ chiffre d'affaires : ${eur(x.seuil)} ÷ (1 − ${niveau(a)}) = ${eur(x.chiffreDAlerte)}`,
-            tolerance: Math.max(2, Math.round(x.chiffreDAlerte * 0.003)),
           },
           {
             libelle: "Ventes du mois au seuil d'alerte",
+            nature: "quantite",
             attendu: x.ventesDAlerte,
-            calcul: `${eur(x.chiffreDAlerte)} ÷ ${eur(x.d.prix)} = ${qte(auCentime(x.seuil / (1 - a) / x.d.prix))}, soit ${qte(x.ventesDAlerte)} enceintes : le voyant s'allume en dessous`,
-            // Un taux de marge arrondi au dixième peut faire perdre une enceinte.
-            tolerance: 1,
+            calcul: `${eur(x.chiffreDAlerte)} ÷ ${eur(x.d.prix)} = ${qte(x.chiffreDAlerte / x.d.prix)}, arrondi à l'unité supérieure : ${qte(x.ventesDAlerte)} enceintes, et le voyant s'allume en dessous`,
           },
           {
             libelle: "Ventes du mois de la cible",
+            nature: "quantite",
             attendu: x.ventesDeLaCible,
-            calcul: `${eur(x.seuil)} ÷ (1 − ${niveau(CIBLE_DE_L_INDICE)}) ÷ ${eur(x.d.prix)} = ${eur(x.chiffreDeLaCible)} ÷ ${eur(x.d.prix)} = ${qte(auCentime(x.seuil / (1 - CIBLE_DE_L_INDICE) / x.d.prix))}, soit ${qte(x.ventesDeLaCible)} enceintes`,
-            tolerance: 1,
+            calcul: `${eur(x.seuil)} ÷ (1 − ${niveau(CIBLE_DE_L_INDICE)}) ÷ ${eur(x.d.prix)} = ${eur(x.chiffreDeLaCible)} ÷ ${eur(x.d.prix)} = ${qte(x.chiffreDeLaCible / x.d.prix)}, arrondi à l'unité supérieure : ${qte(x.ventesDeLaCible)} enceintes, pour que l'indice atteigne la cible`,
           },
         ];
       },
@@ -606,14 +603,14 @@ export const TABLEAU_DE_BORD: Chapitre = {
         const nb = (v: typeof s.voyants) => Object.values(v).filter(Boolean).length;
         return [
           { libelle: "Chiffre d'affaires du semestre", montant: s.chiffreDAffaires, reference: d.chiffreDAffaires },
-          { libelle: "Indice de sécurité du semestre", montant: auDixieme(s.indiceDeSecurite * 100), unite: "%", reference: auDixieme(d.indiceDeSecurite * 100) },
-          { libelle: "Part de marché du semestre", montant: auDixieme(s.partDeMarche * 100), unite: "%", reference: auDixieme(d.partDeMarche * 100) },
+          { libelle: "Indice de sécurité du semestre", montant: arrondi2(s.indiceDeSecurite * 100), unite: "%", reference: arrondi2(d.indiceDeSecurite * 100) },
+          { libelle: "Part de marché du semestre", montant: arrondi2(s.partDeMarche * 100), unite: "%", reference: arrondi2(d.partDeMarche * 100) },
           { libelle: "Trésorerie la plus basse du semestre", montant: s.tresoreriePlusBasse, reference: d.tresoreriePlusBasse },
-          { libelle: "Résultat du semestre, face à son seuil d'alerte", montant: auCentime(s.resultat - x.alerte.resultat), reference: auCentime(d.resultat - x.alerte.resultat), effet: true },
+          { libelle: "Résultat du semestre, face à son seuil d'alerte", montant: arrondi2(s.resultat - x.alerte.resultat), reference: arrondi2(d.resultat - x.alerte.resultat), effet: true },
           {
             libelle: "Trésorerie la plus basse, face à son seuil d'alerte",
-            montant: auCentime(s.tresoreriePlusBasse - x.alerte.tresorerie),
-            reference: auCentime(d.tresoreriePlusBasse - x.alerte.tresorerie),
+            montant: arrondi2(s.tresoreriePlusBasse - x.alerte.tresorerie),
+            reference: arrondi2(d.tresoreriePlusBasse - x.alerte.tresorerie),
             effet: true,
             fort: true,
           },
@@ -651,10 +648,10 @@ export const TABLEAU_DE_BORD: Chapitre = {
       explication: (c, p) => {
         const x = tableauDuChapitre(c);
         const s = semestreDuLaboratoire(x.f, p);
-        const usure = auCentime(x.inv.montantHt / x.f.semestre.investissement.dureeDAmortissementMois);
+        const usure = arrondi2(x.inv.montantHt / x.f.semestre.investissement.dureeDAmortissementMois);
         return [
           `Défi relevé : la trésorerie la plus basse est de ${eur(s.tresoreriePlusBasse)}, et le résultat du semestre de ${eur(s.resultat)}. Le voyant de trésorerie s'allume, celui du résultat reste éteint.`,
-          `Le banc ne coûte au résultat que son usure, ${eur(usure)} par mois dès ${x.nom(x.inv.mois)} ; il coûte ${eur(auCentime(x.inv.montantHt * (1 + x.f.semestre.tauxDeTva)))} TTC à la trésorerie, d'un coup. CampusTech payant ${x.delaiQuiAllume} jours après sa facture, très en retard, allume le même voyant sans toucher au résultat ; même une publicité de ${eur(x.publiciteQuiAllume)} par mois l'allume avant celui du résultat. Le résultat et la trésorerie ne mesurent pas la même chose : un tableau de bord suit les deux.`,
+          `Le banc ne coûte au résultat que son usure, ${eur(usure)} par mois dès ${x.nom(x.inv.mois)} ; il coûte ${eur(arrondi2(x.inv.montantHt * (1 + x.f.semestre.tauxDeTva)))} TTC à la trésorerie, d'un coup. CampusTech payant ${x.delaiQuiAllume} jours après sa facture, très en retard, allume le même voyant sans toucher au résultat ; même une publicité de ${eur(x.publiciteQuiAllume)} par mois l'allume avant celui du résultat. Le résultat et la trésorerie ne mesurent pas la même chose : un tableau de bord suit les deux.`,
         ];
       },
     },

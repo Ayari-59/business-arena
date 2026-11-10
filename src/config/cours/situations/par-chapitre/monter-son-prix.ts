@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_DECISION, decision } from "../../chapitres/decider";
 import { demandeAuPrix, trimestreDeDecision } from "../../monde/couts-et-budgets";
@@ -32,11 +32,8 @@ export const HAUSSE_DE_PRIX = 0.05;
 /** Les bornes du curseur des ventes perdues, en enceintes. */
 export const VENTES_PERDUES_DU_CURSEUR = { min: 0, max: 1_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
+const auCentime = arrondi2;
 
 export type Verdict = "aucune-vente-perdue" | "perte-supportable" | "perte-trop-forte";
 
@@ -70,8 +67,8 @@ export function monterSonPrix(c: Pick<Cas, "code">) {
     margeHaussee,
     quantiteMinimale,
     perte,
-    pourcentage: auDixieme((perte / b.ventes) * 100),
-    hausseDeLaMarge: auDixieme((margeHaussee / margeUnitaire - 1) * 100),
+    pourcentage: taux2(perte, b.ventes),
+    hausseDeLaMarge: arrondi2((margeHaussee / margeUnitaire - 1) * 100),
     perteCommeLePrix,
     perteAChiffreEgal,
     apres,
@@ -148,7 +145,7 @@ export const MONTER_SON_PRIX: Situation = {
         return [
           { libelle: "Marge d'une enceinte aujourd'hui", attendu: r.margeUnitaire, calcul: `${eur(r.b.marge)} ÷ ${qte(r.b.ventes)} = ${eur(r.margeUnitaire)}` },
           { libelle: "Prix après la hausse", attendu: r.nouveauPrix, calcul: `${eur(r.b.prix)} × (1 + ${pct(HAUSSE_DE_PRIX * 100)}) = ${eur(r.nouveauPrix)}` },
-          { libelle: "Marge d'une enceinte après la hausse", attendu: r.margeHaussee, tolerance: 0.02, calcul: `${eur(r.margeUnitaire)} + ${pct(HAUSSE_DE_PRIX * 100)} × ${eur(r.b.prix)} = ${eur(r.margeHaussee)}` },
+          { libelle: "Marge d'une enceinte après la hausse", attendu: r.margeHaussee, calcul: `${eur(r.margeUnitaire)} + ${pct(HAUSSE_DE_PRIX * 100)} × ${eur(r.b.prix)} = ${eur(r.margeHaussee)}` },
         ];
       },
       explication: (c) => {
@@ -202,13 +199,13 @@ export const MONTER_SON_PRIX: Situation = {
       titre: "Les ventes que l'on peut perdre",
       notions: ["contribution_margin", "price_elasticity"],
       question: () =>
-        "Formalisez : la plus petite quantité qui garde au moins la marge du trimestre (à l'enceinte supérieure), les ventes que l'on peut donc perdre, et leur part des ventes du trimestre, en pourcentage au dixième.",
+        "Formalisez : la plus petite quantité qui garde au moins la marge du trimestre (à l'enceinte supérieure), les ventes que l'on peut donc perdre, et leur part des ventes du trimestre, en pourcentage à deux décimales.",
       champs: (c) => {
         const r = monterSonPrix(c);
         return [
-          { libelle: "Plus petite quantité qui garde la marge", attendu: r.quantiteMinimale, calcul: `${eur(r.b.marge)} ÷ ${eur(r.margeHaussee)}, à l'enceinte supérieure = ${qte(r.quantiteMinimale)}` },
-          { libelle: "Ventes que l'on peut perdre, au plus", attendu: r.perte, calcul: `${qte(r.b.ventes)} − ${qte(r.quantiteMinimale)} = ${qte(r.perte)}` },
-          { libelle: "Part des ventes du trimestre (%)", attendu: r.pourcentage, tolerance: 0.1, calcul: `${qte(r.perte)} ÷ ${qte(r.b.ventes)} × 100 ≈ ${pct(r.pourcentage)}` },
+          { libelle: "Plus petite quantité qui garde la marge", nature: "quantite", attendu: r.quantiteMinimale, calcul: `${eur(r.b.marge)} ÷ ${eur(r.margeHaussee)} = ${qte(r.b.marge / r.margeHaussee)}, à l'enceinte supérieure : ${qte(r.quantiteMinimale)} (une de moins ne garderait pas toute la marge)` },
+          { libelle: "Ventes que l'on peut perdre, au plus", nature: "quantite", attendu: r.perte, calcul: `${qte(r.b.ventes)} − ${qte(r.quantiteMinimale)} = ${qte(r.perte)}` },
+          { libelle: "Part des ventes du trimestre (%)", attendu: r.pourcentage, calcul: `${qte(r.perte)} ÷ ${qte(r.b.ventes)} × 100 = ${pct(r.pourcentage)}` },
         ];
       },
       explication: (c) => {
@@ -231,12 +228,12 @@ export const MONTER_SON_PRIX: Situation = {
         const r = monterSonPrix(c);
         const d = r.k.d;
         return [
-          { libelle: "Enceintes demandées au nouveau prix", attendu: r.apres.demande, calcul: `${qte(d.demande.aPrixNul)} − ${qte(d.demande.perdueParEuro)} × ${eur(r.nouveauPrix)}, à l'enceinte inférieure = ${qte(r.apres.demande)}` },
+          { libelle: "Enceintes demandées au nouveau prix", nature: "quantite", attendu: r.apres.demande, calcul: `${qte(d.demande.aPrixNul)} − ${qte(d.demande.perdueParEuro)} × ${eur(r.nouveauPrix)} = ${qte(d.demande.aPrixNul - d.demande.perdueParEuro * r.nouveauPrix)}, à l'enceinte inférieure : ${qte(r.apres.demande)} (la droite ne promet pas l'enceinte entamée)` },
           { libelle: "Demande sans réponse au nouveau prix", attendu: r.apres.nonServie, calcul: `${qte(r.apres.demande)} − ${qte(r.apres.ventes)} = ${qte(r.apres.nonServie)}` },
           {
             libelle: "Prix le plus haut qui garde toutes les ventes",
             attendu: r.prixLimite,
-            calcul: `${qte(d.demande.aPrixNul)} − ${qte(d.demande.perdueParEuro)} × p ≥ ${qte(r.b.production)}, soit p ≤ (${qte(d.demande.aPrixNul)} − ${qte(r.b.production)}) ÷ ${qte(d.demande.perdueParEuro)} ≈ ${eur(r.prixLimite)}`,
+            calcul: `${qte(d.demande.aPrixNul)} − ${qte(d.demande.perdueParEuro)} × p ≥ ${qte(r.b.production)}, soit p ≤ (${qte(d.demande.aPrixNul)} − ${qte(r.b.production)}) ÷ ${qte(d.demande.perdueParEuro)} = ${qte((d.demande.aPrixNul - r.b.production) / d.demande.perdueParEuro)}, au centime inférieur : ${eur(r.prixLimite)}`,
           },
           {
             libelle: "Résultat du trimestre au nouveau prix",

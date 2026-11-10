@@ -243,7 +243,7 @@ export function moisDeGestion(mois: number, leviers: Partial<LeviersDeGestion> =
     const unites = x.achats / u.approvisionnement.assiette;
     const approvisionnement = auCentime(unites * cout.approvisionnement);
     const coutDAchat = auCentime(x.achats + approvisionnement);
-    return { ...x, unites, approvisionnement, coutDAchat, coutUnitaire: coutDAchat / x.quantite };
+    return { ...x, unites, approvisionnement, coutDAchat, coutUnitaire: auCentime(coutDAchat / x.quantite) };
   });
   const imputees = {
     approvisionnement: somme(lotsAuCoutDAchat.map((x) => x.approvisionnement)),
@@ -280,9 +280,9 @@ export function moisDeGestion(mois: number, leviers: Partial<LeviersDeGestion> =
     matieres,
     autres,
     coutDeProduction,
-    coutDeProductionUnitaire: coutDeProduction / livrees,
+    coutDeProductionUnitaire: auCentime(coutDeProduction / livrees),
     coutDeRevient,
-    coutDeRevientUnitaire: coutDeRevient / livrees,
+    coutDeRevientUnitaire: auCentime(coutDeRevient / livrees),
     resultat,
     /** Ce que les unités d'œuvre arrondies ont imputé de plus (ou de moins) que les centres. */
     arrondiDesUnitesDOeuvre: auCentime(somme(PRINCIPAUX.map((c) => imputees[c])) - r.total),
@@ -359,7 +359,7 @@ export function varianteDeDecembre() {
     fraisDuSousProduit,
     valeurDeRealisation,
     coutDeProduction,
-    coutDeProductionUnitaire: coutDeProduction / d.livrees,
+    coutDeProductionUnitaire: auCentime(coutDeProduction / d.livrees),
     coutDeRevient,
     resultat,
     /** Le sous-produit porte sa valeur de réalisation et ses frais : son résultat est nul. */

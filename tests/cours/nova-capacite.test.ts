@@ -541,24 +541,26 @@ describe("6. la machine en plus", () => {
     expect(m.ventesNecessaires).toBe(1_891);
   });
 
-  it("la VAN : −54 116,25 € sur la demande de N + 1, 1 219,62 € à 5 % de plus, 56 555,49 € à 10 % de plus", () => {
+  it("la VAN : −54 116,41 € sur la demande de N + 1, 1 219,71 € à 5 % de plus, 56 555,82 € à 10 % de plus (au facteur 4,6229)", () => {
     expect(facteurDActualisation(0.08, 6)).toBeCloseTo(A6, 12);
     const flux = (gagnees: number) => (gagnees * 21 - 31_950 - 4_500 - 2_500) * 0.75 + 2_500;
     for (const [h, gagnees, van] of [
-      [0, 1_200, -54_116.25],
-      [0.05, 770 + 1_190, 1_219.62],
-      [0.1, 1_140 + 1_580, 56_555.49],
+      [0, 1_200, -54_116.41],
+      [0.05, 770 + 1_190, 1_219.71],
+      [0.1, 1_140 + 1_580, 56_555.82],
     ] as const) {
       const m = machineEnPlus(f, "poste-manuel", { hausseDeLaDemande: h });
       expect(m.ventesGagnees, String(h)).toBe(gagnees);
       expect(m.fluxAnnuel).toBe(flux(gagnees));
       expect(m.investissement).toBe(15_000 + 3_000);
-      expect(m.van).toBe(auCentime(-18_000 + flux(gagnees) * A6));
+      // Deux décimales : la VAN se calcule sur le facteur au dix-millième que l'élève écrit, 4,6229.
+      expect(m.facteurDActualisation).toBe(4.6229);
+      expect(m.van).toBe(auCentime(-18_000 + flux(gagnees) * 4.6229));
       expect(m.van).toBe(van);
     }
     // La demande haussée de 5 % : 6 090, 7 770, 6 510, 8 190.
     expect(machineEnPlus(f, "poste-manuel", { hausseDeLaDemande: 0.05 }).trimestres.map((x) => x.demande)).toEqual([6_090, 7_770, 6_510, 8_190]);
-    expect(machineEnPlus(f, "poste-manuel", { hausseDeLaDemande: 0.05 }).delaiDeRecuperation).toBe(18_000 / 4_157.5);
+    expect(machineEnPlus(f, "poste-manuel", { hausseDeLaDemande: 0.05 }).delaiDeRecuperation).toBe(auCentime(18_000 / 4_157.5));
     expect(machineEnPlus(f, "poste-manuel").delaiDeRecuperation).toBeNull();
   });
 

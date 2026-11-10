@@ -1,6 +1,7 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SEUIL, seuilDuMois } from "../../chapitres/seuil-de-rentabilite";
+import { seuilAuTauxArrondi } from "../../monde/couts-et-budgets";
 import type { Situation } from "../types";
 
 /**
@@ -25,10 +26,9 @@ export const HAUSSE_DU_LOYER = 0.12;
 /** Les bornes du curseur du loyer, en euros par mois. */
 export const LOYER_DU_CURSEUR = { min: 18_000, max: 24_000 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number, d = 2) => `${qte(t * 100, d)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
+const auCentime = arrondi2;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 export type Verdict = "negocier" | "signer";
@@ -41,7 +41,8 @@ export function loyerQuiAugmente(c: Pick<Cas, "code">) {
   const hausse = auCentime(nouveauLoyer - ch.loyer);
   const nouvellesCharges = auCentime(s.chargesFixes + hausse);
   const seuilQuantite = plafond(nouvellesCharges / s.margeUnitaire);
-  const seuilValeur = auCentime((nouvellesCharges * s.prix) / s.margeUnitaire);
+  // Le seuil en valeur sur le taux de marge à deux décimales, comme l'élève.
+  const seuilValeur = seuilAuTauxArrondi(nouvellesCharges, s.tauxDeMarge).seuilValeur!;
   const resultat = auCentime(s.marge - nouvellesCharges);
   const margeDeSecurite = auCentime(s.chiffreDAffaires - seuilValeur);
   // Le loyer le plus haut que janvier porte : la marge, moins les autres charges fixes.
@@ -57,7 +58,7 @@ export function loyerQuiAugmente(c: Pick<Cas, "code">) {
     seuilValeur,
     resultat,
     margeDeSecurite,
-    indice: auCentime((margeDeSecurite / s.chiffreDAffaires) * 100),
+    indice: taux2(margeDeSecurite, s.chiffreDAffaires),
     autresFixes,
     loyerMaximal,
     hausseMaximale: (loyerMaximal - ch.loyer) / ch.loyer,
@@ -101,7 +102,7 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
       texte: (c) => {
         const { x } = loyerQuiAugmente(c);
         return [
-          `« Le bailleur nous annonce une hausse de ${pct(HAUSSE_DU_LOYER, 0)} du loyer au renouvellement du bail ; le reste de nos charges fixes ne bouge pas. Ma règle est simple : les ventes de janvier, notre mois de référence, doivent toujours couvrir nos charges. Avant de signer, je veux savoir combien ${x.f.entreprise} devra vendre chaque mois, ce qui nous restera de marge de sécurité, et jusqu'où je peux accepter une hausse. »`,
+          `« Le bailleur nous annonce une hausse de ${pct(HAUSSE_DU_LOYER)} du loyer au renouvellement du bail ; le reste de nos charges fixes ne bouge pas. Ma règle est simple : les ventes de janvier, notre mois de référence, doivent toujours couvrir nos charges. Avant de signer, je veux savoir combien ${x.f.entreprise} devra vendre chaque mois, ce qui nous restera de marge de sécurité, et jusqu'où je peux accepter une hausse. »`,
           "Pas de cours cette fois : vous avez les chiffres du mois, et la méthode est celle du chapitre. À vous d'en trouver l'ordre.",
         ];
       },
@@ -118,7 +119,7 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
             { libelle: "Loyer du mois, aujourd'hui", valeurs: [eur(ch.loyer)] },
             { libelle: "Personnel du mois", valeurs: [eur(ch.personnel)] },
             { libelle: "Usure de la ligne de montage, du mois", valeurs: [eur(ch.amortissement)] },
-            { libelle: "Hausse annoncée du loyer", valeurs: [pct(HAUSSE_DU_LOYER, 0)] },
+            { libelle: "Hausse annoncée du loyer", valeurs: [pct(HAUSSE_DU_LOYER)] },
           ],
         };
       },
@@ -131,7 +132,7 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
       titre: "Le nouveau seuil",
       notions: ["breakeven", "fixed_costs"],
       question: () =>
-        "Avec le nouveau loyer, quelles seront les charges fixes du mois ? À partir de combien d'unités vendues seront-elles couvertes, et pour quel chiffre d'affaires ?",
+        "Avec le nouveau loyer, quelles seront les charges fixes du mois ? À partir de combien d'unités vendues seront-elles couvertes, et pour quel chiffre d'affaires (sur le taux de marge à deux décimales, au centime) ?",
       champs: (c) => {
         const r = loyerQuiAugmente(c);
         const { s, ch, f } = r.x;
@@ -139,19 +140,18 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
           {
             libelle: "Charges fixes avec le nouveau loyer",
             attendu: r.nouvellesCharges,
-            calcul: `${eur(ch.loyer)} × (1 + ${pct(HAUSSE_DU_LOYER, 0)}) = ${eur(r.nouveauLoyer)} de loyer, plus ${eur(ch.personnel)} + ${eur(ch.amortissement)} = ${eur(r.nouvellesCharges)}`,
+            calcul: `${eur(ch.loyer)} × (1 + ${pct(HAUSSE_DU_LOYER)}) = ${eur(r.nouveauLoyer)} de loyer, plus ${eur(ch.personnel)} + ${eur(ch.amortissement)} = ${eur(r.nouvellesCharges)}`,
           },
           {
             libelle: `Seuil de rentabilité (${f.unites})`,
+            nature: "quantite",
             attendu: r.seuilQuantite,
-            tolerance: 1,
             calcul: `${eur(r.nouvellesCharges)} ÷ (${eur(s.prix)} − ${eur(s.coutVariableUnitaire)}) = ${qte(r.nouvellesCharges / s.margeUnitaire)}, arrondi à l'unité supérieure : ${qte(r.seuilQuantite)}`,
           },
           {
             libelle: "Seuil de rentabilité (chiffre d'affaires)",
             attendu: r.seuilValeur,
-            tolerance: auCentime(r.seuilValeur * 0.005),
-            calcul: `${eur(r.nouvellesCharges)} × ${eur(s.prix)} ÷ ${eur(s.margeUnitaire)} = ${eur(r.seuilValeur)}`,
+            calcul: `${eur(r.nouvellesCharges)} ÷ ${pourcent(s.tauxDeMargePct)} = ${eur(r.seuilValeur)}`,
           },
         ];
       },
@@ -175,8 +175,8 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
         const { s } = r.x;
         return [
           { libelle: "Résultat de janvier avec le nouveau loyer", attendu: r.resultat, calcul: `${eur(s.marge)} − ${eur(r.nouvellesCharges)} = ${eur(r.resultat)}` },
-          { libelle: "Marge de sécurité", attendu: r.margeDeSecurite, tolerance: auCentime(r.seuilValeur * 0.005), calcul: `${eur(s.chiffreDAffaires)} − ${eur(r.seuilValeur)} = ${eur(r.margeDeSecurite)}` },
-          { libelle: "Indice de sécurité (%)", attendu: r.indice, tolerance: 0.1, calcul: `${eur(r.margeDeSecurite)} ÷ ${eur(s.chiffreDAffaires)} = ${qte(r.indice)} %` },
+          { libelle: "Marge de sécurité", attendu: r.margeDeSecurite, calcul: `${eur(s.chiffreDAffaires)} − ${eur(r.seuilValeur)} = ${eur(r.margeDeSecurite)}` },
+          { libelle: "Indice de sécurité (%)", attendu: r.indice, calcul: `${eur(r.margeDeSecurite)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pourcent(r.indice)}` },
         ];
       },
       explication: (c) => {
@@ -232,27 +232,26 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
       titre: "Ce qui tiendrait, à rebours",
       notions: ["breakeven", "contribution_margin"],
       question: () =>
-        "Remontez à ce que la règle du dirigeant permet : la hausse de loyer la plus forte que janvier peut porter, en pourcentage, au dixième ; puis, si la hausse annoncée était signée, le prix de vente le plus bas qui paierait les charges aux ventes de janvier, au centime supérieur, et les ventes en plus qu'il faudrait chaque mois au prix d'aujourd'hui.",
+        "Remontez à ce que la règle du dirigeant permet : la hausse de loyer la plus forte que janvier peut porter, en pourcentage, à deux décimales ; puis, si la hausse annoncée était signée, le prix de vente le plus bas qui paierait les charges aux ventes de janvier, au centime supérieur, et les ventes en plus qu'il faudrait chaque mois au prix d'aujourd'hui.",
       champs: (c) => {
         const r = loyerQuiAugmente(c);
         const { s, ch, m } = r.x;
         return [
           {
             libelle: "Hausse maximale du loyer (%)",
-            attendu: auCentime(Math.round(r.hausseMaximale * 1000) / 10),
-            tolerance: 0.1,
+            attendu: auCentime(r.hausseMaximale * 100),
             calcul: `(${eur(r.loyerMaximal)} − ${eur(ch.loyer)}) ÷ ${eur(ch.loyer)} = ${pct(r.hausseMaximale)}, soit le résultat de janvier, ${eur(s.resultat)}, rapporté au loyer`,
           },
           {
             libelle: "Prix de vente qui paierait la hausse",
             attendu: r.prixQuiTient,
-            calcul: `${eur(s.coutVariableUnitaire)} + ${eur(r.nouvellesCharges)} ÷ ${qte(m.quantite)} = ${eur(s.coutVariableUnitaire)} + ${qte(r.nouvellesCharges / m.quantite, 4)} €, au centime supérieur ${eur(r.prixQuiTient)}`,
+            calcul: `${eur(s.coutVariableUnitaire)} + ${eur(r.nouvellesCharges)} ÷ ${qte(m.quantite)} = ${eur(s.coutVariableUnitaire)} + ${qte(r.nouvellesCharges / m.quantite)} €, au centime supérieur : ${eur(r.prixQuiTient)}`,
           },
           {
             libelle: "Ventes en plus chaque mois, au prix d'aujourd'hui",
+            nature: "quantite",
             attendu: r.ventesEnPlus,
-            tolerance: 1,
-            calcul: `${eur(r.hausse)} de hausse ÷ ${eur(s.margeUnitaire)} de marge = ${qte(r.hausse / s.margeUnitaire)}, arrondi à ${qte(r.ventesEnPlus)}`,
+            calcul: `${eur(r.hausse)} de hausse ÷ ${eur(s.margeUnitaire)} de marge = ${qte(r.hausse / s.margeUnitaire)}, arrondi à l'unité supérieure : ${qte(r.ventesEnPlus)} (une de moins ne paierait pas toute la hausse)`,
           },
         ];
       },
@@ -260,7 +259,7 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
         const r = loyerQuiAugmente(c);
         const { f, m } = r.x;
         return [
-          `La règle du dirigeant tient jusqu'à ${pct(r.hausseMaximale, 1)} de hausse, et le bailleur en demande ${pct(HAUSSE_DU_LOYER, 0)}. L'écart paraît mince : ${eur(auCentime(r.prixQuiTient - m.prix))} de plus sur le prix d'une ${f.unite}, ou ${qte(r.ventesEnPlus)} ${f.unites} de plus par mois. Mais la marge de sécurité, elle, aurait disparu.`,
+          `La règle du dirigeant tient jusqu'à ${pct(r.hausseMaximale)} de hausse, et le bailleur en demande ${pct(HAUSSE_DU_LOYER)}. L'écart paraît mince : ${eur(auCentime(r.prixQuiTient - m.prix))} de plus sur le prix d'une ${f.unite}, ou ${qte(r.ventesEnPlus)} ${f.unites} de plus par mois. Mais la marge de sécurité, elle, aurait disparu.`,
         ];
       },
     },
@@ -277,7 +276,7 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
           {
             texte: `Négocier : au-delà de ${eur(r.loyerMaximal)} de loyer, janvier passe sous le seuil`,
             juste: r.verdict === "negocier",
-            retour: `Oui. Avec ${eur(r.nouveauLoyer)} de loyer, le seuil monte à ${qte(r.seuilQuantite)} ${f.unites} pour ${qte(r.x.m.quantite)} vendues en janvier, et le mois perd ${eur(-r.resultat)}. Votre règle tient jusqu'à ${eur(r.loyerMaximal)}, soit ${pct(r.hausseMaximale, 1)} de hausse : c'est le plafond à négocier.`,
+            retour: `Oui. Avec ${eur(r.nouveauLoyer)} de loyer, le seuil monte à ${qte(r.seuilQuantite)} ${f.unites} pour ${qte(r.x.m.quantite)} vendues en janvier, et le mois perd ${eur(-r.resultat)}. Votre règle tient jusqu'à ${eur(r.loyerMaximal)}, soit ${pct(r.hausseMaximale)} de hausse : c'est le plafond à négocier.`,
           },
           {
             texte: `Signer : la hausse ne nous coûte que ${eur(Math.abs(r.resultat))} par mois`,

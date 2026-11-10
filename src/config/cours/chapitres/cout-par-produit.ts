@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutsDeLaGamme, planSousFacteurRare, resultatSansLaReference } from "../monde/couts-et-budgets";
 import { GESTION_DU_COURS, type CodeDeReference, type FicheDeGestion } from "../monde/nova-gestion";
@@ -43,6 +43,15 @@ import type { Chapitre, LigneDeSimulation, TableauDeDonnees } from "../types";
  * Ce qui a disparu avec l'arène : le niveau où la gamme s'ouvre, le budget qualité (nul partout,
  * une ligne inutile) et le coût de l'heure arrondi dans la correction (les charges communes
  * s'imputent au prorata exact, pour retomber juste sur leur total ; l'élève qui arrondit est admis).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les charges communes s'imputent au prorata, chaque part en
+ * une ligne arrondie au centime (charges communes × heures de la référence ÷ heures de la gamme, et
+ * de même au chiffre d'affaires) : les parts retombent juste sur leur total, et le résultat de la
+ * gamme sur 4 511 €. Le coût de l'heure et celui de 100 € de chiffre d'affaires, au centime, se
+ * calculent encore, mais l'imputation ne repart pas d'eux (au coût de l'heure arrondi, avec une
+ * tolérance d'un demi-centime par heure, avant) ; les heures-machine sont des grandeurs au
+ * centième, les enceintes produites au mois de pointe une quantité.
  */
 
 /** Les deux clés du laboratoire, codées comme la part des charges communes réparties aux heures. */
@@ -70,11 +79,8 @@ export const REFERENCE_DISCUTEE: CodeDeReference = "one";
 /** Le chapitre se calcule sur la gamme de la fiche de gestion : celle de NOVA. */
 export const ENTREPRISES_DE_LA_GAMME: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const pct = (x: number) => `${qte(x)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 /** Un résultat dit en mots : « un bénéfice de 154,55 € », « une perte de 642,62 € ». */
 const resultatDit = (x: number) => (x >= 0 ? `un bénéfice de ${eur(x)}` : `une perte de ${eur(-x)}`);
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
@@ -104,15 +110,12 @@ export function coutsParProduit(c: Pick<Cas, "code">) {
   const refs = h.parReference;
   const x = refs.find((l) => l.code === REFERENCE_DISCUTEE)!;
   const xv = v.parReference.find((l) => l.code === REFERENCE_DISCUTEE)!;
-  // Les tolérances : l'élève impute avec un coût d'unité d'œuvre arrondi au centime, un demi-centime par unité au plus.
-  const toleranceAuxHeures = (heures: number) => auCentime(heures * 0.005 + 0.01);
-  const toleranceAuChiffre = (chiffre: number) => auCentime((chiffre / 100) * 0.005 + 0.01);
   // Le curseur de la clé : la part aux heures qui laisse la référence discutée encore bénéficiaire.
-  const pente = auCentime(x.imputees - xv.imputees);
+  const pente = arrondi2(x.imputees - xv.imputees);
   const partLimite = Math.floor(((x.margeSpecifique - xv.imputees) / pente) * 100 + 1e-9);
   // Le calcul à rebours : le prix qui annule le résultat en coût complet (aux heures), et celui qui annule la marge sur coûts spécifiques.
-  const prixQuiAnnuleLeResultat = auCentime(x.coutComplet / x.quantite);
-  const prixQuiAnnuleLaMarge = auCentime(x.direct / x.quantite);
+  const prixQuiAnnuleLeResultat = arrondi2(x.coutComplet / x.quantite);
+  const prixQuiAnnuleLaMarge = arrondi2(x.direct / x.quantite);
   const enVariante = coutsDeLaGamme(f, { prix: { [REFERENCE_DISCUTEE]: PRIX_DE_ONE_EN_VARIANTE } });
   const sansX = resultatSansLaReference(h, REFERENCE_DISCUTEE);
   // Le facteur rare : le programme qui classe par marge par heure-machine, et celui qui classe par marge par enceinte.
@@ -131,20 +134,18 @@ export function coutsParProduit(c: Pick<Cas, "code">) {
     fragile,
     communes: h.communes,
     heures: h.heures,
-    coutDeLHeure: auCentime(h.coutDeLHeure),
-    coutDesCent: auCentime(h.coutPourCentEurosDeChiffreDAffaires),
-    toleranceAuxHeures,
-    toleranceAuChiffre,
+    coutDeLHeure: arrondi2(h.coutDeLHeure),
+    coutDesCent: arrondi2(h.coutPourCentEurosDeChiffreDAffaires),
     pente,
     partLimite,
     prixQuiAnnuleLeResultat,
     prixQuiAnnuleLaMarge,
     resultatEnVariante: enVariante.resultat,
-    gainAGarderEnVariante: auCentime(enVariante.resultat - sansX),
+    gainAGarderEnVariante: arrondi2(enVariante.resultat - sansX),
     sansX,
     plan,
     naif,
-    perteDuMauvaisClassement: auCentime(plan.marge - naif.marge),
+    perteDuMauvaisClassement: arrondi2(plan.marge - naif.marge),
   };
 }
 
@@ -176,7 +177,7 @@ function tableauDesDeuxCles(k: CoutsParProduit): TableauDeDonnees {
     titre: `Ce que chaque référence ${dE(k.f.entreprise)} coûte et rapporte, selon la clé`,
     colonnes: [...k.refs.map((l) => l.nom), "Toute la gamme"],
     lignes: [
-      ligne("Marge sur coûts spécifiques", (i) => k.refs[i]!.margeSpecifique, auCentime(k.h.chiffreDAffaires - k.h.directs)),
+      ligne("Marge sur coûts spécifiques", (i) => k.refs[i]!.margeSpecifique, arrondi2(k.h.chiffreDAffaires - k.h.directs)),
       ligne("Charges communes aux heures-machine", (i) => k.refs[i]!.imputees, k.communes),
       ligne("Résultat aux heures-machine", (i) => k.refs[i]!.resultat, k.h.resultat),
       ligne("Charges communes au chiffre d'affaires", (i) => k.v.parReference[i]!.imputees, k.communes),
@@ -279,11 +280,11 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       champs: (c) => {
         const k = coutsParProduit(c);
         return [
-          ...k.refs.map((l) => ({ libelle: `Heures-machine : ${l.nom}`, attendu: auCentime(l.heures), calcul: `${qte(l.quantite)} × ${qte(l.heuresMachineParUnite)} h = ${qte(auCentime(l.heures))} h` })),
+          ...k.refs.map((l) => ({ libelle: `Heures-machine : ${l.nom}`, nature: "grandeur" as const, attendu: arrondi2(l.heures), calcul: `${qte(l.quantite)} × ${qte(l.heuresMachineParUnite)} h = ${qte(arrondi2(l.heures))} h` })),
           {
             libelle: "Coût d'une heure-machine",
             attendu: k.coutDeLHeure,
-            calcul: `${eur(k.communes)} ÷ ${qte(auCentime(k.heures))} h ≈ ${eur(k.coutDeLHeure)}`,
+            calcul: `${eur(k.communes)} ÷ ${qte(arrondi2(k.heures))} h = ${eur(k.coutDeLHeure)}`,
           },
         ];
       },
@@ -302,22 +303,22 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       notions: ["full_unit_cost"],
       question: (c) => {
         const k = coutsParProduit(c);
-        return `Ajoutez au coût direct de chaque référence ses heures-machine × ${eur(k.coutDeLHeure)}. Quel est son coût complet ?`;
+        return `Ajoutez au coût direct de chaque référence sa part des charges communes, au prorata de ses heures-machine (${eur(k.communes)} × ses heures ÷ ${qte(arrondi2(k.heures))} h, au centime). Quel est son coût complet ?`;
       },
       champs: (c) => {
         const k = coutsParProduit(c);
         return k.refs.map((l) => ({
           libelle: `Coût complet : ${l.nom}`,
           attendu: l.coutComplet,
-          calcul: `${eur(l.direct)} + ${qte(auCentime(l.heures))} h × ${eur(k.coutDeLHeure)} ≈ ${eur(l.coutComplet)}`,
-          tolerance: k.toleranceAuxHeures(l.heures),
+          calcul: `${eur(l.direct)} + ${eur(k.communes)} × ${qte(arrondi2(l.heures))} h ÷ ${qte(arrondi2(k.heures))} h = ${eur(l.direct)} + ${eur(l.imputees)} = ${eur(l.coutComplet)}`,
         }));
       },
       explication: (c) => {
         const k = coutsParProduit(c);
-        const ecart = auCentime(k.x.imputees - k.x.heures * k.coutDeLHeure);
+        const auCoutArrondi = arrondi2(arrondi2(k.x.heures) * k.coutDeLHeure);
+        const ecart = arrondi2(k.x.imputees - auCoutArrondi);
         return [
-          `La correction impute les charges communes au prorata exact des heures, pour qu'elles retombent juste sur ${eur(k.communes)} : ${k.refs.map((l) => eur(l.imputees)).join(" + ")}. Avec le coût de l'heure arrondi au centime, ${k.x.nom} reçoit ${eur(Math.abs(ecart))} de ${ecart > 0 ? "moins" : "plus"} : la correction l'admet.`,
+          `Au prorata des heures, chaque part arrondie au centime, les charges communes retombent juste sur ${eur(k.communes)} : ${k.refs.map((l) => eur(l.imputees)).join(" + ")}. Le coût de l'heure, lui, est arrondi : ${qte(arrondi2(k.x.heures))} h × ${eur(k.coutDeLHeure)} = ${eur(auCoutArrondi)}, ${eur(Math.abs(ecart))} de ${ecart > 0 ? "moins" : "plus"} pour ${k.x.nom}, et les trois parts ne feraient plus le total.`,
         ];
       },
     },
@@ -335,13 +336,11 @@ export const COUT_PAR_PRODUIT: Chapitre = {
             libelle: `Résultat : ${l.nom}`,
             attendu: l.resultat,
             calcul: `${eur(l.chiffreDAffaires)} − ${eur(l.coutComplet)} = ${eur(l.resultat)}`,
-            tolerance: k.toleranceAuxHeures(l.heures),
           })),
           {
             libelle: "Résultat de la gamme",
             attendu: k.h.resultat,
             calcul: `${k.refs.map((l) => entre(l.resultat)).join(" + ")} = ${eur(k.h.resultat)}, soit ${eur(k.h.chiffreDAffaires)} − ${eur(k.h.directs)} − ${eur(k.communes)}`,
-            tolerance: k.toleranceAuxHeures(k.heures),
           },
         ];
       },
@@ -360,7 +359,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       notions: ["full_unit_cost", "fixed_costs"],
       question: (c) => {
         const k = coutsParProduit(c);
-        return `Le responsable de ${k.x.nom} trouve qu'elle porte trop de charges communes : elle demande ${pct(Math.round((k.x.heures / k.heures) * 100))} des heures-machine pour ${pct(Math.round((k.x.chiffreDAffaires / k.h.chiffreDAffaires) * 100))} du chiffre d'affaires. Il veut les répartir au chiffre d'affaires. Avant de calculer, pariez : le résultat de la gamme…`;
+        return `Le responsable de ${k.x.nom} trouve qu'elle porte trop de charges communes : elle demande ${pct(taux2(k.x.heures, k.heures))} des heures-machine pour ${pct(taux2(k.x.chiffreDAffaires, k.h.chiffreDAffaires))} du chiffre d'affaires. Il veut les répartir au chiffre d'affaires. Avant de calculer, pariez : le résultat de la gamme…`;
       },
       options: (c) => {
         const k = coutsParProduit(c);
@@ -413,7 +412,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       explication: (c) => {
         const k = coutsParProduit(c);
         return [
-          `À ${pct(k.partLimite)} des charges aux heures, ${k.x.nom} est encore bénéficiaire ; un point de plus, elle perd. Tout au chiffre d'affaires, elle gagne ${eur(k.xv.resultat)} ; tout aux heures, elle perd ${eur(-k.x.resultat)}. Chaque point de clé lui ajoute ${eur(auCentime(k.pente / 100))} de charges.`,
+          `À ${pct(k.partLimite)} des charges aux heures, ${k.x.nom} est encore bénéficiaire ; un point de plus, elle perd. Tout au chiffre d'affaires, elle gagne ${eur(k.xv.resultat)} ; tout aux heures, elle perd ${eur(-k.x.resultat)}. Chaque point de clé lui ajoute ${eur(arrondi2(k.pente / 100))} de charges.`,
           `Pendant ce temps, le résultat de la gamme n'a pas bougé d'un centime : ${eur(k.h.resultat)} à toutes les positions. La clé déplace les charges communes d'une référence à l'autre ; elle ne les fait ni grossir ni disparaître. Et la marge sur coûts spécifiques de ${k.x.nom}, ${eur(k.x.margeSpecifique)}, est restée la même : elle ne dépend d'aucune clé.`,
         ];
       },
@@ -426,29 +425,26 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       notions: ["full_unit_cost", "fixed_costs"],
       question: (c) => {
         const k = coutsParProduit(c);
-        return `Formalisez le bout du curseur, la clé au chiffre d'affaires, dont l'unité d'œuvre est 100 € de chiffre d'affaires. Calculez le coût de cette unité d'œuvre au centime, les charges communes portées par ${k.x.nom}, son résultat, puis celui de la gamme.`;
+        return `Formalisez le bout du curseur, la clé au chiffre d'affaires, dont l'unité d'œuvre est 100 € de chiffre d'affaires. Calculez le coût de cette unité d'œuvre au centime, les charges communes portées par ${k.x.nom} (au prorata de son chiffre d'affaires, au centime), son résultat, puis celui de la gamme.`;
       },
       champs: (c) => {
         const k = coutsParProduit(c);
         return [
-          { libelle: "Coût de 100 € de chiffre d'affaires", attendu: k.coutDesCent, calcul: `${eur(k.communes)} ÷ (${eur(k.h.chiffreDAffaires)} ÷ 100) ≈ ${eur(k.coutDesCent)}` },
+          { libelle: "Coût de 100 € de chiffre d'affaires", attendu: k.coutDesCent, calcul: `${eur(k.communes)} ÷ (${eur(k.h.chiffreDAffaires)} ÷ 100) = ${eur(k.coutDesCent)}` },
           {
             libelle: `Charges communes : ${k.x.nom}, au chiffre d'affaires`,
             attendu: k.xv.imputees,
-            calcul: `${eur(k.x.chiffreDAffaires)} ÷ 100 × ${eur(k.coutDesCent)} ≈ ${eur(k.xv.imputees)}`,
-            tolerance: k.toleranceAuChiffre(k.x.chiffreDAffaires),
+            calcul: `${eur(k.communes)} × ${eur(k.x.chiffreDAffaires)} ÷ ${eur(k.h.chiffreDAffaires)} = ${eur(k.xv.imputees)}`,
           },
           {
             libelle: `Résultat : ${k.x.nom}, au chiffre d'affaires`,
             attendu: k.xv.resultat,
             calcul: `${eur(k.x.chiffreDAffaires)} − ${eur(k.x.direct)} − ${eur(k.xv.imputees)} = ${eur(k.xv.resultat)}`,
-            tolerance: k.toleranceAuChiffre(k.x.chiffreDAffaires),
           },
           {
             libelle: "Résultat de la gamme, au chiffre d'affaires",
             attendu: k.v.resultat,
             calcul: `${eur(k.h.chiffreDAffaires)} − ${eur(k.h.directs)} − ${eur(k.communes)} = ${eur(k.v.resultat)}`,
-            tolerance: k.toleranceAuChiffre(k.h.chiffreDAffaires),
           },
         ];
       },
@@ -542,7 +538,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       explication: (c, p) => {
         const k = coutsParProduit(c);
         const a = gammeA(k.f, position(p));
-        const gain = auCentime(a.resultat - k.h.resultat);
+        const gain = arrondi2(a.resultat - k.h.resultat);
         const ms = a.parReference.find((l) => l.code === k.x.code)!.margeSpecifique;
         return [
           `Les trois références sont bénéficiaires : ${a.parReference.map((l) => `${l.nom} ${eur(l.resultat)}`).join(", ")}. ${gain === 0 ? `Le résultat de la gamme, lui, n'a pas bougé : ${eur(a.resultat)}. Rien n'a changé dans l'usine, sinon la façon de partager les charges communes.` : `Le résultat de la gamme passe de ${eur(k.h.resultat)} à ${eur(a.resultat)} : ce gain vient du prix, une vente réelle, pas de la clé.`}`,
@@ -626,9 +622,9 @@ export const COUT_PAR_PRODUIT: Chapitre = {
           {
             libelle: `Prix qui annule le résultat de ${k.x.nom}`,
             attendu: k.prixQuiAnnuleLeResultat,
-            calcul: `(${eur(k.x.direct)} + ${eur(k.x.imputees)}) ÷ ${qte(k.x.quantite)} = ${eur(k.x.coutComplet)} ÷ ${qte(k.x.quantite)} ≈ ${eur(k.prixQuiAnnuleLeResultat)}`,
+            calcul: `(${eur(k.x.direct)} + ${eur(k.x.imputees)}) ÷ ${qte(k.x.quantite)} = ${eur(k.x.coutComplet)} ÷ ${qte(k.x.quantite)} = ${eur(k.prixQuiAnnuleLeResultat)}`,
           },
-          { libelle: `Prix qui annule la marge sur coûts spécifiques de ${k.x.nom}`, attendu: k.prixQuiAnnuleLaMarge, calcul: `${eur(k.x.direct)} ÷ ${qte(k.x.quantite)} ≈ ${eur(k.prixQuiAnnuleLaMarge)}` },
+          { libelle: `Prix qui annule la marge sur coûts spécifiques de ${k.x.nom}`, attendu: k.prixQuiAnnuleLaMarge, calcul: `${eur(k.x.direct)} ÷ ${qte(k.x.quantite)} = ${eur(k.prixQuiAnnuleLaMarge)}` },
           {
             libelle: `Résultat de la gamme, ${k.x.nom} à ${eur(PRIX_DE_ONE_EN_VARIANTE)}`,
             attendu: k.resultatEnVariante,
@@ -664,7 +660,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       },
       question: (c) => {
         const k = coutsParProduit(c);
-        return `En décembre, les clients demanderaient de quoi occuper ${qte(auCentime(k.plan.heuresDemandees))} heures-machine, pour ${qte(k.plan.capacite)} que les deux lignes donnent dans le mois. Les charges communes ne bougent pas. Il faut renoncer à une partie des ventes : pariez, laquelle sacrifier d'abord ?`;
+        return `En décembre, les clients demanderaient de quoi occuper ${qte(arrondi2(k.plan.heuresDemandees))} heures-machine, pour ${qte(k.plan.capacite)} que les deux lignes donnent dans le mois. Les charges communes ne bougent pas. Il faut renoncer à une partie des ventes : pariez, laquelle sacrifier d'abord ?`;
       },
       options: (c) => {
         const k = coutsParProduit(c);
@@ -689,14 +685,14 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       question: () => "Calculez, pour chaque référence, ce qu'elle rapporte par heure-machine, au centime.",
       champs: (c) =>
         coutsParProduit(c).refs.map((l) => {
-          const m = auCentime((l.prix - l.coutVariableUnitaire) / l.heuresMachineParUnite);
-          return { libelle: `Marge par heure-machine : ${l.nom}`, attendu: m, calcul: `(${eur(l.prix)} − ${eur(l.coutVariableUnitaire)}) ÷ ${qte(l.heuresMachineParUnite)} h ≈ ${eur(m)}` };
+          const m = arrondi2((l.prix - l.coutVariableUnitaire) / l.heuresMachineParUnite);
+          return { libelle: `Marge par heure-machine : ${l.nom}`, attendu: m, calcul: `(${eur(l.prix)} − ${eur(l.coutVariableUnitaire)}) ÷ ${qte(l.heuresMachineParUnite)} h = ${eur(m)}` };
         }),
       explication: (c) => {
         const k = coutsParProduit(c);
         const parEnceinte = [...k.plan.plan].sort((a, b) => b.margeUnitaire - a.margeUnitaire);
         return [
-          `Le classement change : par enceinte, ${parEnceinte.map((l) => `${l.nom} ${eur(l.margeUnitaire)}`).join(", ")} ; par heure-machine, ${k.plan.plan.map((l) => `${l.nom} ${eur(auCentime(l.margeParHeure))}`).join(", ")}. Sous contrainte, on sert d'abord la référence qui rapporte le plus par unité du facteur rare.`,
+          `Le classement change : par enceinte, ${parEnceinte.map((l) => `${l.nom} ${eur(l.margeUnitaire)}`).join(", ")} ; par heure-machine, ${k.plan.plan.map((l) => `${l.nom} ${eur(arrondi2(l.margeParHeure))}`).join(", ")}. Sous contrainte, on sert d'abord la référence qui rapporte le plus par unité du facteur rare.`,
         ];
       },
     },
@@ -718,19 +714,21 @@ export const COUT_PAR_PRODUIT: Chapitre = {
         return [
           {
             libelle: "Heures-machine demandées",
-            attendu: auCentime(k.plan.heuresDemandees),
-            calcul: `${k.refs.map((l) => `${qte(l.demandeDuMoisDePointe)} × ${qte(l.heuresMachineParUnite)}`).join(" + ")} = ${qte(auCentime(k.plan.heuresDemandees))} h`,
+            nature: "grandeur",
+            attendu: arrondi2(k.plan.heuresDemandees),
+            calcul: `${k.refs.map((l) => `${qte(l.demandeDuMoisDePointe)} × ${qte(l.heuresMachineParUnite)}`).join(" + ")} = ${qte(arrondi2(k.plan.heuresDemandees))} h`,
           },
           {
             libelle: `${d.nom} produites`,
+            nature: "quantite",
             attendu: d.quantite,
-            calcul: `(${qte(k.plan.capacite)} − ${autres.map((l) => qte(auCentime(l.heures))).join(" − ")}) ÷ ${qte(d.heuresMachineParUnite)}, à l'enceinte inférieure = ${qte(d.quantite)}`,
+            calcul: `(${qte(k.plan.capacite)} − ${autres.map((l) => qte(arrondi2(l.heures))).join(" − ")}) ÷ ${qte(d.heuresMachineParUnite)} = ${qte((k.plan.capacite - autres.reduce((t, l) => t + arrondi2(l.heures), 0)) / d.heuresMachineParUnite)}, à l'enceinte inférieure : ${qte(d.quantite)} (une enceinte entamée ne se vend pas)`,
           },
           { libelle: "Marge du mois de pointe, au meilleur programme", attendu: k.plan.marge, calcul: `${k.plan.plan.map((l) => `${qte(l.quantite)} × ${eur(l.margeUnitaire)}`).join(" + ")} = ${eur(k.plan.marge)}` },
           {
             libelle: "Marge d'un programme classé par marge par enceinte",
             attendu: k.naif.marge,
-            calcul: `${k.naif.plan.map((l) => `${qte(l.quantite)} × ${eur(l.margeUnitaire)}`).join(" + ")} = ${eur(k.naif.marge)}, ${dn.nom} n'ayant plus que ${qte(auCentime(k.naif.capacite - k.naif.plan.slice(0, -1).reduce((t, l) => t + l.heures, 0)))} h`,
+            calcul: `${k.naif.plan.map((l) => `${qte(l.quantite)} × ${eur(l.margeUnitaire)}`).join(" + ")} = ${eur(k.naif.marge)}, ${dn.nom} n'ayant plus que ${qte(arrondi2(k.naif.capacite - k.naif.plan.slice(0, -1).reduce((t, l) => t + l.heures, 0)))} h`,
           },
         ];
       },

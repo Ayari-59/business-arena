@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   ALEA_DU_DELAI,
@@ -46,6 +46,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : la-formule-de-wilson, le-tableau-des-tranches, la-securite-par-la-table ;
  *   · expert : trois-jours-ou-la-loi (deux protections, deux aléas), un-service-a-99 (ce que coûte un
  *     risque plus faible) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le coût de possession d'un jeu se donne au centime (2,58 € et
+ * non 2,578 €, monde/approvisionnement-de-nova.ts) ; Q* s'écrit à deux décimales, puis se commande
+ * à l'unité la plus proche, et le corrigé dit pourquoi ; la quantité d'une commande sur douze monte
+ * à l'unité supérieure ; les stocks de sécurité et points de commande sont des quantités, à l'unité
+ * supérieure ; le nombre de commandes, la période, les jours entre deux commandes et les ruptures
+ * attendues sont des grandeurs au centième ; les coûts du tableau des tranches attendent le centime
+ * (à 5 centimes près, avant).
  */
 
 /** Le chapitre se joue chez NOVA : ses jeux de composants, son fournisseur et son délai sont ceux du monde du cours. */
@@ -63,9 +72,10 @@ export const SECURITES_DU_LABORATOIRE = { min: 0, max: 200, pas: 1 } as const;
 /** Le taux de service du chapitre expert. */
 export const SERVICE_EXPERT = 0.99;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (p: number, d = 1) => `${qte(p * 100, d)} %`;
+const qte = nombreAuCentieme;
+const pct = (p: number) => pourcent(p * 100);
+/** Un coefficient de la table de la loi normale, tel que la table l'écrit : « 1,645 ». */
+const coef = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 4 });
 
 const donnee = (valeur: number, unite?: string, texte?: string): CelluleACompleter => ({ valeur, ...(unite ? { unite } : {}), ...(texte ? { texte } : {}) });
 const aSaisir = (valeur: number, calcul: string, autres: Partial<CelluleACompleter> = {}): CelluleACompleter => ({ valeur, saisir: true, calcul, ...autres });
@@ -101,7 +111,7 @@ function tableauDesDonnees(): TableauDeDonnees {
       { libelle: "Jeux consommés sur l'année (D)", valeurs: [qte(conso.annee)] },
       { libelle: "Prix d'un jeu", valeurs: [eur(PRIX_DU_JEU)] },
       { libelle: "Coût de passation d'une commande", valeurs: [eur(COUT_DE_PASSATION)] },
-      { libelle: "Taux de possession, par an", valeurs: [pct(POSSESSION.taux, 0)] },
+      { libelle: "Taux de possession, par an", valeurs: [pct(POSSESSION.taux)] },
       { libelle: "Coût physique d'un jeu en stock, par an", valeurs: [eur(POSSESSION.physiqueParJeu)] },
       { libelle: "Délai de livraison", valeurs: [`${qte(DELAI_DU_FOURNISSEUR)} jours de montage`] },
     ],
@@ -126,7 +136,7 @@ function tableauDeLaLoi(): TableauDeDonnees {
   return {
     titre: "La loi normale centrée réduite : la valeur t telle que P(T ≤ t) vaut le taux de service",
     colonnes: ["t"],
-    lignes: TABLE_DE_LA_LOI_NORMALE.map((x) => ({ libelle: `Taux de service de ${pct(x.service)}`, valeurs: [qte(x.t, 3)] })),
+    lignes: TABLE_DE_LA_LOI_NORMALE.map((x) => ({ libelle: `Taux de service de ${pct(x.service)}`, valeurs: [qte(x.t)] })),
   };
 }
 
@@ -137,7 +147,6 @@ function grilleDesTranches(): TableauACompleter {
     titre: "Le coût total d'approvisionnement, tranche par tranche",
     colonnes: ["Prix du jeu", "Q* à ce prix", "Quantité retenue", "Achat de l'année", "Gestion du stock", "Coût total"],
     colonneDeTotal: 5,
-    tolerance: 0.05,
     lignes: tranches.lignes.map((l, i) => {
       const nom = i === 0 ? "Tranche à 22 €" : `Tranche de ${pct(l.tranche.remise)}`;
       const retenue = l.dedans ? `Q* tombe dans la tranche : ${qte(l.retenue)} jeux` : `Q* est sous la tranche, qui commence à ${qte(l.tranche.des)} : on retient sa borne, ${qte(l.retenue)} jeux`;
@@ -145,10 +154,10 @@ function grilleDesTranches(): TableauACompleter {
         libelle: nom,
         cellules: [
           { ...donnee(l.prix), horsTotal: true },
-          aSaisir(l.qEtoile, `√(2 × ${qte(l.D)} × ${qte(COUT_DE_PASSATION)} ÷ ${qte(l.cs, 3)}) = ${qte(l.qEtoile)}`, { unite: "jeux", tolerance: 1, horsTotal: true, indice: "√(2 D cl ÷ cs), avec cs au prix de la tranche" }),
-          aSaisir(l.retenue, retenue, { unite: "jeux", horsTotal: true, indice: "Q* s'il tombe dans la tranche, sinon la borne de la tranche" }),
+          aSaisir(l.qEtoile, `√(2 × ${qte(l.D)} × ${qte(COUT_DE_PASSATION)} ÷ ${eur(l.cs)}) = ${qte(l.qEtoileExacte)}, à l'unité : ${qte(l.qEtoile)}`, { unite: "jeux", nature: "quantite", horsTotal: true, indice: "√(2 D cl ÷ cs), avec cs au prix de la tranche" }),
+          aSaisir(l.retenue, retenue, { unite: "jeux", nature: "quantite", horsTotal: true, indice: "Q* s'il tombe dans la tranche, sinon la borne de la tranche" }),
           aSaisir(l.achat, `${qte(l.D)} × ${eur(l.prix)} = ${eur(l.achat)}`, { indice: "les jeux de l'année au prix de la tranche" }),
-          aSaisir(l.total, `${qte(l.commandes, 2)} × ${eur(COUT_DE_PASSATION)} + ${qte(l.stockMoyen)} × ${qte(l.cs, 3)} = ${eur(l.total)}`, { indice: "la passation des commandes et la possession du stock moyen" }),
+          aSaisir(l.total, `${qte(l.commandes)} × ${eur(COUT_DE_PASSATION)} + ${qte(l.stockMoyen)} × ${eur(l.cs)} = ${eur(l.total)}`, { indice: "la passation des commandes et la possession du stock moyen" }),
           aSaisir(l.totalDApprovisionnement, `${eur(l.achat)} + ${eur(l.total)} = ${eur(l.totalDApprovisionnement)}`, { indice: "l'achat plus la gestion du stock" }),
         ],
       };
@@ -214,12 +223,12 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       titre: "Ce que coûte une commande par mois",
       notions: ["stock"],
       question: () =>
-        `Calculez cs = ${pct(POSSESSION.taux, 0)} × ${eur(PRIX_DU_JEU)} + ${eur(POSSESSION.physiqueParJeu)}. Puis, pour ${qte(COMMANDES_D_AUJOURD_HUI)} commandes par an : la quantité d'une commande (D ÷ n), la passation (n × ${eur(COUT_DE_PASSATION)}), la possession (Q ÷ 2 × cs) et le coût de gestion.`,
+        `Calculez cs = ${pct(POSSESSION.taux)} × ${eur(PRIX_DU_JEU)} + ${eur(POSSESSION.physiqueParJeu)}. Puis, pour ${qte(COMMANDES_D_AUJOURD_HUI)} commandes par an : la quantité d'une commande (D ÷ n), la passation (n × ${eur(COUT_DE_PASSATION)}), la possession (Q ÷ 2 × cs) et le coût de gestion.`,
       champs: () => {
         const { aujourdhui: a } = approvisionnement();
         return [
-          { libelle: "Coût de possession d'un jeu par an (cs)", attendu: a.cs, calcul: `${pct(POSSESSION.taux, 0)} × ${eur(PRIX_DU_JEU)} + ${eur(POSSESSION.physiqueParJeu)} = ${eur(a.cs)}` },
-          { libelle: "Quantité d'une commande, en jeux", attendu: a.quantite, tolerance: 0.01, calcul: `${qte(a.D)} ÷ ${qte(a.commandes)} = ${qte(a.quantite)}` },
+          { libelle: "Coût de possession d'un jeu par an (cs)", attendu: a.cs, calcul: `${pct(POSSESSION.taux)} × ${eur(PRIX_DU_JEU)} + ${eur(POSSESSION.physiqueParJeu)} = ${eur(a.cs)}` },
+          { libelle: "Quantité d'une commande, en jeux", nature: "quantite", attendu: a.quantite, calcul: `${qte(a.D)} ÷ ${qte(a.commandes)} = ${qte(a.D / a.commandes)}, arrondi à l'unité supérieure : ${qte(a.quantite)} (des commandes d'un jeu de moins ne couvriraient pas l'année)` },
           { libelle: "Coût de passation de l'année", attendu: a.passation, calcul: `${qte(a.commandes)} × ${eur(COUT_DE_PASSATION)} = ${eur(a.passation)}` },
           { libelle: "Coût de possession de l'année", attendu: a.possession, calcul: `${qte(a.stockMoyen)} × ${eur(a.cs)} = ${eur(a.possession)}` },
           { libelle: "Coût de gestion du stock", attendu: a.total, calcul: `${eur(a.passation)} + ${eur(a.possession)} = ${eur(a.total)}` },
@@ -288,9 +297,9 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       champs: () => {
         const { w } = approvisionnement();
         return [
-          { libelle: "Quantité économique Q*, en jeux", attendu: w.quantite, calcul: `√(2 × ${qte(w.D)} × ${qte(COUT_DE_PASSATION)} ÷ ${qte(w.cs)}) = ${qte(w.quantite)}` },
-          { libelle: "Nombre de commandes n*", attendu: w.commandes, calcul: `${qte(w.D)} ÷ ${qte(w.quantite)} = ${qte(w.commandes)}` },
-          { libelle: "Période T*, en semaines", attendu: w.semaines, calcul: `${qte(SEMAINES_PAR_AN)} ÷ ${qte(w.commandes)} = ${qte(w.semaines)}` },
+          { libelle: "Quantité économique Q*, en jeux", nature: "quantite", attendu: w.quantite, calcul: `√(2 × ${qte(w.D)} × ${qte(COUT_DE_PASSATION)} ÷ ${eur(w.cs)}) = ${qte(w.quantiteExacte)}, arrondi à l'unité la plus proche : ${qte(w.quantite)} jeux (on commande des jeux entiers, et le coût de gestion est plat autour de l'optimum)` },
+          { libelle: "Nombre de commandes n*", nature: "grandeur", attendu: w.commandes, calcul: `${qte(w.D)} ÷ ${qte(w.quantite)} = ${qte(w.commandes)}` },
+          { libelle: "Période T*, en semaines", nature: "grandeur", attendu: w.semaines, calcul: `${qte(SEMAINES_PAR_AN)} ÷ ${qte(w.commandes)} = ${qte(w.semaines)}` },
           { libelle: "Coût de gestion à l'optimum", attendu: w.total, calcul: `${eur(w.passation)} + ${eur(w.possession)} = ${eur(w.total)}` },
         ];
       },
@@ -405,7 +414,7 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       options: () => {
         const { retenue, w, tranches } = approvisionnement();
         return [
-          { texte: `${qte(retenue.commandes)} commandes de ${qte(retenue.retenue)} jeux`, juste: true, retour: `Oui : le coût total le plus bas, ${eur(retenue.totalDApprovisionnement)}, une commande toutes les ${qte(SEMAINES_PAR_AN / retenue.commandes, 1)} semaines.` },
+          { texte: `${qte(retenue.commandes)} commandes de ${qte(retenue.retenue)} jeux`, juste: true, retour: `Oui : le coût total le plus bas, ${eur(retenue.totalDApprovisionnement)}, une commande toutes les ${qte(SEMAINES_PAR_AN / retenue.commandes)} semaines.` },
           { texte: `${qte(tranches.lignes[2]!.commandes)} commandes de ${qte(tranches.lignes[2]!.retenue)} jeux, la plus forte remise`, juste: false, retour: `Non : ${eur(tranches.lignes[2]!.totalDApprovisionnement)}, la possession d'un gros stock mange la remise.` },
           { texte: `${qte(w.commandes)} commandes de ${qte(w.quantite)} jeux, la quantité de Wilson`, juste: false, retour: `Non : ${eur(tranches.lignes[0]!.totalDApprovisionnement)}. Wilson minimise la seule gestion ; la remise change l'objectif.` },
         ];
@@ -424,8 +433,8 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       champs: () => {
         const { delai, retenue } = approvisionnement();
         return [
-          { libelle: "Consommation pendant le délai, en jeux", attendu: delai.moyenne, calcul: `${qte(delai.parJour)} × ${qte(delai.delai)} = ${qte(delai.moyenne)}` },
-          { libelle: "Jours de montage entre deux commandes", attendu: retenue.retenue / delai.parJour, calcul: `${qte(retenue.retenue)} ÷ ${qte(delai.parJour)} = ${qte(retenue.retenue / delai.parJour)}` },
+          { libelle: "Consommation pendant le délai, en jeux", nature: "quantite", attendu: delai.moyenne, calcul: `${qte(delai.parJour)} × ${qte(delai.delai)} = ${qte(delai.moyenne)}` },
+          { libelle: "Jours de montage entre deux commandes", nature: "grandeur", attendu: arrondi2(retenue.retenue / delai.parJour), calcul: `${qte(retenue.retenue)} ÷ ${qte(delai.parJour)} = ${qte(retenue.retenue / delai.parJour)}` },
         ];
       },
       explication: () => {
@@ -445,7 +454,7 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
         const { delai } = approvisionnement();
         return [
           `La ligne monte ce que les clients demandent : pendant les ${qte(delai.delai)} jours du délai, elle consomme ${qte(delai.moyenne)} jeux en moyenne, mais parfois plus, parfois moins. Les relevés disent que cette consommation suit une loi normale de moyenne ${qte(delai.moyenne)} et d'écart type ${qte(delai.ecartType)} jeux.`,
-          `NOVA admet une rupture dans ${pct(ALEA_DU_DELAI.risqueAdmis, 0)} des commandes au plus. Le stock de sécurité S doit donc tenir P(consommation du délai > ${qte(delai.moyenne)} + S) ≤ ${pct(ALEA_DU_DELAI.risqueAdmis, 0)}. On centre et on réduit : t = S ÷ ${qte(delai.ecartType)}.`,
+          `NOVA admet une rupture dans ${pct(ALEA_DU_DELAI.risqueAdmis)} des commandes au plus. Le stock de sécurité S doit donc tenir P(consommation du délai > ${qte(delai.moyenne)} + S) ≤ ${pct(ALEA_DU_DELAI.risqueAdmis)}. On centre et on réduit : t = S ÷ ${qte(delai.ecartType)}.`,
         ];
       },
       repere: () => "Point de commande = consommation moyenne du délai + stock de sécurité ; stock de sécurité = t × écart type, t lu dans la table pour le taux de service voulu.",
@@ -463,7 +472,7 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       options: () => [
         { texte: "Une commande sur deux", juste: true, retour: "Bon pari. La loi normale est symétrique : la moitié des délais consomment plus que la moyenne. Commander à la moyenne, c'est un risque de 50 %." },
         { texte: "Aucun : c'est la consommation du délai", juste: false, retour: "Non : c'est la consommation moyenne. Dès que le délai consomme plus, la ligne s'arrête avant la livraison." },
-        { texte: `${pct(ALEA_DU_DELAI.risqueAdmis, 0)} des commandes, le risque que NOVA admet`, juste: false, retour: "Non : ce risque se tient avec un stock de sécurité, pas sans. À la moyenne, le risque est d'une commande sur deux." },
+        { texte: `${pct(ALEA_DU_DELAI.risqueAdmis)} des commandes, le risque que NOVA admet`, juste: false, retour: "Non : ce risque se tient avec un stock de sécurité, pas sans. À la moyenne, le risque est d'une commande sur deux." },
       ],
     },
     {
@@ -497,11 +506,11 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       defi: () => {
         const s = securiteAuRisque();
         return {
-          consigne: `Trouvez le plus petit stock de sécurité qui tient le risque de rupture à ${pct(ALEA_DU_DELAI.risqueAdmis, 0)} au plus.`,
+          consigne: `Trouvez le plus petit stock de sécurité qui tient le risque de rupture à ${pct(ALEA_DU_DELAI.risqueAdmis)} au plus.`,
           atteint: (p) => p.securite === s,
           indice: (p) =>
             risqueDeRupture(p.securite!) > ALEA_DU_DELAI.risqueAdmis
-              ? `À ${qte(p.securite!)} jeux, le risque dépasse ${pct(ALEA_DU_DELAI.risqueAdmis, 0)} : ajoutez des jeux.`
+              ? `À ${qte(p.securite!)} jeux, le risque dépasse ${pct(ALEA_DU_DELAI.risqueAdmis)} : ajoutez des jeux.`
               : `À ${qte(p.securite!)} jeux, le risque est tenu, mais un jeu de moins le tiendrait peut-être encore : chaque jeu se paie.`,
           solution: { securite: s },
         };
@@ -509,8 +518,8 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       explication: (_, p) => {
         const { retenue } = approvisionnement();
         return [
-          `À ${qte(p.securite!)} jeux, le risque passe sous ${pct(ALEA_DU_DELAI.risqueAdmis, 0)} : ${pct(risqueDeRupture(p.securite!), 2)}. Les premiers jeux de sécurité font beaucoup baisser le risque, les suivants de moins en moins.`,
-          `Sur ${qte(retenue.commandes)} commandes, cela fait une rupture attendue tous les ${qte(1 / rupturesParAn(retenue.commandes, ALEA_DU_DELAI.risqueAdmis), 0)} ans environ. L'étape suivante trouve ce stock par la table, sans tâtonner.`,
+          `À ${qte(p.securite!)} jeux, le risque passe sous ${pct(ALEA_DU_DELAI.risqueAdmis)} : ${pct(risqueDeRupture(p.securite!))}. Les premiers jeux de sécurité font beaucoup baisser le risque, les suivants de moins en moins.`,
+          `Sur ${qte(retenue.commandes)} commandes, cela fait une rupture attendue tous les ${qte(1 / rupturesParAn(retenue.commandes, ALEA_DU_DELAI.risqueAdmis))} ans environ. L'étape suivante trouve ce stock par la table, sans tâtonner.`,
         ];
       },
     },
@@ -523,14 +532,14 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       tableau: () => tableauDeLaLoi(),
       question: () => {
         const { table } = approvisionnement();
-        return `Pour un taux de service de ${pct(table.service)}, lisez t dans la table. Calculez le stock de sécurité t × ${qte(table.ecartType)}, à l'unité supérieure, le point de commande, et ce que ce stock coûte à posséder sur l'année, au cs de la tranche retenue (${qte(table.cs, 3)} €).`;
+        return `Pour un taux de service de ${pct(table.service)}, lisez t dans la table. Calculez le stock de sécurité t × ${qte(table.ecartType)}, à l'unité supérieure, le point de commande, et ce que ce stock coûte à posséder sur l'année, au cs de la tranche retenue (${qte(table.cs)} €).`;
       },
       champs: () => {
         const { table } = approvisionnement();
         return [
-          { libelle: "Stock de sécurité, en jeux", attendu: table.securite, calcul: `${qte(table.t, 3)} × ${qte(table.ecartType)} = ${qte(table.brut)}, soit ${qte(table.securite)} à l'unité supérieure` },
-          { libelle: "Point de commande, en jeux", attendu: table.pointDeCommande, calcul: `${qte(table.moyenne)} + ${qte(table.securite)} = ${qte(table.pointDeCommande)}` },
-          { libelle: "Possession du stock de sécurité, par an", attendu: table.coutAnnuel, calcul: `${qte(table.securite)} × ${qte(table.cs, 3)} = ${eur(table.coutAnnuel)}` },
+          { libelle: "Stock de sécurité, en jeux", nature: "quantite", attendu: table.securite, calcul: `${coef(table.t)} × ${qte(table.ecartType)} = ${qte(table.brut)}, arrondi à l'unité supérieure : ${qte(table.securite)} (un jeu de moins laisserait le risque au-dessus du seuil admis)` },
+          { libelle: "Point de commande, en jeux", nature: "quantite", attendu: table.pointDeCommande, calcul: `${qte(table.moyenne)} + ${qte(table.securite)} = ${qte(table.pointDeCommande)}` },
+          { libelle: "Possession du stock de sécurité, par an", attendu: table.coutAnnuel, calcul: `${qte(table.securite)} × ${qte(table.cs)} = ${eur(table.coutAnnuel)}` },
         ];
       },
       explication: () => {
@@ -567,21 +576,21 @@ export const APPROVISIONNER_AU_MOINDRE_COUT: Chapitre = {
       notions: ["stock"],
       question: () => {
         const { expert, retenue } = approvisionnement();
-        return `La direction veut un taux de service de ${pct(expert.service, 0)}. Calculez le stock de sécurité (à l'unité supérieure), la possession de plus sur l'année face au service de ${pct(1 - ALEA_DU_DELAI.risqueAdmis, 0)}, et les ruptures attendues en ${qte(retenue.commandes)} commandes.`;
+        return `La direction veut un taux de service de ${pct(expert.service)}. Calculez le stock de sécurité (à l'unité supérieure), la possession de plus sur l'année face au service de ${pct(1 - ALEA_DU_DELAI.risqueAdmis)}, et les ruptures attendues en ${qte(retenue.commandes)} commandes.`;
       },
       champs: () => {
         const { expert, table, retenue } = approvisionnement();
         return [
-          { libelle: "Stock de sécurité, en jeux", attendu: expert.securite, calcul: `${qte(expert.t, 3)} × ${qte(expert.ecartType)} = ${qte(expert.brut)}, soit ${qte(expert.securite)}` },
+          { libelle: "Stock de sécurité, en jeux", nature: "quantite", attendu: expert.securite, calcul: `${coef(expert.t)} × ${qte(expert.ecartType)} = ${qte(expert.brut)}, arrondi à l'unité supérieure : ${qte(expert.securite)}` },
           { libelle: "Possession de plus, par an", attendu: Math.round((expert.coutAnnuel - table.coutAnnuel) * 100) / 100, calcul: `${eur(expert.coutAnnuel)} − ${eur(table.coutAnnuel)} = ${eur(expert.coutAnnuel - table.coutAnnuel)}` },
-          { libelle: "Ruptures attendues sur l'année", attendu: rupturesParAn(retenue.commandes, 1 - expert.service), tolerance: 0.001, calcul: `${qte(retenue.commandes)} × ${pct(1 - expert.service, 0)} = ${qte(rupturesParAn(retenue.commandes, 1 - expert.service))}` },
+          { libelle: "Ruptures attendues sur l'année", nature: "grandeur", attendu: arrondi2(rupturesParAn(retenue.commandes, 1 - expert.service)), calcul: `${qte(retenue.commandes)} × ${pct(1 - expert.service)} = ${qte(rupturesParAn(retenue.commandes, 1 - expert.service))}` },
         ];
       },
       explication: () => {
         const { expert, table, retenue } = approvisionnement();
-        const ans = (service: number) => qte(1 / rupturesParAn(retenue.commandes, 1 - service), 0);
+        const ans = (service: number) => qte(1 / rupturesParAn(retenue.commandes, 1 - service));
         return [
-          `Passer de ${pct(table.service, 0)} à ${pct(expert.service, 0)} coûte ${eur(expert.coutAnnuel - table.coutAnnuel)} par an : une rupture tous les ${ans(expert.service)} ans au lieu d'une tous les ${ans(table.service)} ans. Est-ce assez cher payé ? Cela dépend de ce que coûte une ligne arrêtée.`,
+          `Passer de ${pct(table.service)} à ${pct(expert.service)} coûte ${eur(expert.coutAnnuel - table.coutAnnuel)} par an : une rupture tous les ${ans(expert.service)} ans au lieu d'une tous les ${ans(table.service)} ans. Est-ce assez cher payé ? Cela dépend de ce que coûte une ligne arrêtée.`,
         ];
       },
     },

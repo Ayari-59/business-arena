@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_SEUIL_DU_LYCEE, seuilDeJanvier } from "../../chapitres/assez-vendre-pour-ne-rien-perdre";
 import { CHARGES_FIXES_DU_MOIS } from "../../monde/nova-gestion";
 import type { Situation } from "../types";
@@ -12,8 +12,7 @@ import type { Situation } from "../types";
  * le nouveau seuil en enceintes et le nouveau point mort.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 export const HAUSSE_DU_LOYER = 1_300;
 
@@ -59,8 +58,8 @@ export const LE_LOYER_AUGMENTE: Situation = {
         const { apres } = leLoyerAugmente();
         return [
           { libelle: "Charges fixes du mois", attendu: apres.chargesFixes, calcul: `${eur(apres.chargesFixes - HAUSSE_DU_LOYER)} + ${eur(HAUSSE_DU_LOYER)} = ${eur(apres.chargesFixes)}` },
-          { libelle: "Seuil en enceintes", attendu: apres.seuilQuantite!, calcul: `${eur(apres.chargesFixes)} ÷ ${eur(apres.margeUnitaire)} = ${qte(Math.round(apres.seuilExact! * 10) / 10)}, soit ${qte(apres.seuilQuantite!)}`, tolerance: 0 },
-          { libelle: "Jour du point mort", attendu: apres.pointMort!, calcul: `${eur(apres.seuilValeur!)} ÷ ${eur(apres.chiffreDAffaires)} × ${qte(apres.jours)} jours, arrondi au jour supérieur : le ${qte(apres.pointMort!)}`, tolerance: 0 },
+          { libelle: "Seuil en enceintes", nature: "quantite", attendu: apres.seuilQuantite!, calcul: `${eur(apres.chargesFixes)} ÷ ${eur(apres.margeUnitaire)} = ${qte(apres.seuilExact!)}, arrondi à l'unité supérieure : ${qte(apres.seuilQuantite!)} (une enceinte de moins laisserait une perte)` },
+          { libelle: "Jour du point mort", nature: "quantite", attendu: apres.pointMort!, calcul: `${eur(apres.seuilValeur!)} ÷ ${eur(apres.chiffreDAffaires)} × ${qte(apres.jours)} jours = ${qte(apres.pointMortExact!)}, arrondi au jour supérieur : le ${qte(apres.pointMort!)}` },
         ];
       },
       explication: () => {

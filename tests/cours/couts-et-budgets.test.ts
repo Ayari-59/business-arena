@@ -98,7 +98,9 @@ describe("le seuil de rentabilité de janvier", () => {
     expect(s.chargesVariables).toBe(1_590 * 38);
     expect(s.marge).toBe(93_810 - 60_420);
     expect(s.margeUnitaire).toBe(59 - 38);
-    expect(s.tauxDeMarge).toBe(21 / 59);
+    // Le taux se donne à deux décimales : 21 ÷ 59 = 35,59 %.
+    expect(s.tauxDeMargePct).toBe(35.59);
+    expect(s.tauxDeMarge).toBe(0.3559);
     expect(s.resultat).toBe(33_390 - 31_183);
     expect(s.chiffreDAffaires - s.chargesVariables - s.chargesFixes).toBe(s.resultat);
     expect([s.chiffreDAffaires, s.chargesVariables, s.marge, s.resultat]).toEqual([93_810, 60_420, 33_390, 2_207]);
@@ -108,13 +110,16 @@ describe("le seuil de rentabilité de janvier", () => {
     expect(s.seuilExact).toBe(31_183 / 21);
     expect(s.seuilQuantite).toBe(Math.ceil(31_183 / 21));
     expect(s.seuilQuantite).toBe(1_485);
-    expect(s.seuilValeur).toBe(c((31_183 * 59) / 21));
-    expect(s.seuilValeur).toBe(87_609.38);
-    expect(s.margeDeSecurite).toBe(c(93_810 - 87_609.38));
-    expect(s.margeDeSecurite).toBe(6_200.62);
-    expect(s.indiceDeSecurite).toBe(6_200.62 / 93_810);
-    // Le 29 janvier, si les ventes sont régulières sur les 31 jours.
-    expect(s.pointMort).toBe(Math.ceil((87_609.38 / 93_810) * 31));
+    // Le seuil en valeur part du taux arrondi, comme l'élève : 31 183 € ÷ 35,59 % (87 609,38 € sur le taux exact).
+    expect(s.seuilValeur).toBe(c((31_183 * 100) / 35.59));
+    expect(s.seuilValeur).toBe(87_617.31);
+    expect(s.margeDeSecurite).toBe(c(93_810 - 87_617.31));
+    expect(s.margeDeSecurite).toBe(6_192.69);
+    expect(s.indiceDeSecuritePct).toBe(c((6_192.69 / 93_810) * 100));
+    expect(s.indiceDeSecuritePct).toBe(6.6);
+    // Le 29 janvier, si les ventes sont régulières sur les 31 jours : 28,95 jours.
+    expect(s.pointMortExact).toBe(c((87_617.31 / 93_810) * 31));
+    expect(s.pointMortExact).toBe(28.95);
     expect(s.pointMort).toBe(29);
   });
 
@@ -122,6 +127,7 @@ describe("le seuil de rentabilité de janvier", () => {
     expect(s.levierOperationnel).toBe(33_390 / 2_207);
     expect(s.levierOperationnel!).toBeCloseTo(15.13, 2);
     expect(s.levierOperationnel! * (2_207 / 33_390)).toBeCloseTo(1, 12);
+    // À l'arrondi du taux de marge près : 1 ÷ 15,13 = 6,61 %, pour un indice de 6,60 %.
     expect(s.indiceDeSecurite!).toBeCloseTo(1 / s.levierOperationnel!, 3);
   });
 
@@ -348,10 +354,13 @@ describe("le coût par produit : la gamme Go, One, Studio", () => {
     expect(s.chargesFixes).toBe(33_578 + 373 + 1_233 + 393);
     expect(s.marge).toBe(195 * 15 + 1_160 * 21 + 217 * 59);
     expect(s.marge).toBe(40_088);
-    expect(s.seuilValeur).toBe(c((35_577 * 103_063) / 40_088));
-    expect(s.seuilValeur).toBe(91_465.58);
+    // Le taux moyen à deux décimales, 38,90 %, et le seuil sur ce taux (91 465,58 € sur le taux exact).
+    expect(s.tauxDeMargePct).toBe(c((40_088 / 103_063) * 100));
+    expect(s.tauxDeMargePct).toBe(38.9);
+    expect(s.seuilValeur).toBe(c((35_577 * 100) / 38.9));
+    expect(s.seuilValeur).toBe(91_457.58);
     expect(s.resultat).toBe(40_088 - 35_577);
-    expect(s.seuilParProduit.reduce((t, x) => t + x.chiffreDAffaires, 0)).toBeCloseTo(91_465.58, 1);
+    expect(s.seuilParProduit.reduce((t, x) => t + x.chiffreDAffaires, 0)).toBeCloseTo(91_457.58, 1);
   });
 
   it("le facteur rare : servir d'abord ce qui rapporte le plus par heure-machine", () => {
@@ -524,7 +533,9 @@ describe("le tableau de bord du semestre et ses voyants", () => {
   it("les indicateurs de chaque mois", () => {
     expect(t.mois.map((m) => m.resultat)).toEqual(q.map((x) => x * 21 - 31_183));
     expect(t.mois.map((m) => m.resultat)).toEqual([2_207, -733, 5_315, 8_717, 11_447, 13_988]);
-    expect(t.mois.map((m) => m.indiceDeSecurite)).toEqual(q.map((x) => (x * 59 - c((31_183 * x * 59) / (x * 21))) / (x * 59)));
+    // Le seuil sur le taux à deux décimales (35,59 %), l'indice à deux décimales.
+    expect(t.mois.map((m) => m.indiceDeSecuritePct)).toEqual(q.map((x) => c(((x * 59 - c((31_183 * 100) / 35.59)) / (x * 59)) * 100)));
+    expect(t.mois.map((m) => m.indiceDeSecuritePct)).toEqual([6.6, -2.42, 14.55, 21.84, 26.85, 30.96]);
     expect(t.mois.map((m) => m.partDeMarche)).toEqual(q.map((x, k) => x / marche[k]!));
     expect(t.mois.map((m) => m.tresorerie)).toEqual([58_838, 31_998, 19_302.8, 33_810, 50_068, 63_641.6]);
   });
@@ -547,7 +558,7 @@ describe("le tableau de bord du semestre et ses voyants", () => {
     expect(s.chiffreDAffaires).toBe(10_859 * 59);
     expect(s.resultat).toBe(10_859 * 21 - 6 * 31_183);
     expect(s.resultat).toBe(40_941);
-    expect(s.seuil).toBe(c((6 * 31_183 * 59) / 21));
+    expect(s.seuil).toBe(c((6 * 31_183 * 100) / 35.59));
     expect(s.partDeMarche).toBe(10_859 / 43_000);
     expect(s.voyants).toEqual({ indiceDeSecurite: false, resultat: false, tresorerie: false, partDeMarche: false });
   });

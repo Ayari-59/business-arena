@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { controleBudgetaire } from "../monde/ecarts";
 import { USINES_DU_COURS, type FicheDeLUsine, type ModeleDeNova } from "../monde/nova-usine";
@@ -41,6 +41,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     variante, le-laboratoire-du-centre (heures-machine et coût réel : annuler le rendement et le
  *     budget laisse un écart sur activité, la tension entre activité normale et rendement) ; puis
  *     qui-doit-agir et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures-machine préétablies et réelles sont des grandeurs
+ * au centième ; le coefficient d'imputation rationnelle se déclare comme tel ; les écarts attendent
+ * le centime.
  */
 
 /**
@@ -76,10 +81,8 @@ export const COUT_DU_LABORATOIRE = { min: 180_000, max: 240_000, pas: 100 } as c
 /** Le contrôle budgétaire se calcule sur une production : l'usine de NOVA. */
 export const ENTREPRISES_DU_CONTROLE_BUDGETAIRE: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const auCentime = (x: number) => Math.round(x * 100) / 100;
 /** Le sens d'un écart sur une charge : positif, défavorable. */
 const sens = (x: number) => (x > 0 ? "défavorable" : x < 0 ? "favorable" : "nul");
 const ecartDit = (x: number) => `${eur(x)} ${sens(x)}`;
@@ -103,7 +106,7 @@ export function centreDeMontage(c: Pick<Cas, "code">) {
   const k = f.centre;
   const r = f.realise;
   const cHm = e.coutStandardDeLHeureMachine;
-  const partFixe = auCentime(k.chargesFixes / k.activiteNormale);
+  const partFixe = arrondi2(k.chargesFixes / k.activiteNormale);
   const heuresReelles = r.centre.heuresMachine;
   const heuresPreetablies = e.preetabliDuReel.heuresMachine;
   const parModele = f.modeles.map((m) => ({
@@ -111,19 +114,19 @@ export function centreDeMontage(c: Pick<Cas, "code">) {
     nom: m.nom,
     quantite: r.ventes[m.code].quantite,
     parUnite: m.heuresMachineParUnite,
-    heures: auCentime(r.ventes[m.code].quantite * m.heuresMachineParUnite),
+    heures: arrondi2(r.ventes[m.code].quantite * m.heuresMachineParUnite),
   }));
   // Les heures au-delà de l'activité normale : celles que la production demandait, celles perdues.
-  const auDelaDeLaNormale = auCentime(heuresReelles - k.activiteNormale);
-  const perdues = auCentime(heuresReelles - heuresPreetablies);
-  const utiles = auCentime(heuresPreetablies - k.activiteNormale);
+  const auDelaDeLaNormale = arrondi2(heuresReelles - k.activiteNormale);
+  const perdues = arrondi2(heuresReelles - heuresPreetablies);
+  const utiles = arrondi2(heuresPreetablies - k.activiteNormale);
   // L'interdépendance : la part fixe d'une heure perdue revient en écart sur activité.
-  const activiteDesPerdues = auCentime(-perdues * partFixe);
-  const activiteSansLesPerdues = auCentime(-utiles * partFixe);
-  const coutNetDesPerdues = auCentime(e.centre.rendement + activiteDesPerdues);
+  const activiteDesPerdues = arrondi2(-perdues * partFixe);
+  const activiteSansLesPerdues = arrondi2(-utiles * partFixe);
+  const coutNetDesPerdues = arrondi2(e.centre.rendement + activiteDesPerdues);
   // Le cas : le centre n'aurait tourné que les heures de la production, avec la même dépense au-delà du budget flexible.
-  const coutSansLesPerdues = auCentime(k.chargesFixes + k.coutVariableParHeure * heuresPreetablies + e.centre.budget);
-  const depassementSansLesPerdues = auCentime(coutSansLesPerdues - e.preetabliDuReel.centre);
+  const coutSansLesPerdues = arrondi2(k.chargesFixes + k.coutVariableParHeure * heuresPreetablies + e.centre.budget);
+  const depassementSansLesPerdues = arrondi2(coutSansLesPerdues - e.preetabliDuReel.centre);
   // La variante en sous-activité.
   const fv = ficheEnSousActivite(f);
   const ev = controleBudgetaire(fv);
@@ -132,7 +135,7 @@ export function centreDeMontage(c: Pick<Cas, "code">) {
     heuresPreetablies: ev.preetabliDuReel.heuresMachine,
     cout: fv.realise.centre.cout,
     budgetFlexible: ev.centre.budgetFlexible,
-    preetabliDeLActivite: auCentime(cHm * fv.realise.centre.heuresMachine),
+    preetabliDeLActivite: arrondi2(cHm * fv.realise.centre.heuresMachine),
     preetabliDeLaProduction: ev.preetabliDuReel.centre,
     budget: ev.centre.budget,
     activite: ev.centre.activite,
@@ -140,12 +143,12 @@ export function centreDeMontage(c: Pick<Cas, "code">) {
     global: ev.centre.global,
     coefficient: ev.centre.coefficient,
     fixesImputes: ev.centre.fixesImputes,
-    sousActivite: auCentime(k.chargesFixes - ev.centre.fixesImputes),
+    sousActivite: arrondi2(k.chargesFixes - ev.centre.fixesImputes),
   };
   // Le calcul à rebours : activité réelle = activité normale − écart sur activité ÷ part fixe d'une heure.
-  const activiteARebours = auCentime(k.activiteNormale - ECART_SUR_ACTIVITE_A_REBOURS / partFixe);
-  const budgetFlexibleARebours = auCentime(k.chargesFixes + k.coutVariableParHeure * activiteARebours);
-  const coutReelARebours = auCentime(budgetFlexibleARebours + ECART_SUR_BUDGET_A_REBOURS);
+  const activiteARebours = arrondi2(k.activiteNormale - ECART_SUR_ACTIVITE_A_REBOURS / partFixe);
+  const budgetFlexibleARebours = arrondi2(k.chargesFixes + k.coutVariableParHeure * activiteARebours);
+  const coutReelARebours = arrondi2(budgetFlexibleARebours + ECART_SUR_BUDGET_A_REBOURS);
   // Les curseurs : le plus d'heures que le centre pouvait tourner sans dépasser le coût préétabli de la
   // production réelle, en tenant son budget flexible, puis avec sa dépense au-delà de ce budget.
   const heuresSansDepasser = Math.floor((e.preetabliDuReel.centre - k.chargesFixes) / k.coutVariableParHeure + 1e-9);
@@ -161,12 +164,12 @@ export function centreDeMontage(c: Pick<Cas, "code">) {
     heuresPreetablies,
     parModele,
     coutReel: r.centre.cout,
-    coutReelDeLHeure: auCentime(r.centre.cout / heuresReelles),
+    coutReelDeLHeure: arrondi2(r.centre.cout / heuresReelles),
     budgetInitial: e.budgetStandard.centre,
-    ecartAuBudgetInitial: auCentime(r.centre.cout - e.budgetStandard.centre),
+    ecartAuBudgetInitial: arrondi2(r.centre.cout - e.budgetStandard.centre),
     preetabliDeLaProduction: e.preetabliDuReel.centre,
     budgetFlexible: e.centre.budgetFlexible,
-    preetabliDeLActivite: auCentime(cHm * heuresReelles),
+    preetabliDeLActivite: arrondi2(cHm * heuresReelles),
     global: e.centre.global,
     budget: e.centre.budget,
     activite: e.centre.activite,
@@ -174,7 +177,7 @@ export function centreDeMontage(c: Pick<Cas, "code">) {
     coefficient: e.centre.coefficient,
     fixesImputes: e.centre.fixesImputes,
     /** Positif : un boni de suractivité ; négatif : un coût de la sous-activité. */
-    boni: auCentime(e.centre.fixesImputes - k.chargesFixes),
+    boni: arrondi2(e.centre.fixesImputes - k.chargesFixes),
     auDelaDeLaNormale,
     perdues,
     utiles,
@@ -194,11 +197,11 @@ export type CentreDeMontage = ReturnType<typeof centreDeMontage>;
 
 /** Les écarts du centre pour des heures-machine et un coût réel quelconques, la production restant la réelle. */
 export function laboratoireDuCentre(x: CentreDeMontage, heures: number, cout: number) {
-  const budgetFlexible = auCentime(x.k.chargesFixes + x.k.coutVariableParHeure * heures);
-  const budget = auCentime(cout - budgetFlexible);
-  const activite = auCentime(budgetFlexible - x.cHm * heures);
-  const rendement = auCentime((heures - x.heuresPreetablies) * x.cHm);
-  return { budgetFlexible, budget, activite, rendement, global: auCentime(budget + activite + rendement) };
+  const budgetFlexible = arrondi2(x.k.chargesFixes + x.k.coutVariableParHeure * heures);
+  const budget = arrondi2(cout - budgetFlexible);
+  const activite = arrondi2(budgetFlexible - x.cHm * heures);
+  const rendement = arrondi2((heures - x.heuresPreetablies) * x.cHm);
+  return { budgetFlexible, budget, activite, rendement, global: arrondi2(budget + activite + rendement) };
 }
 
 /** Le centre au budget et au réel, et ce que demande une enceinte : le document de départ. */
@@ -325,11 +328,13 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
         return [
           ...x.parModele.map((m) => ({
             libelle: `Heures-machine préétablies des ${m.nom}`,
+            nature: "grandeur",
             attendu: m.heures,
             calcul: `${qte(m.quantite)} × ${qte(m.parUnite)} = ${qte(m.heures)}`,
           })),
           {
             libelle: "Activité préétablie de la production réelle",
+            nature: "grandeur",
             attendu: x.heuresPreetablies,
             calcul: `${x.parModele.map((m) => qte(m.heures)).join(" + ")} = ${qte(x.heuresPreetablies)}`,
           },
@@ -467,13 +472,13 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
       montrer: "Montrer le croisement",
       lecture: (c, h) => {
         const x = centreDeMontage(c);
-        const impute = auCentime(x.cHm * h);
-        const flexible = auCentime(x.k.chargesFixes + x.k.coutVariableParHeure * h);
+        const impute = arrondi2(x.cHm * h);
+        const flexible = arrondi2(x.k.chargesFixes + x.k.coutVariableParHeure * h);
         return [
           { libelle: "Coût imputé (coût préétabli de l'activité)", montant: impute },
           { libelle: "Budget flexible de ces heures", montant: flexible },
-          { libelle: "Charges fixes imputées", montant: auCentime((x.k.chargesFixes * h) / x.k.activiteNormale) },
-          { libelle: "Écart sur activité", montant: auCentime(flexible - impute), fort: true },
+          { libelle: "Charges fixes imputées", montant: arrondi2((x.k.chargesFixes * h) / x.k.activiteNormale) },
+          { libelle: "Écart sur activité", montant: arrondi2(flexible - impute), fort: true },
         ];
       },
       droites: (c) => {
@@ -535,7 +540,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
       champs: (c) => {
         const x = centreDeMontage(c);
         return [
-          { libelle: "Coefficient d'imputation rationnelle", attendu: x.coefficient, calcul: `${qte(x.heuresReelles)} ÷ ${qte(x.k.activiteNormale)} = ${qte(x.coefficient)}` },
+          { libelle: "Coefficient d'imputation rationnelle", nature: "coefficient", attendu: x.coefficient, calcul: `${qte(x.heuresReelles)} ÷ ${qte(x.k.activiteNormale)} = ${qte(x.coefficient)}` },
           { libelle: "Charges fixes imputées", attendu: x.fixesImputes, calcul: `${eur(x.k.chargesFixes)} × ${qte(x.coefficient)} = ${eur(x.fixesImputes)}` },
           { libelle: "Différence d'imputation", attendu: x.boni, calcul: `${eur(x.fixesImputes)} − ${eur(x.k.chargesFixes)} = ${eur(x.boni)}` },
         ];
@@ -604,13 +609,13 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
       montrer: "Montrer la limite",
       lecture: (c, h) => {
         const x = centreDeMontage(c);
-        const activite = auCentime(x.k.chargesFixes + x.k.coutVariableParHeure * h - x.cHm * h);
-        const rendement = auCentime((h - x.heuresPreetablies) * x.cHm);
+        const activite = arrondi2(x.k.chargesFixes + x.k.coutVariableParHeure * h - x.cHm * h);
+        const rendement = arrondi2((h - x.heuresPreetablies) * x.cHm);
         return [
-          { libelle: "Budget flexible de ces heures", montant: auCentime(x.k.chargesFixes + x.k.coutVariableParHeure * h) },
+          { libelle: "Budget flexible de ces heures", montant: arrondi2(x.k.chargesFixes + x.k.coutVariableParHeure * h) },
           { libelle: "Écart sur activité", montant: activite },
           { libelle: "Écart sur rendement", montant: rendement },
-          { libelle: "Écart global, sans écart sur budget", montant: auCentime(activite + rendement), fort: true },
+          { libelle: "Écart global, sans écart sur budget", montant: arrondi2(activite + rendement), fort: true },
         ];
       },
       droites: (c) => {
@@ -679,7 +684,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
       },
       options: (c) => {
         const x = centreDeMontage(c);
-        const somme = auCentime(x.rendement + Math.abs(x.activiteDesPerdues));
+        const somme = arrondi2(x.rendement + Math.abs(x.activiteDesPerdues));
         return [
           {
             texte: `${eur(x.coutNetDesPerdues)} : leur seul coût variable`,
@@ -748,7 +753,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
       },
       defi: (c) => {
         const x = centreDeMontage(c);
-        const solution = { heures: x.heuresPreetablies, cout: auCentime(x.k.chargesFixes + x.k.coutVariableParHeure * x.heuresPreetablies) };
+        const solution = { heures: x.heuresPreetablies, cout: arrondi2(x.k.chargesFixes + x.k.coutVariableParHeure * x.heuresPreetablies) };
         return {
           consigne: "Annulez à la fois l'écart sur rendement et l'écart sur budget.",
           atteint: (p) => {
@@ -817,7 +822,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
         const v = x.variante;
         return [
           `Les trois écarts font l'écart global de la variante : ${eur(v.budget)} + ${entre(v.activite)} + ${eur(v.rendement)} = ${eur(v.global)}, soit ${eur(v.cout)} − ${eur(v.preetabliDeLaProduction)}.`,
-          `Sous l'activité normale, l'écart sur activité devient ${sens(v.activite)} : les ${qte(auCentime(x.k.activiteNormale - v.heuresReelles))} heures-machine non tournées laissent chacune ${eur(x.partFixe)} de charges fixes sans production pour les porter. En imputation rationnelle, le coefficient est de ${qte(v.coefficient)}, les fixes imputés de ${eur(v.fixesImputes)} : un coût de la sous-activité de ${eur(v.sousActivite)}, qui ne charge pas le coût des enceintes mais le résultat.`,
+          `Sous l'activité normale, l'écart sur activité devient ${sens(v.activite)} : les ${qte(arrondi2(x.k.activiteNormale - v.heuresReelles))} heures-machine non tournées laissent chacune ${eur(x.partFixe)} de charges fixes sans production pour les porter. En imputation rationnelle, le coefficient est de ${qte(v.coefficient)}, les fixes imputés de ${eur(v.fixesImputes)} : un coût de la sous-activité de ${eur(v.sousActivite)}, qui ne charge pas le coût des enceintes mais le résultat.`,
         ];
       },
     },
@@ -835,6 +840,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
         return [
           {
             libelle: "Activité réelle, en heures-machine",
+            nature: "grandeur",
             attendu: x.activiteARebours,
             calcul: `L'écart sur activité vaut (activité normale − activité réelle) × ${eur(x.partFixe)} : ${qte(k.activiteNormale)} − ${entre(ECART_SUR_ACTIVITE_A_REBOURS)} ÷ ${eur(x.partFixe)} = ${qte(x.activiteARebours)}`,
           },

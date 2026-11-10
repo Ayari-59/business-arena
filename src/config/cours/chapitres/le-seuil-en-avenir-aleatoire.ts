@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { T_DE_LA_TABLE, arrondi, lectureDeLaTable, quantileNormal } from "../monde/loi-normale";
 import { GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
@@ -53,6 +53,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · expert : l-ecart-type-a-rebours, le-trimestre et lire-le-trimestre (la somme de mois
  *     indépendants), d-ou-vient-l-ecart-type (l'écart-type d'une fourchette, à rebours), le-mois-redoute
  *     (le résultat dépassé 95 fois sur 100), les-limites ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les variables centrées réduites, les t de la table et les
+ * probabilités sont des coefficients ; une probabilité lue à la table se donne au dix-millième, à
+ * un dix-millième près (au deux-millième, avant) ; les écarts-types et les résultats redoutés
+ * attendent le centime (à 1, 5 ou 20 € près, avant), l'espérance et l'écart-type des ventes sont
+ * des grandeurs au centième.
  */
 
 /** Le seuil probabilisé se calcule sur le mois de janvier de NOVA, la fiche de gestion du monde du cours. */
@@ -76,16 +83,16 @@ export const LEVIERS_DU_RISQUE = {
   ecartType: { min: 50, max: 250, pas: 5 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Une probabilité, à quatre décimales, comme la table. */
 const pr = (p: number) => (p + 0).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 /** Une variable centrée réduite, à deux décimales. */
 const tt = (t: number) => (t + 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 3 }).replace(/^-/, "−");
-const pct = (p: number, d = 1) => `${qte(p * 100, d)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const pct = (p: number) => pourcent(p * 100);
+const auCentime = arrondi2;
 /** La probabilité saisie : l'écart d'une lecture de table à l'autre (t arrondi ou interpolé). */
-const TOLERANCE_D_UNE_PROBABILITE = 0.002;
+/** Une probabilité lue à la table se donne au dix-millième, comme la table (au deux-millième près, avant). */
+const TOLERANCE_D_UNE_PROBABILITE = 0.0001;
 
 /** La fiche de gestion du cours. */
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeGestion => GESTION_DU_COURS[c.code]!;
@@ -253,15 +260,17 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
       champs: (c) => {
         const { d, bas, haut, sousBas, entre } = aleatoireDuChapitre(c);
         return [
-          { libelle: `Variable centrée réduite de ${qte(bas)} enceintes`, attendu: -1, calcul: `(${qte(bas)} − ${qte(d.moyenne)}) ÷ ${qte(d.ecartType)} = ${tt(-1)}` },
+          { libelle: `Variable centrée réduite de ${qte(bas)} enceintes`, nature: "coefficient", attendu: -1, calcul: `(${qte(bas)} − ${qte(d.moyenne)}) ÷ ${qte(d.ecartType)} = ${tt(-1)}` },
           {
             libelle: `P(X < ${qte(bas)})`,
+            nature: "coefficient",
             attendu: sousBas,
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `Π(${tt(-1)}) = 1 − Π(1,00) = 1 − ${pr(lectureDeLaTable(1))} = ${pr(sousBas)}`,
           },
           {
             libelle: `P(${qte(bas)} < X < ${qte(haut)})`,
+            nature: "coefficient",
             attendu: entre,
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `Π(1,00) − Π(${tt(-1)}) = ${pr(lectureDeLaTable(1))} − ${pr(sousBas)} = ${pr(entre)}`,
@@ -339,20 +348,21 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
       champs: (c) => {
         const { d, x } = aleatoireDuChapitre(c);
         return [
-          { libelle: "Variable centrée réduite du seuil", attendu: x.tLu, tolerance: 0.01, calcul: `(${qte(x.seuil!)} − ${qte(d.moyenne)}) ÷ ${qte(d.ecartType)} = ${tt(x.tLu)}` },
+          { libelle: "Variable centrée réduite du seuil", nature: "coefficient", attendu: x.tLu, tolerance: 0.01, calcul: `(${qte(x.seuil!)} − ${qte(d.moyenne)}) ÷ ${qte(d.ecartType)} = ${tt(x.tLu)}` },
           {
             libelle: "Probabilité d'atteindre le seuil",
+            nature: "coefficient",
             attendu: x.profitLu,
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `P(X ≥ ${qte(x.seuil!)}) = 1 − Π(${tt(x.tLu)}) = Π(${tt(-x.tLu)}) = ${pr(x.profitLu)}`,
           },
-          { libelle: "Probabilité d'une perte", attendu: x.perteLue, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `1 − ${pr(x.profitLu)} = ${pr(x.perteLue)}` },
+          { libelle: "Probabilité d'une perte", nature: "coefficient", attendu: x.perteLue, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `1 − ${pr(x.profitLu)} = ${pr(x.perteLue)}` },
         ];
       },
       explication: (c) => {
         const { f, x } = aleatoireDuChapitre(c);
         return [
-          `${f.entreprise} a ${pct(x.profitLu)} de chances d'atteindre son seuil en janvier, et ${pct(x.perteLue)} de risque de perdre de l'argent : à peu près 1 janvier sur ${qte(Math.round(1 / x.perteLue), 0)}. En avenir certain, l'indice de sécurité disait seulement que les ventes dépassaient le seuil.`,
+          `${f.entreprise} a ${pct(x.profitLu)} de chances d'atteindre son seuil en janvier, et ${pct(x.perteLue)} de risque de perdre de l'argent : à peu près 1 janvier sur ${qte(Math.round(1 / x.perteLue))}. En avenir certain, l'indice de sécurité disait seulement que les ventes dépassaient le seuil.`,
           "La probabilité ne dit pas si le risque est acceptable : c'est au dirigeant d'en juger, selon ce qu'une perte lui coûterait.",
         ];
       },
@@ -375,6 +385,7 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
           { libelle: "Écart-type du résultat", attendu: x.resultat.ecartType, calcul: `σ(R) = ${eur(x.marge)} × ${qte(d.ecartType)} = ${eur(x.resultat.ecartType)} ; la constante ne disperse rien` },
           {
             libelle: "Probabilité d'une perte, P(R < 0)",
+            nature: "coefficient",
             attendu: lectureDeLaTable(tR),
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `t = (0 − ${eur(x.resultat.esperance)}) ÷ ${eur(x.resultat.ecartType)} = ${tt(tR)} ; Π(${tt(tR)}) = ${pr(lectureDeLaTable(tR))}`,
@@ -405,6 +416,7 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
           { libelle: "Écart-type du chiffre d'affaires", attendu: x.chiffreDAffaires.ecartType, calcul: `${eur(x.prix)} × ${qte(d.ecartType)} = ${eur(x.chiffreDAffaires.ecartType)}` },
           {
             libelle: `P(CA < ${eur(CHIFFRE_D_AFFAIRES_REDOUTE)})`,
+            nature: "coefficient",
             attendu: caLu,
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `t = (${eur(CHIFFRE_D_AFFAIRES_REDOUTE)} − ${eur(x.chiffreDAffaires.esperance)}) ÷ ${eur(x.chiffreDAffaires.ecartType)} = ${tt(arrondi(tCa, 2))} ; Π(${tt(arrondi(tCa, 2))}) = ${pr(caLu)}`,
@@ -433,18 +445,19 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
         return [
           {
             libelle: "Variable centrée réduite de l'objectif",
+            nature: "coefficient",
             attendu: t,
             tolerance: 0.01,
             calcul: `(${eur(OBJECTIF_DU_DIRIGEANT)} − ${eur(x.resultat.esperance)}) ÷ ${eur(x.resultat.ecartType)} = ${tt(t)}`,
           },
-          { libelle: "Probabilité d'atteindre l'objectif", attendu: objectifLu, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `P(R ≥ ${eur(OBJECTIF_DU_DIRIGEANT)}) = 1 − Π(${tt(t)}) = 1 − ${pr(lectureDeLaTable(t))} = ${pr(objectifLu)}` },
+          { libelle: "Probabilité d'atteindre l'objectif", nature: "coefficient", attendu: objectifLu, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `P(R ≥ ${eur(OBJECTIF_DU_DIRIGEANT)}) = 1 − Π(${tt(t)}) = 1 − ${pr(lectureDeLaTable(t))} = ${pr(objectifLu)}` },
         ];
       },
       explication: (c) => {
         const { objectifLu, x } = aleatoireDuChapitre(c);
         const ventes = auCentime((OBJECTIF_DU_DIRIGEANT + x.chargesFixes) / x.marge);
         return [
-          `À peu près 1 janvier sur ${qte(Math.round(1 / objectifLu), 0)} atteint l'objectif : ${pct(objectifLu)}. Il faudrait vendre ${qte(ventes)} enceintes, loin au-dessus de l'espérance. Un objectif se fixe aussi avec sa probabilité : celui-ci est un pari, pas un budget.`,
+          `À peu près 1 janvier sur ${qte(Math.round(1 / objectifLu))} atteint l'objectif : ${pct(objectifLu)}. Il faudrait vendre ${qte(ventes)} enceintes, loin au-dessus de l'espérance. Un objectif se fixe aussi avec sa probabilité : celui-ci est un pari, pas un budget.`,
         ];
       },
     },
@@ -479,7 +492,7 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
       },
       grandeur: () => ({ libelle: "Écart-type des ventes du mois", unite: "enceintes" }),
       sens: "plus-grande",
-      cible: (c) => ({ attendu: aleatoireDuChapitre(c).ecartTypeMax, min: ECART_TYPE_DU_CURSEUR.min, max: ECART_TYPE_DU_CURSEUR.max }),
+      cible: (c) => ({ nature: "grandeur", attendu: aleatoireDuChapitre(c).ecartTypeMax, min: ECART_TYPE_DU_CURSEUR.min, max: ECART_TYPE_DU_CURSEUR.max }),
       zones: ["En profit 9 mois sur 10 au moins", "En perte plus d'1 mois sur 10"],
       rates: () => ({
         dessous: "Les ventes peuvent être plus dispersées sans dépasser 1 mois de perte sur 10 : cherchez le plus grand écart-type.",
@@ -523,17 +536,16 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
       champs: (c) => {
         const x = aleatoireDuChapitre(c);
         return [
-          { libelle: `t tel que Π(t) = ${qte(CONFIANCE_DU_DIRIGEANT)}`, attendu: x.T.unCoteA90, tolerance: 0.01, calcul: `la table donne Π(1,28) = ${pr(lectureDeLaTable(1.28))} et Π(1,29) = ${pr(lectureDeLaTable(1.29))} : t ≈ ${tt(x.T.unCoteA90)}` },
+          { libelle: `t tel que Π(t) = ${qte(CONFIANCE_DU_DIRIGEANT)}`, nature: "coefficient", attendu: x.T.unCoteA90, tolerance: 0.01, calcul: `la table donne Π(1,28) = ${pr(lectureDeLaTable(1.28))} et Π(1,29) = ${pr(lectureDeLaTable(1.29))} : t ≈ ${tt(x.T.unCoteA90)}` },
           {
             libelle: "Écart-type du résultat le plus grand",
             attendu: x.ecartTypeDuResultatMax,
-            tolerance: 5,
             calcul: `E(R) − ${tt(x.T.unCoteA90)} × σ(R) ≥ 0 : σ(R) ≤ ${eur(x.x.resultat.esperance)} ÷ ${tt(x.T.unCoteA90)} = ${eur(x.ecartTypeDuResultatMax)}`,
           },
           {
             libelle: "Écart-type des ventes le plus grand, en enceintes",
+            nature: "grandeur",
             attendu: x.ecartTypeMaxALaTable,
-            tolerance: 0.3,
             calcul: `σ(X) = σ(R) ÷ ${eur(x.x.marge)} = ${eur(x.ecartTypeDuResultatMax)} ÷ ${eur(x.x.marge)} = ${qte(x.ecartTypeMaxALaTable)}`,
           },
         ];
@@ -541,7 +553,7 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
       explication: (c) => {
         const x = aleatoireDuChapitre(c);
         return [
-          `Il faudrait diviser la dispersion des ventes par ${qte(x.d.ecartType / x.ecartTypeMaxALaTable, 1)} pour tenir 9 mois sur 10. Ou bien éloigner le seuil de l'espérance : la marge de sécurité, ${qte(auCentime(x.d.moyenne - x.x.seuil!))} enceintes, ne vaut que ${qte(arrondi((x.d.moyenne - x.x.seuil!) / x.d.ecartType, 2))} écart-type. Le laboratoire fait jouer les deux.`,
+          `Il faudrait diviser la dispersion des ventes par ${qte(x.d.ecartType / x.ecartTypeMaxALaTable)} pour tenir 9 mois sur 10. Ou bien éloigner le seuil de l'espérance : la marge de sécurité, ${qte(auCentime(x.d.moyenne - x.x.seuil!))} enceintes, ne vaut que ${qte(arrondi((x.d.moyenne - x.x.seuil!) / x.d.ecartType, 2))} écart-type. Le laboratoire fait jouer les deux.`,
         ];
       },
     },
@@ -591,11 +603,11 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
       defi: (c) => {
         const x = aleatoireDuChapitre(c);
         return {
-          consigne: `Mettez ${x.f.entreprise} en profit au moins 9 mois sur 10 : une probabilité d'atteindre le seuil d'au moins ${pct(CONFIANCE_DU_DIRIGEANT, 0)}.`,
+          consigne: `Mettez ${x.f.entreprise} en profit au moins 9 mois sur 10 : une probabilité d'atteindre le seuil d'au moins ${pct(CONFIANCE_DU_DIRIGEANT)}.`,
           atteint: (p) => defiDuRisque(x.f, p),
           indice: (p) => {
             const l = laboratoireDuRisque(x.f, p);
-            return `La probabilité d'atteindre le seuil vaut ${pct(l.probabiliteDeProfit, 2)}. Éloignez le seuil de l'espérance des ventes, ou resserrez leur dispersion.`;
+            return `La probabilité d'atteindre le seuil vaut ${pct(l.probabiliteDeProfit)}. Éloignez le seuil de l'espérance des ventes, ou resserrez leur dispersion.`;
           },
           solution: { ...x.depart, chargesFixes: x.seul.chargesFixes },
         };
@@ -605,7 +617,7 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
         const l = laboratoireDuRisque(x.f, p);
         const s = x.seul;
         return [
-          `Défi relevé : ${pct(l.probabiliteDeProfit, 2)} de chances d'atteindre le seuil, pour un résultat attendu de ${eur(l.resultat.esperance)} (${eur(x.x.resultat.esperance)} au départ).`,
+          `Défi relevé : ${pct(l.probabiliteDeProfit)} de chances d'atteindre le seuil, pour un résultat attendu de ${eur(l.resultat.esperance)} (${eur(x.x.resultat.esperance)} au départ).`,
           `Chaque levier, seul, y arrivait : un prix d'au moins ${eur(s.prix)}, un coût variable d'au plus ${eur(s.coutVariable)}, des charges fixes d'au plus ${eur(s.chargesFixes)}, des ventes attendues d'au moins ${qte(s.moyenne)} enceintes, ou un écart-type d'au plus ${qte(s.ecartType)}.`,
           "Les quatre premiers éloignent le seuil de l'espérance des ventes ; le dernier resserre la loi autour d'elle. La probabilité dépend du rapport des deux : la marge de sécurité comptée en écarts-types.",
         ];
@@ -625,9 +637,10 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
         const r = x.x.resultat;
         return [
           { libelle: "Espérance du résultat du trimestre", attendu: q.esperance, calcul: `${qte(MOIS_DU_TRIMESTRE)} × ${eur(r.esperance)} = ${eur(q.esperance)}` },
-          { libelle: "Écart-type du résultat du trimestre", attendu: q.ecartType, tolerance: 1, calcul: `√(${qte(MOIS_DU_TRIMESTRE)} × ${eur(r.ecartType)}²) = ${eur(r.ecartType)} × √${qte(MOIS_DU_TRIMESTRE)} = ${eur(q.ecartType)}` },
+          { libelle: "Écart-type du résultat du trimestre", attendu: q.ecartType, calcul: `√(${qte(MOIS_DU_TRIMESTRE)} × ${eur(r.ecartType)}²) = ${eur(r.ecartType)} × √${qte(MOIS_DU_TRIMESTRE)} = ${eur(q.ecartType)}` },
           {
             libelle: "Probabilité d'une perte sur le trimestre",
+            nature: "coefficient",
             attendu: q.perteLue,
             tolerance: TOLERANCE_D_UNE_PROBABILITE,
             calcul: `t = (0 − ${eur(q.esperance)}) ÷ ${eur(q.ecartType)} = ${tt(q.tLu)} ; Π(${tt(q.tLu)}) = 1 − Π(${tt(-q.tLu)}) = ${pr(q.perteLue)}`,
@@ -675,17 +688,17 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
       titre: "L'écart-type d'une fourchette, à rebours",
       question: (c) => {
         const x = aleatoireDuChapitre(c);
-        return `Le directeur commercial n'a pas donné d'écart-type : il a dit « 95 fois sur 100, les ventes de janvier tombent entre ${qte(x.fourchette.bas)} et ${qte(x.fourchette.haut)} enceintes, intervalle centré sur la vente moyenne ». Sans formule : retrouvez l'espérance, le t de la table d'un intervalle centré à ${pct(CONFIANCE_DE_LA_FOURCHETTE, 0)}, puis l'écart-type.`;
+        return `Le directeur commercial n'a pas donné d'écart-type : il a dit « 95 fois sur 100, les ventes de janvier tombent entre ${qte(x.fourchette.bas)} et ${qte(x.fourchette.haut)} enceintes, intervalle centré sur la vente moyenne ». Sans formule : retrouvez l'espérance, le t de la table d'un intervalle centré à ${pct(CONFIANCE_DE_LA_FOURCHETTE)}, puis l'écart-type.`;
       },
       champs: (c) => {
         const x = aleatoireDuChapitre(c);
         return [
-          { libelle: "Espérance des ventes", attendu: x.retrouve.moyenne, calcul: `le centre de l'intervalle : (${qte(x.fourchette.bas)} + ${qte(x.fourchette.haut)}) ÷ 2 = ${qte(x.retrouve.moyenne)}` },
-          { libelle: "t de la table", attendu: x.T.centreA95, tolerance: 0.01, calcul: `P(−t < T < t) = 2Π(t) − 1 = ${qte(CONFIANCE_DE_LA_FOURCHETTE)}, Π(t) = ${pr((1 + CONFIANCE_DE_LA_FOURCHETTE) / 2)} : t = ${tt(x.T.centreA95)}` },
+          { libelle: "Espérance des ventes", nature: "grandeur", attendu: x.retrouve.moyenne, calcul: `le centre de l'intervalle : (${qte(x.fourchette.bas)} + ${qte(x.fourchette.haut)}) ÷ 2 = ${qte(x.retrouve.moyenne)}` },
+          { libelle: "t de la table", nature: "coefficient", attendu: x.T.centreA95, tolerance: 0.01, calcul: `P(−t < T < t) = 2Π(t) − 1 = ${qte(CONFIANCE_DE_LA_FOURCHETTE)}, Π(t) = ${pr((1 + CONFIANCE_DE_LA_FOURCHETTE) / 2)} : t = ${tt(x.T.centreA95)}` },
           {
             libelle: "Écart-type des ventes",
+            nature: "grandeur",
             attendu: x.retrouve.ecartType,
-            tolerance: 0.5,
             calcul: `${qte(x.retrouve.moyenne)} + ${tt(x.T.centreA95)} × σ = ${qte(x.fourchette.haut)} : σ = ${qte(auCentime(x.fourchette.haut - x.retrouve.moyenne))} ÷ ${tt(x.T.centreA95)} = ${qte(x.retrouve.ecartType)}`,
           },
         ];
@@ -708,6 +721,7 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
         return [
           {
             libelle: `t tel que Π(t) = ${qte(CONFIANCE_DU_MOIS_REDOUTE)}`,
+            nature: "coefficient",
             attendu: x.T.unCoteA95,
             tolerance: 0.006,
             calcul: `Π(1,64) = ${pr(lectureDeLaTable(1.64))} et Π(1,65) = ${pr(lectureDeLaTable(1.65))} : ${qte(CONFIANCE_DU_MOIS_REDOUTE)} est au milieu, t = ${tt(x.T.unCoteA95)}`,
@@ -715,7 +729,6 @@ export const LE_SEUIL_EN_AVENIR_ALEATOIRE: Chapitre = {
           {
             libelle: "Résultat dépassé 95 fois sur 100",
             attendu: x.redoute,
-            tolerance: 20,
             calcul: `P(R > r) = ${qte(CONFIANCE_DU_MOIS_REDOUTE)} : (r − ${eur(x.x.resultat.esperance)}) ÷ ${eur(x.x.resultat.ecartType)} = −${tt(x.T.unCoteA95)}, r = ${eur(x.x.resultat.esperance)} − ${tt(x.T.unCoteA95)} × ${eur(x.x.resultat.ecartType)} = ${eur(x.redoute)}`,
           },
         ];

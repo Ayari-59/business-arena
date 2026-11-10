@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_COUT_COMPLET, coutCompletDeJanvier } from "../../chapitres/cout-complet";
 import type { CentrePrincipal } from "../../monde/nova-gestion";
@@ -20,6 +20,10 @@ import type { Situation } from "../types";
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : les
  * centres d'analyse, après répartition, sont ceux de `coutCompletDeJanvier` ; leurs charges ne
  * bougent pas avec les ventes.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les coûts de la chaîne attendent le centime (à 5 centimes
+ * près, avant) ; les unités vendues sont une quantité.
  */
 
 /** Les ventes en plus qu'apporterait le client : 20 % des enceintes de janvier, chaque mois (hypothèse du cours). */
@@ -31,9 +35,7 @@ export const PRIX_DU_NOUVEAU_CLIENT = 55;
 /** Les bornes du curseur du volume, en enceintes par mois. */
 export const VOLUME_DU_CURSEUR = { min: 1_500, max: 2_200 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 const PRINCIPAUX: readonly CentrePrincipal[] = ["approvisionnement", "production", "distribution"];
 
@@ -45,25 +47,25 @@ export function nouveauClientRegulier(c: Pick<Cas, "code">) {
   const { m, k, r, cles, coutVariableUnitaire, coutFige } = x;
   const duClient = Math.round(m.quantite * HAUSSE_DES_VENTES);
   const quantite = m.quantite + duClient;
-  const achats = auCentime(quantite * m.coutVariable.composants);
-  const autres = auCentime(quantite * m.coutVariable.autres);
-  const chiffreDAffaires = auCentime(k.chiffreDAffaires + duClient * PRIX_DU_NOUVEAU_CLIENT);
+  const achats = arrondi2(quantite * m.coutVariable.composants);
+  const autres = arrondi2(quantite * m.coutVariable.autres);
+  const chiffreDAffaires = arrondi2(k.chiffreDAffaires + duClient * PRIX_DU_NOUVEAU_CLIENT);
   // L'activité de chaque centre principal dans son unité d'œuvre, au nouveau volume.
   const valeur = { achats, quantite, chiffreDAffaires };
   const activite = Object.fromEntries(PRINCIPAUX.map((p) => [p, valeur[cles.unitesDOeuvre[p].nature] / cles.unitesDOeuvre[p].assiette])) as Record<CentrePrincipal, number>;
-  const uo = Object.fromEntries(PRINCIPAUX.map((p) => [p, auCentime(r.principaux[p] / activite[p])])) as Record<CentrePrincipal, number>;
-  const coutDAchat = auCentime(achats + r.principaux.approvisionnement);
-  const coutDeProduction = auCentime(coutDAchat + autres + r.principaux.production);
-  const coutDeRevient = auCentime(coutDeProduction + r.principaux.distribution);
-  const unitaire = auCentime(coutDeRevient / quantite);
-  const resultat = auCentime(chiffreDAffaires - coutDeRevient);
-  const apport = auCentime(resultat - k.resultat);
+  const uo = Object.fromEntries(PRINCIPAUX.map((p) => [p, arrondi2(r.principaux[p] / activite[p])])) as Record<CentrePrincipal, number>;
+  const coutDAchat = arrondi2(achats + r.principaux.approvisionnement);
+  const coutDeProduction = arrondi2(coutDAchat + autres + r.principaux.production);
+  const coutDeRevient = arrondi2(coutDeProduction + r.principaux.distribution);
+  const unitaire = arrondi2(coutDeRevient / quantite);
+  const resultat = arrondi2(chiffreDAffaires - coutDeRevient);
+  const apport = arrondi2(resultat - k.resultat);
   // L'erreur du directeur : chiffrer le client au coût de revient de janvier.
-  const perteAuCoutFige = auCentime((PRIX_DU_NOUVEAU_CLIENT - coutFige) * duClient);
+  const perteAuCoutFige = arrondi2((PRIX_DU_NOUVEAU_CLIENT - coutFige) * duClient);
   // Le volume à partir duquel le prix du client couvre le coût complet d'une enceinte.
   const volumeQuiCouvre = plafond(r.total / (PRIX_DU_NOUVEAU_CLIENT - coutVariableUnitaire));
   // La condition : si le prix du client gagnait les clients d'aujourd'hui.
-  const siLePrixSEtend = auCentime((m.prix - PRIX_DU_NOUVEAU_CLIENT) * m.quantite);
+  const siLePrixSEtend = arrondi2((m.prix - PRIX_DU_NOUVEAU_CLIENT) * m.quantite);
   const verdict: Verdict = apport > 0 ? "accepter" : "refuser";
   return {
     x,
@@ -144,7 +146,7 @@ export const UN_NOUVEAU_CLIENT_REGULIER: Situation = {
         const { m, r } = n.x;
         const v = n.nouvelle;
         return [
-          { libelle: "Unités vendues avec le nouveau client", attendu: v.quantite, calcul: `${qte(m.quantite)} + ${qte(n.duClient)} = ${qte(v.quantite)}` },
+          { libelle: "Unités vendues avec le nouveau client", nature: "quantite", attendu: v.quantite, calcul: `${qte(m.quantite)} + ${qte(n.duClient)} = ${qte(v.quantite)}` },
           {
             libelle: "Approvisionnement : coût pour 100 € d'achats",
             attendu: v.uo.approvisionnement,
@@ -179,14 +181,13 @@ export const UN_NOUVEAU_CLIENT_REGULIER: Situation = {
         const { m, r } = n.x;
         const v = n.nouvelle;
         return [
-          { libelle: "Coût d'achat", attendu: v.coutDAchat, tolerance: 0.05, calcul: `${qte(v.quantite)} × ${eur(m.coutVariable.composants)} + ${eur(r.principaux.approvisionnement)} = ${eur(v.achats)} + ${eur(r.principaux.approvisionnement)} = ${eur(v.coutDAchat)}` },
+          { libelle: "Coût d'achat", attendu: v.coutDAchat, calcul: `${qte(v.quantite)} × ${eur(m.coutVariable.composants)} + ${eur(r.principaux.approvisionnement)} = ${eur(v.achats)} + ${eur(r.principaux.approvisionnement)} = ${eur(v.coutDAchat)}` },
           {
             libelle: "Coût de production",
             attendu: v.coutDeProduction,
-            tolerance: 0.05,
             calcul: `${eur(v.coutDAchat)} + ${qte(v.quantite)} × ${eur(m.coutVariable.autres)} + ${eur(r.principaux.production)} = ${eur(v.coutDAchat)} + ${eur(v.autres)} + ${eur(r.principaux.production)} = ${eur(v.coutDeProduction)}`,
           },
-          { libelle: "Coût de revient", attendu: v.coutDeRevient, tolerance: 0.05, calcul: `${eur(v.coutDeProduction)} + ${eur(r.principaux.distribution)} = ${eur(v.coutDeRevient)}` },
+          { libelle: "Coût de revient", attendu: v.coutDeRevient, calcul: `${eur(v.coutDeProduction)} + ${eur(r.principaux.distribution)} = ${eur(v.coutDeRevient)}` },
           { libelle: "Coût de revient d'une unité", attendu: v.unitaire, tolerance: 0.01, calcul: `${eur(v.coutDeRevient)} ÷ ${qte(v.quantite)} = ${eur(v.unitaire)}` },
         ];
       },
@@ -220,11 +221,11 @@ export const UN_NOUVEAU_CLIENT_REGULIER: Situation = {
       montrer: "Montrer le croisement",
       lecture: (c, q) => {
         const { f, coutVariableUnitaire, r } = nouveauClientRegulier(c).x;
-        const cout = auCentime(coutVariableUnitaire * q + r.total);
+        const cout = arrondi2(coutVariableUnitaire * q + r.total);
         return [
-          { libelle: `Ces ${f.unites} à ${eur(PRIX_DU_NOUVEAU_CLIENT)}`, montant: auCentime(PRIX_DU_NOUVEAU_CLIENT * q) },
+          { libelle: `Ces ${f.unites} à ${eur(PRIX_DU_NOUVEAU_CLIENT)}`, montant: arrondi2(PRIX_DU_NOUVEAU_CLIENT * q) },
           { libelle: "Coût de revient du mois", montant: cout },
-          { libelle: `Coût complet d'une ${f.unite}`, montant: auCentime(cout / q), fort: true },
+          { libelle: `Coût complet d'une ${f.unite}`, montant: arrondi2(cout / q), fort: true },
         ];
       },
       droites: (c) => {
@@ -284,7 +285,7 @@ export const UN_NOUVEAU_CLIENT_REGULIER: Situation = {
             retour: `Oui. À ${qte(n.nouvelle.quantite)} ${f.unites}, une ${f.unite} ne coûte plus que ${eur(n.nouvelle.unitaire)}, et le résultat passe de ${eur(n.x.k.resultat)} à ${eur(n.resultat)}. À une condition : que ce prix reste celui du client. Accordé aux clients d'aujourd'hui, il coûterait ${eur(n.siLePrixSEtend)} par mois sur leurs ${qte(m.quantite)} ${f.unites}, plus que le client n'apporte.`,
           },
           {
-            texte: `Refuser : à ${eur(PRIX_DU_NOUVEAU_CLIENT)}, chaque ${f.unite} perd ${eur(auCentime(coutFige - PRIX_DU_NOUVEAU_CLIENT))} sur le coût de revient de ${eur(coutFige)}`,
+            texte: `Refuser : à ${eur(PRIX_DU_NOUVEAU_CLIENT)}, chaque ${f.unite} perd ${eur(arrondi2(coutFige - PRIX_DU_NOUVEAU_CLIENT))} sur le coût de revient de ${eur(coutFige)}`,
             juste: false,
             retour: `Non : ${eur(coutFige)} est le coût d'une ${f.unite} à ${qte(m.quantite)} ${f.unites}. Le client ne fait pas dépenser un euro de charges fixes de plus : il ne coûte que ses charges variables, et le coût complet baisse avec lui.`,
           },

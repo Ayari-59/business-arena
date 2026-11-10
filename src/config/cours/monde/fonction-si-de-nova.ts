@@ -53,9 +53,10 @@ export function budgetDuSi() {
 /** Les indicateurs du tableau de bord de mars, au dixième. */
 export function tableauDeBordDeMars() {
   const heures = MARS.jours * 24;
-  const disponibilitePct = Math.round(((heures - MARS.heuresDArret) / heures) * 1_000) / 10;
-  const delaiMoyen = Math.round((MARS.heuresDeResolution / MARS.incidents) * 10) / 10;
-  const partEn4HeuresPct = Math.round((MARS.resolusEnMoinsDe4Heures / MARS.incidents) * 1_000) / 10;
+  // Deux décimales (10 novembre 2026) : les taux et le délai se donnent au centième (au dixième, avant).
+  const disponibilitePct = auCentime(((heures - MARS.heuresDArret) / heures) * 100);
+  const delaiMoyen = auCentime(MARS.heuresDeResolution / MARS.incidents);
+  const partEn4HeuresPct = auCentime((MARS.resolusEnMoinsDe4Heures / MARS.incidents) * 100);
   return { heures, disponibilitePct, delaiMoyen, partEn4HeuresPct };
 }
 

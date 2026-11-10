@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { NOM_DU_RESPONSABLE, syntheseDesEcarts, tableauDesVentes, tableauDuCoutPreetabli, tableauDuTrimestre } from "../../chapitres/analyse-des-ecarts";
 import type { TableauDeDonnees } from "../../types";
@@ -29,11 +29,13 @@ import type { Situation } from "../types";
  * Le jugement tient à ceci : les trois partages proposés retombent tous sur 47 100 €. Seul celui
  * qui juge l'usine au préétabli de la production réelle et le volume à la marge préétablie compte
  * chaque écart une fois, chez celui qui le décide.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures-machine (perdues, réelles) sont des grandeurs au
+ * centième.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 /** Un montant ajouté, entre parenthèses s'il est négatif. */
 const entreParentheses = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const minuscule = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -45,13 +47,13 @@ const LIGNE_NON_CHIFFREE = "Centre de montage : écart sur rendement";
 export function resultatQuiManque(c: Pick<Cas, "code">) {
   const s = syntheseDesEcarts(c);
   const e = s.e;
-  const manque = auCentime(-e.ecartDeResultat);
+  const manque = arrondi2(-e.ecartDeResultat);
   /** Les écarts de l'usine déjà chiffrés dans son compte rendu (réel − prévu, sur une charge). */
   const chiffres = s.lignes.filter((l) => !l.poste.startsWith("Ventes") && l.responsable !== "distribution" && l.poste !== LIGNE_NON_CHIFFREE);
-  const sommeDesChiffres = auCentime(chiffres.reduce((t, l) => t + s.brut(l), 0));
+  const sommeDesChiffres = arrondi2(chiffres.reduce((t, l) => t + s.brut(l), 0));
   /** L'écart sur rendement, à rebours : l'écart global sur coûts moins les écarts déjà chiffrés. */
-  const rendement = auCentime(e.ecartGlobalSurCouts - sommeDesChiffres);
-  const heuresPerdues = auCentime(rendement / s.cHm);
+  const rendement = arrondi2(e.ecartGlobalSurCouts - sommeDesChiffres);
+  const heuresPerdues = arrondi2(rendement / s.cHm);
   return {
     s,
     e,
@@ -60,17 +62,17 @@ export function resultatQuiManque(c: Pick<Cas, "code">) {
     sommeDesChiffres,
     rendement,
     heuresPerdues,
-    heuresReelles: auCentime(e.preetabliDuReel.heuresMachine + heuresPerdues),
+    heuresReelles: arrondi2(e.preetabliDuReel.heuresMachine + heuresPerdues),
     mix: mixDesVentes(c),
     /** La lecture du commercial : le chiffre d'affaires face au budget, l'usine face au budget standard. */
     commercial: {
       ventes: e.ventes.ecartDeChiffreDAffaires,
-      usine: auCentime(-s.depassementDuBudget),
+      usine: arrondi2(-s.depassementDuBudget),
     },
     /** La lecture de l'usine : le coût de ce qui a été vendu en plus passe aux ventes, qui gardent aussi leur écart sur volume. */
     usine: {
-      ventes: auCentime(s.ventes - s.partDuVolume),
-      usine: auCentime(s.production + s.partDuVolume),
+      ventes: arrondi2(s.ventes - s.partDuVolume),
+      usine: arrondi2(s.production + s.partDuVolume),
     },
   };
 }
@@ -86,12 +88,12 @@ export function mixDesVentes(c: Pick<Cas, "code">) {
   const s = syntheseDesEcarts(c);
   const v = s.e.ventes;
   const total = v.qTotaleReelle;
-  const margeAuMix = (salon: number) => auCentime((total - salon) * s.cNomade.marge + salon * s.cSalon.marge);
-  const ecartDeMarge = auCentime(s.cSalon.marge - s.cNomade.marge);
+  const margeAuMix = (salon: number) => arrondi2((total - salon) * s.cNomade.marge + salon * s.cSalon.marge);
+  const ecartDeMarge = arrondi2(s.cSalon.marge - s.cNomade.marge);
   const salonsQuiSuffisent = Math.ceil((v.margePrevue - total * s.cNomade.marge) / ecartDeMarge - 1e-9);
   /** L'écart sur composition, pour un nombre de Salon : chaque modèle face à sa part prévue des ventes réelles. */
   const composition = (salon: number) =>
-    auCentime((total - salon - v.auMixPrevu.nomade) * s.cNomade.marge + (salon - v.auMixPrevu.salon) * s.cSalon.marge);
+    arrondi2((total - salon - v.auMixPrevu.nomade) * s.cNomade.marge + (salon - v.auMixPrevu.salon) * s.cSalon.marge);
   return {
     total,
     margeAuMix,
@@ -222,7 +224,7 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
         return [
           { libelle: "Écart sur quantité globale", montant: s.e.ventes.quantiteGlobale },
           { libelle: "Écart sur composition", montant: composition },
-          { libelle: "Écart sur volume", montant: auCentime(s.e.ventes.quantiteGlobale + composition), fort: true },
+          { libelle: "Écart sur volume", montant: arrondi2(s.e.ventes.quantiteGlobale + composition), fort: true },
         ];
       },
       droites: (c) => {
@@ -240,7 +242,7 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
         const x = resultatQuiManque(c);
         const s = x.s;
         const v = x.e.ventes;
-        const enPlus = auCentime(s.f.realise.ventes.salon.quantite - v.auMixPrevu.salon);
+        const enPlus = arrondi2(s.f.realise.ventes.salon.quantite - v.auMixPrevu.salon);
         return [
           `Chaque ${s.salon.nom} vendue à la place d'une ${s.nomade.nom} apporte ${eur(x.mix.ecartDeMarge)} de marge préétablie. À la composition du budget, ${qte(v.auMixPrevu.salon)} ${s.salon.nom}, l'écart sur volume serait de ${eur(v.quantiteGlobale)} ; les ${qte(enPlus)} ${s.salon.nom} vendues en plus l'ont ramené à ${eur(v.volume)}, et il en aurait fallu ${qte(x.mix.salonsQuiSuffisent)} pour l'annuler.`,
           `Les ${s.salon.nom} coûtent plus cher à fabriquer, mais ce coût est déjà dans leur coût préétabli : au résultat, elles n'ont rien coûté, elles ont sauvé ${eur(v.composition)} de marge. Le reproche de l'usine ne tient pas.`,
@@ -306,11 +308,13 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
           },
           {
             libelle: "Heures-machine perdues",
+            nature: "grandeur",
             attendu: x.heuresPerdues,
             calcul: `${eur(x.rendement)} ÷ ${eur(s.cHm)} = ${qte(x.heuresPerdues)}`,
           },
           {
             libelle: "Heures-machine réelles du centre",
+            nature: "grandeur",
             attendu: x.heuresReelles,
             calcul: `${qte(r.ventes.nomade.quantite)} × ${qte(s.nomade.heuresMachineParUnite)} + ${qte(r.ventes.salon.quantite)} × ${qte(s.salon.heuresMachineParUnite)} = ${qte(x.e.preetabliDuReel.heuresMachine)} préétablies, plus ${qte(x.heuresPerdues)} : ${qte(x.heuresReelles)}`,
           },

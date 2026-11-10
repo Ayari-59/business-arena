@@ -1,3 +1,4 @@
+import { nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_PREVISION } from "../../chapitres/la-prevision-des-ventes";
 import { ELECTRO_COMPOSANTS } from "../../monde/exercice-de-nova";
@@ -17,11 +18,16 @@ import type { Situation } from "../types";
  *
  * HYPOTHÈSE DU CAS : NOVA ne garde pas de jeux en stock d'un trimestre à l'autre, et ne sous-traite
  * rien au printemps ; un jeu réservé et non monté resterait à sa charge.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part de NOVA se donne à deux décimales (au dixième,
+ * avant), et les ventes prévues en repartent ; le marché, les ventes prévues, les enceintes montées
+ * et les demandes sans enceinte sont des quantités, à l'enceinte ; la tendance, une grandeur.
  */
 
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const dec3 = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-const pct = (p: number) => `${qte(p, 1)} %`;
+const pct = pourcent;
 
 /** Le trimestre du cas : le printemps de N + 1, le 2e trimestre (rang 14). */
 export const TRIMESTRE_DU_CAS = 2;
@@ -89,14 +95,14 @@ export const LES_JEUX_DU_PRINTEMPS: Situation = {
       type: "montants",
       titre: "La prévision du printemps",
       notions: ["seasonality", "demand_market_share"],
-      question: () => "Prévoyez le 2e trimestre de N + 1 : sa tendance, le marché prévu (à l'enceinte), la part de NOVA en N (au dixième) et ses ventes prévues (à l'enceinte).",
+      question: () => "Prévoyez le 2e trimestre de N + 1 : sa tendance, le marché prévu (à l'enceinte), la part de NOVA en N (à deux décimales) et ses ventes prévues (à l'enceinte).",
       champs: () => {
         const { lin, n, t } = jeuxDuPrintemps();
         return [
-          { libelle: "Tendance du rang 14, en enceintes", attendu: t.tendance, calcul: `${qte(lin.a)} × ${t.rang} + ${qte(lin.b)} = ${qte(t.tendance)}` },
-          { libelle: "Marché prévu, en enceintes", attendu: t.marche, tolerance: 1, calcul: `${qte(t.tendance)} × ${dec3(t.coefficient)} = ${qte(t.tendance * t.coefficient)}, soit ${qte(t.marche)}` },
-          { libelle: "Part de NOVA en N, en %", attendu: n.part, tolerance: 0.05, calcul: `${qte(n.total)} ÷ ${qte(n.marcheTotal)} = ${pct(n.part)}` },
-          { libelle: "Ventes de NOVA prévues, en enceintes", attendu: t.nova, tolerance: 1, calcul: `${qte(t.marche)} × ${pct(n.part)} = ${qte((t.marche * n.part) / 100)}, soit ${qte(t.nova)}` },
+          { libelle: "Tendance du rang 14, en enceintes", nature: "grandeur", attendu: t.tendance, calcul: `${qte(lin.a)} × ${t.rang} + ${qte(lin.b)} = ${qte(t.tendance)}` },
+          { libelle: "Marché prévu, en enceintes", nature: "quantite", attendu: t.marche, calcul: `${qte(t.tendance)} × ${dec3(t.coefficient)} = ${qte(t.tendance * t.coefficient)}, arrondi à l'enceinte : ${qte(t.marche)}` },
+          { libelle: "Part de NOVA en N, en %", attendu: n.part, calcul: `${qte(n.total)} ÷ ${qte(n.marcheTotal)} × 100 = ${pct(n.part)}` },
+          { libelle: "Ventes de NOVA prévues, en enceintes", nature: "quantite", attendu: t.nova, calcul: `${qte(t.marche)} × ${pct(n.part)} = ${qte((t.marche * n.part) / 100)}, arrondi à l'enceinte : ${qte(t.nova)}` },
         ];
       },
       explication: () => {
@@ -113,8 +119,8 @@ export const LES_JEUX_DU_PRINTEMPS: Situation = {
       champs: () => {
         const { t, p, montees, sansEnceinte } = jeuxDuPrintemps();
         return [
-          { libelle: "Enceintes montées au printemps", attendu: montees, calcul: `la plus petite de la demande (${qte(t.nova)}) et de la capacité (${qte(p.capacite)}) : ${qte(montees)}` },
-          { libelle: "Demandes sans enceinte", attendu: sansEnceinte, calcul: `${qte(t.nova)} − ${qte(montees)} = ${qte(sansEnceinte)}` },
+          { libelle: "Enceintes montées au printemps", nature: "quantite", attendu: montees, calcul: `la plus petite de la demande (${qte(t.nova)}) et de la capacité (${qte(p.capacite)}) : ${qte(montees)}` },
+          { libelle: "Demandes sans enceinte", nature: "quantite", attendu: sansEnceinte, calcul: `${qte(t.nova)} − ${qte(montees)} = ${qte(sansEnceinte)}` },
         ];
       },
       explication: () => {

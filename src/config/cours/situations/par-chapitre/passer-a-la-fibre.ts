@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_RESEAU, FIBRE, LIGNE, RAPPORT, VISIO, passerALaFibre } from "../../monde/reseau-d-atlas";
 import type { Situation } from "../types";
 
@@ -9,10 +9,12 @@ import type { Situation } from "../types";
  * Le chapitre trouvait combien de visioconférences la ligne du bureau tient ; le cas refait le calcul
  * avec une offre fibre, et fait dire si elle répond au besoin de collaboration du cabinet. Hypothèses :
  * monde/reseau-d-atlas.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les visioconférences sont une quantité ; le temps d'envoi,
+ * une grandeur au centième (au dixième près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const PASSER_A_LA_FIBRE: Situation = {
   code: "passer-a-la-fibre",
@@ -48,8 +50,8 @@ export const PASSER_A_LA_FIBRE: Situation = {
       champs: () => {
         const k = passerALaFibre();
         return [
-          { libelle: "Visioconférences en même temps", attendu: k.visiosAvecLaFibre, calcul: `${qte(FIBRE.envoiMbits)} × ${qte((1 - LIGNE.partReservee) * 100)} % ÷ ${qte(VISIO.envoiMbits)} = ${qte(k.visiosAvecLaFibre)}` },
-          { libelle: "Envoi du rapport (secondes)", attendu: k.rapportAvecLaFibre, tolerance: 0.1, calcul: `${qte(RAPPORT.mo)} × 8 ÷ ${qte(FIBRE.envoiMbits)} = ${qte(k.rapportAvecLaFibre)}` },
+          { libelle: "Visioconférences en même temps", nature: "quantite", attendu: k.visiosAvecLaFibre, calcul: `${qte(FIBRE.envoiMbits)} × ${qte((1 - LIGNE.partReservee) * 100)} % ÷ ${qte(VISIO.envoiMbits)} = ${qte(k.visiosAvecLaFibre)}` },
+          { libelle: "Envoi du rapport (secondes)", nature: "grandeur", attendu: k.rapportAvecLaFibre, calcul: `${qte(RAPPORT.mo)} × 8 ÷ ${qte(FIBRE.envoiMbits)} = ${qte(k.rapportAvecLaFibre)}` },
           { libelle: "Coût en plus sur l'année", attendu: k.parAn, calcul: `${eur(FIBRE.enPlusParMois)} × 12 = ${eur(k.parAn)}` },
         ];
       },

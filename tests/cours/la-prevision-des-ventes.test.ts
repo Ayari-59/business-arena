@@ -68,7 +68,7 @@ describe("la série et la tendance, refaites à la main", () => {
     const a = totauxAnnuels();
     expect(a.totaux).toEqual([68_640, 79_300, 89_900]);
     expect(a.hausses).toEqual([10_660, 10_600]);
-    expect(a.taux).toEqual([15.5, 13.4]);
+    expect(a.taux).toEqual([15.53, 13.37]);
   });
 
   it("le point moyen (6,5 ; 19 820), puis a = 108 680 ÷ 143 = 760 et b = 19 820 − 760 × 6,5 = 14 880", () => {
@@ -128,27 +128,27 @@ describe("la saison et la prévision, refaites à la main", () => {
     expect(k.coefficients).toEqual(k.bruts.map((x) => millieme((x * 4) / 4.023)));
   });
 
-  it("NOVA garde sa part de N, 23 609 ÷ 89 900 = 26,3 % ; le 1er trimestre de N + 1 : 24 760 × 0,894 = 22 135, × 26,3 % = 5 822", () => {
+  it("NOVA garde sa part de N, 23 609 ÷ 89 900 = 26,26 % ; le 1er trimestre de N + 1 : 24 760 × 0,894 = 22 135, × 26,26 % = 5 813", () => {
     const n = novaEnN();
     expect(n.ventes).toEqual(ANNEE_N.demande);
-    expect([n.total, n.marcheTotal, n.part]).toEqual([23_609, 89_900, 26.3]);
+    expect([n.total, n.marcheTotal, n.part]).toEqual([23_609, 89_900, 26.26]);
     expect(Math.round(24_760 * 0.894)).toBe(22_135);
-    expect(Math.round(22_135 * 0.263)).toBe(5_822);
+    expect(Math.round(22_135 * 0.2626)).toBe(5_813);
     expect(attendus(ch, "la-prevision-du-marche")).toEqual([24_760, 22_135]);
-    expect(attendus(ch, "la-part-de-nova")).toEqual([26.3, 5_822, 5_800]);
+    expect(attendus(ch, "la-part-de-nova")).toEqual([26.26, 5_813, 5_800]);
   });
 
-  it("les 4 trimestres de N + 1 : 5 822, 7 437, 6 227, 7 801 enceintes, soit la demande de N + 1 du plan à la centaine", () => {
+  it("les 4 trimestres de N + 1 : 5 813, 7 425, 6 218, 7 790 enceintes, soit la demande de N + 1 du plan à la centaine", () => {
     const p = previsionDeNPlus1();
     const tendances = [13, 14, 15, 16].map((t) => 760 * t + 14_880);
     expect(p.trimestres.map((x) => x.tendance)).toEqual(tendances);
     const marche = tendances.map((t, i) => Math.round(t * [0.894, 1.108, 0.901, 1.097][i]!));
     expect(p.trimestres.map((x) => x.marche)).toEqual(marche);
     expect(marche).toEqual([22_135, 28_276, 23_678, 29_663]);
-    expect(p.trimestres.map((x) => x.nova)).toEqual(marche.map((m) => Math.round(m * 0.263)));
-    expect(p.trimestres.map((x) => x.nova)).toEqual([5_822, 7_437, 6_227, 7_801]);
+    expect(p.trimestres.map((x) => x.nova)).toEqual(marche.map((m) => Math.round(m * 0.2626)));
+    expect(p.trimestres.map((x) => x.nova)).toEqual([5_813, 7_425, 6_218, 7_790]);
     expect(p.trimestres.map((x) => x.plan)).toEqual(ANNEE_N_PLUS_1.demande);
-    expect([p.nova, p.plan, p.auDelaDeLaLigne]).toEqual([27_287, 27_200, 437 + 801]);
+    expect([p.nova, p.plan, p.auDelaDeLaLigne]).toEqual([27_246, 27_200, 425 + 790]);
     expect(incoherencesDuTableau(etape(ch, "la-prevision-de-l-annee", "a-completer").grille(NOVA))).toEqual([]);
     expect(juste(ch, "ce-que-la-prevision-annonce")).toEqual(["Le printemps et Noël dépassent la ligne"]);
   });
@@ -161,10 +161,10 @@ describe("la saison et la prévision, refaites à la main", () => {
     gardeDuLaboratoire(ch, "le-laboratoire-de-la-prevision");
   });
 
-  it("plus loin : le rang 17, 27 800 × 0,894 = 24 853, × 26,3 % = 6 536", () => {
+  it("plus loin : le rang 17, 27 800 × 0,894 = 24 853, × 26,26 % = 6 526", () => {
     expect(760 * 17 + 14_880).toBe(27_800);
-    expect(attendus(ch, "plus-loin-que-n-plus-1")).toEqual([27_800, Math.round(27_800 * 0.894), Math.round(Math.round(27_800 * 0.894) * 0.263)]);
-    expect(attendus(ch, "plus-loin-que-n-plus-1")).toEqual([27_800, 24_853, 6_536]);
+    expect(attendus(ch, "plus-loin-que-n-plus-1")).toEqual([27_800, Math.round(27_800 * 0.894), Math.round(Math.round(27_800 * 0.894) * 0.2626)]);
+    expect(attendus(ch, "plus-loin-que-n-plus-1")).toEqual([27_800, 24_853, 6_526]);
   });
 });
 
@@ -174,14 +174,14 @@ describe("le cas dédié : les jeux du printemps", () => {
     gardeDuCas(LES_JEUX_DU_PRINTEMPS, ch);
   });
 
-  it("le printemps de N + 1 : 25 520 × 1,108 = 28 276, × 26,3 % = 7 437 ; la ligne en monte 7 000, 437 demandes sans enceinte", () => {
+  it("le printemps de N + 1 : 25 520 × 1,108 = 28 276, × 26,26 % = 7 425 ; la ligne en monte 7 000, 425 demandes sans enceinte", () => {
     expect(760 * 14 + 14_880).toBe(25_520);
     expect(Math.round(25_520 * 1.108)).toBe(28_276);
-    expect(Math.round(28_276 * 0.263)).toBe(7_437);
+    expect(Math.round(28_276 * 0.2626)).toBe(7_425);
     const j = jeuxDuPrintemps();
-    expect([j.t.tendance, j.t.marche, j.t.nova, j.montees, j.sansEnceinte]).toEqual([25_520, 28_276, 7_437, 7_000, 437]);
-    expect(attendus(LES_JEUX_DU_PRINTEMPS, "la-prevision-du-printemps")).toEqual([25_520, 28_276, 26.3, 7_437]);
-    expect(attendus(LES_JEUX_DU_PRINTEMPS, "ce-que-la-ligne-montera")).toEqual([7_000, 437]);
+    expect([j.t.tendance, j.t.marche, j.t.nova, j.montees, j.sansEnceinte]).toEqual([25_520, 28_276, 7_425, 7_000, 425]);
+    expect(attendus(LES_JEUX_DU_PRINTEMPS, "la-prevision-du-printemps")).toEqual([25_520, 28_276, 26.26, 7_425]);
+    expect(attendus(LES_JEUX_DU_PRINTEMPS, "ce-que-la-ligne-montera")).toEqual([7_000, 425]);
     expect(juste(LES_JEUX_DU_PRINTEMPS, "reponse").map((t) => t.replace(/\s/g, " "))).toEqual(["7 000 jeux, ce que la ligne montera"]);
   });
 });

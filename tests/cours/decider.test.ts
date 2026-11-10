@@ -241,8 +241,8 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     expect(Object.values(attendus(ch, "volume-constant"))).toEqual([128_528.2, 72_147.8]);
     const mb = c(21 - 0.1 * 59);
     const v = Math.ceil(100_338 / mb - 1e-9);
-    expect(attendus(ch, "volume-necessaire")).toEqual({ "Marge par enceinte au prix baissé": mb, "Volume qui garde la marge": v, "Hausse des ventes nécessaire (%)": Math.round((v / 4_778 - 1) * 1_000) / 10 });
-    expect([mb, v, Math.round((v / 4_778 - 1) * 1_000) / 10]).toEqual([15.1, 6_645, 39.1]);
+    expect(attendus(ch, "volume-necessaire")).toEqual({ "Marge par enceinte au prix baissé": mb, "Volume qui garde la marge": v, "Hausse des ventes nécessaire (%)": c((v / 4_778 - 1) * 100) });
+    expect([mb, v, c((v / 4_778 - 1) * 100)]).toEqual([15.1, 6_645, 39.07]);
     expect(juste(ch, "predire-le-volume")).toBe("De bien plus de 10 %");
   });
 
@@ -384,8 +384,8 @@ describe("le cas : monter son prix ?", () => {
     expect(HAUSSE_DE_PRIX).toBe(0.05);
     expect(attendus(s, "marge-unitaire")).toEqual({ "Marge d'une enceinte aujourd'hui": 100_338 / 4_778, "Prix après la hausse": c(59 * 1.05), "Marge d'une enceinte après la hausse": mh });
     expect([100_338 / 4_778, c(59 * 1.05), mh]).toEqual([21, 61.95, 23.95]);
-    expect(attendus(s, "ventes-perdues")).toEqual({ "Plus petite quantité qui garde la marge": qmin, "Ventes que l'on peut perdre, au plus": 4_778 - qmin, "Part des ventes du trimestre (%)": Math.round(((4_778 - qmin) / 4_778) * 1_000) / 10 });
-    expect([qmin, 4_778 - qmin]).toEqual([4_190, 588]);
+    expect(attendus(s, "ventes-perdues")).toEqual({ "Plus petite quantité qui garde la marge": qmin, "Ventes que l'on peut perdre, au plus": 4_778 - qmin, "Part des ventes du trimestre (%)": c(((4_778 - qmin) / 4_778) * 100) });
+    expect([qmin, 4_778 - qmin, c(((4_778 - qmin) / 4_778) * 100)]).toEqual([4_190, 588, 12.31]);
   });
 
   it("le curseur du cas : 588 ventes perdues au plus", () => {

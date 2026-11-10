@@ -36,7 +36,7 @@ import { CAPACITE_DU_TRIMESTRE, MARCHE_DES_ENCEINTES } from "./nova-gestion";
  *     ne font pas 4, chacun se corrige (× 4 ÷ leur somme, au millième) ;
  *   · la prévision du marché est la tendance × le coefficient, à l'enceinte ; celle de NOVA, le
  *     marché prévu × sa part, à l'enceinte ;
- *   · la part de marché s'écrit en pourcentage, au dixième (comme partout au cours).
+ *   · la part de marché s'écrit en pourcentage, à deux décimales (deux décimales, 10 novembre 2026 ; au dixième, avant).
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,6 +85,7 @@ const arrondi = (x: number, n: number) => {
 };
 export const auMillieme = (x: number) => arrondi(x, 3);
 export const auDixieme = (x: number) => arrondi(x, 1);
+export const auCentieme = (x: number) => arrondi(x, 2);
 export const aLUnite = (x: number) => arrondi(x, 0);
 /** Le plan de la production se fait en centaines d'enceintes. */
 export const aLaCentaine = (x: number) => arrondi(x / 100, 0) * 100;
@@ -121,7 +122,7 @@ export function totauxAnnuels() {
   return {
     totaux,
     hausses: totaux.slice(1).map((t, i) => t - totaux[i]!),
-    taux: totaux.slice(1).map((t, i) => auDixieme((t / totaux[i]! - 1) * 100)),
+    taux: totaux.slice(1).map((t, i) => auCentieme((t / totaux[i]! - 1) * 100)),
   };
 }
 
@@ -132,10 +133,10 @@ export function novaEnN() {
   return {
     ventes,
     marche,
-    parts: ventes.map((v, i) => auDixieme((v / marche[i]!) * 100)),
+    parts: ventes.map((v, i) => auCentieme((v / marche[i]!) * 100)),
     total: somme(ventes),
     marcheTotal: somme(marche),
-    part: auDixieme((somme(ventes) / somme(marche)) * 100),
+    part: auCentieme((somme(ventes) / somme(marche)) * 100),
   };
 }
 

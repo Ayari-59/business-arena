@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_QUALITE, qualiteDeNova } from "../../chapitres/le-cout-de-la-non-qualite";
 import { demarcheQualite } from "../../monde/capacite";
@@ -22,6 +22,10 @@ import type { Situation } from "../types";
  * chiffres sont ceux de `demarcheQualite`, au budget de prévention actuel, sur les enceintes du plan de
  * N + 1. HYPOTHÈSE DU COURS : chaque démarche garde ses effets, et chaque année gagne autant que la
  * première. Le cas se jouait au bistrot de l'arène, sur deux démarches rejouées par le moteur.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les délais de récupération sont des grandeurs au centième
+ * d'année (à 0,02 près, avant) ; les taux s'écrivent à deux décimales.
  */
 
 /** L'horizon du plan du président : trois ans. Une hypothèse du cours. */
@@ -30,10 +34,8 @@ export const HORIZON_DU_GERANT_EN_ANNEES = 3;
 /** Les bornes du curseur de la détection du contrôle en ligne, en %. */
 export const DETECTION_DU_CURSEUR = { min: 80, max: 100 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(Math.round(t * 10_000) / 100)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const ans = (x: number) => `${qte(x)} an${x >= 2 ? "s" : ""}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -45,8 +47,8 @@ export function deuxDemarches(c: Pick<Cas, "code">) {
   const horizon = HORIZON_DU_GERANT_EN_ANNEES;
   const standardisation = demarcheQualite(x.f, "standardisation", { volume: x.volume, horizon });
   const controle = demarcheQualite(x.f, "controle-en-ligne", { volume: x.volume, horizon });
-  const delai = (d: typeof standardisation) => auCentime(d.delai ?? Number.POSITIVE_INFINITY);
-  const delaiSurLesCouts = (d: typeof standardisation) => auCentime(d.delaiSurLesCouts ?? Number.POSITIVE_INFINITY);
+  const delai = (d: typeof standardisation) => arrondi2(d.delai ?? Number.POSITIVE_INFINITY);
+  const delaiSurLesCouts = (d: typeof standardisation) => arrondi2(d.delaiSurLesCouts ?? Number.POSITIVE_INFINITY);
   const meilleure = standardisation.gainNet >= controle.gainNet ? standardisation : controle;
   const verdict: Verdict = meilleure.gainNet <= 0 ? "aucune" : meilleure.code;
   // Le curseur : la plus petite détection (en % entier) où le contrôle en ligne se rembourse en un an, ventes comprises.
@@ -61,8 +63,8 @@ export function deuxDemarches(c: Pick<Cas, "code">) {
       standardisation: { couts: delaiSurLesCouts(standardisation), ventes: delai(standardisation) },
       controle: { couts: delaiSurLesCouts(controle), ventes: delai(controle) },
     },
-    retouchesEnPlus: auCentime(controle.avec.detectes - controle.sans.detectes),
-    avanceDuControle: auCentime(controle.gainNet - standardisation.gainNet),
+    retouchesEnPlus: arrondi2(controle.avec.detectes - controle.sans.detectes),
+    avanceDuControle: arrondi2(controle.gainNet - standardisation.gainNet),
     parPoint,
     detectionQuiRembourse,
     meilleure: meilleure.code,
@@ -148,7 +150,7 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
             attendu: k.gainDesCouts,
             calcul: `${qte(k.livresEvites)} défauts livrés de moins × ${eur(q.coutDUnDefautLivre)} − ${qte(d.retouchesEnPlus)} retouches de plus × ${eur(q.coutDUnDefautDetecte)} = ${eur(k.gainDesCouts)}`,
           },
-          { libelle: "Délai de récupération du contrôle en ligne, sur les coûts", attendu: d.delais.controle.couts, calcul: `${eur(k.cout)} ÷ ${eur(k.gainDesCouts)} = ${ans(d.delais.controle.couts)}`, tolerance: 0.02 },
+          { libelle: "Délai de récupération du contrôle en ligne, sur les coûts", nature: "grandeur", attendu: d.delais.controle.couts, calcul: `${eur(k.cout)} ÷ ${eur(k.gainDesCouts)} = ${ans(d.delais.controle.couts)}` },
         ];
       },
       explication: (c) => {
@@ -180,10 +182,10 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
         const q = d.x.f.qualite;
         const avec = (t / 100 - q.controleFinal.tauxDeDetection) * d.x.actuel.defauts;
         return [
-          { libelle: "Défauts livrés de moins", montant: auCentime(avec) },
-          { libelle: "Gain sur les coûts", montant: auCentime(avec * (q.coutDUnDefautLivre - q.coutDUnDefautDetecte)) },
-          { libelle: "Marge des ventes gardées", montant: auCentime(avec * q.ventesPerduesParDefautLivre * d.x.m) },
-          { libelle: "Gain de l'année, ventes comprises", montant: auCentime((t - q.controleFinal.tauxDeDetection * 100) * d.parPoint), fort: true },
+          { libelle: "Défauts livrés de moins", montant: arrondi2(avec) },
+          { libelle: "Gain sur les coûts", montant: arrondi2(avec * (q.coutDUnDefautLivre - q.coutDUnDefautDetecte)) },
+          { libelle: "Marge des ventes gardées", montant: arrondi2(avec * q.ventesPerduesParDefautLivre * d.x.m) },
+          { libelle: "Gain de l'année, ventes comprises", montant: arrondi2((t - q.controleFinal.tauxDeDetection * 100) * d.parPoint), fort: true },
         ];
       },
       droites: (c) => {
@@ -194,7 +196,7 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
       explication: (c) => {
         const d = deuxDemarches(c);
         return [
-          `Dès ${qte(d.detectionQuiRembourse)} % des défauts trouvés, une année de gain rembourse le contrôle en ligne, ventes gardées comprises ; le fournisseur en promet ${pct(d.controle.tauxDeDetection!)}. Chaque point de détection en plus vaut ${eur(auCentime(d.parPoint))} par an : un défaut trouvé au lieu d'être livré coûte une retouche (${eur(d.x.f.qualite.coutDUnDefautDetecte)}) au lieu d'un retour (${eur(d.x.f.qualite.coutDUnDefautLivre)}), et garde ${qte(d.x.f.qualite.ventesPerduesParDefautLivre)} ventes.`,
+          `Dès ${qte(d.detectionQuiRembourse)} % des défauts trouvés, une année de gain rembourse le contrôle en ligne, ventes gardées comprises ; le fournisseur en promet ${pct(d.controle.tauxDeDetection!)}. Chaque point de détection en plus vaut ${eur(arrondi2(d.parPoint))} par an : un défaut trouvé au lieu d'être livré coûte une retouche (${eur(d.x.f.qualite.coutDUnDefautDetecte)}) au lieu d'un retour (${eur(d.x.f.qualite.coutDUnDefautLivre)}), et garde ${qte(d.x.f.qualite.ventesPerduesParDefautLivre)} ventes.`,
         ];
       },
     },
@@ -221,7 +223,7 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
             attendu: k.gain,
             calcul: `${eur(k.gainDesCouts)} + ${qte(k.livresEvites)} × ${qte(q.ventesPerduesParDefautLivre)} × ${eur(d.x.m)} = ${eur(k.gainDesCouts)} + ${eur(k.gainDesVentes)} = ${eur(k.gain)}`,
           },
-          { libelle: "Délai de récupération du contrôle en ligne, ventes comprises", attendu: d.delais.controle.ventes, calcul: `${eur(k.cout)} ÷ ${eur(k.gain)} = ${ans(d.delais.controle.ventes)}`, tolerance: 0.02 },
+          { libelle: "Délai de récupération du contrôle en ligne, ventes comprises", nature: "grandeur", attendu: d.delais.controle.ventes, calcul: `${eur(k.cout)} ÷ ${eur(k.gain)} = ${ans(d.delais.controle.ventes)}` },
         ];
       },
       explication: (c) => {

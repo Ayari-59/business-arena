@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_ECARTS, ecartDit } from "../../chapitres/le-cout-preetabli-et-les-budgets";
 import { ecartsDirects, tableauDeLaProduction } from "../../chapitres/les-ecarts-sur-charges-directes";
@@ -23,25 +23,25 @@ import type { Situation } from "../types";
  * Comme son chapitre, le cas se joue dans la simulation du cours : tous les chiffres viennent du
  * modèle du contrôle budgétaire, par `ecartsDirects`. La cause racontée par la responsable (une
  * hausse du fournisseur) est une hypothèse de l'histoire ; le modèle ne connaît que les écarts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part de l'écart sur prix se donne à deux décimales (au
+ * dixième, avant) ; les kilos préétablis sont des grandeurs au centième.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const qte = nombreAuCentieme;
 
 /** Le dossier de la responsable des achats. */
 export function fournisseurOuAtelier(c: Pick<Cas, "code">) {
   const d = ecartsDirects(c);
   const e = d.e;
   /** Le prix du kilo qui, sur les kilos réellement consommés, ramènerait le coût réel au coût préétabli. */
-  const prixQuiEfface = auCentime(e.preetabliDuReel.matiere / d.r.matiere.kilos);
+  const prixQuiEfface = arrondi2(e.preetabliDuReel.matiere / d.r.matiere.kilos);
   return {
     ...d,
-    partDuPrix: auDixieme((e.matiere.prix / e.matiere.global) * 100),
+    partDuPrix: arrondi2((e.matiere.prix / e.matiere.global) * 100),
     prixQuiEfface,
-    baisseNecessaire: auCentime(d.r.matiere.prixDuKilo - prixQuiEfface),
+    baisseNecessaire: arrondi2(d.r.matiere.prixDuKilo - prixQuiEfface),
     /** Le prix seul n'explique pas tout l'écart : l'atelier a sa part. */
     lesDeux: e.matiere.prix > 0 && e.matiere.quantite > 0,
   };
@@ -54,11 +54,11 @@ const enCentimes = (x: number) => Math.round(x * 100);
 export function prixAuCurseur(c: Pick<Cas, "code">) {
   const x = fournisseurOuAtelier(c);
   const kilos = x.r.matiere.kilos;
-  const reel = (centimes: number) => auCentime((kilos * centimes) / 100);
+  const reel = (centimes: number) => arrondi2((kilos * centimes) / 100);
   return {
     x,
     reel,
-    prix: (centimes: number) => auCentime(((centimes - enCentimes(x.f.prixStandardDuKilo)) * kilos) / 100),
+    prix: (centimes: number) => arrondi2(((centimes - enCentimes(x.f.prixStandardDuKilo)) * kilos) / 100),
     auPlus: Math.floor((x.e.preetabliDuReel.matiere * 100) / kilos + 1e-9),
     min: enCentimes(x.f.prixStandardDuKilo) - 100,
     max: enCentimes(x.r.matiere.prixDuKilo) + 20,
@@ -88,7 +88,7 @@ const LE_PRIX_AU_CURSEUR: EtapeCurseur = {
       { libelle: "Coût préétabli de la matière", montant: e.preetabliDuReel.matiere },
       { libelle: "Écart sur prix", montant: p.prix(centimes) },
       { libelle: "Écart sur quantité", montant: e.matiere.quantite },
-      { libelle: "Écart global sur matière", montant: auCentime(p.reel(centimes) - e.preetabliDuReel.matiere), fort: true },
+      { libelle: "Écart global sur matière", montant: arrondi2(p.reel(centimes) - e.preetabliDuReel.matiere), fort: true },
     ];
   },
   droites: (c) => {
@@ -158,6 +158,7 @@ export const LE_FOURNISSEUR_OU_L_ATELIER: Situation = {
         return [
           {
             libelle: "Kilos préétablis de la production réelle",
+            nature: "grandeur",
             attendu: e.preetabliDuReel.kilos,
             calcul: `${x.modeles.map((m) => `${qte(m.reelle)} × ${qte(m.m.matiereParUnite)}`).join(" + ")} = ${qte(e.preetabliDuReel.kilos)} kg`,
           },
@@ -179,7 +180,7 @@ export const LE_FOURNISSEUR_OU_L_ATELIER: Situation = {
       type: "montants",
       titre: "Le prix et la quantité",
       notions: ["material_price_variance", "efficiency_variance"],
-      question: () => "Décomposez l'écart global en écart sur prix et écart sur quantité, puis calculez, au dixième, la part de l'écart sur prix dans l'écart global.",
+      question: () => "Décomposez l'écart global en écart sur prix et écart sur quantité, puis calculez, à deux décimales, la part de l'écart sur prix dans l'écart global.",
       champs: (c) => {
         const x = fournisseurOuAtelier(c);
         const e = x.e;
@@ -190,7 +191,7 @@ export const LE_FOURNISSEUR_OU_L_ATELIER: Situation = {
             attendu: e.matiere.quantite,
             calcul: `(${qte(x.r.matiere.kilos)} − ${qte(e.preetabliDuReel.kilos)}) × ${eur(x.f.prixStandardDuKilo)} = ${eur(e.matiere.quantite)}`,
           },
-          { libelle: "Part de l'écart sur prix (%)", attendu: x.partDuPrix, calcul: `${eur(e.matiere.prix)} ÷ ${eur(e.matiere.global)} × 100 = ${pct(x.partDuPrix)}`, tolerance: 0.1 },
+          { libelle: "Part de l'écart sur prix (%)", attendu: x.partDuPrix, calcul: `${eur(e.matiere.prix)} ÷ ${eur(e.matiere.global)} × 100 = ${pct(x.partDuPrix)}` },
         ];
       },
       explication: (c) => {
@@ -247,7 +248,7 @@ export const LE_FOURNISSEUR_OU_L_ATELIER: Situation = {
       explication: (c) => {
         const x = fournisseurOuAtelier(c);
         return [
-          `Pour effacer l'écart par le seul prix, il faudrait payer le kilo ${eur(x.prixQuiEfface)}, ${eur(auCentime(x.f.prixStandardDuKilo - x.prixQuiEfface))} sous le standard de ${eur(x.f.prixStandardDuKilo)} : le fournisseur paierait alors le gaspillage de l'atelier, qui ne se verrait plus.`,
+          `Pour effacer l'écart par le seul prix, il faudrait payer le kilo ${eur(x.prixQuiEfface)}, ${eur(arrondi2(x.f.prixStandardDuKilo - x.prixQuiEfface))} sous le standard de ${eur(x.f.prixStandardDuKilo)} : le fournisseur paierait alors le gaspillage de l'atelier, qui ne se verrait plus.`,
         ];
       },
     },

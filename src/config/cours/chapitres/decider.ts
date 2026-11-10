@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutCompletDuMois, demandeAuPrix, meilleurPrixSansDemandeNonServie, trimestreDeDecision } from "../monde/couts-et-budgets";
 import { GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
@@ -45,6 +45,13 @@ import type { Chapitre, LigneDeSimulation, TableauDeDonnees } from "../types";
  *
  * Ce qui a disparu avec l'arène : les concurrents qui jouaient le même trimestre, le prix moyen d'une
  * gamme, et les entreprises sans sous-traitant (le chapitre ne se joue plus que chez NOVA).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la hausse des ventes nécessaire se donne à deux décimales (au
+ * dixième, avant) ; les enceintes demandées, le volume qui garde la marge et la capacité restante
+ * sont des quantités, et le corrigé écrit d'abord le quotient à deux décimales, puis l'enceinte
+ * inférieure (la demande) ou supérieure (le volume) ; le prix optimal part du prix à demande nulle
+ * au centime, et le résultat au prix optimal attend le centime (à 10 € près, avant).
  */
 
 /** L'écart de prix que le dirigeant envisage, à la hausse ou à la baisse (celui de la fiche). */
@@ -74,11 +81,8 @@ export const SOUS_TRAITANCE_DU_LABORATOIRE = { min: 0, max: 3_000, pas: 10 } as 
 /** Le chapitre se calcule sur la décision de la fiche de gestion : celle de NOVA, la seule à avoir un sous-traitant. */
 export const ENTREPRISES_DE_LA_DECISION: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 1000) / 10).toLocaleString("fr-FR")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -94,40 +98,40 @@ export function decision(c: Pick<Cas, "code">) {
   const cv = f.moisDeReference.coutVariable.composants + f.moisDeReference.coutVariable.autres;
   const fixesDuMois = f.moisDeReference.chargesFixes.loyer + f.moisDeReference.chargesFixes.personnel + f.moisDeReference.chargesFixes.amortissement;
   const base = trimestreDeDecision(f);
-  const bas = trimestreDeDecision(f, { prix: auCentime(d.prix * (1 - e)) });
-  const haut = trimestreDeDecision(f, { prix: auCentime(d.prix * (1 + e)) });
+  const bas = trimestreDeDecision(f, { prix: arrondi2(d.prix * (1 - e)) });
+  const haut = trimestreDeDecision(f, { prix: arrondi2(d.prix * (1 + e)) });
   // À volume constant : l'écart de prix va tout droit à la marge.
-  const ecartDeMarge = auCentime(base.chiffreDAffaires * e);
+  const ecartDeMarge = arrondi2(base.chiffreDAffaires * e);
   // Le volume qu'une baisse oblige à vendre pour garder la marge.
   const margeUnitaire = base.margeFabriquee;
-  const margeBaissee = auCentime(margeUnitaire - d.prix * e);
+  const margeBaissee = arrondi2(margeUnitaire - d.prix * e);
   const volume = Math.ceil(base.marge / margeBaissee - 1e-9);
   // Le meilleur prix sans demande non servie, et le même prix retrouvé par le calcul (le sommet de la parabole).
   const meilleur = meilleurPrixSansDemandeNonServie(f, { min: PRIX_DU_LABORATOIRE.min, max: PRIX_DU_LABORATOIRE.max, pas: PRIX_DU_LABORATOIRE.pas });
-  const prixOptimal = auCentime((d.demande.aPrixNul / d.demande.perdueParEuro + cv) / 2);
+  const prixOptimal = arrondi2((d.demande.aPrixNul / d.demande.perdueParEuro + cv) / 2);
   // La commande au prix du trimestre : fabriquer d'abord, sous-traiter le reste.
   const restante = base.capaciteRestante;
   const commande = COMMANDE_AU_PRIX_DU_TRIMESTRE;
   const fabriquee = Math.min(restante, commande);
   const soustraitee = commande - fabriquee;
-  const gainDeLaCommande = auCentime(fabriquee * base.margeFabriquee + soustraitee * base.margeSousTraitee);
+  const gainDeLaCommande = arrondi2(fabriquee * base.margeFabriquee + soustraitee * base.margeSousTraitee);
   // La commande exceptionnelle, quand toute la demande au prix du trimestre est servie.
   const x = COMMANDE_EXCEPTIONNELLE;
   const servie = Math.min(base.demande, d.capacite);
   const restanteServie = d.capacite - servie;
   const xFabriquee = Math.min(restanteServie, x.quantite);
   const xSousTraitee = x.quantite - xFabriquee;
-  const margeXFabriquee = auCentime(xFabriquee * (x.prix - cv));
-  const margeXSousTraitee = auCentime(xSousTraitee * (x.prix - d.coutDuSousTraitant));
-  const coutDeLaCommande = auCentime(xFabriquee * cv + xSousTraitee * d.coutDuSousTraitant);
-  const margeDeLaCommande = auCentime(x.quantite * x.prix - coutDeLaCommande);
-  const prixPlancher = auCentime(coutDeLaCommande / x.quantite);
+  const margeXFabriquee = arrondi2(xFabriquee * (x.prix - cv));
+  const margeXSousTraitee = arrondi2(xSousTraitee * (x.prix - d.coutDuSousTraitant));
+  const coutDeLaCommande = arrondi2(xFabriquee * cv + xSousTraitee * d.coutDuSousTraitant);
+  const margeDeLaCommande = arrondi2(x.quantite * x.prix - coutDeLaCommande);
+  const prixPlancher = arrondi2(coutDeLaCommande / x.quantite);
   const prixPlancherEntier = Math.ceil(coutDeLaCommande / x.quantite - 1e-9);
   // Sans sous-traitant : la commande, tout ou rien, chasse des ventes à 59 € ; leur marge est le coût d'opportunité de la capacité.
   const sansSousTraitant = {
     chassees: xSousTraitee,
-    margeDeLaCommande: auCentime(x.quantite * (x.prix - cv)),
-    margeChassee: auCentime(xSousTraitee * base.margeFabriquee),
+    margeDeLaCommande: arrondi2(x.quantite * (x.prix - cv)),
+    margeChassee: arrondi2(xSousTraitee * base.margeFabriquee),
   };
   return {
     f,
@@ -143,7 +147,7 @@ export function decision(c: Pick<Cas, "code">) {
     margeUnitaire,
     margeBaissee,
     volume,
-    hausseDuVolume: auDixieme((volume / base.ventes - 1) * 100),
+    hausseDuVolume: arrondi2((volume / base.ventes - 1) * 100),
     meilleur,
     prixOptimal,
     demandeOptimale: demandeAuPrix(f, prixOptimal),
@@ -164,8 +168,8 @@ export function decision(c: Pick<Cas, "code">) {
     margeDeLaCommande,
     prixPlancher,
     prixPlancherEntier,
-    sansSousTraitant: { ...sansSousTraitant, net: auCentime(sansSousTraitant.margeDeLaCommande - sansSousTraitant.margeChassee) },
-    coutDeRevientDeJanvier: auCentime(coutCompletDuMois(f).coutDeRevientUnitaire),
+    sansSousTraitant: { ...sansSousTraitant, net: arrondi2(sansSousTraitant.margeDeLaCommande - sansSousTraitant.margeChassee) },
+    coutDeRevientDeJanvier: arrondi2(coutCompletDuMois(f).coutDeRevientUnitaire),
   };
 }
 
@@ -205,7 +209,7 @@ function lectureDuLaboratoire(k: Decision, p: Readonly<Record<string, number>>):
     { libelle: "Enceintes en stock", montant: t.stock, unite: "enceintes", reference: b.stock },
     { libelle: "Marge sur coût variable", montant: t.marge, reference: b.marge },
     { libelle: "Résultat d'exploitation", montant: t.resultat, reference: b.resultat, fort: true },
-    { libelle: "Gain sur le trimestre joué", montant: auCentime(t.resultat - b.resultat), reference: 0, effet: true },
+    { libelle: "Gain sur le trimestre joué", montant: arrondi2(t.resultat - b.resultat), reference: 0, effet: true },
   ];
 }
 
@@ -271,8 +275,8 @@ export const DECIDER: Chapitre = {
         const k = decision(c);
         const b = k.base;
         return [
-          { libelle: `Marge à +${pct(k.e)}, à volume constant`, attendu: auCentime(b.marge + k.ecartDeMarge), calcul: `${eur(b.marge)} + ${pct(k.e)} × ${eur(b.chiffreDAffaires)} = ${eur(auCentime(b.marge + k.ecartDeMarge))}` },
-          { libelle: `Marge à −${pct(k.e)}, à volume constant`, attendu: auCentime(b.marge - k.ecartDeMarge), calcul: `${eur(b.marge)} − ${pct(k.e)} × ${eur(b.chiffreDAffaires)} = ${eur(auCentime(b.marge - k.ecartDeMarge))}` },
+          { libelle: `Marge à +${pct(k.e)}, à volume constant`, attendu: arrondi2(b.marge + k.ecartDeMarge), calcul: `${eur(b.marge)} + ${pct(k.e)} × ${eur(b.chiffreDAffaires)} = ${eur(arrondi2(b.marge + k.ecartDeMarge))}` },
+          { libelle: `Marge à −${pct(k.e)}, à volume constant`, attendu: arrondi2(b.marge - k.ecartDeMarge), calcul: `${eur(b.marge)} − ${pct(k.e)} × ${eur(b.chiffreDAffaires)} = ${eur(arrondi2(b.marge - k.ecartDeMarge))}` },
         ];
       },
       explication: (c) => {
@@ -319,12 +323,12 @@ export const DECIDER: Chapitre = {
       },
       lecture: (c, q) => {
         const k = decision(c);
-        const marge = auCentime(q * k.margeBaissee);
+        const marge = arrondi2(q * k.margeBaissee);
         return [
           { libelle: "Marge par enceinte au prix baissé", montant: k.margeBaissee },
           { libelle: "Marge au prix baissé", montant: marge },
           { libelle: "Marge du trimestre, au prix actuel", montant: k.base.marge },
-          { libelle: "Différence", montant: auCentime(marge - k.base.marge), fort: true },
+          { libelle: "Différence", montant: arrondi2(marge - k.base.marge), fort: true },
         ];
       },
       droites: (c) => {
@@ -340,7 +344,7 @@ export const DECIDER: Chapitre = {
       explication: (c) => {
         const k = decision(c);
         return [
-          `Il faut ${qte(k.volume)} enceintes au lieu de ${qte(k.base.ventes)} : pour ${pct(k.e)} de prix en moins, ${qte(k.hausseDuVolume)} % de ventes en plus. La pente de la droite, c'est la marge d'une enceinte au prix baissé : plus elle est faible, plus il faut de volume.`,
+          `Il faut ${qte(k.volume)} enceintes au lieu de ${qte(k.base.ventes)} : pour ${pct(k.e)} de prix en moins, ${pourcent(k.hausseDuVolume)} de ventes en plus. La pente de la droite, c'est la marge d'une enceinte au prix baissé : plus elle est faible, plus il faut de volume.`,
         ];
       },
     },
@@ -351,19 +355,19 @@ export const DECIDER: Chapitre = {
       titre: "Ce qu'une baisse oblige à vendre",
       notions: ["contribution_margin", "breakeven"],
       question: () =>
-        "Formalisez ce que le curseur a montré : la marge d'une enceinte au prix baissé, le volume qui garde la marge du trimestre (à l'enceinte supérieure), puis la hausse des ventes que cela demande, en pourcentage au dixième.",
+        "Formalisez ce que le curseur a montré : la marge d'une enceinte au prix baissé, le volume qui garde la marge du trimestre (à l'enceinte supérieure), puis la hausse des ventes que cela demande, en pourcentage à deux décimales.",
       champs: (c) => {
         const k = decision(c);
         return [
           { libelle: "Marge par enceinte au prix baissé", attendu: k.margeBaissee, calcul: `${eur(k.margeUnitaire)} − ${pct(k.e)} × ${eur(k.d.prix)} = ${eur(k.margeBaissee)}` },
-          { libelle: "Volume qui garde la marge", attendu: k.volume, calcul: `${eur(k.base.marge)} ÷ ${eur(k.margeBaissee)}, à l'enceinte supérieure = ${qte(k.volume)}` },
-          { libelle: "Hausse des ventes nécessaire (%)", attendu: k.hausseDuVolume, tolerance: 0.1, calcul: `(${qte(k.volume)} ÷ ${qte(k.base.ventes)} − 1) × 100 ≈ ${qte(k.hausseDuVolume)} %` },
+          { libelle: "Volume qui garde la marge", nature: "quantite", attendu: k.volume, calcul: `${eur(k.base.marge)} ÷ ${eur(k.margeBaissee)} = ${qte(k.base.marge / k.margeBaissee)}, à l'enceinte supérieure : ${qte(k.volume)} (une enceinte de moins ne garderait pas toute la marge)` },
+          { libelle: "Hausse des ventes nécessaire (%)", attendu: k.hausseDuVolume, calcul: `(${qte(k.volume)} ÷ ${qte(k.base.ventes)} − 1) × 100 = ${pourcent(k.hausseDuVolume)}` },
         ];
       },
       explication: (c) => {
         const k = decision(c);
         return [
-          `Une baisse de prix se paie en volume, et le volume a ses limites : la demande, et ce que l'on produit. La baisse retire ${eur(auCentime(k.d.prix * k.e))} à chaque enceinte, soit ${qte(Math.round(((k.d.prix * k.e) / k.margeUnitaire) * 100))} % de sa marge : c'est la marge, pas le prix, qui fixe le volume à trouver.`,
+          `Une baisse de prix se paie en volume, et le volume a ses limites : la demande, et ce que l'on produit. La baisse retire ${eur(arrondi2(k.d.prix * k.e))} à chaque enceinte, soit ${qte(Math.round(((k.d.prix * k.e) / k.margeUnitaire) * 100))} % de sa marge : c'est la marge, pas le prix, qui fixe le volume à trouver.`,
         ];
       },
     },
@@ -459,7 +463,7 @@ export const DECIDER: Chapitre = {
       champs: (c) => {
         const k = decision(c);
         const ligne = (t: Decision["base"], signe: string) => [
-          { libelle: `Enceintes demandées à ${signe}${pct(k.e)}`, attendu: t.demande, calcul: `${qte(k.d.demande.aPrixNul)} − ${qte(k.d.demande.perdueParEuro)} × ${eur(t.prix)}, à l'enceinte inférieure = ${qte(t.demande)}` },
+          { libelle: `Enceintes demandées à ${signe}${pct(k.e)}`, nature: "quantite", attendu: t.demande, calcul: `${qte(k.d.demande.aPrixNul)} − ${qte(k.d.demande.perdueParEuro)} × ${eur(t.prix)} = ${qte(k.d.demande.aPrixNul - k.d.demande.perdueParEuro * t.prix)}, à l'enceinte inférieure : ${qte(t.demande)} (la droite ne promet pas l'enceinte entamée)` },
           {
             libelle: `Résultat d'exploitation à ${signe}${pct(k.e)}`,
             attendu: t.resultat,
@@ -550,18 +554,17 @@ export const DECIDER: Chapitre = {
       },
       champs: (c) => {
         const k = decision(c);
-        const prixNul = auCentime(k.d.demande.aPrixNul / k.d.demande.perdueParEuro);
+        const prixNul = arrondi2(k.d.demande.aPrixNul / k.d.demande.perdueParEuro);
         return [
           {
             libelle: "Prix qui rend le résultat le plus grand",
             attendu: k.prixOptimal,
-            calcul: `Le sommet est au milieu des deux prix où le résultat avant charges fixes s'annule, ${eur(prixNul)} (plus de demande) et ${eur(k.cv)} (plus de marge) : (${qte(k.d.demande.aPrixNul)} ÷ ${qte(k.d.demande.perdueParEuro)} + ${qte(k.cv)}) ÷ 2 ≈ ${eur(k.prixOptimal)}`,
+            calcul: `Le sommet est au milieu des deux prix où le résultat avant charges fixes s'annule, ${eur(prixNul)} (plus de demande) et ${eur(k.cv)} (plus de marge) : (${qte(k.d.demande.aPrixNul)} ÷ ${qte(k.d.demande.perdueParEuro)} + ${qte(k.cv)}) ÷ 2 = (${eur(prixNul)} + ${eur(k.cv)}) ÷ 2 = ${eur(k.prixOptimal)}`,
           },
-          { libelle: "Enceintes demandées à ce prix", attendu: k.demandeOptimale, tolerance: 3, calcul: `${qte(k.d.demande.aPrixNul)} − ${qte(k.d.demande.perdueParEuro)} × ${eur(k.prixOptimal)}, à l'enceinte inférieure = ${qte(k.demandeOptimale)}` },
+          { libelle: "Enceintes demandées à ce prix", nature: "quantite", attendu: k.demandeOptimale, calcul: `${qte(k.d.demande.aPrixNul)} − ${qte(k.d.demande.perdueParEuro)} × ${eur(k.prixOptimal)} = ${qte(k.d.demande.aPrixNul - k.d.demande.perdueParEuro * k.prixOptimal)}, à l'enceinte inférieure : ${qte(k.demandeOptimale)} (la droite ne promet pas l'enceinte entamée)` },
           {
             libelle: "Résultat du trimestre à ce prix",
             attendu: k.resultatOptimal,
-            tolerance: 10,
             calcul: `${qte(k.demandeOptimale)} × (${eur(k.prixOptimal)} − ${eur(k.cv)}) − ${eur(k.d.chargesFixes)} = ${eur(k.resultatOptimal)}`,
           },
         ];
@@ -587,7 +590,7 @@ export const DECIDER: Chapitre = {
       champs: (c) => {
         const k = decision(c);
         return [
-          { libelle: "Capacité restante du trimestre", attendu: k.restante, calcul: `${qte(k.d.capacite)} − ${qte(k.d.production)} = ${qte(k.restante)} enceintes` },
+          { libelle: "Capacité restante du trimestre", nature: "quantite", attendu: k.restante, calcul: `${qte(k.d.capacite)} − ${qte(k.d.production)} = ${qte(k.restante)} enceintes` },
           { libelle: "Marge d'une enceinte fabriquée", attendu: k.base.margeFabriquee, calcul: `${eur(k.d.prix)} − ${eur(k.cv)} = ${eur(k.base.margeFabriquee)}` },
           { libelle: "Marge d'une enceinte sous-traitée", attendu: k.base.margeSousTraitee, calcul: `${eur(k.d.prix)} − ${eur(k.d.coutDuSousTraitant)} = ${eur(k.base.margeSousTraitee)}` },
         ];
@@ -609,7 +612,7 @@ export const DECIDER: Chapitre = {
       options: (c) => {
         const k = decision(c);
         const b = k.base;
-        const surcout = auCentime(k.d.coutDuSousTraitant - k.cv);
+        const surcout = arrondi2(k.d.coutDuSousTraitant - k.cv);
         return [
           {
             texte: `Elle fabrique ${qte(k.fabriquee)} enceintes et fait sous-traiter les ${qte(k.soustraitee)} autres`,
@@ -619,12 +622,12 @@ export const DECIDER: Chapitre = {
           {
             texte: "Elle fait tout sous-traiter : c'est plus simple",
             juste: false,
-            retour: `Chaque enceinte sous-traitée alors qu'elle pouvait être fabriquée coûte ${eur(surcout)} de marge : ${eur(auCentime(k.fabriquee * surcout))} perdus sur la commande.`,
+            retour: `Chaque enceinte sous-traitée alors qu'elle pouvait être fabriquée coûte ${eur(surcout)} de marge : ${eur(arrondi2(k.fabriquee * surcout))} perdus sur la commande.`,
           },
           {
             texte: "Elle n'accepte que ce qu'elle peut fabriquer : sous-traiter rapporte trop peu",
             juste: false,
-            retour: `Une enceinte sous-traitée rapporte encore ${eur(b.margeSousTraitee)} : refuser les ${qte(k.soustraitee)} dernières, c'est laisser ${eur(auCentime(k.soustraitee * b.margeSousTraitee))} de marge, et un client mécontent.`,
+            retour: `Une enceinte sous-traitée rapporte encore ${eur(b.margeSousTraitee)} : refuser les ${qte(k.soustraitee)} dernières, c'est laisser ${eur(arrondi2(k.soustraitee * b.margeSousTraitee))} de marge, et un client mécontent.`,
           },
         ];
       },
@@ -670,11 +673,11 @@ export const DECIDER: Chapitre = {
       montrer: "Montrer le prix plancher",
       lecture: (c, p) => {
         const k = decision(c);
-        const ca = auCentime(k.commandeExceptionnelle.quantite * p);
+        const ca = arrondi2(k.commandeExceptionnelle.quantite * p);
         return [
           { libelle: "Chiffre d'affaires de la commande", montant: ca },
           { libelle: "Ce qu'elle coûte en plus (fabriqué et sous-traité)", montant: k.coutDeLaCommande },
-          { libelle: "Marge de la commande", montant: auCentime(ca - k.coutDeLaCommande), fort: true },
+          { libelle: "Marge de la commande", montant: arrondi2(ca - k.coutDeLaCommande), fort: true },
         ];
       },
       droites: (c) => {
@@ -736,10 +739,10 @@ export const DECIDER: Chapitre = {
           {
             texte: `Accepter : ${eur(s.net)} de plus, une fois perdue la marge des ventes qu'elle chasse`,
             juste: s.net > 0,
-            retour: `Oui. La commande apporte ${qte(x.quantite)} × ${eur(auCentime(x.prix - k.cv))} = ${eur(s.margeDeLaCommande)}, mais chasse ${qte(s.chassees)} ventes qui rapportaient ${eur(k.base.margeFabriquee)} chacune, ${eur(s.margeChassee)} : c'est le coût d'opportunité de la capacité. Il reste ${eur(s.net)}. Quand la capacité manque, une enceinte se juge face à la vente dont elle prend la place.`,
+            retour: `Oui. La commande apporte ${qte(x.quantite)} × ${eur(arrondi2(x.prix - k.cv))} = ${eur(s.margeDeLaCommande)}, mais chasse ${qte(s.chassees)} ventes qui rapportaient ${eur(k.base.margeFabriquee)} chacune, ${eur(s.margeChassee)} : c'est le coût d'opportunité de la capacité. Il reste ${eur(s.net)}. Quand la capacité manque, une enceinte se juge face à la vente dont elle prend la place.`,
           },
           {
-            texte: `Accepter : ${eur(s.margeDeLaCommande)} de marge en plus, à ${eur(auCentime(x.prix - k.cv))} l'enceinte`,
+            texte: `Accepter : ${eur(s.margeDeLaCommande)} de marge en plus, à ${eur(arrondi2(x.prix - k.cv))} l'enceinte`,
             juste: false,
             retour: `Non : c'est oublier les ${qte(s.chassees)} ventes à ${eur(k.d.prix)} que la commande chasse. Leur marge, ${eur(s.margeChassee)}, est perdue : la commande ne rapporte que ${eur(s.net)} en net.`,
           },
@@ -749,7 +752,7 @@ export const DECIDER: Chapitre = {
             retour: "Non : c'est traiter les charges fixes comme des variables. Le loyer, la paie et l'usure de la ligne sont payés, commande ou pas ; seul compte ce que la commande ajoute et retire.",
           },
           {
-            texte: `Refuser : une vente chassée perd ${eur(k.base.margeFabriquee)}, plus que les ${eur(auCentime(x.prix - k.cv))} d'une enceinte de la commande`,
+            texte: `Refuser : une vente chassée perd ${eur(k.base.margeFabriquee)}, plus que les ${eur(arrondi2(x.prix - k.cv))} d'une enceinte de la commande`,
             juste: false,
             retour: `Non : la comparaison unité par unité oublie que ${qte(k.restanteServie)} enceintes de la commande prennent une capacité libre, qui ne chasse rien. Seules ${qte(s.chassees)} chassent une vente ; au total, la commande rapporte ${eur(s.net)}.`,
           },

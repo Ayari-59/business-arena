@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   DEMANDES_DES_CENTRES,
@@ -44,6 +44,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     publicité), avec le graphique de la trésorerie la plus basse ;
  *   · expert : le budget d'un processus, la négociation d'un objectif, la communication, les limites ;
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation se donne à deux décimales (au dixième,
+ * avant) ; les heures du programme et disponibles sont des grandeurs au centième, les commandes une
+ * quantité.
  */
 
 /** Le chapitre se calcule sur la fiche de gestion de NOVA. */
@@ -52,11 +57,8 @@ export const ENTREPRISES_DE_LA_DEMARCHE: readonly string[] = ["nova"];
 /** Le mois où le contrôleur propose de livrer le banc, au curseur : mai. */
 export const MOIS_DU_BANC_DU_CURSEUR = 4;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, d = 1) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -107,7 +109,7 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
     mai,
     maxEnMai,
     auMax: navetteDe(f, mai, maxEnMai),
-    parEuro: auCentime(navetteDe(f, mai, 0).plusBas.tresorerie - navetteDe(f, mai, 1).plusBas.tresorerie),
+    parEuro: arrondi2(navetteDe(f, mai, 0).plusBas.tresorerie - navetteDe(f, mai, 1).plusBas.tresorerie),
     juin,
     enJuin: navetteDe(f, juin, D.publicite),
     slack: slackDeLaPublicite(),
@@ -223,14 +225,14 @@ export const LA_DEMARCHE_BUDGETAIRE: Chapitre = {
       notions: ["productivity", "payroll"],
       question: (c) => {
         const p = demarcheDuChapitre(c).programme;
-        return `Le programme de production du semestre est de ${qte(p.production)} enceintes, sans stock. Une enceinte demande ${qte(p.heuresParEnceinte)} heure de montage ; les ${qte(p.operateurs)} opérateurs en donnent chacun ${qte(p.heuresParMois)} par mois. Calculez le programme de main-d'œuvre en heures, les heures disponibles du semestre, le taux d'occupation en % au dixième, puis le budget du personnel du semestre, à ${eur(p.personnelDuMois)} par mois.`;
+        return `Le programme de production du semestre est de ${qte(p.production)} enceintes, sans stock. Une enceinte demande ${qte(p.heuresParEnceinte)} heure de montage ; les ${qte(p.operateurs)} opérateurs en donnent chacun ${qte(p.heuresParMois)} par mois. Calculez le programme de main-d'œuvre en heures, les heures disponibles du semestre, le taux d'occupation en %, à deux décimales, puis le budget du personnel du semestre, à ${eur(p.personnelDuMois)} par mois.`;
       },
       champs: (c) => {
         const p = demarcheDuChapitre(c).programme;
         return [
-          { libelle: "Programme de main-d'œuvre, en heures", attendu: p.heuresDeMontage, calcul: `${qte(p.production)} × ${qte(p.heuresParEnceinte)} = ${qte(p.heuresDeMontage)} heures` },
-          { libelle: "Heures disponibles du semestre", attendu: p.heuresDisponibles, calcul: `${qte(p.operateurs)} × ${qte(p.heuresParMois)} × ${qte(p.mois)} = ${qte(p.heuresDisponibles)} heures` },
-          { libelle: "Taux d'occupation, en %", attendu: auDixieme(p.occupation * 100), tolerance: 0.1, calcul: `${qte(p.heuresDeMontage)} ÷ ${qte(p.heuresDisponibles)} = ${pct(p.occupation)}` },
+          { libelle: "Programme de main-d'œuvre, en heures", nature: "grandeur", attendu: p.heuresDeMontage, calcul: `${qte(p.production)} × ${qte(p.heuresParEnceinte)} = ${qte(p.heuresDeMontage)} heures` },
+          { libelle: "Heures disponibles du semestre", nature: "grandeur", attendu: p.heuresDisponibles, calcul: `${qte(p.operateurs)} × ${qte(p.heuresParMois)} × ${qte(p.mois)} = ${qte(p.heuresDisponibles)} heures` },
+          { libelle: "Taux d'occupation, en %", attendu: arrondi2(p.occupation * 100), calcul: `${qte(p.heuresDeMontage)} ÷ ${qte(p.heuresDisponibles)} × 100 = ${pct(p.occupation)}` },
           { libelle: "Budget du personnel du semestre", attendu: p.budgetDuPersonnel, calcul: `${eur(p.personnelDuMois)} × ${qte(p.mois)} = ${eur(p.budgetDuPersonnel)}` },
         ];
       },
@@ -301,7 +303,7 @@ export const LA_DEMARCHE_BUDGETAIRE: Chapitre = {
       },
       explication: (c) => {
         const x = demarcheDuChapitre(c);
-        const fixes = auCentime(x.centres.total / x.centres.mois);
+        const fixes = arrondi2(x.centres.total / x.centres.mois);
         return [
           `Le total est celui des charges fixes de ${x.f.entreprise}, ${eur(fixes)} par mois : le budget par centre ne crée aucune charge, il confie chacune à quelqu'un. Chaque responsable s'engage sur la sienne, et c'est sur elle qu'il rendra compte.`,
         ];
@@ -321,9 +323,9 @@ export const LA_DEMARCHE_BUDGETAIRE: Chapitre = {
       champs: (c) => {
         const x = demarcheDuChapitre(c);
         const a = x.activite;
-        const manque = auCentime(a.budget - a.coutDeJanvier);
+        const manque = arrondi2(a.budget - a.coutDeJanvier);
         return [
-          { libelle: `Commandes de ${x.nom(MOIS_DU_BUDGET_D_ACTIVITE)}`, attendu: a.commandes.total, calcul: `${qte(a.commandes.enLigne)} + ${qte(a.commandes.campustech)} = ${qte(a.commandes.total)}` },
+          { libelle: `Commandes de ${x.nom(MOIS_DU_BUDGET_D_ACTIVITE)}`, nature: "quantite", attendu: a.commandes.total, calcul: `${qte(a.commandes.enLigne)} + ${qte(a.commandes.campustech)} = ${qte(a.commandes.total)}` },
           { libelle: "Budget de l'activité", attendu: a.budget, calcul: `${qte(a.commandes.total)} × ${eur(a.coutDeLInducteur)} = ${eur(a.budget)}` },
           { libelle: "Ce qui manquerait au budget reconduit", attendu: manque, calcul: `${eur(a.budget)} − ${eur(a.coutDeJanvier)} = ${eur(manque)}` },
         ];
@@ -417,7 +419,7 @@ export const LA_DEMARCHE_BUDGETAIRE: Chapitre = {
         const x = demarcheDuChapitre(c);
         const n = navetteDe(x.f, x.mai, p);
         return [
-          { libelle: "Publicité du semestre, hors taxes", montant: auCentime(p * x.s.mois.length) },
+          { libelle: "Publicité du semestre, hors taxes", montant: arrondi2(p * x.s.mois.length) },
           { libelle: "Résultat du semestre", montant: n.resultat },
           { libelle: "Trésorerie au 30 juin", montant: n.tresorerieFin },
           { libelle: "Trésorerie la plus basse du semestre", montant: n.plusBas.tresorerie, fort: true },
@@ -455,7 +457,7 @@ export const LA_DEMARCHE_BUDGETAIRE: Chapitre = {
         const n = navetteDe(x.f, p.banc!, p.publicite!);
         const d = navetteDe(x.f, x.depart.banc, x.depart.publicite);
         return [
-          { libelle: "Publicité du semestre, hors taxes", montant: auCentime(p.publicite! * x.s.mois.length), reference: auCentime(x.depart.publicite * x.s.mois.length) },
+          { libelle: "Publicité du semestre, hors taxes", montant: arrondi2(p.publicite! * x.s.mois.length), reference: arrondi2(x.depart.publicite * x.s.mois.length) },
           { libelle: "Résultat du semestre", montant: n.resultat, reference: d.resultat },
           { libelle: "Trésorerie au 30 juin", montant: n.tresorerieFin, reference: d.tresorerieFin },
           { libelle: "Trésorerie la plus basse du semestre", montant: n.plusBas.tresorerie, reference: d.plusBas.tresorerie, fort: true },
@@ -501,7 +503,7 @@ export const LA_DEMARCHE_BUDGETAIRE: Chapitre = {
       notions: ["cost_variance"],
       question: (c) => {
         const s = demarcheDuChapitre(c).slack;
-        return `La responsable commerciale a demandé ${eur(s.demande)} par mois, en majorant de ${pct(s.majoration, 0)} ce qui lui suffirait. La direction abat toutes les demandes de ${pct(s.abattement, 0)}. Calculez ce qui lui suffirait, le budget qui lui est alloué, puis, si elle dépense ${eur(s.depense)} par mois, son écart au budget et ce qu'elle dépense au-delà du besoin.`;
+        return `La responsable commerciale a demandé ${eur(s.demande)} par mois, en majorant de ${pct(s.majoration)} ce qui lui suffirait. La direction abat toutes les demandes de ${pct(s.abattement)}. Calculez ce qui lui suffirait, le budget qui lui est alloué, puis, si elle dépense ${eur(s.depense)} par mois, son écart au budget et ce qu'elle dépense au-delà du besoin.`;
       },
       champs: (c) => {
         const s = demarcheDuChapitre(c).slack;

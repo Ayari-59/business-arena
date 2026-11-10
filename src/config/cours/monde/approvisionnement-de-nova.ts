@@ -29,6 +29,13 @@ import { DELAI_DU_FOURNISSEUR, JOURS_DE_SECURITE, anneeAvec, ficheDeNova, kitsDu
  *   · en avenir aléatoire, la consommation pendant le délai suit une loi normale ; le stock de
  *     sécurité est le plus petit qui laisse un risque de rupture par commande au plus égal au risque
  *     admis, à l'unité supérieure ; point de commande = consommation moyenne du délai + sécurité.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : cs, un montant par jeu, se donne au centime (2,58 € et non
+ * 2,578 €) ; Q* s'écrit à deux décimales, puis se commande à l'unité la plus proche (le coût de
+ * gestion est plat autour de l'optimum) ; une quantité D ÷ n se commande à l'unité supérieure, pour
+ * que les n commandes couvrent l'année ; le nombre de commandes et la période qui en découlent se
+ * donnent au centième.
  */
 
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
@@ -67,13 +74,13 @@ export const COMMANDES_D_AUJOURD_HUI = 12;
 export const SEMAINES_PAR_AN = 52;
 
 /** Le coût de possession d'un jeu pendant un an, à un prix donné. */
-export const coutDePossession = (prix: number = PRIX_DU_JEU) => Math.round((POSSESSION.taux * prix + POSSESSION.physiqueParJeu) * 1e6) / 1e6;
+export const coutDePossession = (prix: number = PRIX_DU_JEU) => auCentime(POSSESSION.taux * prix + POSSESSION.physiqueParJeu);
 
 /** Le coût de gestion du stock pour une quantité commandée : passation, possession, total. */
-export function coutDeGestion(quantite: number, prix: number = PRIX_DU_JEU, securite = 0) {
+export function coutDeGestion(quantite: number, prix: number = PRIX_DU_JEU, securite = 0, nombreDeCommandes?: number) {
   const D = consommationDeNPlus1().annee;
   const cs = coutDePossession(prix);
-  const commandes = D / quantite;
+  const commandes = nombreDeCommandes ?? D / quantite;
   const stockMoyen = quantite / 2 + securite;
   const passation = auCentime(commandes * COUT_DE_PASSATION);
   const possession = auCentime(stockMoyen * cs);
@@ -81,15 +88,18 @@ export function coutDeGestion(quantite: number, prix: number = PRIX_DU_JEU, secu
 }
 
 /** Le même coût, pour un nombre de commandes par an : la quantité de chacune est D ÷ n. */
-export const coutPourNCommandes = (n: number) => coutDeGestion(consommationDeNPlus1().annee / n);
+export const coutPourNCommandes = (n: number) => coutDeGestion(plafond(consommationDeNPlus1().annee / n), PRIX_DU_JEU, 0, n);
 
 /** LE MODÈLE DE WILSON : Q* = √(2 D cl ÷ cs), n* = D ÷ Q*, T* en semaines, et le coût de gestion à l'optimum. */
 export function wilson(prix: number = PRIX_DU_JEU) {
   const D = consommationDeNPlus1().annee;
   const cs = coutDePossession(prix);
-  const quantite = Math.sqrt((2 * D * COUT_DE_PASSATION) / cs);
+  /** Q* à deux décimales, puis à l'unité : on commande des jeux entiers. */
+  const quantiteExacte = auCentime(Math.sqrt((2 * D * COUT_DE_PASSATION) / cs));
+  const quantite = Math.round(quantiteExacte);
   const c = coutDeGestion(quantite, prix);
-  return { ...c, quantite, commandes: D / quantite, semaines: SEMAINES_PAR_AN / (D / quantite) };
+  const commandes = auCentime(D / quantite);
+  return { ...c, quantiteExacte, quantite, commandes, semaines: auCentime(SEMAINES_PAR_AN / commandes) };
 }
 
 /** Le nombre de commandes par an, entier, qui rend le coût de gestion le plus faible. */
@@ -140,7 +150,7 @@ export function tableauDesTranches(tarif: readonly TrancheDuTarif[] = TARIF_DEGR
     const dedans = w.quantite >= t.des && w.quantite <= haut;
     const retenue = dedans ? w.quantite : w.quantite < t.des ? t.des : haut;
     const c = coutTotalDApprovisionnement(retenue, tarif);
-    return { tranche: t, haut, qEtoile: w.quantite, dedans, retenue, ...c };
+    return { tranche: t, haut, qEtoileExacte: w.quantiteExacte, qEtoile: w.quantite, dedans, retenue, ...c };
   });
   const meilleure = lignes.reduce((m, l) => (l.totalDApprovisionnement < m.totalDApprovisionnement ? l : m));
   return { lignes, meilleure };

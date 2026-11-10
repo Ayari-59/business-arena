@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { donneesDuMois, seuilDeRentabilite } from "../monde/couts-et-budgets";
 import { AUTRES_COUTS_PAR_ENCEINTE, CHARGES_FIXES_DU_MOIS, COMPOSANTS_PAR_ENCEINTE, NOVA_GESTION } from "../monde/nova-gestion";
@@ -19,14 +19,17 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * 22 € de composants et 16 € d'autres coûts par enceinte, 31 183 € de charges fixes) est celui de
  * nova-gestion.ts, et le seuil est calculé par le modèle du contrôle de gestion (couts-et-budgets.ts,
  * `seuilDeRentabilite`) : les deux chapitres trouvent le même seuil, au centime.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le seuil en chiffre d'affaires se calcule sur le taux de
+ * marge à deux décimales, au centime (sur le taux exact, à 10 € près, avant) ; l'indice de sécurité
+ * se donne à deux décimales ; le seuil en enceintes et le jour du point mort sont des quantités, à
+ * l'unité supérieure.
  */
 
 export const ENTREPRISES_DU_SEUIL_DU_LYCEE = ["nova"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 /** Le seuil du mois de janvier de NOVA, par le modèle du cours. */
 export const seuilDeJanvier = (leviers: Parameters<typeof donneesDuMois>[1] = {}) => seuilDeRentabilite(donneesDuMois(NOVA_GESTION, leviers));
@@ -134,19 +137,19 @@ export const ASSEZ_VENDRE_POUR_NE_RIEN_PERDRE: Chapitre = {
       type: "montants",
       titre: "Le seuil, en enceintes et en euros",
       notions: ["breakeven", "margin_rates"],
-      question: () => "Calculez le taux de marge sur coût variable (au centième de point), le seuil en enceintes (à l'unité supérieure), et le seuil en chiffre d'affaires (charges fixes ÷ taux de marge, à 10 € près).",
+      question: () => "Calculez le taux de marge sur coût variable (au centième de point), le seuil en enceintes (à l'unité supérieure), et le seuil en chiffre d'affaires (charges fixes ÷ ce taux à deux décimales, au centime).",
       champs: () => {
         const s = seuilDeJanvier();
-        const taux = auCentieme(s.tauxDeMarge * 100);
+        const taux = s.tauxDeMargePct;
         return [
-          { libelle: "Taux de marge sur coût variable (%)", attendu: taux, calcul: `${eur(s.margeUnitaire)} ÷ ${eur(s.prix)} × 100 = ${pct(taux)}`, tolerance: 0.01 },
-          { libelle: "Seuil en enceintes", attendu: s.seuilQuantite!, calcul: `${eur(s.chargesFixes)} ÷ ${eur(s.margeUnitaire)} = ${qte(Math.round(s.seuilExact! * 10) / 10)}, soit ${qte(s.seuilQuantite!)} enceintes`, tolerance: 0 },
-          { libelle: "Seuil en chiffre d'affaires", attendu: s.seuilValeur!, calcul: `${eur(s.chargesFixes)} ÷ (${eur(s.margeUnitaire)} ÷ ${eur(s.prix)}) = ${eur(s.seuilValeur!)}, sur le taux exact`, tolerance: 10 },
+          { libelle: "Taux de marge sur coût variable (%)", attendu: taux, calcul: `${eur(s.margeUnitaire)} ÷ ${eur(s.prix)} × 100 = ${pct(taux)}` },
+          { libelle: "Seuil en enceintes", nature: "quantite", attendu: s.seuilQuantite!, calcul: `${eur(s.chargesFixes)} ÷ ${eur(s.margeUnitaire)} = ${qte(s.seuilExact!)}, arrondi à l'unité supérieure : ${qte(s.seuilQuantite!)} enceintes (${qte(s.seuilQuantite! - 1)} laisseraient une perte)` },
+          { libelle: "Seuil en chiffre d'affaires", attendu: s.seuilValeur!, calcul: `${eur(s.chargesFixes)} ÷ ${pct(s.tauxDeMargePct)} = ${eur(s.seuilValeur!)}` },
         ];
       },
       explication: () => {
         const s = seuilDeJanvier();
-        return [`Il faut vendre ${qte(s.seuilQuantite!)} enceintes, ${eur(s.seuilValeur!)} de chiffre d'affaires, pour que le mois ne perde rien. Le seuil en euros se calcule sur le taux exact : un taux arrondi le décale de quelques euros.`];
+        return [`Il faut vendre ${qte(s.seuilQuantite!)} enceintes, ${eur(s.seuilValeur!)} de chiffre d'affaires, pour que le mois ne perde rien. Le seuil en euros part du taux à deux décimales, ${pct(s.tauxDeMargePct)}, comme votre calcul.`];
       },
     },
     {
@@ -186,14 +189,14 @@ export const ASSEZ_VENDRE_POUR_NE_RIEN_PERDRE: Chapitre = {
       type: "montants",
       titre: "Le point mort et la marge de sécurité",
       notions: ["dead_point", "safety_margin"],
-      question: (c) => `Les ventes de ${c.entreprise} sont régulières sur les ${qte(seuilDeJanvier().jours)} jours de janvier. Calculez la marge de sécurité (chiffre d'affaires moins seuil), l'indice de sécurité (au dixième de point), et le jour de janvier où le seuil est atteint.`,
+      question: (c) => `Les ventes de ${c.entreprise} sont régulières sur les ${qte(seuilDeJanvier().jours)} jours de janvier. Calculez la marge de sécurité (chiffre d'affaires moins seuil), l'indice de sécurité (à deux décimales), et le jour de janvier où le seuil est atteint.`,
       champs: () => {
         const s = seuilDeJanvier();
-        const indice = Math.round(s.indiceDeSecurite! * 1000) / 10;
+        const indice = s.indiceDeSecuritePct!;
         return [
-          { libelle: "Marge de sécurité", attendu: s.margeDeSecurite!, calcul: `${eur(s.chiffreDAffaires)} − ${eur(s.seuilValeur!)} = ${eur(s.margeDeSecurite!)}`, tolerance: 10 },
-          { libelle: "Indice de sécurité (%)", attendu: indice, calcul: `${eur(s.margeDeSecurite!)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pct(indice)}`, tolerance: 0.1 },
-          { libelle: "Jour du point mort", attendu: s.pointMort!, calcul: `${eur(s.seuilValeur!)} ÷ ${eur(s.chiffreDAffaires)} × ${qte(s.jours)} jours = ${qte(Math.round((s.seuilValeur! / s.chiffreDAffaires) * s.jours * 100) / 100)}, le ${qte(s.pointMort!)} janvier`, tolerance: 0 },
+          { libelle: "Marge de sécurité", attendu: s.margeDeSecurite!, calcul: `${eur(s.chiffreDAffaires)} − ${eur(s.seuilValeur!)} = ${eur(s.margeDeSecurite!)}` },
+          { libelle: "Indice de sécurité (%)", attendu: indice, calcul: `${eur(s.margeDeSecurite!)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pct(indice)}` },
+          { libelle: "Jour du point mort", nature: "quantite", attendu: s.pointMort!, calcul: `${eur(s.seuilValeur!)} ÷ ${eur(s.chiffreDAffaires)} × ${qte(s.jours)} jours = ${qte(s.pointMortExact!)} : le seuil est franchi pendant le jour suivant, le ${qte(s.pointMort!)} janvier` },
         ];
       },
       explication: () => {
@@ -225,7 +228,7 @@ export const ASSEZ_VENDRE_POUR_NE_RIEN_PERDRE: Chapitre = {
       texte: (c) => {
         const s = seuilDeJanvier();
         return [
-          `En janvier, chaque enceinte de ${c.entreprise} laisse ${eur(s.margeUnitaire)} de marge, ${pct(auCentieme(s.tauxDeMarge * 100))} de son prix. Il faut en vendre ${qte(s.seuilQuantite!)}, ${eur(s.seuilValeur!)} de chiffre d'affaires, pour payer les ${eur(s.chargesFixes)} de charges fixes : le point mort tombe le ${qte(s.pointMort!)} janvier.`,
+          `En janvier, chaque enceinte de ${c.entreprise} laisse ${eur(s.margeUnitaire)} de marge, ${pct(s.tauxDeMargePct)} de son prix. Il faut en vendre ${qte(s.seuilQuantite!)}, ${eur(s.seuilValeur!)} de chiffre d'affaires, pour payer les ${eur(s.chargesFixes)} de charges fixes : le point mort tombe le ${qte(s.pointMort!)} janvier.`,
           "Le seuil se calcule avant d'agir : il dit ce qu'il faut vendre, et alerte quand une baisse prévue mangerait la marge de sécurité. Dans l'arène, l'écran d'analyse des coûts donne le seuil de chaque tour.",
         ];
       },

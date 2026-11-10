@@ -1,6 +1,5 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
-import { auCentime } from "../monde/amortissement";
 import { coutDeLAvance } from "../monde/facture";
 import {
   DELAI_MAXIMAL_CONVENU,
@@ -65,6 +64,12 @@ import type { Chapitre } from "../types";
  *     a-rebours (retrouver le retard et les pénalités à partir d'un relevé de banque), le
  *     laboratoire de la facture (le retard, le compte, la base des pénalités et l'outil au choix),
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les délais moyens de paiement se donnent au centième de jour
+ * (au dixième, avant) ; les factures dues, les jours de relance et de paiement et les jours de
+ * retard sont des quantités ; le coût d'un jour de découvert se donne au centime (au millième,
+ * avant), et les jours de retard en repartent.
  */
 
 /**
@@ -110,13 +115,13 @@ export const DELAI_DU_LABORATOIRE = { min: 30, max: 120, pas: 5 } as const;
 /** Le client qui paie tard se calcule sur la fiche de NOVA en N + 1. */
 export const ENTREPRISES_DU_CLIENT_QUI_PAIE_TARD: readonly string[] = [NOVA_DELAIS.code];
 
-const eur = (x: number) => montantEcrit(auCentime(x)).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const jours = (n: number) => `${n.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} jours`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-/** Le coût d'un jour de découvert sur une facture, au millième : 7,552 € (un arrondi au centime fausserait la division). */
-const parJourExact = (k: { fct: { ttc: number }; taux: number }) => `${((k.fct.ttc * k.taux) / JOURS_DE_L_ANNEE_BANCAIRE).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} €`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
+const jours = (n: number) => `${nombreAuCentieme(n)} jours`;
+/** Le coût d'un jour de découvert sur une facture, en texte, au centime (7,55 €) ; les jours de retard en repartent. */
+/** Le coût d'un jour de découvert sur la facture, au centime : une ligne du corrigé, que la suivante reprend. */
+const parJour = (k: { fct: { ttc: number }; taux: number }) => arrondi2((k.fct.ttc * k.taux) / JOURS_DE_L_ANNEE_BANCAIRE);
+const parJourExact = (k: { fct: { ttc: number }; taux: number }) => eur(parJour(k));
 
 const FICHES: Readonly<Record<string, FicheDesDelaisDeNova>> = { [NOVA_DELAIS.code]: NOVA_DELAIS };
 
@@ -154,12 +159,12 @@ export function financerUneFacture(f: FicheDesDelaisDeNova, p: { delaiReel: numb
   const retard = Math.max(0, p.delaiReel - convenu);
   const couts: Record<Outil, number> = {
     attendre: coutDuDecouvert(fct.ttc, p.tauxDuCompte, p.delaiReel),
-    escompte: auCentime(coutDeLEscompte(fct.ttc, b.escompte.taux, convenu) + coutDuDecouvert(fct.ttc, p.tauxDuCompte, retard)),
+    escompte: arrondi2(coutDeLEscompte(fct.ttc, b.escompte.taux, convenu) + coutDuDecouvert(fct.ttc, p.tauxDuCompte, retard)),
     affacturage: coutDeLAffacturage(fct.ttc, b.affacturage.commission, b.affacturage.tauxDeFinancement, p.delaiReel),
   };
   const leMoinsCher = OUTILS.reduce((m, k) => (couts[k] < couts[m] ? k : m));
-  const penalites = auCentime((fct.ttc * tauxDesPenalites(p.base) * retard) / JOURS_DE_L_ANNEE_CIVILE);
-  return { fct, convenu, retard, couts, leMoinsCher, penalites, reclamable: retard > 0 ? auCentime(penalites + f.penalites.indemnite) : 0 };
+  const penalites = arrondi2((fct.ttc * tauxDesPenalites(p.base) * retard) / JOURS_DE_L_ANNEE_CIVILE);
+  return { fct, convenu, retard, couts, leMoinsCher, penalites, reclamable: retard > 0 ? arrondi2(penalites + f.penalites.indemnite) : 0 };
 }
 
 /** Tout ce que le chapitre et son cas lisent : la facture, les créances, le retard, les trois financements, les variantes. */
@@ -204,15 +209,15 @@ export function clientQuiPaieTard(c: Pick<Cas, "code">) {
     r,
     m,
     taux,
-    partDeCampusTech: auCentime((reel.campustechHT / reel.caHT) * 100),
-    delaiMoyen: auDixieme(reel.delaiMoyen),
-    delaiMoyenALEcheance: auDixieme(aLEcheance.delaiMoyen),
+    partDeCampusTech: arrondi2((reel.campustechHT / reel.caHT) * 100),
+    delaiMoyen: arrondi2(reel.delaiMoyen),
+    delaiMoyenALEcheance: arrondi2(aLEcheance.delaiMoyen),
     creditDeLaTva,
-    creditHorsTaxes: auCentime(r.coutDuCreditConvenuParFacture - creditDeLaTva),
+    creditHorsTaxes: arrondi2(r.coutDuCreditConvenuParFacture - creditDeLaTva),
     tauxDuPlancher,
-    parJourDuPlancher: auCentime(parJourDuPlancher),
-    parJourDeLaLoi: auCentime(parJourDeLaLoi),
-    parJourDuDecouvert: auCentime(parJourDuDecouvert),
+    parJourDuPlancher: arrondi2(parJourDuPlancher),
+    parJourDeLaLoi: arrondi2(parJourDeLaLoi),
+    parJourDuDecouvert: arrondi2(parJourDuDecouvert),
     joursQueCouvreLePlancher,
     plancher,
     joursQuiValentLEscompte: Math.round(joursQuiValentLEscompte),
@@ -225,7 +230,7 @@ export function clientQuiPaieTard(c: Pick<Cas, "code">) {
 export type ClientQuiPaieTard = ReturnType<typeof clientQuiPaieTard>;
 
 /** Ce que le plancher légal, puis le taux de la loi, permettent de réclamer pour une facture en retard de j jours. */
-const reclamable = (k: ClientQuiPaieTard, j: number, t: number) => auCentime((k.fct.ttc * t * j) / JOURS_DE_L_ANNEE_CIVILE + (j > 0 ? k.f.penalites.indemnite : 0));
+const reclamable = (k: ClientQuiPaieTard, j: number, t: number) => arrondi2((k.fct.ttc * t * j) / JOURS_DE_L_ANNEE_CIVILE + (j > 0 ? k.f.penalites.indemnite : 0));
 
 /** La position du laboratoire lue dans la fiche : le délai réel, le compte (en %), la base (1 ou 2), l'outil (0, 1, 2). */
 function laboratoire(k: ClientQuiPaieTard, p: Readonly<Record<string, number>>) {
@@ -316,6 +321,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           },
           {
             libelle: "Factures encore dues au 31 décembre",
+            nature: "quantite",
             attendu: k.reel.factures,
             calcul: `payées ${jours(k.ct.delaiReel)} après leur 20 du mois, les factures d'octobre, de novembre et de décembre le seront en janvier, février et mars : ${qte(k.reel.factures)}`,
           },
@@ -338,7 +344,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["payment_terms", "bfr"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Le délai moyen de paiement des clients rapporte les créances au chiffre d'affaires du trimestre, toutes taxes comprises : créances (TTC) ÷ chiffre d'affaires du trimestre (TTC) × ${JOURS_DU_TRIMESTRE}. Au dernier trimestre, ${k.f.entreprise} a vendu ${qte(k.reel.enceintes)} enceintes à ${eur(k.f.prixHT)} HT. Calculez le chiffre d'affaires du trimestre (TTC), le délai moyen de paiement des clients, au dixième de jour, puis la part de ${k.ct.nom} dans le chiffre d'affaires hors taxes du trimestre (%).`;
+        return `Le délai moyen de paiement des clients rapporte les créances au chiffre d'affaires du trimestre, toutes taxes comprises : créances (TTC) ÷ chiffre d'affaires du trimestre (TTC) × ${JOURS_DU_TRIMESTRE}. Au dernier trimestre, ${k.f.entreprise} a vendu ${qte(k.reel.enceintes)} enceintes à ${eur(k.f.prixHT)} HT. Calculez le chiffre d'affaires du trimestre (TTC), le délai moyen de paiement des clients, au centième de jour, puis la part de ${k.ct.nom} dans le chiffre d'affaires hors taxes du trimestre (%).`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
@@ -347,8 +353,8 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           {
             libelle: "Délai moyen de paiement des clients (jours)",
             attendu: k.delaiMoyen,
+            nature: "grandeur",
             calcul: `${eur(k.reel.creancesTTC)} ÷ ${eur(k.reel.caTTC)} × ${JOURS_DU_TRIMESTRE} = ${jours(k.delaiMoyen)}`,
-            tolerance: 0.1,
           },
           {
             libelle: `Part de ${k.ct.nom} dans le chiffre d'affaires (%)`,
@@ -443,7 +449,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           { libelle: "Coût du retard au découvert", montant: cout },
           { libelle: "Réclamable au plancher légal", montant: auPlancher },
           { libelle: "Réclamable au taux de la loi", montant: reclamable(k, j, k.r.tauxDesPenalites) },
-          { libelle: "Ce que le plancher laisse à l'entreprise", montant: auCentime(auPlancher - cout), fort: true },
+          { libelle: "Ce que le plancher laisse à l'entreprise", montant: arrondi2(auPlancher - cout), fort: true },
         ];
       },
       droites: (c) => {
@@ -548,9 +554,9 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const x = relancesDeCampusTech(c);
         const s = x.s;
         return [
-          { libelle: "Relance amiable (jours après la facture)", attendu: s.relanceAmiable!, calcul: `${s.echeance} + ${RELANCES.relanceAmiable} = ${s.relanceAmiable}, le ${x.relance}` },
-          { libelle: "Mise en demeure (jours après la facture)", attendu: s.miseEnDemeure!, calcul: `${s.echeance} + ${RELANCES.miseEnDemeure} = ${s.miseEnDemeure}, le ${x.miseEnDemeure}` },
-          { libelle: "Paiement réel (jours après la facture)", attendu: s.paiement, calcul: `${s.echeance} + ${s.retard} = ${s.paiement}, le ${x.paiement}` },
+          { libelle: "Relance amiable (jours après la facture)", nature: "quantite", attendu: s.relanceAmiable!, calcul: `${s.echeance} + ${RELANCES.relanceAmiable} = ${s.relanceAmiable} : le ${x.relance}` },
+          { libelle: "Mise en demeure (jours après la facture)", nature: "quantite", attendu: s.miseEnDemeure!, calcul: `${s.echeance} + ${RELANCES.miseEnDemeure} = ${s.miseEnDemeure} : le ${x.miseEnDemeure}` },
+          { libelle: "Paiement réel (jours après la facture)", nature: "quantite", attendu: s.paiement, calcul: `${s.echeance} + ${s.retard} = ${s.paiement} : le ${x.paiement}` },
           {
             libelle: "Réclamable pour la facture",
             attendu: s.reclamable,
@@ -644,7 +650,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         return [
           { libelle: "Coût de l'escompte jusqu'à l'échéance", montant: k.m.escompte },
           { libelle: "Coût du découvert de ces jours", montant: decouvert },
-          { libelle: "Ce que l'escompte coûte de plus", montant: auCentime(k.m.escompte - decouvert), fort: true },
+          { libelle: "Ce que l'escompte coûte de plus", montant: arrondi2(k.m.escompte - decouvert), fort: true },
         ];
       },
       droites: (c) => {
@@ -740,7 +746,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["payment_terms", "bfr"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Variante : ${k.ct.nom} tient son délai convenu et paie à ${jours(k.ct.delaiConvenu)}. Refaites les créances clients du 31 décembre (TTC), le délai moyen de paiement des clients, au dixième de jour, puis ce que le retard laisse en plus au bilan, toutes taxes comprises.`;
+        return `Variante : ${k.ct.nom} tient son délai convenu et paie à ${jours(k.ct.delaiConvenu)}. Refaites les créances clients du 31 décembre (TTC), le délai moyen de paiement des clients, au centième de jour, puis ce que le retard laisse en plus au bilan, toutes taxes comprises.`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
@@ -754,8 +760,8 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           {
             libelle: "Délai moyen de paiement à l'échéance (jours)",
             attendu: k.delaiMoyenALEcheance,
+            nature: "grandeur",
             calcul: `${eur(e.creancesTTC)} ÷ ${eur(e.caTTC)} × ${JOURS_DU_TRIMESTRE} = ${jours(k.delaiMoyenALEcheance)}`,
-            tolerance: 0.1,
           },
           {
             libelle: "Ce que le retard laisse en plus au bilan (TTC)",
@@ -787,14 +793,15 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         return [
           {
             libelle: "Jours de retard",
+            nature: "quantite",
             attendu: k.retardARebours,
-            calcul: `(${eur(COUT_RELEVE_A_REBOURS)} − ${eur(k.m.escompte)}) ÷ (${eur(k.fct.ttc)} × ${pct(k.taux)} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE}) = ${eur(auCentime(COUT_RELEVE_A_REBOURS - k.m.escompte))} ÷ ${parJourExact(k)} = ${qte(k.retardARebours)}`,
+            calcul: `(${eur(COUT_RELEVE_A_REBOURS)} − ${eur(k.m.escompte)}) ÷ (${eur(k.fct.ttc)} × ${pct(k.taux)} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE}) = ${eur(arrondi2(COUT_RELEVE_A_REBOURS - k.m.escompte))} ÷ ${parJourExact(k)} = ${nombreAuCentieme(arrondi2(COUT_RELEVE_A_REBOURS - k.m.escompte) / parJour(k))}, à l'unité : ${qte(k.retardARebours)} jours`,
           },
-          { libelle: "Jour du paiement, après la facture", attendu: k.paiementARebours, calcul: `${k.ct.delaiConvenu} + ${k.retardARebours} = ${k.paiementARebours}` },
+          { libelle: "Jour du paiement, après la facture", nature: "quantite", attendu: k.paiementARebours, calcul: `${k.ct.delaiConvenu} + ${k.retardARebours} = ${k.paiementARebours}` },
           {
             libelle: "Réclamable pour cette facture",
-            attendu: auCentime(x.penalitesParFacture + x.indemniteParFacture),
-            calcul: `${eur(k.fct.ttc)} × ${pct(x.tauxDesPenalites)} × ${k.retardARebours} ÷ ${JOURS_DE_L_ANNEE_CIVILE} + ${eur(x.indemniteParFacture)} = ${eur(x.penalitesParFacture)} + ${eur(x.indemniteParFacture)} = ${eur(auCentime(x.penalitesParFacture + x.indemniteParFacture))}`,
+            attendu: arrondi2(x.penalitesParFacture + x.indemniteParFacture),
+            calcul: `${eur(k.fct.ttc)} × ${pct(x.tauxDesPenalites)} × ${k.retardARebours} ÷ ${JOURS_DE_L_ANNEE_CIVILE} + ${eur(x.indemniteParFacture)} = ${eur(x.penalitesParFacture)} + ${eur(x.indemniteParFacture)} = ${eur(arrondi2(x.penalitesParFacture + x.indemniteParFacture))}`,
           },
         ];
       },
@@ -924,7 +931,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           lignes: [
             { libelle: `Coût du crédit convenu (${jours(k.ct.delaiConvenu)}, au découvert)`, valeurs: [eur(k.r.coutDuCreditConvenuParFacture)] },
             { libelle: `Coût du retard (${jours(k.r.joursDeRetard)}, au découvert)`, valeurs: [eur(k.r.coutDuRetardParFacture)] },
-            { libelle: "Pénalités et indemnité réclamables", valeurs: [eur(auCentime(k.r.penalitesParFacture + k.r.indemniteParFacture))] },
+            { libelle: "Pénalités et indemnité réclamables", valeurs: [eur(arrondi2(k.r.penalitesParFacture + k.r.indemniteParFacture))] },
             { libelle: "Financée par l'escompte, retard compris", valeurs: [eur(k.m.escompteEtRetard)] },
             { libelle: "Financée par le découvert seul", valeurs: [eur(k.m.decouvert)] },
             { libelle: "Financée par l'affacturage", valeurs: [eur(k.m.affacturage)] },

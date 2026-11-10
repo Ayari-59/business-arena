@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeDeProduction, hausseQuiAnnuleLaVan, machineDe, machineEnPlus, margeUnitaire, planDEmprunt } from "../monde/capacite";
 import { CAPACITES_DU_COURS, type CodeDeMachine, type FicheDeLaCapacite } from "../monde/nova-capacite";
@@ -46,6 +46,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * est achetée le 1er janvier N + 1 et sert dès le trimestre 1 ; l'emprunt est du même montant, à
  * 5 %, sur la durée de la machine ; l'impôt est de 25 %, y compris l'économie d'impôt d'un résultat
  * perdu ; le recrutement se compte au départ ; le taux d'actualisation est de 8 %.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes, les capacités et les enceintes refusées sont des
+ * quantités ; les ventes qui rendent le résultat ou la VAN nuls montent à l'enceinte supérieure, et
+ * le corrigé dit pourquoi. Les flux et les VAN attendent le centime (à 50 centimes et 1 € près,
+ * avant) : la VAN se calcule sur le facteur d'actualisation au dix-millième que le corrigé écrit
+ * (4,6229), et non sur le facteur exact ; les délais de récupération sont des grandeurs au
+ * centième, la part de l'opérateur et la hausse de la demande des pourcentages à deux décimales.
  */
 
 /**
@@ -108,11 +116,10 @@ export function machineDuChapitre(code: string): { code: string; name: string; c
   return { code: m.code, name: NOM_DU_POSTE_DANS_L_ARENE, costPerUnit: m.prix, depreciationRounds: m.dureeEnAnnees * 4 };
 }
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const pct = (x: number, d = 2) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const pct = (x: number) => pourcent(x * 100);
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** À l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
@@ -263,7 +270,7 @@ function fluxEcrit(x: Croissance, r: ReturnType<typeof machineEnPlus>) {
   return `(${eur(r.margeGagnee)}${salaires} − ${eur(r.entretien)} − ${eur(r.amortissement)}) × ${qte(1 - x.impot)} + ${eur(r.amortissement)} = ${eur(r.fluxAnnuel)}`;
 }
 
-/** La VAN écrite : « −18 000 € + (−7 812,50 €) × 4,6229 = −54 116,25 € ». */
+/** La VAN écrite : « −18 000 € + (−7 812,50 €) × 4,6229 = −54 116,41 € ». */
 const vanEcrite = (r: ReturnType<typeof machineEnPlus>) => `−${eur(r.investissement)} + ${entre(r.fluxAnnuel)} × ${facteurEcrit(r.facteurDActualisation)} = ${eur(r.van)}`;
 
 /** Le plan de l'emprunt du poste : le capital dû, les intérêts et l'annuité de chaque année. */
@@ -314,7 +321,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
           (() => {
             const seuil = f.personnel.salaireDuMarche.nPlus1 * f.personnel.seuilDeDemission;
             const surcout = auCentime((seuil - f.operateurs.salaireBrutMensuel) * (1 + f.operateurs.tauxDesCotisationsPatronales) * 12);
-            return `L'opérateur embauché est payé comme les autres, ${eur(f.operateurs.salaireBrutMensuel)} bruts par mois. C'est ${pct(f.operateurs.salaireBrutMensuel / f.personnel.salaireDuMarche.nPlus1)} du marché de N + 1, sous le seuil de démission de ${pct(f.personnel.seuilDeDemission, 0)} que montre le chapitre « Le départ d'un salarié ». La simulation garde ce salaire pour juger l'investissement seul ; payer l'opérateur au seuil, ${eur(seuil)}, coûterait ${eur(surcout)} de plus par an.`;
+            return `L'opérateur embauché est payé comme les autres, ${eur(f.operateurs.salaireBrutMensuel)} bruts par mois. C'est ${pct(f.operateurs.salaireBrutMensuel / f.personnel.salaireDuMarche.nPlus1)} du marché de N + 1, sous le seuil de démission de ${pct(f.personnel.seuilDeDemission)} que montre le chapitre « Le départ d'un salarié ». La simulation garde ce salaire pour juger l'investissement seul ; payer l'opérateur au seuil, ${eur(seuil)}, coûterait ${eur(surcout)} de plus par an.`;
           })(),
         ];
       },
@@ -336,12 +343,12 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const x = croissance(c);
         const t4 = x.sans.trimestres[3]!;
         return [
-          { libelle: "Ventes du trimestre 4", attendu: t4.production, calcul: `min(${qte(t4.demande)} ; ${qte(t4.capaciteOutil)} ; ${qte(t4.capaciteEquipe)}) = ${qte(t4.production)}`, tolerance: 0 },
+          { libelle: "Ventes du trimestre 4", nature: "quantite", attendu: t4.production, calcul: `min(${qte(t4.demande)} ; ${qte(t4.capaciteOutil)} ; ${qte(t4.capaciteEquipe)}) = ${qte(t4.production)}` },
           {
             libelle: `${x.f.unites.charAt(0).toUpperCase()}${x.f.unites.slice(1)} refusées sur l'année`,
+            nature: "quantite",
             attendu: x.sans.refusees,
-            calcul: `${x.goulots.map((t) => `(${qte(t.demande)} − ${qte(t.production)})`).join(" + ")} = ${qte(x.sans.refusees)}, aux trimestres où l'outil est le goulot`,
-            tolerance: 0,
+            calcul: `${x.goulots.map((t) => `(${qte(t.demande)} − ${qte(t.production)})`).join(" + ")} = ${qte(x.sans.refusees)} sur les trimestres où l'outil est le goulot`,
           },
           { libelle: "Marge refusée sur l'année", attendu: x.sans.margeRefusee, calcul: `${qte(x.sans.refusees)} × ${eur(x.m)} = ${eur(x.sans.margeRefusee)}` },
         ];
@@ -473,7 +480,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const parOperateur = x.poste.ventesGagnees - s.ventesGagnees;
         return [
           `Sans embauche, l'outil passe à ${qte(r.capaciteOutil)}, mais l'équipe reste à ${qte(r.capaciteEquipe)} : le goulot se déplace de l'outil à l'équipe, et ${x.f.entreprise} ne vend que ${qte(r.ventesGagnees)} ${x.f.unites} de plus. C'est peu, mais elles ne coûtent que la machine : le résultat de l'année gagne ${eur(r.resultatGagne)}, et la VAN vaut ${eur(r.van)}.`,
-          `L'opérateur, lui, coûte ${eur(x.poste.salaires)} par an pour ${qte(parOperateur)} ventes de plus (${eur(auCentime(parOperateur * x.m))} de marge) : sur la demande prévue, c'est l'embauche liée qui fait perdre, pas la machine. Le graphique le montre : la courbe avec l'opérateur ne passe au-dessus qu'à partir de ${x.operateurPaie === null ? "aucune hausse" : pct(x.operateurPaie, 1)} de demande en plus. Et ${minuscule(machineDe(x.f, "ligne-automatisee").nom)} ne vend pas une ${x.f.unite} de plus que le poste sur la demande prévue : la demande plafonne, quelle que soit la machine.`,
+          `L'opérateur, lui, coûte ${eur(x.poste.salaires)} par an pour ${qte(parOperateur)} ventes de plus (${eur(auCentime(parOperateur * x.m))} de marge) : sur la demande prévue, c'est l'embauche liée qui fait perdre, pas la machine. Le graphique le montre : la courbe avec l'opérateur ne passe au-dessus qu'à partir de ${x.operateurPaie === null ? "aucune hausse" : pct(x.operateurPaie)} de demande en plus. Et ${minuscule(machineDe(x.f, "ligne-automatisee").nom)} ne vend pas une ${x.f.unite} de plus que le poste sur la demande prévue : la demande plafonne, quelle que soit la machine.`,
         ];
       },
     },
@@ -492,10 +499,10 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const x = croissance(c);
         const equipe = x.sans.trimestres[0]!.capaciteEquipe;
         return [
-          { libelle: "Capacité de l'outil avec le poste", attendu: x.poste.capaciteOutil, calcul: `${qte(x.f.ligne.capaciteParTrimestre)} + ${qte(x.machine.capaciteEnPlus)} = ${qte(x.poste.capaciteOutil)}`, tolerance: 0 },
-          { libelle: "Ventes gagnées sans embauche", attendu: x.posteSeul.ventesGagnees, calcul: `${ventesGagneesEcrites(x.posteSeul)} : l'équipe borne à ${qte(equipe)}`, tolerance: 0 },
-          { libelle: "Capacité de l'équipe avec l'opérateur", attendu: x.poste.capaciteEquipe, calcul: `${qte(equipe)} + ${qte(x.enceintesParOperateur)} = ${qte(x.poste.capaciteEquipe)}`, tolerance: 0 },
-          { libelle: "Ventes gagnées avec l'opérateur", attendu: x.poste.ventesGagnees, calcul: `${ventesGagneesEcrites(x.poste)} : la demande redevient le goulot`, tolerance: 0 },
+          { libelle: "Capacité de l'outil avec le poste", nature: "quantite", attendu: x.poste.capaciteOutil, calcul: `${qte(x.f.ligne.capaciteParTrimestre)} + ${qte(x.machine.capaciteEnPlus)} = ${qte(x.poste.capaciteOutil)}` },
+          { libelle: "Ventes gagnées sans embauche", nature: "quantite", attendu: x.posteSeul.ventesGagnees, calcul: `${ventesGagneesEcrites(x.posteSeul)} : l'équipe borne à ${qte(equipe)}` },
+          { libelle: "Capacité de l'équipe avec l'opérateur", nature: "quantite", attendu: x.poste.capaciteEquipe, calcul: `${qte(equipe)} + ${qte(x.enceintesParOperateur)} = ${qte(x.poste.capaciteEquipe)}` },
+          { libelle: "Ventes gagnées avec l'opérateur", nature: "quantite", attendu: x.poste.ventesGagnees, calcul: `${ventesGagneesEcrites(x.poste)} : la demande redevient le goulot` },
         ];
       },
       explication: (c) => {
@@ -578,7 +585,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
       grandeur: (c) => ({ libelle: "Ventes gagnées sur l'année", unite: ficheDe(c).unites }),
       cible: (c) => {
         const x = croissance(c);
-        return { attendu: x.poste.ventesNecessaires, min: VENTES_DU_CURSEUR.min, max: VENTES_DU_CURSEUR.max };
+        return { nature: "quantite", attendu: x.poste.ventesNecessaires, min: VENTES_DU_CURSEUR.min, max: VENTES_DU_CURSEUR.max };
       },
       zones: ["Résultat gagné", "Résultat perdu"],
       rates: () => ({
@@ -623,8 +630,8 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         return [
           { libelle: "Marge gagnée", attendu: p.margeGagnee, calcul: `${qte(p.ventesGagnees)} × ${eur(x.m)} = ${eur(p.margeGagnee)}` },
           { libelle: "Résultat gagné de l'année", attendu: p.resultatGagne, calcul: `${eur(p.margeGagnee)} − ${eur(p.charges)} = ${eur(p.resultatGagne)}` },
-          { libelle: "Part de l'opérateur dans les charges (%)", attendu: x.partDeLOperateur, calcul: `${eur(p.salaires)} ÷ ${eur(p.charges)} × 100 = ${qte(x.partDeLOperateur)} %`, tolerance: 0.1 },
-          { libelle: "Ventes gagnées qui rendent le résultat nul", attendu: p.ventesNecessaires, calcul: `${eur(p.charges)} ÷ ${eur(x.m)} = ${qte(auCentime(p.charges / x.m))}, soit ${qte(p.ventesNecessaires)} à l'${x.f.unite} supérieure`, tolerance: 0 },
+          { libelle: "Part de l'opérateur dans les charges (%)", attendu: x.partDeLOperateur, calcul: `${eur(p.salaires)} ÷ ${eur(p.charges)} × 100 = ${pourcent(x.partDeLOperateur)}` },
+          { libelle: "Ventes gagnées qui rendent le résultat nul", nature: "quantite", attendu: p.ventesNecessaires, calcul: `${eur(p.charges)} ÷ ${eur(x.m)} = ${qte(p.charges / x.m)}, arrondi à l'${x.f.unite} supérieure : ${qte(p.ventesNecessaires)} (une de moins laisserait une perte)` },
         ];
       },
       explication: (c) => {
@@ -652,9 +659,9 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const p = x.poste;
         return [
           { libelle: "Investissement du départ", attendu: p.investissement, calcul: `${eur(x.machine.prix)} + ${eur(p.recrutements)} = ${eur(p.investissement)}` },
-          { libelle: "Flux de chaque année", attendu: p.fluxAnnuel, calcul: fluxEcrit(x, p), tolerance: 0.5 },
+          { libelle: "Flux de chaque année", attendu: p.fluxAnnuel, calcul: fluxEcrit(x, p) },
           // L'élève qui garde le facteur à quatre décimales tombe à quelques dizaines de centimes.
-          { libelle: "VAN du poste avec son opérateur", attendu: p.van, calcul: vanEcrite(p), tolerance: 1 },
+          { libelle: "VAN du poste avec son opérateur", attendu: p.van, calcul: vanEcrite(p) },
         ];
       },
       explication: (c) => {
@@ -683,10 +690,11 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const s = x.posteSeul;
         return [
           { libelle: "Investissement du départ, sans recrutement", attendu: s.investissement, calcul: `${eur(x.machine.prix)}, sans recrutement` },
-          { libelle: "Flux de chaque année du poste seul", attendu: s.fluxAnnuel, calcul: `${qte(s.ventesGagnees)} × ${eur(x.m)} = ${eur(s.margeGagnee)} de marge ; ${fluxEcrit(x, s)}`, tolerance: 0.5 },
-          { libelle: "VAN du poste seul", attendu: s.van, calcul: vanEcrite(s), tolerance: 1 },
+          { libelle: "Flux de chaque année du poste seul", attendu: s.fluxAnnuel, calcul: `${qte(s.ventesGagnees)} × ${eur(x.m)} = ${eur(s.margeGagnee)} de marge ; ${fluxEcrit(x, s)}` },
+          { libelle: "VAN du poste seul", attendu: s.van, calcul: vanEcrite(s) },
           {
             libelle: "Délai de récupération (années)",
+            nature: "grandeur",
             attendu: auCentime(s.delaiDeRecuperation ?? 0),
             calcul: `${eur(s.investissement)} ÷ ${eur(s.fluxAnnuel)} = ${qte(auCentime(s.delaiDeRecuperation ?? 0))} ans`,
             tolerance: 0.01,
@@ -766,7 +774,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const x = croissance(c);
         const h = x.hausseNulle ?? 0;
         return [
-          `La VAN s'annule à ${qte(Math.round(h * 1000))} ‰, soit ${pct(h, 1)} de demande en plus, gardée ${qte(x.machine.dureeEnAnnees)} ans. Chaque point de hausse ne fait vendre qu'aux trimestres où l'outil bornait, ${x.goulots.map((t) => `T${t.trimestre}`).join(" et ")} : ${qte(x.demandeDesGoulots)} ${x.f.unites} de demande, donc environ ${qte(Math.round(x.demandeDesGoulots / 100))} ventes de plus par point.`,
+          `La VAN s'annule à ${qte(Math.round(h * 1000))} ‰, soit ${pct(h)} de demande en plus, gardée ${qte(x.machine.dureeEnAnnees)} ans. Chaque point de hausse ne fait vendre qu'aux trimestres où l'outil bornait, ${x.goulots.map((t) => `T${t.trimestre}`).join(" et ")} : ${qte(x.demandeDesGoulots)} ${x.f.unites} de demande, donc environ ${qte(Math.round(x.demandeDesGoulots / 100))} ventes de plus par point.`,
           `De ${eur(x.poste.van)} à zéro pour quelques points de demande : la VAN dépend de la demande bien plus que de la machine. Le calcul à rebours le refait sans curseur.`,
         ];
       },
@@ -775,11 +783,11 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
       id: "a-plus-cinq",
       objectifs: [3],
       type: "montants",
-      titre: `Variante : la demande monte de ${pct(HAUSSE_DE_LA_VARIANTE, 1)}`,
+      titre: `Variante : la demande monte de ${pct(HAUSSE_DE_LA_VARIANTE)}`,
       notions: ["discounting", "irr_payback", "capacity"],
       question: (c) => {
         const x = croissance(c);
-        return `Variante : la demande de chaque trimestre de N + 1 monte de ${pct(HAUSSE_DE_LA_VARIANTE, 1)}, et le reste ${qte(x.machine.dureeEnAnnees)} ans. Refaites le raisonnement pour le poste et son opérateur : les ventes gagnées sur l'année (trimestre par trimestre, la demande arrondie à l'${x.f.unite}), le flux de chaque année, la VAN et le délai de récupération (en années).`;
+        return `Variante : la demande de chaque trimestre de N + 1 monte de ${pct(HAUSSE_DE_LA_VARIANTE)}, et le reste ${qte(x.machine.dureeEnAnnees)} ans. Refaites le raisonnement pour le poste et son opérateur : les ventes gagnées sur l'année (trimestre par trimestre, la demande arrondie à l'${x.f.unite}), le flux de chaque année, la VAN et le délai de récupération (en années).`;
       },
       champs: (c) => {
         const x = croissance(c);
@@ -788,14 +796,15 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         return [
           {
             libelle: "Ventes gagnées sur l'année",
+            nature: "quantite",
             attendu: v.ventesGagnees,
             calcul: `Demande ${demandes} ; sans le poste, l'outil borne à ${qte(x.f.ligne.capaciteParTrimestre)} ; avec lui, toute la demande est servie : ${ventesGagneesEcrites(v)}`,
-            tolerance: 0,
           },
-          { libelle: `Flux de chaque année à ${pct(HAUSSE_DE_LA_VARIANTE, 1)}`, attendu: v.fluxAnnuel, calcul: `${qte(v.ventesGagnees)} × ${eur(x.m)} = ${eur(v.margeGagnee)} ; ${fluxEcrit(x, v)}`, tolerance: 0.5 },
-          { libelle: `VAN à ${pct(HAUSSE_DE_LA_VARIANTE, 1)}`, attendu: v.van, calcul: vanEcrite(v), tolerance: 1 },
+          { libelle: `Flux de chaque année à ${pct(HAUSSE_DE_LA_VARIANTE)}`, attendu: v.fluxAnnuel, calcul: `${qte(v.ventesGagnees)} × ${eur(x.m)} = ${eur(v.margeGagnee)} ; ${fluxEcrit(x, v)}` },
+          { libelle: `VAN à ${pct(HAUSSE_DE_LA_VARIANTE)}`, attendu: v.van, calcul: vanEcrite(v) },
           {
-            libelle: `Délai de récupération à ${pct(HAUSSE_DE_LA_VARIANTE, 1)} (années)`,
+            libelle: `Délai de récupération à ${pct(HAUSSE_DE_LA_VARIANTE)} (années)`,
+            nature: "grandeur",
             attendu: auCentime(v.delaiDeRecuperation ?? 0),
             calcul: `${eur(v.investissement)} ÷ ${eur(v.fluxAnnuel)} = ${qte(auCentime(v.delaiDeRecuperation ?? 0))} ans`,
             tolerance: 0.01,
@@ -806,8 +815,8 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const x = croissance(c);
         const v = x.variante;
         return [
-          `À ${pct(HAUSSE_DE_LA_VARIANTE, 1)} de plus, le poste et son opérateur vendent ${qte(v.ventesGagnees)} ${x.f.unites} de plus au lieu de ${qte(x.poste.ventesGagnees)}, et la VAN passe de ${eur(x.poste.van)} à ${eur(v.van)} : positive, de peu. Le délai de récupération, ${ans(v.delaiDeRecuperation ?? 0)}, reste sous les ${qte(x.machine.dureeEnAnnees)} ans de la machine, mais il ne dit pas la valeur créée : seule la VAN la dit.`,
-          `Au même point, le poste seul aurait encore une VAN de ${eur(x.posteSeul.van)}, meilleure : l'opérateur ne se paie qu'à partir de ${x.operateurPaie === null ? "aucune hausse" : pct(x.operateurPaie, 1)} de demande en plus.`,
+          `À ${pct(HAUSSE_DE_LA_VARIANTE)} de plus, le poste et son opérateur vendent ${qte(v.ventesGagnees)} ${x.f.unites} de plus au lieu de ${qte(x.poste.ventesGagnees)}, et la VAN passe de ${eur(x.poste.van)} à ${eur(v.van)} : positive, de peu. Le délai de récupération, ${ans(v.delaiDeRecuperation ?? 0)}, reste sous les ${qte(x.machine.dureeEnAnnees)} ans de la machine, mais il ne dit pas la valeur créée : seule la VAN la dit.`,
+          `Au même point, le poste seul aurait encore une VAN de ${eur(x.posteSeul.van)}, meilleure : l'opérateur ne se paie qu'à partir de ${x.operateurPaie === null ? "aucune hausse" : pct(x.operateurPaie)} de demande en plus.`,
         ];
       },
     },
@@ -825,18 +834,17 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const x = croissance(c);
         const p = x.poste;
         return [
-          { libelle: "Flux de chaque année qui annule la VAN", attendu: x.fluxQuiAnnule, calcul: `${eur(p.investissement)} ÷ ${facteurEcrit(p.facteurDActualisation)} = ${eur(x.fluxQuiAnnule)}`, tolerance: 0.5 },
+          { libelle: "Flux de chaque année qui annule la VAN", attendu: x.fluxQuiAnnule, calcul: `${eur(p.investissement)} ÷ ${facteurEcrit(p.facteurDActualisation)} = ${eur(x.fluxQuiAnnule)}` },
           {
             libelle: "Ventes gagnées par an qui annulent la VAN",
+            nature: "quantite",
             attendu: x.ventesQuiAnnulent,
-            calcul: `(${eur(x.fluxQuiAnnule)} − ${eur(p.amortissement)}) ÷ ${qte(1 - x.impot)} = ${eur(x.resultatQuiAnnule)} de résultat avant impôt ; (${eur(x.resultatQuiAnnule)} + ${eur(p.salaires)} + ${eur(p.entretien)} + ${eur(p.amortissement)}) ÷ ${eur(x.m)} = ${qte(auCentime((x.resultatQuiAnnule + p.salaires + p.entretien + p.amortissement) / x.m))}, soit ${qte(x.ventesQuiAnnulent)}`,
-            tolerance: 0,
+            calcul: `(${eur(x.fluxQuiAnnule)} − ${eur(p.amortissement)}) ÷ ${qte(1 - x.impot)} = ${eur(x.resultatQuiAnnule)} de résultat avant impôt ; (${eur(x.resultatQuiAnnule)} + ${eur(p.salaires)} + ${eur(p.entretien)} + ${eur(p.amortissement)}) ÷ ${eur(x.m)} = ${qte((x.resultatQuiAnnule + p.salaires + p.entretien + p.amortissement) / x.m)}, arrondi à l'${x.f.unite} supérieure : ${qte(x.ventesQuiAnnulent)} (une de moins laisserait la VAN négative)`,
           },
           {
             libelle: "Hausse de la demande qui annule la VAN (%)",
             attendu: x.hausseARebours,
-            calcul: `Seuls les trimestres où l'outil bornait gagnent des ventes : (${qte(x.ventesQuiAnnulent)} − ${qte(p.ventesGagnees)}) ÷ (${x.goulots.map((t) => qte(t.demande)).join(" + ")}) × 100 = ${qte(x.hausseARebours)} %`,
-            tolerance: 0.05,
+            calcul: `Seuls les trimestres où l'outil bornait gagnent des ventes : (${qte(x.ventesQuiAnnulent)} − ${qte(p.ventesGagnees)}) ÷ (${x.goulots.map((t) => qte(t.demande)).join(" + ")}) × 100 = ${pourcent(x.hausseARebours)}`,
           },
         ];
       },
@@ -890,7 +898,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
       question: (c) => {
         const x = croissance(c);
         const k = x.critique;
-        return `À ${pct(HAUSSE_DE_LA_CRITIQUE, 1)} de demande en plus, le poste et son opérateur font gagner ${eur(k.resultatGagne)} de résultat la première année. Un collègue en tire une « rentabilité » : ${eur(k.resultatGagne)} ÷ ${eur(x.machine.prix)} = ${qte(x.rentabiliteDuCollegue)} %, bien au-dessus des ${pct(x.f.investissement.tauxDeLEmprunt)} de l'emprunt. Que lui répondez-vous ?`;
+        return `À ${pct(HAUSSE_DE_LA_CRITIQUE)} de demande en plus, le poste et son opérateur font gagner ${eur(k.resultatGagne)} de résultat la première année. Un collègue en tire une « rentabilité » : ${eur(k.resultatGagne)} ÷ ${eur(x.machine.prix)} = ${qte(x.rentabiliteDuCollegue)} %, bien au-dessus des ${pct(x.f.investissement.tauxDeLEmprunt)} de l'emprunt. Que lui répondez-vous ?`;
       },
       options: (c) => {
         const x = croissance(c);
@@ -900,7 +908,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
           {
             texte: "Ce ratio ne juge rien : seule la VAN compte tous les flux de la durée, actualisés",
             juste: true,
-            retour: `Oui. À ${pct(HAUSSE_DE_LA_CRITIQUE, 1)}, la VAN vaut ${eur(k.van)}, et le poste se récupère en ${ans(k.delaiDeRecuperation ?? 0)}. Le ratio du collègue rapporte un résultat comptable d'une seule année (amortissement et intérêts compris, avant impôt) au seul prix : il oublie le recrutement, la durée de ${qte(x.machine.dureeEnAnnees)} ans, le moment où l'argent rentre et ce que l'argent coûte. Il dirait la même chose d'une machine qui ne durerait qu'un an.`,
+            retour: `Oui. À ${pct(HAUSSE_DE_LA_CRITIQUE)}, la VAN vaut ${eur(k.van)}, et le poste se récupère en ${ans(k.delaiDeRecuperation ?? 0)}. Le ratio du collègue rapporte un résultat comptable d'une seule année (amortissement et intérêts compris, avant impôt) au seul prix : il oublie le recrutement, la durée de ${qte(x.machine.dureeEnAnnees)} ans, le moment où l'argent rentre et ce que l'argent coûte. Il dirait la même chose d'une machine qui ne durerait qu'un an.`,
           },
           {
             texte: "Il a raison : un investissement paie dès que ce ratio dépasse le taux de l'emprunt",
@@ -931,11 +939,11 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const h = x.hausseNulle;
         return [
           {
-            texte: `Pas sur la demande prévue : avec son opérateur, il lui faut ${h === null ? "plus de demande qu'il n'y en aura" : `${pct(h, 1)} de demande en plus`}, chaque année`,
+            texte: `Pas sur la demande prévue : avec son opérateur, il lui faut ${h === null ? "plus de demande qu'il n'y en aura" : `${pct(h)} de demande en plus`}, chaque année`,
             juste: x.verdict === "attendre-la-demande",
             retour:
               x.verdict === "attendre-la-demande"
-                ? `Oui. Sur la demande prévue, la VAN vaut ${eur(p.van)} : l'opérateur coûte ${eur(p.salaires)} par an, plus que ce que les ventes refusées rapportent (${eur(p.margeGagnee)}). Le poste ne paie qu'à ${pct(h ?? 0, 1)} de demande en plus, gardée ${qte(x.machine.dureeEnAnnees)} ans ; le poste seul, sans embauche, ne crée que ${eur(x.posteSeul.van)}. La décision tient à un pari sur la demande, et c'est lui qu'il faut étayer.`
+                ? `Oui. Sur la demande prévue, la VAN vaut ${eur(p.van)} : l'opérateur coûte ${eur(p.salaires)} par an, plus que ce que les ventes refusées rapportent (${eur(p.margeGagnee)}). Le poste ne paie qu'à ${pct(h ?? 0)} de demande en plus, gardée ${qte(x.machine.dureeEnAnnees)} ans ; le poste seul, sans embauche, ne crée que ${eur(x.posteSeul.van)}. La décision tient à un pari sur la demande, et c'est lui qu'il faut étayer.`
                 : `Non : la VAN du poste avec son opérateur vaut ${eur(p.van)}.`,
           },
           {
@@ -957,7 +965,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
             retour:
               x.verdict === "ne-pas-acheter"
                 ? "Oui : aucune hausse de la demande ne la rend rentable."
-                : `Non : une première année en perte ne condamne pas un investissement. À ${pct(HAUSSE_DE_LA_CRITIQUE, 1)} de demande en plus, la VAN vaudrait ${eur(x.critique.van)}. C'est la demande qu'il faut juger, pas l'année.`,
+                : `Non : une première année en perte ne condamne pas un investissement. À ${pct(HAUSSE_DE_LA_CRITIQUE)} de demande en plus, la VAN vaudrait ${eur(x.critique.van)}. C'est la demande qu'il faut juger, pas l'année.`,
           },
         ];
       },
@@ -972,7 +980,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const p = x.poste;
         return [
           `Chez ${x.f.entreprise}, l'outil refuse ${qte(x.sans.refusees)} ${x.f.unites} en N + 1, ${eur(x.sans.margeRefusee)} de marge. ${x.machine.nom} les sert toutes, à condition d'embaucher : sans opérateur, le goulot passe à l'équipe, et il n'en sert que ${qte(x.posteSeul.ventesGagnees)}.`,
-          `Une croissance par l'investissement se juge en trois questions. La capacité est-elle le goulot, et que devient-il ensuite ? Quelle embauche va avec ? La VAN, sur toute la durée, est-elle positive ? Ici, le poste et son opérateur coûtent ${eur(p.charges)} par an, dont ${eur(p.salaires)} de salaire : sur la demande prévue, leur VAN vaut ${eur(p.van)}, et elle devient positive à ${pct(x.hausseNulle ?? 0, 1)} de demande en plus, gardée ${qte(x.machine.dureeEnAnnees)} ans. La VAN dépend de la demande bien plus que de la machine. Les intérêts changent le résultat de l'année, pas la VAN, et un résultat d'une année rapporté au prix n'est pas une rentabilité.`,
+          `Une croissance par l'investissement se juge en trois questions. La capacité est-elle le goulot, et que devient-il ensuite ? Quelle embauche va avec ? La VAN, sur toute la durée, est-elle positive ? Ici, le poste et son opérateur coûtent ${eur(p.charges)} par an, dont ${eur(p.salaires)} de salaire : sur la demande prévue, leur VAN vaut ${eur(p.van)}, et elle devient positive à ${pct(x.hausseNulle ?? 0)} de demande en plus, gardée ${qte(x.machine.dureeEnAnnees)} ans. La VAN dépend de la demande bien plus que de la machine. Les intérêts changent le résultat de l'année, pas la VAN, et un résultat d'une année rapporté au prix n'est pas une rentabilité.`,
           "Au niveau de l'examen, vous savez dire ce qui borne une production, chiffrer les charges d'un investissement et de l'embauche qui va avec, calculer ses flux, sa VAN et son délai de récupération, remonter de la VAN nulle aux ventes et à la hausse de la demande qu'elle exige, et critiquer un ratio qui n'en est pas un.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

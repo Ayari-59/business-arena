@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { VENTES_AUX_PARTICULIERS } from "./exercice-de-nova";
 import { ajustementExponentiel, ajustementLineaire, aLUnite, coefficientsSaisonniers, correlation, serieDuMarche } from "./prevision-des-ventes";
 
@@ -22,8 +23,10 @@ import { ajustementExponentiel, ajustementLineaire, aLUnite, coefficientsSaisonn
  * (JANVIER_N_PLUS_1_AUX_PARTICULIERS).
  *
  * LES ARRONDIS : la série CVS s'arrondit à l'enceinte ; les coefficients de corrélation se lisent
- * au millième ; les prévisions du lissage ne s'arrondissent pas en chemin (l'affichage arrondit au
- * centième).
+ * au millième ; LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire,
+ * 10 novembre 2026, pedagogy/cours/deux-decimales.ts) : chaque prévision du lissage s'arrondit au
+ * centième, et la suivante en repart, comme sur la copie de l'élève (elles ne s'arrondissaient pas
+ * en chemin, avant).
  */
 
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
@@ -141,8 +144,8 @@ export function lissage(alpha: number, ventes: readonly number[] = VENTES_LISSEE
   const mois: MoisLisse[] = [];
   let p = ventes[0]!;
   for (let m = 1; m < ventes.length; m++) {
-    mois.push({ mois: m, vente: ventes[m]!, prevision: p, erreur: ventes[m]! - p });
-    p = alpha * ventes[m]! + (1 - alpha) * p;
+    mois.push({ mois: m, vente: ventes[m]!, prevision: p, erreur: arrondi2(ventes[m]! - p) });
+    p = arrondi2(alpha * ventes[m]! + (1 - alpha) * p);
   }
   const carres = somme(mois.map((x) => x.erreur ** 2));
   return { alpha, mois, sommeDesCarres: carres, ecartMoyen: somme(mois.map((x) => Math.abs(x.erreur))) / mois.length, prochaine: p };
@@ -166,5 +169,5 @@ export const JANVIER_N_PLUS_1_AUX_PARTICULIERS = 1_400;
 export function previsionDeFevrier(alpha: number = meilleurAlpha(), janvier: number = JANVIER_N_PLUS_1_AUX_PARTICULIERS) {
   const l = lissage(alpha);
   const prevue = l.prochaine;
-  return { alpha, janvierPrevu: prevue, janvier, erreur: janvier - prevue, fevrier: alpha * janvier + (1 - alpha) * prevue };
+  return { alpha, janvierPrevu: prevue, janvier, erreur: arrondi2(janvier - prevue), fevrier: arrondi2(alpha * janvier + (1 - alpha) * prevue) };
 }

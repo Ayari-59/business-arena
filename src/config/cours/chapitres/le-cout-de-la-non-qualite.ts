@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeDeProduction, courbeDeLaQualite, coutMoyenDUnDefaut, coutsDeLaQualite, demarcheQualite, margeUnitaire, type LeviersDeLaQualite } from "../monde/capacite";
 import { CAPACITES_DU_COURS, type FicheDeLaCapacite } from "../monde/nova-capacite";
@@ -37,6 +37,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     double), a-rebours (retrouver les défauts, le taux et le budget de prévention à partir de la seule
  *     défaillance externe), la-critique (une critique de la méthode : des ventes perdues comptées sur
  *     l'année alors que l'outil refuse déjà de la demande) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les défauts (de l'année, trouvés, livrés, évités) et les
+ * ventes qu'ils font perdre sont des espérances, taux × volume : des grandeurs au centième ; le
+ * délai de récupération aussi (à 0,02 an près, avant) ; les taux s'écrivent à deux décimales.
  */
 
 /** Les entreprises où le chapitre se joue : NOVA, la seule fiche de capacité du monde du cours. */
@@ -66,10 +71,8 @@ export const LABORATOIRE_DE_LA_QUALITE = {
   retour: { min: 50, max: 200, pas: 10 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(Math.round(t * 10_000) / 100)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const ans = (x: number) => `${qte(x)} an${x >= 2 ? "s" : ""}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -90,7 +93,7 @@ export function budgetDuTaux(f: FicheDeLaCapacite, taux: number): number | null 
   for (let i = 1; i < c.length; i++) {
     const a = c[i - 1]!;
     const b = c[i]!;
-    if (taux <= a.tauxDeDefaut + 1e-12 && taux >= b.tauxDeDefaut - 1e-12) return auCentime(a.budget + ((a.tauxDeDefaut - taux) / (a.tauxDeDefaut - b.tauxDeDefaut)) * (b.budget - a.budget));
+    if (taux <= a.tauxDeDefaut + 1e-12 && taux >= b.tauxDeDefaut - 1e-12) return arrondi2(a.budget + ((a.tauxDeDefaut - taux) / (a.tauxDeDefaut - b.tauxDeDefaut)) * (b.budget - a.budget));
   }
   return null;
 }
@@ -115,13 +118,13 @@ export function qualiteDeNova(c: Pick<Cas, "code">) {
   // Le curseur des ventes perdues : le double rattrape le budget actuel en résultat quand livrés évités × v × marge couvrent le coût total en plus.
   const ventesQuiFontDoubler = Math.ceil(((double.total - actuel.total) / ((actuel.livres - double.livres) * m)) * 100 - 1e-9);
   // L'euro de prévention, du budget actuel au double.
-  const ajoutee = auCentime(double.prevention - actuel.prevention);
-  const evitee = auCentime(actuel.nonQualite - double.nonQualite);
-  const regagnee = auCentime(actuel.margePerdue - double.margePerdue);
+  const ajoutee = arrondi2(double.prevention - actuel.prevention);
+  const evitee = arrondi2(actuel.nonQualite - double.nonQualite);
+  const regagnee = arrondi2(actuel.margePerdue - double.margePerdue);
   // Le calcul à rebours.
   const detection = q.controleFinal.tauxDeDetection;
-  const livresARebours = auCentime(DEFAILLANCE_EXTERNE_A_REBOURS / q.coutDUnDefautLivre);
-  const defautsARebours = auCentime(livresARebours / (1 - detection));
+  const livresARebours = arrondi2(DEFAILLANCE_EXTERNE_A_REBOURS / q.coutDUnDefautLivre);
+  const defautsARebours = arrondi2(livresARebours / (1 - detection));
   const tauxARebours = defautsARebours / volume;
   const budgetARebours = budgetDuTaux(f, tauxARebours)!;
   // La démarche du chapitre : la standardisation des postes.
@@ -139,7 +142,7 @@ export function qualiteDeNova(c: Pick<Cas, "code">) {
     sansLaQualitePercue: { leMoinsCher: sansLaQualitePercue.leMoinsCher, leMeilleur: sansLaQualitePercue.leMeilleur },
     coutMoyenDUnDefaut: coutMoyenDUnDefaut(f),
     /** Combien de fois un défaut livré coûte plus qu'un défaut trouvé. */
-    rapportDesCouts: auCentime(q.coutDUnDefautLivre / q.coutDUnDefautDetecte),
+    rapportDesCouts: arrondi2(q.coutDUnDefautLivre / q.coutDUnDefautDetecte),
     retourQuiFaitDoubler,
     ventesQuiFontDoubler,
     ajoutee,
@@ -152,7 +155,7 @@ export function qualiteDeNova(c: Pick<Cas, "code">) {
     tauxARebours,
     budgetARebours,
     standardisation,
-    delaiDeLaStandardisation: auCentime(standardisation.delaiSurLesCouts!),
+    delaiDeLaStandardisation: arrondi2(standardisation.delaiSurLesCouts!),
   };
 }
 
@@ -277,9 +280,9 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
       champs: (c) => {
         const a = qualiteDeNova(c).actuel;
         return [
-          { libelle: "Défauts de l'année", attendu: a.defauts, calcul: `${qte(a.volume)} × ${pct(a.tauxDeDefaut)} = ${qte(a.defauts)}` },
-          { libelle: "Défauts trouvés au contrôle", attendu: a.detectes, calcul: `${qte(a.defauts)} × ${pct(a.tauxDeDetection)} = ${qte(a.detectes)}` },
-          { libelle: "Défauts livrés aux clients", attendu: a.livres, calcul: `${qte(a.defauts)} − ${qte(a.detectes)} = ${qte(a.livres)}` },
+          { libelle: "Défauts de l'année", nature: "grandeur", attendu: a.defauts, calcul: `${qte(a.volume)} × ${pct(a.tauxDeDefaut)} = ${qte(a.defauts)}` },
+          { libelle: "Défauts trouvés au contrôle", nature: "grandeur", attendu: a.detectes, calcul: `${qte(a.defauts)} × ${pct(a.tauxDeDetection)} = ${qte(a.detectes)}` },
+          { libelle: "Défauts livrés aux clients", nature: "grandeur", attendu: a.livres, calcul: `${qte(a.defauts)} − ${qte(a.detectes)} = ${qte(a.livres)}` },
         ];
       },
       explication: (c) => {
@@ -312,7 +315,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
         const x = qualiteDeNova(c);
         const a = x.actuel;
         return [
-          `La qualité coûte ${eur(a.total)} à ${x.f.entreprise} sur l'année, dont ${eur(a.nonQualite)} de non-qualité. Les défauts livrés sont ${qte(auCentime(a.detectes / a.livres))} fois moins nombreux que les défauts trouvés, mais coûtent plus : ${eur(a.externe)} contre ${eur(a.interne)}. Un défaut coûte en moyenne ${eur(x.coutMoyenDUnDefaut)}, et ${qte(x.rapportDesCouts)} fois plus cher chez le client qu'à l'atelier.`,
+          `La qualité coûte ${eur(a.total)} à ${x.f.entreprise} sur l'année, dont ${eur(a.nonQualite)} de non-qualité. Les défauts livrés sont ${qte(arrondi2(a.detectes / a.livres))} fois moins nombreux que les défauts trouvés, mais coûtent plus : ${eur(a.externe)} contre ${eur(a.interne)}. Un défaut coûte en moyenne ${eur(x.coutMoyenDUnDefaut)}, et ${qte(x.rapportDesCouts)} fois plus cher chez le client qu'à l'atelier.`,
         ];
       },
     },
@@ -365,7 +368,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
           { libelle: "Défaillance externe au budget actuel", montant: a.externe },
           { libelle: "Coût total au budget actuel", montant: a.total },
           { libelle: "Coût total au double", montant: d.total },
-          { libelle: "Ce que doubler fait gagner sur le coût total", montant: auCentime(a.total - d.total), fort: true },
+          { libelle: "Ce que doubler fait gagner sur le coût total", montant: arrondi2(a.total - d.total), fort: true },
         ];
       },
       droites: (c) => {
@@ -380,7 +383,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
       explication: (c) => {
         const x = qualiteDeNova(c);
         return [
-          `À ${eur(x.q.coutDUnDefautLivre)} le retour, doubler la prévention coûte ${eur(auCentime(x.double.total - x.actuel.total))} de plus qu'elle n'évite. Il faudrait qu'un retour coûte ${eur(x.retourQuiFaitDoubler)} pour que le double devienne le moins cher : chaque défaut livré évité vaudrait alors assez pour payer la prévention en plus.`,
+          `À ${eur(x.q.coutDUnDefautLivre)} le retour, doubler la prévention coûte ${eur(arrondi2(x.double.total - x.actuel.total))} de plus qu'elle n'évite. Il faudrait qu'un retour coûte ${eur(x.retourQuiFaitDoubler)} pour que le double devienne le moins cher : chaque défaut livré évité vaudrait alors assez pour payer la prévention en plus.`,
           "Plus la défaillance externe coûte cher, plus il vaut la peine de prévenir. Le budget au coût total le plus bas n'est pas une constante : il dépend de ce que coûte un défaut. L'étape suivante dessine la courbe entière, à la fiche.",
         ];
       },
@@ -493,7 +496,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
           { libelle: "Ventes perdues au budget actuel", montant: a.ventesPerdues },
           { libelle: "Résultat de la qualité au budget actuel", montant: a.resultat },
           { libelle: "Résultat de la qualité au double", montant: d.resultat },
-          { libelle: "Ce que doubler fait gagner au résultat", montant: auCentime(d.resultat - a.resultat), fort: true },
+          { libelle: "Ce que doubler fait gagner au résultat", montant: arrondi2(d.resultat - a.resultat), fort: true },
         ];
       },
       droites: (c) => {
@@ -535,7 +538,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
         const a = x.actuel;
         const d = x.double;
         return [
-          { libelle: "Ventes perdues au budget actuel", attendu: a.ventesPerdues, calcul: `${qte(a.livres)} × ${qte(x.q.ventesPerduesParDefautLivre)} = ${qte(a.ventesPerdues)}` },
+          { libelle: "Ventes perdues au budget actuel", nature: "grandeur", attendu: a.ventesPerdues, calcul: `${qte(a.livres)} × ${qte(x.q.ventesPerduesParDefautLivre)} = ${qte(a.ventesPerdues)}` },
           { libelle: "Résultat de la qualité au budget actuel", attendu: a.resultat, calcul: `(${qte(x.volume)} − ${qte(a.ventesPerdues)}) × ${eur(x.m)} − ${eur(a.total)} = ${eur(a.resultat)}` },
           {
             libelle: "Résultat de la qualité au double",
@@ -547,7 +550,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
       explication: (c) => {
         const x = qualiteDeNova(c);
         return [
-          `Au double, le coût total est plus haut de ${eur(auCentime(x.double.total - x.actuel.total))}, mais ${x.f.entreprise} ne perd que ${qte(x.double.ventesPerdues)} ventes au lieu de ${qte(x.actuel.ventesPerdues)} : le résultat de la qualité y est plus haut de ${eur(auCentime(x.double.resultat - x.actuel.resultat))}.`,
+          `Au double, le coût total est plus haut de ${eur(arrondi2(x.double.total - x.actuel.total))}, mais ${x.f.entreprise} ne perd que ${qte(x.double.ventesPerdues)} ventes au lieu de ${qte(x.actuel.ventesPerdues)} : le résultat de la qualité y est plus haut de ${eur(arrondi2(x.double.resultat - x.actuel.resultat))}.`,
         ];
       },
     },
@@ -581,14 +584,14 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
           {
             texte: "Le budget au meilleur résultat : les ventes gardées comptent autant que les coûts",
             juste: !memes,
-            retour: `Oui : ${eur(b.resultat)} de résultat ${ouEst(b)}, contre ${eur(x.leMoinsCher.resultat)} ${ouEst(x.leMoinsCher)}. Le budget au coût le plus bas oublie ${qte(auCentime(x.leMoinsCher.ventesPerdues - b.ventesPerdues))} ventes que la qualité perçue fait perdre de plus.`,
+            retour: `Oui : ${eur(b.resultat)} de résultat ${ouEst(b)}, contre ${eur(x.leMoinsCher.resultat)} ${ouEst(x.leMoinsCher)}. Le budget au coût le plus bas oublie ${qte(arrondi2(x.leMoinsCher.ventesPerdues - b.ventesPerdues))} ventes que la qualité perçue fait perdre de plus.`,
           },
           {
             texte: "Le budget au coût le plus bas : c'est lui qui coûte le moins",
             juste: memes,
             retour: memes
               ? "Oui : ici, le coût le plus bas donne aussi le meilleur résultat."
-              : `Non : c'est le piège. Le coût de la qualité ne compte pas les ventes que perd un client déçu ; ${ouEst(x.leMoinsCher)}, le résultat est plus bas de ${eur(auCentime(b.resultat - x.leMoinsCher.resultat))}.`,
+              : `Non : c'est le piège. Le coût de la qualité ne compte pas les ventes que perd un client déçu ; ${ouEst(x.leMoinsCher)}, le résultat est plus bas de ${eur(arrondi2(b.resultat - x.leMoinsCher.resultat))}.`,
           },
           {
             texte: "Aucun budget : la prévention est une charge qu'on peut couper",
@@ -627,17 +630,17 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
           { libelle: "Marge regagnée sur les ventes perdues", attendu: x.regagnee, calcul: `(${qte(a.ventesPerdues)} − ${qte(d.ventesPerdues)}) × ${eur(x.m)} = ${eur(x.regagnee)}` },
           {
             libelle: "Ce que rapporte un euro de prévention ajouté",
-            attendu: auCentime((x.evitee + x.regagnee) / x.ajoutee),
-            calcul: `(${eur(x.evitee)} + ${eur(x.regagnee)}) ÷ ${eur(x.ajoutee)} = ${eur(auCentime((x.evitee + x.regagnee) / x.ajoutee))}`,
+            attendu: arrondi2((x.evitee + x.regagnee) / x.ajoutee),
+            calcul: `(${eur(x.evitee)} + ${eur(x.regagnee)}) ÷ ${eur(x.ajoutee)} = ${eur(arrondi2((x.evitee + x.regagnee) / x.ajoutee))}`,
             tolerance: 0.01,
           },
         ];
       },
       explication: (c) => {
         const x = qualiteDeNova(c);
-        const parEuroSurLesCouts = auCentime(x.evitee / x.ajoutee);
+        const parEuroSurLesCouts = arrondi2(x.evitee / x.ajoutee);
         return [
-          `Sur les seuls coûts, un euro de prévention ajouté n'évite que ${eur(parEuroSurLesCouts)} de défaillances : il coûte plus qu'il n'évite, et le coût total monte. Ventes comprises, il rapporte ${eur(auCentime((x.evitee + x.regagnee) / x.ajoutee))} : il se paie, et le résultat monte.`,
+          `Sur les seuls coûts, un euro de prévention ajouté n'évite que ${eur(parEuroSurLesCouts)} de défaillances : il coûte plus qu'il n'évite, et le coût total monte. Ventes comprises, il rapporte ${eur(arrondi2((x.evitee + x.regagnee) / x.ajoutee))} : il se paie, et le résultat monte.`,
           "On augmente la prévention tant qu'un euro de plus évite plus d'un euro de défaillances et de marge perdue réunies. C'est le raisonnement à la marge qui fixe le bon niveau, pas le zéro défaut.",
         ];
       },
@@ -672,7 +675,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
           { libelle: "Coût total de la qualité", montant: r.total, reference: d.total },
           { libelle: "Marge des ventes perdues", montant: r.margePerdue, reference: d.margePerdue },
           { libelle: "Résultat de la qualité", montant: r.resultat, reference: d.resultat },
-          { libelle: "Écart de résultat face au départ", montant: auCentime(r.resultat - d.resultat), reference: 0, effet: true, fort: true },
+          { libelle: "Écart de résultat face au départ", montant: arrondi2(r.resultat - d.resultat), reference: 0, effet: true, fort: true },
         ];
       },
       graphique: (c) => {
@@ -728,12 +731,13 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
         return [
           {
             libelle: "Défauts de cette année",
+            nature: "grandeur",
             attendu: x.defautsARebours,
             calcul: `${eur(DEFAILLANCE_EXTERNE_A_REBOURS)} ÷ ${eur(x.q.coutDUnDefautLivre)} = ${qte(x.livresARebours)} défauts livrés, soit ${pct(1 - x.q.controleFinal.tauxDeDetection)} des défauts : ${qte(x.livresARebours)} ÷ ${qte(1 - x.q.controleFinal.tauxDeDetection)} = ${qte(x.defautsARebours)}`,
           },
           {
             libelle: "Taux de défaut, en %",
-            attendu: auCentime(x.tauxARebours * 100),
+            attendu: arrondi2(x.tauxARebours * 100),
             calcul: `${qte(x.defautsARebours)} ÷ ${qte(x.volume)} = ${pct(x.tauxARebours)}`,
             tolerance: 0.01,
           },
@@ -767,13 +771,13 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
         const x = qualiteDeNova(c);
         const s = x.standardisation;
         return [
-          { libelle: "Défauts évités sur l'année", attendu: s.defautsEvites, calcul: `${qte(x.volume)} × ${pct(s.baisseDuTauxDeDefaut)} = ${qte(s.defautsEvites)}` },
+          { libelle: "Défauts évités sur l'année", nature: "grandeur", attendu: s.defautsEvites, calcul: `${qte(x.volume)} × ${pct(s.baisseDuTauxDeDefaut)} = ${qte(s.defautsEvites)}` },
           {
             libelle: "Gain de l'année sur le coût total",
             attendu: s.gainDesCouts,
             calcul: `${qte(s.defautsEvites)} × ${eur(x.coutMoyenDUnDefaut)} (le coût moyen d'un défaut : ${pct(x.q.controleFinal.tauxDeDetection)} × ${eur(x.q.coutDUnDefautDetecte)} + ${pct(1 - x.q.controleFinal.tauxDeDetection)} × ${eur(x.q.coutDUnDefautLivre)}) = ${eur(s.gainDesCouts)}`,
           },
-          { libelle: "Délai de récupération sur les coûts", attendu: x.delaiDeLaStandardisation, calcul: `${eur(s.cout)} ÷ ${eur(s.gainDesCouts)} = ${ans(x.delaiDeLaStandardisation)}`, tolerance: 0.02 },
+          { libelle: "Délai de récupération sur les coûts", nature: "grandeur", attendu: x.delaiDeLaStandardisation, calcul: `${eur(s.cout)} ÷ ${eur(s.gainDesCouts)} = ${ans(x.delaiDeLaStandardisation)}` },
         ];
       },
       explication: (c) => {

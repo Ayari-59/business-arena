@@ -1,3 +1,4 @@
+import { arrondi, arrondi2, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   ALPHAS,
@@ -38,6 +39,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : la-serie-cvs, la-correlation-de-la-cvs, l-ajustement-puissance, la-prevision-de-janvier ;
  *   · expert : le-choix-de-l-ajustement (trois tendances, deux séries), ce-que-le-lissage-ne-voit-pas ;
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les coefficients de corrélation et de détermination restent
+ * au millième, l'exposant a et ln b au dix-millième (des coefficients) ; b se donne au centième, et
+ * la tendance du rang 13 en repart, puis s'arrondit à l'enceinte (à 15 et 20 enceintes près, avant)
+ * ; la série CVS et la tendance sont des quantités, à l'enceinte ; chaque prévision du lissage
+ * s'arrondit au centième et la suivante en repart (monde/correlation-et-lissage.ts).
  */
 
 /** La prévision se calcule sur le marché et les ventes de NOVA, que le monde du cours tient. */
@@ -52,11 +60,23 @@ export const ECART_GUETTE = 1_000;
 /** Les mois que le lissage à la main calcule (février à juin, avec α = 0,3). */
 export const MOIS_A_LA_MAIN = 5;
 
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const dec = (x: number, d: number) => (x + 0).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/^-/, "−");
 const NOMS = ["1er trimestre", "2e trimestre", "3e trimestre", "4e trimestre"] as const;
 
 const donnee = (valeur: number, unite = "enceintes"): CelluleACompleter => ({ valeur, unite });
+
+/**
+ * L'ajustement puissance tel que l'élève le calcule (deux décimales, 10 novembre 2026) : a et ln b au
+ * dix-millième, b au centième, la tendance du rang 13 à deux décimales puis à l'enceinte.
+ */
+function puissanceALaMain(p: { a: number; xMoyen: number; yMoyen: number }) {
+  const a = arrondi(p.a, 4);
+  const lnB = arrondi(arrondi(p.yMoyen, 4) - a * arrondi(p.xMoyen, 4), 4);
+  const b = arrondi2(Math.exp(lnB));
+  const exact13 = arrondi2(b * 13 ** a);
+  return { a, lnB, b, exact13, rang13: Math.round(exact13) };
+}
 const texte = (valeur: number, t: string): CelluleACompleter => ({ valeur, texte: t });
 const aSaisir = (valeur: number, calcul: string, autres: Partial<CelluleACompleter> = {}): CelluleACompleter => ({ valeur, saisir: true, calcul, ...autres });
 
@@ -135,7 +155,7 @@ function grilleDeLaCVS(): TableauACompleter {
         donnee(x.marche),
         texte(x.coefficient, dec(x.coefficient, 3)),
         x.annee === "N"
-          ? aSaisir(x.cvs, `${qte(x.marche)} ÷ ${dec(x.coefficient, 3)} = ${qte(x.marche / x.coefficient)}, soit ${qte(x.cvs)}`, { unite: "enceintes", tolerance: 1, indice: "le marché du trimestre divisé par son coefficient" })
+          ? aSaisir(x.cvs, `${qte(x.marche)} ÷ ${dec(x.coefficient, 3)} = ${qte(x.marche / x.coefficient)}, arrondi à l'enceinte : ${qte(x.cvs)}`, { unite: "enceintes", nature: "quantite", indice: "le marché du trimestre divisé par son coefficient" })
           : { ...donnee(x.cvs), calcul: `${qte(x.marche)} ÷ ${dec(x.coefficient, 3)}` },
       ],
     })),
@@ -228,8 +248,8 @@ export const CORRELATION_ET_LISSAGE: Chapitre = {
       champs: () => {
         const { brute } = correlationEtLissage();
         return [
-          { libelle: "Coefficient de corrélation r", attendu: auMillieme(brute.r), tolerance: 0.001, calcul: `${qte(brute.sxy)} ÷ √(${qte(brute.sxx)} × ${qte(brute.syy)}) = ${dec(brute.r, 3)}` },
-          { libelle: "Coefficient de détermination r²", attendu: auMillieme(brute.r2), tolerance: 0.001, calcul: `${dec(brute.r, 3)}² = ${dec(brute.r2, 3)}` },
+          { libelle: "Coefficient de corrélation r", nature: "coefficient", attendu: auMillieme(brute.r), tolerance: 0.001, calcul: `${qte(brute.sxy)} ÷ √(${qte(brute.sxx)} × ${qte(brute.syy)}) = ${dec(brute.r, 3)}` },
+          { libelle: "Coefficient de détermination r²", nature: "coefficient", attendu: auMillieme(brute.r2), tolerance: 0.001, calcul: `${dec(brute.r, 3)}² = ${dec(brute.r2, 3)}` },
         ];
       },
       explication: () => {
@@ -263,13 +283,13 @@ export const CORRELATION_ET_LISSAGE: Chapitre = {
       notions: ["seasonality"],
       question: () => {
         const { cvs } = correlationEtLissage();
-        return `Sur la série CVS, Σ (t − t̄)(y − ȳ) = ${qte(cvs.sxy)}, Σ (t − t̄)² = ${qte(cvs.sxx)} et Σ (y − ȳ)² = ${qte(cvs.syy, 0)}. Calculez r et r², au millième.`;
+        return `Sur la série CVS, Σ (t − t̄)(y − ȳ) = ${qte(cvs.sxy)}, Σ (t − t̄)² = ${qte(cvs.sxx)} et Σ (y − ȳ)² = ${qte(cvs.syy)}. Calculez r et r², au millième.`;
       },
       champs: () => {
         const { cvs } = correlationEtLissage();
         return [
-          { libelle: "Coefficient de corrélation r", attendu: auMillieme(cvs.r), tolerance: 0.001, calcul: `${qte(cvs.sxy)} ÷ √(${qte(cvs.sxx)} × ${qte(cvs.syy, 0)}) = ${dec(cvs.r, 3)}` },
-          { libelle: "Coefficient de détermination r²", attendu: auMillieme(cvs.r2), tolerance: 0.001, calcul: `${dec(cvs.r, 3)}² = ${dec(cvs.r2, 3)}` },
+          { libelle: "Coefficient de corrélation r", nature: "coefficient", attendu: auMillieme(cvs.r), tolerance: 0.001, calcul: `${qte(cvs.sxy)} ÷ √(${qte(cvs.sxx)} × ${qte(cvs.syy)}) = ${dec(cvs.r, 3)}` },
+          { libelle: "Coefficient de détermination r²", nature: "coefficient", attendu: auMillieme(cvs.r2), tolerance: 0.001, calcul: `${dec(cvs.r, 3)}² = ${dec(cvs.r2, 3)}` },
         ];
       },
       explication: () => {
@@ -368,17 +388,19 @@ export const CORRELATION_ET_LISSAGE: Chapitre = {
       },
       champs: () => {
         const { puissance: p } = correlationEtLissage();
+        const k = puissanceALaMain(p);
         return [
-          { libelle: "Exposant a", attendu: Math.round(p.a * 10_000) / 10_000, tolerance: 0.0005, calcul: `${dec(p.sxy, 4)} ÷ ${dec(p.sxx, 4)} = ${dec(p.a, 4)}` },
-          { libelle: "ln b", attendu: Math.round(p.lnB * 10_000) / 10_000, tolerance: 0.001, calcul: `${dec(p.yMoyen, 4)} − ${dec(p.a, 4)} × ${dec(p.xMoyen, 4)} = ${dec(p.lnB, 4)}` },
-          { libelle: "b, en enceintes", attendu: Math.round(p.b), tolerance: 15, calcul: `e^${dec(p.lnB, 4)} = ${qte(Math.round(p.b))}` },
-          { libelle: "Tendance du rang 13, en enceintes", attendu: Math.round(p.en(13)), tolerance: 20, calcul: `${qte(Math.round(p.b))} × 13^${dec(p.a, 4)} = ${qte(Math.round(p.en(13)))}` },
+          { libelle: "Exposant a", nature: "coefficient", attendu: k.a, tolerance: 0.0005, calcul: `${dec(p.sxy, 4)} ÷ ${dec(p.sxx, 4)} = ${dec(k.a, 4)}` },
+          { libelle: "ln b", nature: "coefficient", attendu: k.lnB, tolerance: 0.001, calcul: `${dec(p.yMoyen, 4)} − ${dec(k.a, 4)} × ${dec(p.xMoyen, 4)} = ${dec(k.lnB, 4)}` },
+          { libelle: "b, en enceintes", nature: "grandeur", attendu: k.b, calcul: `e^${dec(k.lnB, 4)} = ${qte(k.b)}` },
+          { libelle: "Tendance du rang 13, en enceintes", nature: "quantite", attendu: k.rang13, calcul: `${qte(k.b)} × 13^${dec(k.a, 4)} = ${qte(k.exact13)}, à l'enceinte : ${qte(k.rang13)}` },
         ];
       },
       explication: () => {
         const { puissance: p, brute } = correlationEtLissage();
+        const k = puissanceALaMain(p);
         return [
-          `La tendance puissance est y = ${qte(Math.round(p.b))} × t^${dec(p.a, 4)}. Au rang 13, elle prévoit ${qte(Math.round(p.en(13)))} enceintes, quand la droite en prévoit ${qte(brute.droite.en(13))} : un exposant de ${dec(p.a, 2)} freine trop la croissance.`,
+          `La tendance puissance est y = ${qte(k.b)} × t^${dec(k.a, 4)}. Au rang 13, elle prévoit ${qte(k.rang13)} enceintes, quand la droite en prévoit ${qte(brute.droite.en(13))} : un exposant de ${dec(p.a, 2)} freine trop la croissance.`,
         ];
       },
     },
@@ -496,8 +518,8 @@ export const CORRELATION_ET_LISSAGE: Chapitre = {
         const d = lisse.mois.at(-1)!;
         const p = Math.round(d.prevision * 100) / 100;
         return [
-          { libelle: "Erreur de décembre", attendu: Math.round(d.erreur * 100) / 100, tolerance: 0.02, calcul: `${qte(d.vente)} − ${qte(p)} = ${qte(Math.round(d.erreur * 100) / 100)}` },
-          { libelle: "Prévision de janvier N + 1", attendu: Math.round(lisse.prochaine * 100) / 100, tolerance: 0.02, calcul: `${qte(alpha)} × ${qte(d.vente)} + ${qte(Math.round((1 - alpha) * 10) / 10)} × ${qte(p)} = ${qte(Math.round(lisse.prochaine * 100) / 100)}` },
+          { libelle: "Erreur de décembre", nature: "grandeur", attendu: Math.round(d.erreur * 100) / 100, calcul: `${qte(d.vente)} − ${qte(p)} = ${qte(Math.round(d.erreur * 100) / 100)}` },
+          { libelle: "Prévision de janvier N + 1", nature: "grandeur", attendu: Math.round(lisse.prochaine * 100) / 100, calcul: `${qte(alpha)} × ${qte(d.vente)} + ${qte(Math.round((1 - alpha) * 10) / 10)} × ${qte(p)} = ${qte(Math.round(lisse.prochaine * 100) / 100)}` },
         ];
       },
       explication: () => {
