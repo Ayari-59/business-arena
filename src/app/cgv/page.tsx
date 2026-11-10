@@ -161,9 +161,9 @@ function CgvPage() {
                 mentions légales et la page RGPD
               </Link>
               . Les élèves et les étudiants jouent sans compte ni adresse électronique : un code suffit, avec un pseudonyme.
-              Deux usages enregistrent un nom, et seulement eux : la classe du cours garde le nom que l&apos;élève donne en la
-              rejoignant, et l&apos;examen individuel garde le nom et le numéro d&apos;étudiant du candidat, saisis par lui ou
-              reçus de la plateforme de l&apos;établissement.
+              Deux usages enregistrent un nom, et seulement eux. La classe du cours garde le nom que l&apos;élève donne en la
+              rejoignant. L&apos;examen individuel garde le nom et le numéro d&apos;étudiant du candidat, saisis par lui ou reçus
+              de la plateforme de l&apos;établissement.
             </p>
           </Section>
 
