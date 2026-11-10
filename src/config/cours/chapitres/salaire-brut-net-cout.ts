@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   COUT_MAXIMAL_D_UN_POSTE,
@@ -30,10 +30,15 @@ import type { Chapitre } from "../types";
  *
  * CE QUI A CHANGÉ. Le chapitre lisait la paie du cas de chaque entreprise de l'arène ; il lit
  * maintenant celle de NOVA : 1 875 € bruts, 1 462,50 € nets, 2 662,50 € de coût par opérateur.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : chaque ligne du bulletin est arrondie au centime (monde/paie.ts),
+ * le corrigé repart des lignes arrondies, et chaque champ attend le centime, à un centime près
+ * (l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Un taux de cotisation, donné en fraction (0,22), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Le plus haut brut que le curseur propose, en euros par mois. */
@@ -110,9 +115,9 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
       champs: (c) => {
         const s = salaire(c);
         return [
-          { libelle: "Salaire brut d'un opérateur", attendu: s.brut, calcul: `${eur(s.brutDeLEquipe)} ÷ ${s.effectif} = ${eur(s.brut)}`, tolerance: 1 },
-          { libelle: "Cotisations salariales", attendu: s.salariales, calcul: `${eur(s.brut)} × ${pct(s.tauxSalarial)} = ${eur(s.salariales)}`, tolerance: 1 },
-          { libelle: "Salaire net", attendu: s.net, calcul: `${eur(s.brut)} − ${eur(s.salariales)} = ${eur(s.net)}`, tolerance: 1 },
+          { libelle: "Salaire brut d'un opérateur", attendu: s.brut, calcul: `${eur(s.brutDeLEquipe)} ÷ ${s.effectif} = ${eur(s.brut)}` },
+          { libelle: "Cotisations salariales", attendu: s.salariales, calcul: `${eur(s.brut)} × ${pct(s.tauxSalarial)} = ${eur(s.salariales)}` },
+          { libelle: "Salaire net", attendu: s.net, calcul: `${eur(s.brut)} − ${eur(s.salariales)} = ${eur(s.net)}` },
         ];
       },
       explication: (c) => {
@@ -133,9 +138,9 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
       champs: (c) => {
         const s = salaire(c);
         return [
-          { libelle: "Cotisations patronales", attendu: s.patronales, calcul: `${eur(s.brut)} × ${pct(s.tauxPatronal)} = ${eur(s.patronales)}`, tolerance: 1 },
-          { libelle: "Coût pour l'entreprise", attendu: s.cout, calcul: `${eur(s.brut)} + ${eur(s.patronales)} = ${eur(s.cout)}`, tolerance: 1 },
-          { libelle: "Coût pour 100 € de net", attendu: s.coutPour100DeNet, calcul: `${eur(s.cout)} ÷ ${eur(s.net)} × 100 = ${eur(s.coutPour100DeNet)}`, tolerance: 0.5 },
+          { libelle: "Cotisations patronales", attendu: s.patronales, calcul: `${eur(s.brut)} × ${pct(s.tauxPatronal)} = ${eur(s.patronales)}` },
+          { libelle: "Coût pour l'entreprise", attendu: s.cout, calcul: `${eur(s.brut)} + ${eur(s.patronales)} = ${eur(s.cout)}` },
+          { libelle: "Coût pour 100 € de net", attendu: s.coutPour100DeNet, calcul: `${eur(s.cout)} ÷ ${eur(s.net)} × 100 = ${eur(s.coutPour100DeNet)}` },
         ];
       },
       explication: (c) => {
@@ -188,7 +193,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
       rates: () => ({ dessous: "Le budget paie ce brut, mais il en paierait un plus haut : cherchez le plus haut.", dessus: "À ce brut, le poste coûte plus que le budget." }),
       montrer: "Montrer le brut",
       lecture: (_c, brut) => [
-        { libelle: "Cotisations patronales", montant: Math.round((coutDUnBrut(brut) - brut) * 100) / 100 },
+        { libelle: "Cotisations patronales", montant: arrondi2(coutDUnBrut(brut) - brut) },
         { libelle: "Coût du poste pour l'entreprise", montant: coutDUnBrut(brut), fort: true },
         { libelle: "Budget du poste", montant: COUT_MAXIMAL_D_UN_POSTE },
       ],
@@ -217,7 +222,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
         return [
           { libelle: "Hausse du brut", montant: h.brut, reference: d.brut },
           { libelle: "Hausse du coût pour l'entreprise", montant: h.cout, reference: d.cout, fort: true },
-          { libelle: "Ce qui reste dans l'enveloppe", montant: Math.round((ENVELOPPE_DE_LA_HAUSSE - h.cout) * 100) / 100, effet: true },
+          { libelle: "Ce qui reste dans l'enveloppe", montant: arrondi2(ENVELOPPE_DE_LA_HAUSSE - h.cout), effet: true },
         ];
       },
       defi: () => {

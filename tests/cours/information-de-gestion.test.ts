@@ -198,11 +198,13 @@ describe("ce que coûte et rapporte un outil numérique", () => {
     gardesDeTexte(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE);
   });
 
-  it("5 620 € la première année ; 30 % des 2 162 ventes manquées, 649 enceintes à 21 €, 13 629 € par an ; 3,8 mois ; 14,1 %", () => {
+  it("5 620 € la première année ; 30 % des 2 162 ventes manquées, 649 enceintes à 21 €, 13 629 € par an ; 3,79 mois ; 14,09 %", () => {
     expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "cout")).toEqual([4 * 40 * 12, 4 * 300, 1_920 + 2_500 + 1_200]);
-    expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "gain")).toEqual([Math.round(2_162 * 0.3), 649 * 21]);
-    expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "delai")).toEqual([13_629 - 1_920, auDixieme((3_700 / 11_709) * 12)]);
-    expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "adoption")).toEqual([auDixieme((1_920 / 13_629) * 100), c(13_629 * 0.6), c(13_629 * 0.6 - 1_920)]);
+    // Chaque ligne arrondie : 648,60 ventes retrouvées font 649 enceintes, et le gain se calcule sur elles.
+    expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "gain")).toEqual([649, 649 * 21]);
+    // À deux décimales : 3 700 × 12 ÷ 11 709 = 3,7919… mois ; 1 920 ÷ 13 629 = 14,0876… %.
+    expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "delai")).toEqual([13_629 - 1_920, 3.79]);
+    expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "adoption")).toEqual([14.09, c(13_629 * 0.6), c(13_629 * 0.6 - 1_920)]);
     expect(juste(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "verdict")).toEqual(["L'outil se rembourse dans la première année"]);
   });
 

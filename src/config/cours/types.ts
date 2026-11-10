@@ -1,5 +1,6 @@
 import type { EcritureAttendue } from "../../pedagogy/cours/correcteur";
 import type { Ecriture } from "../../pedagogy/cours/etats";
+import type { NatureDuNombre } from "../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "./cas";
 
@@ -105,11 +106,19 @@ export interface ChampDeMontant {
   /** Comment on le calcule : se lit après la réponse. */
   calcul: string;
   /**
-   * L'écart admis, en plus ou en moins (0,01 par défaut : le centime). Un seuil de
-   * rentabilité en valeur dépend de l'arrondi du taux de marge que l'élève a gardé :
-   * l'euro près suffit à dire qu'il a compris.
+   * L'écart admis, en plus ou en moins (0,01 par défaut : le centime). Les calculs se font à deux
+   * chiffres après la virgule (décision du propriétaire, 10 novembre 2026) : un montant, un
+   * pourcentage, une grandeur gardent le centième ; une quantité, l'unité exacte
+   * (pedagogy/cours/deux-decimales.ts). Les champs à 1, à 0,1 ou à 0,05 attendent leur lot
+   * (tests/architecture/deux-decimales.test.ts).
    */
   tolerance?: number;
+  /**
+   * Ce que le champ calcule : un montant (absent, par défaut), un pourcentage (absent aussi quand le
+   * libellé porte « (%) » ou « en % »), une grandeur au centième, une quantité entière, un
+   * coefficient au dix-millième. Une quantité et un coefficient se déclarent toujours.
+   */
+  nature?: NatureDuNombre;
 }
 
 export interface EtapeMontants extends Base {

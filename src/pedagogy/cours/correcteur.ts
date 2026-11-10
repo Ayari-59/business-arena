@@ -1,4 +1,5 @@
 import { compteDuPlan, intituleDe, memeFamille } from "./plan-comptable";
+import { arrondi2 } from "./deux-decimales";
 import { auCentime, type Ecriture } from "./etats";
 
 /**
@@ -205,9 +206,12 @@ export function corriger(saisie: readonly LigneSaisie[], attendue: EcritureAtten
   return { juste: remarques.length === 0, remarques, notes: remarques.length === 0 ? notes : [] };
 }
 
-/** Un montant dans une phrase de correction. */
+/**
+ * Un montant dans une phrase de correction, au centime : deux décimales dès qu'il n'est pas entier
+ * (« 1 234,50 € »), aucune sinon. Il s'arrondit d'abord (`arrondi2`) : un reste de calcul ne
+ * s'écrit ni « 1 235,00 € » (1 234,999), ni « -0 € » (−0,000001).
+ */
 export function montantEcrit(montant: number): string {
-  // Un reste d'arrondi (−0,000001) s'écrit « 0 € », jamais « -0 € ».
-  const x = Math.abs(montant) < 0.005 ? 0 : montant;
+  const x = arrondi2(montant);
   return `${x.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(x) ? 0 : 2, maximumFractionDigits: 2 })} €`;
 }

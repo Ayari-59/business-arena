@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2, eur, pct, produit2, qte, somme2, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import {
@@ -32,17 +31,16 @@ import type { Chapitre } from "../types";
  * compte 87 450 €. Il se joue maintenant chez NOVA seule, où les chiffres étaient déjà ceux de la
  * fiche (aucun ne change) ; ses cas « Le fournisseur augmente ses prix » et « Suivre la baisse du
  * concurrent » aussi.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les trois taux se donnent à deux décimales (55,26 %, 35,59 %,
+ * 28,10 %), à un centième près ; ils se donnaient au dixième, à un dixième près.
  */
-
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /** La baisse de prix étudiée : celle que le chapitre « Décider » étudie, l'écart de prix de la fiche. */
 export const BAISSE_DE_PRIX = baisseDePrixEtudiee();
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 export const POURQUOI_PRIX_COUT_MARGE =
   "ce chapitre lit le mois de janvier de NOVA, celui que le contrôle de gestion du cours suit, avec ses prix, ses coûts et ses charges fixes.";
@@ -61,8 +59,8 @@ export function prixPlancher(c: Cas) {
 /** Le prix, le coût et la marge d'une unité, et ceux du mois : ceux de la fiche de NOVA. */
 export function prixCoutMarge(_c: Cas) {
   const m = margeDuMois(FICHE_DE_GESTION);
-  const prixBaisse = auCentime(m.prix * (1 - BAISSE_DE_PRIX));
-  const margeBaissee = auCentime(prixBaisse - m.cout);
+  const prixBaisse = produit2(m.prix, 1 - BAISSE_DE_PRIX);
+  const margeBaissee = somme2(prixBaisse, -m.cout);
   return {
     prix: m.prix,
     matiere: m.composants,
@@ -78,7 +76,7 @@ export function prixCoutMarge(_c: Cas) {
     resultat: m.resultat,
     prixBaisse,
     margeBaissee,
-    baisseDeLaMarge: auDixieme(((m.marge - margeBaissee) / m.marge) * 100),
+    baisseDeLaMarge: taux2(somme2(m.marge, -margeBaissee), m.marge),
     tauxTva: m.tauxDeTva,
     prixTtc: m.prixTtc,
   };
@@ -153,13 +151,13 @@ export const PRIX_COUT_MARGE: Chapitre = {
       notions: ["margin_rates", "markup_coefficient"],
       question: (c) => {
         const m = prixCoutMarge(c);
-        return `La marge de ${eur(m.marge)} se compare au coût, ou au prix. Le taux de marge la rapporte au coût, le taux de marque au prix de vente. Calculez les deux, en pourcentage, au dixième.`;
+        return `La marge de ${eur(m.marge)} se compare au coût, ou au prix. Le taux de marge la rapporte au coût, le taux de marque au prix de vente. Calculez les deux, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const m = prixCoutMarge(c);
         return [
-          { libelle: "Taux de marge (%)", attendu: m.tauxDeMarge, calcul: `${eur(m.marge)} ÷ ${eur(m.cout)} × 100 = ${pct(m.tauxDeMarge)}`, tolerance: 0.1 },
-          { libelle: "Taux de marque (%)", attendu: m.tauxDeMarque, calcul: `${eur(m.marge)} ÷ ${eur(m.prix)} × 100 = ${pct(m.tauxDeMarque)}`, tolerance: 0.1 },
+          { libelle: "Taux de marge (%)", attendu: m.tauxDeMarge, calcul: `${eur(m.marge)} ÷ ${eur(m.cout)} × 100 = ${pct(m.tauxDeMarge)}` },
+          { libelle: "Taux de marque (%)", attendu: m.tauxDeMarque, calcul: `${eur(m.marge)} ÷ ${eur(m.prix)} × 100 = ${pct(m.tauxDeMarque)}` },
         ];
       },
       explication: (c) => {
@@ -213,13 +211,13 @@ export const PRIX_COUT_MARGE: Chapitre = {
       },
       lecture: (c, prix) => {
         const m = prixCoutMarge(c);
-        const marge = auCentime(prix - m.cout);
-        const margeDuMois = auCentime(marge * m.quantite);
+        const marge = somme2(prix, -m.cout);
+        const margeDuMois = produit2(marge, m.quantite);
         return [
           { libelle: "Marge d'une unité", montant: marge },
           { libelle: "Marge du mois", montant: margeDuMois },
           { libelle: "Charges fixes", montant: m.chargesFixes },
-          { libelle: "Résultat du mois", montant: auCentime(margeDuMois - m.chargesFixes), fort: true },
+          { libelle: "Résultat du mois", montant: somme2(margeDuMois, -m.chargesFixes), fort: true },
         ];
       },
       droites: (c) => {
@@ -235,7 +233,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
         const p = prixPlancher(c);
         return [
           p.plancher <= p.prix
-            ? `Sous ${eur(p.plancher)}, ${c.entreprise} perd de l'argent à quantités égales. Son prix actuel, ${eur(p.prix)}, lui laisse ${eur(auCentime(p.prix - p.plancher))} de marge de manœuvre.`
+            ? `Sous ${eur(p.plancher)}, ${c.entreprise} perd de l'argent à quantités égales. Son prix actuel, ${eur(p.prix)}, lui laisse ${eur(arrondi2(p.prix - p.plancher))} de marge de manœuvre.`
             : `À quantités égales, il faudrait vendre au moins ${eur(p.plancher)} pour ne pas perdre d'argent : le prix actuel, ${eur(p.prix)}, est trop bas pour ce volume. L'autre issue est de vendre davantage.`,
           "Les deux droites se croisent au prix plancher : la marge du mois monte avec le prix, les charges fixes ne bougent pas.",
         ];
@@ -259,7 +257,6 @@ export const PRIX_COUT_MARGE: Chapitre = {
             libelle: "Baisse de la marge (%)",
             attendu: m.baisseDeLaMarge,
             calcul: `(${eur(m.marge)} − ${eur(m.margeBaissee)}) ÷ ${eur(m.marge)} × 100 = ${pct(m.baisseDeLaMarge)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -299,7 +296,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
           indice: (p) => {
             const apres = margeDuMois(FICHE_DE_GESTION, { prix: m.prixBaisse, quantite: p.quantite! });
             return apres.margeDuMois < m.margeDuMois
-              ? `La marge du mois tombe à ${eur(apres.margeDuMois)} : il manque ${eur(auCentime(m.margeDuMois - apres.margeDuMois))}. Il faut vendre davantage.`
+              ? `La marge du mois tombe à ${eur(apres.margeDuMois)} : il manque ${eur(arrondi2(m.margeDuMois - apres.margeDuMois))}. Il faut vendre davantage.`
               : `La marge du mois atteint ${eur(apres.margeDuMois)} : moins de ${c.unites} suffirait-il ?`;
           },
           solution: { quantite: auPas },
@@ -308,7 +305,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
       explication: (c, p) => {
         const m = prixCoutMarge(c);
         const { juste } = quantitePourGarderLaMarge(FICHE_DE_GESTION);
-        const hausse = auDixieme((p.quantite! / m.quantite - 1) * 100);
+        const hausse = taux2(p.quantite! - m.quantite, m.quantite);
         return [
           `Défi relevé : ${qte(p.quantite!)} ${c.unites} au lieu de ${qte(m.quantite)}, soit ${pct(hausse)} de ventes en plus, pour une baisse de prix de ${pct(BAISSE_DE_PRIX * 100)}. Au plus juste, il en faudrait ${qte(juste)}.`,
           `Une petite baisse de prix demande beaucoup de ventes en plus, parce qu'elle se prend tout entière sur la marge. Les clients suivront-ils ? C'est la question du chapitre « Décider », au palier 4.`,

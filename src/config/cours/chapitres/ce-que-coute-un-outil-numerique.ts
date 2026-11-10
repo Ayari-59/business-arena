@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { accordPluriel } from "../accords";
 import { type Cas } from "../cas";
 import {
@@ -42,6 +42,13 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre chiffrait le gain sur les ventes manquées de l'arène, dans huit
  * entreprises. Chez NOVA, l'outil coûte maintenant 5 620 € la première année et rapporte 13 629 €
  * par an si toute l'équipe s'en sert.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts). Les ventes retrouvées sont une quantité : elles s'arrondissent à
+ * l'enceinte (648,60 donne 649), et le gain se calcule sur ces 649 enceintes, comme sur la copie de
+ * l'élève. Chaque montant attend le centime, à un centime près (l'euro près, et 21 € pour le gain,
+ * avant) ; le délai de récupération et le taux d'adoption minimal se donnent à deux décimales (au
+ * dixième, avant).
  */
 
 export { ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS, ADOPTION_DE_LA_PREMIERE_ANNEE, FORMATION_PAR_UTILISATEUR, MISE_EN_PLACE, MOIS_PAR_AN, PART_DES_VENTES_RETROUVEES };
@@ -52,10 +59,7 @@ export const ENTREPRISES_DE_L_OUTIL = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 export const POURQUOI_L_OUTIL =
   "ce chapitre chiffre le gain de l'outil sur les ventes que NOVA manque faute de voir ses commandes à temps, que le cours sait compter.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const mois = (n: number) => `${n.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} mois`;
+const mois = (n: number) => `${nombreAuCentieme(n)} mois`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type Verdict = ReturnType<typeof outilDuMonde>["verdict"];
@@ -143,12 +147,17 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
       type: "montants",
       titre: "Ce que l'outil peut rapporter",
       notions: ["contribution_margin", "capacity"],
-      question: (c) => `Si toute l'équipe s'en sert, l'outil fait retrouver ${PART} % des ventes manquées. Calculez ces ventes retrouvées sur l'année, à l'unité (en ${c.unites}), puis le gain annuel qu'elles rapportent.`,
+      question: (c) => `Si toute l'équipe s'en sert, l'outil fait retrouver ${PART} % des ventes manquées. Calculez ces ventes retrouvées sur l'année, arrondies à l'unité (en ${c.unites}), puis le gain annuel que rapportent ces ventes arrondies.`,
       champs: (c) => {
         const o = outilNumerique(c);
         return [
-          { libelle: `Ventes retrouvées sur l'année (${c.unites})`, attendu: o.ventesRetrouvees, calcul: `${qte(o.ventesManquees)} × ${PART} % = ${qte(o.ventesRetrouvees)}`, tolerance: 1 },
-          { libelle: "Gain annuel", attendu: o.gain, calcul: `${qte(o.ventesRetrouvees)} × ${eur(o.marge)} = ${eur(o.gain)}`, tolerance: 21 },
+          {
+            libelle: `Ventes retrouvées sur l'année (${c.unites})`,
+            nature: "quantite",
+            attendu: o.ventesRetrouvees,
+            calcul: `${qte(o.ventesManquees)} × ${PART} % = ${nombreAuCentieme((o.ventesManquees * PART) / 100)}, arrondi à l'unité : ${qte(o.ventesRetrouvees)}`,
+          },
+          { libelle: "Gain annuel", attendu: o.gain, calcul: `${qte(o.ventesRetrouvees)} × ${eur(o.marge)} = ${eur(o.gain)}` },
         ];
       },
       explication: (c) => {
@@ -165,12 +174,12 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
       type: "montants",
       titre: "Le délai de récupération",
       notions: ["irr_payback"],
-      question: () => "Le gain net de l'année est le gain annuel moins l'abonnement. Calculez-le, puis le délai de récupération : le nombre de mois de gain net qu'il faut pour rembourser les dépenses de départ (mise en place et formation), au dixième.",
+      question: () => "Le gain net de l'année est le gain annuel moins l'abonnement. Calculez-le, puis le délai de récupération : le nombre de mois de gain net qu'il faut pour rembourser les dépenses de départ (mise en place et formation), à deux décimales.",
       champs: (c) => {
         const o = outilNumerique(c);
         return [
-          { libelle: "Gain net de l'année", attendu: o.gainNet, calcul: `${eur(o.gain)} − ${eur(o.abonnement)} = ${eur(o.gainNet)}`, tolerance: 1 },
-          { libelle: "Délai de récupération (mois)", attendu: o.delai, calcul: `${eur(o.depart)} ÷ ${eur(o.gainNet)} × ${MOIS_PAR_AN} = ${mois(o.delai)}`, tolerance: 0.1 },
+          { libelle: "Gain net de l'année", attendu: o.gainNet, calcul: `${eur(o.gain)} − ${eur(o.abonnement)} = ${eur(o.gainNet)}` },
+          { libelle: "Délai de récupération (mois)", nature: "grandeur", attendu: o.delai, calcul: `${eur(o.depart)} ÷ ${eur(o.gainNet)} × ${MOIS_PAR_AN} = ${mois(o.delai)}` },
         ];
       },
       explication: (c) => {
@@ -184,13 +193,13 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
       type: "montants",
       titre: "Si l'équipe ne s'en sert pas",
       notions: ["irr_payback", "productivity"],
-      question: () => `Le gain suit la part de l'équipe qui se sert vraiment de l'outil ; l'abonnement, lui, se paie pour tous. Calculez le taux d'adoption sous lequel le gain ne couvre plus l'abonnement (abonnement ÷ gain annuel × 100, au dixième), puis le gain et le gain net de l'année si ${A} % de l'équipe s'en sert.`,
+      question: () => `Le gain suit la part de l'équipe qui se sert vraiment de l'outil ; l'abonnement, lui, se paie pour tous. Calculez le taux d'adoption sous lequel le gain ne couvre plus l'abonnement (abonnement ÷ gain annuel × 100, à deux décimales), puis le gain et le gain net de l'année si ${A} % de l'équipe s'en sert.`,
       champs: (c) => {
         const o = outilNumerique(c);
         return [
-          { libelle: "Taux d'adoption minimal (%)", attendu: o.seuilDAdoption, calcul: `${eur(o.abonnement)} ÷ ${eur(o.gain)} × 100 = ${pct(o.seuilDAdoption)}`, tolerance: 0.1 },
-          { libelle: `Gain de l'année à ${A} % d'adoption`, attendu: o.gainAdopte, calcul: `${eur(o.gain)} × ${A} % = ${eur(o.gainAdopte)}`, tolerance: 1 },
-          { libelle: `Gain net de l'année à ${A} % d'adoption`, attendu: o.gainNetAdopte, calcul: `${eur(o.gainAdopte)} − ${eur(o.abonnement)} = ${eur(o.gainNetAdopte)}`, tolerance: 1 },
+          { libelle: "Taux d'adoption minimal (%)", attendu: o.seuilDAdoption, calcul: `${eur(o.abonnement)} ÷ ${eur(o.gain)} × 100 = ${pct(o.seuilDAdoption)}` },
+          { libelle: `Gain de l'année à ${A} % d'adoption`, attendu: o.gainAdopte, calcul: `${eur(o.gain)} × ${A} % = ${eur(o.gainAdopte)}` },
+          { libelle: `Gain net de l'année à ${A} % d'adoption`, attendu: o.gainNetAdopte, calcul: `${eur(o.gainAdopte)} − ${eur(o.abonnement)} = ${eur(o.gainNetAdopte)}` },
         ];
       },
       explication: (c) => {
