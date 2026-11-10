@@ -1427,6 +1427,49 @@ describe.each([
   }, 240_000);
 });
 
+/**
+ * LES COMPÉTENCES DU DIPLÔME D'OÙ L'ON VIENT (demande du propriétaire, novembre 2026 ;
+ * config/cours/competences-affichees.ts). « Les opérations en devises » cite le DCG, le BUT GEA et deux
+ * processus du BTS CG : ouverte depuis le DCG, sa page ne montre que l'UE10 ; depuis le BTS CG, que P1 et P2.
+ */
+describe("la page d'un chapitre n'annonce que les compétences du diplôme d'où l'on vient", () => {
+  const competences = (p: Page) => p.locator("[data-objectifs-du-chapitre] > div.carte").innerText().then(espacesOrdinaires);
+
+  it("depuis /cours?diplome=dcg, le lien du chapitre porte le DCG et la page ne montre que lui ; depuis le BTS CG, que P1 et P2", async () => {
+    const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctx);
+    const page = await ctx.newPage();
+
+    await aller(page, "/cours?diplome=dcg");
+    const lien = page.locator('[data-programme="dcg"] [data-chapitre="les-operations-en-devises"] a[href^="/cours/les-operations-en-devises?"]').first();
+    expect(await lien.getAttribute("href")).toMatch(/[?&]diplome=dcg(&|$)/);
+    await lien.click();
+    await page.waitForURL(/\/cours\/les-operations-en-devises\?.*diplome=dcg/, { timeout: 60_000 });
+    await expect.poll(() => page.locator("[data-objectifs-du-chapitre]").count(), { timeout: 15_000 }).toBe(1);
+    const dcg = await competences(page);
+    expect(dcg).toContain("Compétences du référentiel · DCG");
+    expect(dcg).toContain("UE10 · Comptabilité approfondie");
+    for (const autre of ["BTS CG", "BUT GEA", "Contrôle et traitement comptable", "Produire l'information comptable"]) expect(dcg, autre).not.toContain(autre);
+
+    await aller(page, "/cours?diplome=bts-cg");
+    const duBts = page.locator('[data-programme="bts-cg"] [data-chapitre="les-operations-en-devises"] a[href^="/cours/les-operations-en-devises?"]').first();
+    await duBts.click();
+    await page.waitForURL(/\/cours\/les-operations-en-devises\?.*diplome=bts-cg/, { timeout: 60_000 });
+    await expect.poll(() => page.locator("[data-objectifs-du-chapitre]").count(), { timeout: 15_000 }).toBe(1);
+    const bts = await competences(page);
+    expect(bts).toContain("Compétences du référentiel · BTS CG");
+    expect(bts).toContain("P1 · Contrôle et traitement comptable des opérations commerciales");
+    expect(bts).toContain("P2 · Contrôle et production de l'information financière");
+    expect(bts).not.toContain("UE10");
+
+    // Sans contexte (un lien direct), le diplôme du chapitre : celui de son parcours, le DCG.
+    await aller(page, "/cours/les-operations-en-devises?entreprise=nova");
+    await expect.poll(() => page.locator("[data-objectifs-du-chapitre]").count(), { timeout: 15_000 }).toBe(1);
+    expect(await competences(page)).toContain("Compétences du référentiel · DCG");
+    await ctx.close();
+  }, 120_000);
+});
+
 describe("l'accueil présente les quatre formats", () => {
   it("quatre formats, chacun avec sa page, et la porte gratuite de ceux qui en ont une, sans déborder sur téléphone", async () => {
     const page = await nouvellePage(390, 844);
