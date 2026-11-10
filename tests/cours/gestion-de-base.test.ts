@@ -148,12 +148,14 @@ describe("rembourser une part du prêt en février", () => {
 });
 
 describe("prix, coût et marge", () => {
-  it("les textes sont propres ; janvier de NOVA : 38 € de coût, 21 € de marge, 55,3 % et 35,6 %", () => {
+  it("les textes sont propres ; janvier de NOVA : 38 € de coût, 21 € de marge, 55,26 % et 35,59 %", () => {
     gardesDeTexte(PRIX_COUT_MARGE);
     expect(attendus(PRIX_COUT_MARGE, "marge-unitaire")).toEqual([22 + 16, 59 - 38]);
-    expect(attendus(PRIX_COUT_MARGE, "les-taux")).toEqual([Math.round((21 / 38) * 1_000) / 10, Math.round((21 / 59) * 1_000) / 10]);
+    // Les taux à deux décimales (décision du propriétaire, 10 novembre 2026) : 21 ÷ 38 = 0,552631…, 21 ÷ 59 = 0,355932…
+    expect(attendus(PRIX_COUT_MARGE, "les-taux")).toEqual([55.26, 35.59]);
     expect(attendus(PRIX_COUT_MARGE, "le-mois")).toEqual([21 * 1_590, 21 * 1_590 - (19_700 + 10_650 + 833)]);
-    expect(attendus(PRIX_COUT_MARGE, "baisse-de-prix")).toEqual([c(59 * 0.9 - 38), Math.round(((21 - 15.1) / 21) * 1_000) / 10]);
+    // (21 € − 15,10 €) ÷ 21 € = 0,280952… : 28,10 %.
+    expect(attendus(PRIX_COUT_MARGE, "baisse-de-prix")).toEqual([c(59 * 0.9 - 38), 28.1]);
     expect(BAISSE_DE_PRIX).toBe(0.1);
   });
 

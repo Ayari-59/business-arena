@@ -1,4 +1,5 @@
 import { lireNombre, montantEcrit } from "./correcteur";
+import type { NatureDuNombre } from "./deux-decimales";
 
 /**
  * LE TABLEAU À COMPLÉTER : UNE ÉTAPE OÙ L'ÉLÈVE REMPLIT LES CASES D'UN TABLEAU.
@@ -38,6 +39,11 @@ export interface CelluleACompleter {
   indice?: string;
   /** L'écart admis, en plus ou en moins. Absent : celui du tableau, sinon le centime. */
   tolerance?: number;
+  /**
+   * Ce que la cellule calcule (pedagogy/cours/deux-decimales.ts). Absent : un pourcentage en « % », une
+   * grandeur dans une autre unité, un montant sans unité. Une quantité et un coefficient se déclarent.
+   */
+  nature?: NatureDuNombre;
   /** La cellule ne compte dans aucun total (un coût unitaire dans une ligne de total). */
   horsTotal?: boolean;
 }
