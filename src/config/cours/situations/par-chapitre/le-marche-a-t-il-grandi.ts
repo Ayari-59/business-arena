@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { CREER_DES_RICHESSES, POURQUOI_LA_RICHESSE } from "../../chapitres/creer-des-richesses";
 import { ENTREPRISES_DE_LA_GESTION_DE_BASE, FICHE_DU_MARCHE, MARCHE_DE_L_ANNEE_SUIVANTE, richesseDuMarche, type ComptesDUneEnseigne } from "../../monde/gestion-et-information";
 import type { TableauDeDonnees } from "../../types";
@@ -21,12 +21,12 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas comparait le premier et le dernier trimestre de l'année de l'arène, dans
  * neuf entreprises. Il compare maintenant deux années du marché à trois : la richesse créée grandit
  * plus vite que la production, parce que le loyer et les budgets ne grandissent pas avec les ventes.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les variations de la production et de la valeur ajoutée se
+ * donnent à deux décimales, à un centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type Croissance = "hausse" | "baisse";
@@ -35,9 +35,9 @@ export type Croissance = "hausse" | "baisse";
 export function deuxAnnees() {
   const avant = richesseDuMarche(FICHE_DU_MARCHE);
   const apres = richesseDuMarche(FICHE_DU_MARCHE, "milieu", MARCHE_DE_L_ANNEE_SUIVANTE);
-  const variationDeLaValeur = auDixieme((apres.valeurAjoutee / avant.valeurAjoutee - 1) * 100);
-  const variationDeLaProduction = auDixieme((apres.production / avant.production - 1) * 100);
-  const ecarts = avant.enseignes.map((v, i) => ({ nom: v.nom, ecart: Math.round((apres.enseignes[i]!.valeurAjoutee - v.valeurAjoutee) * 100) / 100 }));
+  const variationDeLaValeur = arrondi2((apres.valeurAjoutee / avant.valeurAjoutee - 1) * 100);
+  const variationDeLaProduction = arrondi2((apres.production / avant.production - 1) * 100);
+  const ecarts = avant.enseignes.map((v, i) => ({ nom: v.nom, ecart: arrondi2(apres.enseignes[i]!.valeurAjoutee - v.valeurAjoutee) }));
   const croissance: Croissance = apres.valeurAjoutee > avant.valeurAjoutee ? "hausse" : "baisse";
   const moteur = ecarts.reduce((g, x) => ((croissance === "hausse" ? x.ecart > g.ecart : x.ecart < g.ecart) ? x : g));
   return {
@@ -124,12 +124,12 @@ export const LE_MARCHE_A_T_IL_GRANDI: Situation = {
       titre: "La croissance du marché",
       notions: ["revenue"],
       question: () =>
-        "Calculez, d'une année à l'autre, le taux de variation de la production du marché (ses trois chiffres d'affaires réunis), puis celui de sa valeur ajoutée, en pourcentage au dixième.",
+        "Calculez, d'une année à l'autre, le taux de variation de la production du marché (ses trois chiffres d'affaires réunis), puis celui de sa valeur ajoutée, en pourcentage à deux décimales.",
       champs: () => {
         const k = deuxAnnees();
         return [
-          { libelle: "Variation de la production du marché (%)", attendu: k.variationDeLaProduction, calcul: `(${eur(k.production.fin)} ÷ ${eur(k.production.debut)} − 1) × 100 = ${pct(k.variationDeLaProduction)}`, tolerance: 0.1 },
-          { libelle: "Variation de la valeur ajoutée du marché (%)", attendu: k.variationDeLaValeur, calcul: `(${eur(k.va.fin)} ÷ ${eur(k.va.debut)} − 1) × 100 = ${pct(k.variationDeLaValeur)}`, tolerance: 0.1 },
+          { libelle: "Variation de la production du marché (%)", attendu: k.variationDeLaProduction, calcul: `(${eur(k.production.fin)} ÷ ${eur(k.production.debut)} − 1) × 100 = ${pct(k.variationDeLaProduction)}` },
+          { libelle: "Variation de la valeur ajoutée du marché (%)", attendu: k.variationDeLaValeur, calcul: `(${eur(k.va.fin)} ÷ ${eur(k.va.debut)} − 1) × 100 = ${pct(k.variationDeLaValeur)}` },
         ];
       },
       explication: () => {

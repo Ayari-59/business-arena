@@ -7,6 +7,7 @@ import { PROGRAMME } from "../../src/config/cours/registre";
 import { DOUBLER_LA_PUBLICITE } from "../../src/config/cours/situations/par-chapitre/doubler-la-publicite";
 import { LE_SECOND_SEMESTRE } from "../../src/config/cours/situations/par-chapitre/le-second-semestre";
 import { TAUX_AMBITIEUX, UN_OBJECTIF_PLUS_AMBITIEUX } from "../../src/config/cours/situations/par-chapitre/un-objectif-plus-ambitieux";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDuProgramme, gardesDeTexte, juste, triDe } from "./gardes-de-nova";
 import { bonneReponseJamaisLaPlusLongue } from "./gardes-du-management";
 
@@ -47,8 +48,8 @@ describe("évaluer son activité", () => {
     expect(resultat(1_450)).toBe(-733);
   });
 
-  it("janvier à juin : +35,3 % de chiffre d'affaires et de ventes, un prix stable, juin le meilleur mois", () => {
-    const evolution = Math.round(((2_151 - 1_590) / 1_590) * 1_000) / 10;
+  it("janvier à juin : +35,28 % de chiffre d'affaires et de ventes, un prix stable, juin le meilleur mois", () => {
+    const evolution = arrondi2(((2_151 - 1_590) / 1_590) * 100);
     expect(attendus(EVALUER_SON_ACTIVITE, "evolutions")).toEqual([evolution, evolution]);
     expect(juste(EVALUER_SON_ACTIVITE, "le-prix-moyen")).toEqual(["Il n'a presque pas bougé : les deux évoluent ensemble"]);
     expect(juste(EVALUER_SON_ACTIVITE, "le-meilleur-mois")).toEqual(["Juin"]);
@@ -67,15 +68,15 @@ describe("évaluer son activité", () => {
     expect(e.defi(NOVA).solution).toEqual({ prix: 60 });
   });
 
-  it("le cas des deux trimestres : 281 902 € puis 358 779 €, +27,3 % ; le résultat passe de 6 789 € à 34 152 €", () => {
+  it("le cas des deux trimestres : 281 902 € puis 358 779 €, +27,27 % ; le résultat passe de 6 789 € à 34 152 €", () => {
     const t1 = ventes.slice(0, 3);
     const t2 = ventes.slice(3);
     const somme = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
     expect(attendus(LE_SECOND_SEMESTRE, "chiffre-et-ventes")).toEqual([
       somme(t1) * 59,
       somme(t2) * 59,
-      Math.round(((somme(t2) - somme(t1)) / somme(t1)) * 1_000) / 10,
-      Math.round(((somme(t2) - somme(t1)) / somme(t1)) * 1_000) / 10,
+      arrondi2(((somme(t2) - somme(t1)) / somme(t1)) * 100),
+      arrondi2(((somme(t2) - somme(t1)) / somme(t1)) * 100),
     ]);
     expect(attendus(LE_SECOND_SEMESTRE, "resultats")).toEqual([somme(t1.map(resultat)), somme(t2.map(resultat)), somme(t2.map(resultat)) - somme(t1.map(resultat))]);
     expect(juste(LE_SECOND_SEMESTRE, "reponse")).toEqual(["Oui : chiffre d'affaires et résultat en hausse au deuxième trimestre"]);
@@ -130,7 +131,7 @@ describe("se fixer des objectifs et les suivre", () => {
   it("l'année N : 7 000 enceintes de capacité, 4 900 visées par trimestre ; le premier trimestre manque de demande ; l'objectif est tenu", () => {
     expect(TAUX_DE_CAPACITE_VISE).toBe(0.7);
     expect(attendus(SE_FIXER_DES_OBJECTIFS, "objectif")).toEqual([Math.min(7_000, 4 * 3 * 600), 0.7 * 7_000, 4 * 4_900]);
-    expect(attendus(SE_FIXER_DES_OBJECTIFS, "ecarts")).toEqual([4_778 - 4_900, 6_081 - 4_900, 5_810 - 4_900, 6_940 - 4_900, Math.round((23_609 / 19_600) * 1_000) / 10]);
+    expect(attendus(SE_FIXER_DES_OBJECTIFS, "ecarts")).toEqual([4_778 - 4_900, 6_081 - 4_900, 5_810 - 4_900, 6_940 - 4_900, arrondi2((23_609 / 19_600) * 100)]);
     expect(juste(SE_FIXER_DES_OBJECTIFS, "origine")).toEqual(["De la demande : il n'y avait pas assez de clients pour atteindre l'objectif"]);
     expect(juste(SE_FIXER_DES_OBJECTIFS, "conclusion")).toEqual(["Objectif tenu : les ventes de l'année l'atteignent"]);
   });

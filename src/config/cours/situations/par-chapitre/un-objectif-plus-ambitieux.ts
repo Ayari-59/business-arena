@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2, nombreAuCentieme, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { accordPluriel } from "../../accords";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_OBJECTIFS, POURQUOI_LES_OBJECTIFS, TAUX_DE_CAPACITE_VISE, suiviDesObjectifs, type Verdict } from "../../chapitres/se-fixer-des-objectifs";
@@ -19,6 +20,10 @@ import type { Situation } from "../types";
  * avec le taux du directeur : l'année N de NOVA, dans le monde du cours (nova-capacite.ts). Le cas
  * se jouait dans huit entreprises de l'arène ; chez NOVA, l'objectif proposé (6 300 enceintes par
  * trimestre, 25 200 sur l'année) dépasse la demande de N (23 609) : il est mal posé.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les objectifs, la demande et le nombre de trimestres sont des
+ * quantités, entières, déclarées comme telles (à une ou quatre enceintes près, avant).
  */
 
 /**
@@ -28,8 +33,8 @@ import type { Situation } from "../types";
  */
 export const TAUX_AMBITIEUX = 0.9;
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Une quantité calculée : à deux décimales, puis arrondie à l'unité quand elle tombe entre deux entiers. */
+const aLUniteEcrite = (x: number) => (Number.isInteger(arrondi2(x)) ? qte(x) : `${nombreAuCentieme(x)}, arrondi à l'unité : ${qte(aLUnite(x))}`);
 
 /** L'objectif proposé, éprouvé sur l'année du cours. */
 export function objectifAmbitieux(c: Cas) {
@@ -92,18 +97,18 @@ export const UN_OBJECTIF_PLUS_AMBITIEUX: Situation = {
       titre: "L'objectif proposé face à la demande",
       notions: ["capacity", "dashboard"],
       question: () =>
-        "Calculez l'objectif proposé par trimestre (à l'unité), l'objectif de l'année, la demande adressée à l'entreprise sur l'année, puis le nombre de trimestres où la demande atteignait l'objectif.",
+        "Calculez l'objectif proposé par trimestre (arrondi à l'unité), l'objectif de l'année, la demande adressée à l'entreprise sur l'année, puis le nombre de trimestres où la demande atteignait l'objectif.",
       champs: (c) => {
         const k = objectifAmbitieux(c);
         const o = k.o;
         return [
-          { libelle: "Objectif proposé par trimestre", attendu: o.objectif, calcul: `${qte(o.capacite)} × ${TAUX_AMBITIEUX.toLocaleString("fr-FR")} = ${qte(o.objectif)}`, tolerance: 1 },
-          { libelle: "Objectif proposé pour l'année", attendu: o.objectifDeLAnnee, calcul: `${qte(o.objectif)} × ${o.trimestres.length} = ${qte(o.objectifDeLAnnee)}`, tolerance: 4 },
+          { libelle: "Objectif proposé par trimestre", nature: "quantite", attendu: o.objectif, calcul: `${qte(o.capacite)} × ${nombreAuCentieme(TAUX_AMBITIEUX)} = ${aLUniteEcrite(o.capacite * TAUX_AMBITIEUX)}` },
+          { libelle: "Objectif proposé pour l'année", nature: "quantite", attendu: o.objectifDeLAnnee, calcul: `${qte(o.objectif)} × ${o.trimestres.length} = ${qte(o.objectifDeLAnnee)}` },
           {
             libelle: "Demande adressée sur l'année",
             attendu: o.demandeDeLAnnee,
             calcul: `${o.trimestres.map((x) => qte(x.demande)).join(" + ")} = ${qte(o.demandeDeLAnnee)}`,
-            tolerance: 0,
+            nature: "quantite",
           },
           {
             libelle: "Trimestres où la demande atteignait l'objectif",
@@ -114,7 +119,7 @@ export const UN_OBJECTIF_PLUS_AMBITIEUX: Situation = {
                 .map((x) => `T${x.numero}`)
                 .join(", ") || "aucun"
             }`,
-            tolerance: 0,
+            nature: "quantite",
           },
         ];
       },

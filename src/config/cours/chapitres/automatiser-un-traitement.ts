@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   CALCUL_A_LA_MAIN,
@@ -30,10 +30,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * l'intelligence artificielle. Tout se corrige au serveur.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez MAILLE & CO : monde/programme-de-fidelite-de-maille.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les tours de boucle et les points qui restent sont des
+ * quantités, entières, déclarées comme telles.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 const LIGNES_DU_PROGRAMME = [
   `VALEUR_DU_BON ← ${REGLE.valeurDuBon}`,
@@ -215,8 +217,8 @@ export const AUTOMATISER_UN_TRAITEMENT: Chapitre = {
         const p = pointsLaurent() * REGLE.multiplicateurPrivilege;
         const k = bonsUnAUn(p);
         return [
-          { libelle: "Tours de boucle", attendu: k.tours, calcul: `${qte(p)} → ${Array.from({ length: k.tours }, (_, i) => qte(p - (i + 1) * REGLE.pointsParBon)).join(" → ")} : ${qte(k.tours)} tours` },
-          { libelle: "Points qui restent", attendu: k.reste, calcul: `La boucle s'arrête quand points passe sous ${qte(REGLE.pointsParBon)} : ${qte(k.reste)}` },
+          { libelle: "Tours de boucle", nature: "quantite", attendu: k.tours, calcul: `${qte(p)} → ${Array.from({ length: k.tours }, (_, i) => qte(p - (i + 1) * REGLE.pointsParBon)).join(" → ")} : ${qte(k.tours)} tours` },
+          { libelle: "Points qui restent", nature: "quantite", attendu: k.reste, calcul: `La boucle s'arrête quand points passe sous ${qte(REGLE.pointsParBon)} : ${qte(k.reste)}` },
         ];
       },
       explication: () => ["Une boucle « pour » fait un nombre de tours connu d'avance, un par élément de la liste. Une boucle « tant que » tourne tant que sa condition est vraie : il faut qu'elle finisse par devenir fausse, sinon la boucle ne s'arrête jamais."],

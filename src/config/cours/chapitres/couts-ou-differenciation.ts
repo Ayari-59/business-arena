@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeDuMarche, battreAuris, enseigneDe, gammeDe, meilleurPrix, offreDeNova, qualitePercue, strategiesGeneriques, type BilanDUneEnseigne } from "../monde/attractivite";
 import { MARCHES_DU_COURS, type CodeDeGamme, type FicheDuMarche } from "../monde/marche-a-trois";
@@ -37,6 +37,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     le-laboratoire-de-l-offre, battre-auris-a-la-main (une variante chiffrée : l'année refaite à la
  *     main, la gamme soignée à 67 €, avec le résultat d'Auris la même année), les-limites (une
  *     critique de la méthode : le classement dépend des hypothèses) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les seuils et les ventes qu'il faudrait sont des quantités,
+ * écrites d'abord à deux décimales puis arrondies à l'unité supérieure, que le corrigé nomme ; les
+ * résultats attendent le centime (à l'euro près, avant).
  */
 
 /**
@@ -96,12 +101,13 @@ export const BAISSE_DE_L_EXPLICATION = 3;
 /** Un prix d'une offre à essayer, au pari d'Auris : la différenciation du chapitre, vendue plus cher encore. */
 export const PRIX_DE_LA_DIFFERENCIATION_PLUS_CHERE = 75;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
 /** Une part (une fraction) en pourcentage au centième. */
-const pct = (x: number) => `${qte(Math.round(x * 10_000) / 100)} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+/** Une part (0,3314) écrite en pourcentage, à deux décimales. */
+const pct = (x: number) => pourcent(arrondi2(x * 100));
+const auCentieme = arrondi2;
 const auCentime = auCentieme;
 /** Un nombre au nombre de décimales donné, à la française (une qualité, une attractivité). */
 const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n });
@@ -502,9 +508,9 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
           { libelle: "Coût complet, différenciation", attendu: k.differenciation.coutComplet, calcul: cc(k.differenciation) },
           {
             libelle: "Seuil de rentabilité, domination par les coûts",
+            nature: "quantite",
             attendu: k.couts.seuilDeRentabilite,
-            calcul: `${eur(k.couts.charges)} ÷ ${eur(k.couts.margeUnitaire)} = ${qte(auCentieme(k.couts.charges / k.couts.margeUnitaire))}, arrondi à ${qte(k.couts.seuilDeRentabilite)} ${k.f.unites}`,
-            tolerance: 0,
+            calcul: `${eur(k.couts.charges)} ÷ ${eur(k.couts.margeUnitaire)} = ${qte(quotient2(k.couts.charges, k.couts.margeUnitaire))}, soit ${qte(k.couts.seuilDeRentabilite)} ${k.f.unites} à l'unité supérieure : une de moins ne couvrirait pas les charges`,
           },
         ];
       },
@@ -704,11 +710,11 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
         return [
           {
             libelle: "Ventes qu'il faudrait à la stratégie de coûts",
+            nature: "quantite",
             attendu: k.ventesPourEgaler,
-            calcul: `(${eur(k.differenciation.resultat)} + ${eur(k.couts.charges)}) ÷ ${eur(k.couts.margeUnitaire)} = ${qte(auCentieme((k.differenciation.resultat + k.couts.charges) / k.couts.margeUnitaire))}, arrondi à ${qte(k.ventesPourEgaler)} ${k.f.unites}`,
-            tolerance: 0,
+            calcul: `(${eur(k.differenciation.resultat)} + ${eur(k.couts.charges)}) ÷ ${eur(k.couts.margeUnitaire)} = ${qte(quotient2(k.differenciation.resultat + k.couts.charges, k.couts.margeUnitaire))}, soit ${qte(k.ventesPourEgaler)} ${k.f.unites} à l'unité supérieure, pour égaler le résultat`,
           },
-          { libelle: "Ventes de plus qu'avec la stratégie de coûts", attendu: k.enceintesDePlus, calcul: `${qte(k.ventesPourEgaler)} − ${qte(k.couts.ventes)} = ${qte(k.enceintesDePlus)}`, tolerance: 0 },
+          { libelle: "Ventes de plus qu'avec la stratégie de coûts", nature: "quantite", attendu: k.enceintesDePlus, calcul: `${qte(k.ventesPourEgaler)} − ${qte(k.couts.ventes)} = ${qte(k.enceintesDePlus)}` },
           {
             libelle: "Part de marché qu'il faudrait (%)",
             attendu: auCentieme(k.partPourEgaler * 100),
@@ -918,21 +924,19 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
           },
           {
             libelle: `Ventes ${dE(k.f.entreprise)} sur l'année`,
+            nature: "quantite",
             attendu: v.nova.ventes,
-            calcul: `${qte(v.partDuTrimestre)} % × ${qte(k.f.marche.parTrimestre)} = ${qte(v.ventesDuTrimestre)} ${k.f.unites} par trimestre, × ${t} = ${qte(v.nova.ventes)}`,
-            tolerance: 0,
+            calcul: `${qte(v.partDuTrimestre)} % × ${qte(k.f.marche.parTrimestre)} = ${qte(arrondi2((v.partDuTrimestre * k.f.marche.parTrimestre) / 100))}, arrondi à ${qte(v.ventesDuTrimestre)} ${k.f.unites} par trimestre, × ${t} = ${qte(v.nova.ventes)}`,
           },
           {
             libelle: `Résultat ${dE(k.f.entreprise)}`,
             attendu: v.nova.resultat,
             calcul: `${qte(v.nova.ventes)} × (${eur(v.nova.offre.prix)} − ${eur(v.nova.coutVariable)}) − ${eur(v.nova.charges)} = ${eur(v.nova.resultat)}`,
-            tolerance: 1,
           },
           {
             libelle: `Résultat ${dE(k.auris.nom)} la même année`,
             attendu: v.auris.resultat,
             calcul: `${dec(v.attractiviteAuris, 4)} ÷ ${dec(v.sommeDesAttractivites, 4)} × ${qte(k.f.marche.parTrimestre)} = ${qte(v.ventesDAurisDuTrimestre)} ${k.f.unites} par trimestre ; ${qte(v.auris.ventes)} × ${eur(v.auris.margeUnitaire)} − ${eur(v.auris.charges)} = ${eur(v.auris.resultat)}`,
-            tolerance: 1,
           },
         ];
       },

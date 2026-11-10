@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import {
   ENTREPRISES_DE_LA_RSE,
@@ -33,6 +33,11 @@ import type { Situation } from "../types";
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de monde/attractivite.ts (`viserLeLabel`, `engagementRse`). Les courriers de
  * l'arène (bad buzz, sanction) n'y existent pas, et l'arène ne rejoue plus rien.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'effort et le capital-image sont des grandeurs au centième,
+ * déclarées comme telles ; le coût, la marge gagnée, l'économie et les écarts de résultat attendent le
+ * centime (à l'euro près, avant).
  */
 
 /** LA PROPOSITION DE LA DIRECTION, hypothèse du cours : 24 000 € de budget RSE chaque trimestre, deux fois l'échelle de l'effort. */
@@ -41,12 +46,13 @@ export const PROPOSITION_DE_LA_DIRECTION = 24_000;
 /** Les bornes du curseur des enceintes vendues en plus que le budget du cours. */
 export const VENTES_DU_CURSEUR_DU_CAS = { min: 0, max: 4_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
 const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n }).replace(/^-/, "−");
-const pct = (t: number, n = 1) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: n }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+/** Une part (0,15) écrite en pourcentage, à deux décimales. */
+const pct = (t: number) => pourcent(arrondi2(t * 100));
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 
 export type Verdict = "viser-le-label" | "pas-cette-annee";
@@ -60,8 +66,8 @@ export function viserLeLabel(c: Pick<Cas, "code">) {
   const budget = PROPOSITION_DE_LA_DIRECTION;
   const v = viserLeLabelDuModele(f, budget);
   // Comme l'élève le calcule : l'effort au centième, puis le capital au centième.
-  const effort = Math.round(v.effort * 100) / 100;
-  const capitalT3 = Math.round(v.capitalT3 * 100) / 100;
+  const effort = arrondi2(v.effort);
+  const capitalT3 = arrondi2(v.capitalT3);
   const sans = v.vers.sans;
   const proposition = v.vers.avec;
   const cours = v.depart.avec;
@@ -150,7 +156,7 @@ export const VISER_LE_LABEL: Situation = {
             { libelle: "Inertie du capital-image", valeurs: [dec(x.k)] },
             { libelle: "Seuil du label (capital d'ouverture)", valeurs: [dec(x.r.seuilDuLabel)] },
             { libelle: "Premier trimestre où le label peut venir", valeurs: [`trimestre ${x.r.premierTrimestreDuLabel}`] },
-            { libelle: "Hausse d'attractivité du label", valeurs: [pct(x.r.bonusDuLabel, 0)] },
+            { libelle: "Hausse d'attractivité du label", valeurs: [pct(x.r.bonusDuLabel)] },
             { libelle: "Durée du label", valeurs: [`${qte(x.r.dureeDuLabel)} trimestres`] },
             { libelle: `Marge sur coût variable d'une ${x.f.unite}`, valeurs: [eur(x.m)] },
           ],
@@ -170,15 +176,15 @@ export const VISER_LE_LABEL: Situation = {
       champs: (c) => {
         const x = viserLeLabel(c);
         return [
-          { libelle: "Effort d'un trimestre", attendu: x.effort, calcul: `ln(1 + ${eur(x.budget)} ÷ ${eur(x.r.echelle)}) = ${dec(x.effort)}`, tolerance: 0.01 },
-          { libelle: `Capital-image à la fin du trimestre ${x.n}`, attendu: x.capitalT3, calcul: `${dec(x.effort)} × (1 − ${dec(x.k)} puissance ${x.n}) = ${dec(x.capitalT3)}`, tolerance: 0.01 },
-          { libelle: "Coût de l'engagement sur l'année", attendu: x.v.cout, calcul: `${eur(x.budget)} × ${qte(x.f.marche.trimestres)} = ${eur(x.v.cout)}`, tolerance: 1 },
+          { libelle: "Effort d'un trimestre", nature: "grandeur", attendu: x.effort, calcul: `ln(1 + ${eur(x.budget)} ÷ ${eur(x.r.echelle)}) = ${dec(x.effort)}` },
+          { libelle: `Capital-image à la fin du trimestre ${x.n}`, nature: "grandeur", attendu: x.capitalT3, calcul: `${dec(x.effort)} × (1 − ${dec(x.k)} puissance ${x.n}) = ${dec(x.capitalT3)}` },
+          { libelle: "Coût de l'engagement sur l'année", attendu: x.v.cout, calcul: `${eur(x.budget)} × ${qte(x.f.marche.trimestres)} = ${eur(x.v.cout)}` },
         ];
       },
       explication: (c) => {
         const x = viserLeLabel(c);
         return [
-          `${dec(x.capitalT3)} à la fin du trimestre ${x.n}, pour un seuil de ${dec(x.r.seuilDuLabel)} : ${dec(x.margeSurLeSeuil)} de marge, que l'arrondi ne menace pas. La simulation accorde le label au trimestre ${x.v.labelAuTrimestre}, sur le capital d'ouverture, avec ${pct(x.r.bonusDuLabel, 0)} d'attractivité en plus. L'année coûte ${eur(x.v.coutEnPlus)} de plus qu'au budget du cours.`,
+          `${dec(x.capitalT3)} à la fin du trimestre ${x.n}, pour un seuil de ${dec(x.r.seuilDuLabel)} : ${dec(x.margeSurLeSeuil)} de marge, que l'arrondi ne menace pas. La simulation accorde le label au trimestre ${x.v.labelAuTrimestre}, sur le capital d'ouverture, avec ${pct(x.r.bonusDuLabel)} d'attractivité en plus. L'année coûte ${eur(x.v.coutEnPlus)} de plus qu'au budget du cours.`,
         ];
       },
     },
@@ -207,9 +213,9 @@ export const VISER_LE_LABEL: Situation = {
       champs: (c) => {
         const x = viserLeLabel(c);
         return [
-          { libelle: "Marge gagnée face à l'année sans engagement", attendu: x.v.vers.margeGagnee, calcul: `${eur(x.proposition.marge)} − ${eur(x.sans.marge)} = ${eur(x.v.vers.margeGagnee)}`, tolerance: 1 },
-          { libelle: "Écart de résultat avec l'année sans engagement", attendu: x.v.ecartAuSans, calcul: `${eur(x.proposition.resultat)} − ${entre(x.sans.resultat)} = ${eur(x.v.ecartAuSans)}`, tolerance: 1 },
-          { libelle: "Écart de résultat avec le budget du cours", attendu: x.v.ecartAuDepart, calcul: `${eur(x.proposition.resultat)} − ${entre(x.cours.resultat)} = ${eur(x.v.ecartAuDepart)}`, tolerance: 1 },
+          { libelle: "Marge gagnée face à l'année sans engagement", attendu: x.v.vers.margeGagnee, calcul: `${eur(x.proposition.marge)} − ${eur(x.sans.marge)} = ${eur(x.v.vers.margeGagnee)}` },
+          { libelle: "Écart de résultat avec l'année sans engagement", attendu: x.v.ecartAuSans, calcul: `${eur(x.proposition.resultat)} − ${entre(x.sans.resultat)} = ${eur(x.v.ecartAuSans)}` },
+          { libelle: "Écart de résultat avec le budget du cours", attendu: x.v.ecartAuDepart, calcul: `${eur(x.proposition.resultat)} − ${entre(x.cours.resultat)} = ${eur(x.v.ecartAuDepart)}` },
         ];
       },
       explication: (c) => {
@@ -252,7 +258,7 @@ export const VISER_LE_LABEL: Situation = {
       explication: (c) => {
         const x = viserLeLabel(c);
         return [
-          `Il faudrait ${qte(x.ventesPourPayer)} ${x.f.unites} de plus qu'au budget du cours, à ${eur(x.m)} l'${x.f.unite}. Le budget proposé en vend ${qte(x.ventesEnPlus)} de plus, ${pct(x.ventesEnPlus / x.ventesPourPayer, 0)} de ce qu'il faudrait : la marge sur le seuil se paie cher.`,
+          `Il faudrait ${qte(x.ventesPourPayer)} ${x.f.unites} de plus qu'au budget du cours, à ${eur(x.m)} l'${x.f.unite}. Le budget proposé en vend ${qte(x.ventesEnPlus)} de plus, ${pct(x.ventesEnPlus / x.ventesPourPayer)} de ce qu'il faudrait : la marge sur le seuil se paie cher.`,
         ];
       },
     },
@@ -288,17 +294,16 @@ export const VISER_LE_LABEL: Situation = {
         return [
           {
             libelle: `Capital du plan qui monte à la fin du trimestre ${x.n}`,
-            attendu: Math.round(x.capitalMonteT3 * 100) / 100,
+            nature: "grandeur",
+            attendu: arrondi2(x.capitalMonteT3),
             calcul: `${reste} × (${kk} × ${kk} × ${ef(a!)} + ${kk} × ${ef(b!)} + ${ef(d!)}) = ${dec(x.capitalMonteT3)}`,
-            tolerance: 0.01,
           },
           {
             libelle: `Économie sur les trimestres 1 à ${x.n}`,
             attendu: x.economie,
             calcul: `${qte(x.n)} × ${eur(x.budget)} − (${PLAN_QUI_MONTE.map(eur).join(" + ")}) = ${eur(x.economie)}`,
-            tolerance: 1,
           },
-          { libelle: "Écart de résultat avec le budget proposé", attendu: x.ecartMonte, calcul: `${eur(x.monte.avec.resultat)} − ${entre(x.proposition.resultat)} = ${eur(x.ecartMonte)}`, tolerance: 1 },
+          { libelle: "Écart de résultat avec le budget proposé", attendu: x.ecartMonte, calcul: `${eur(x.monte.avec.resultat)} − ${entre(x.proposition.resultat)} = ${eur(x.ecartMonte)}` },
         ];
       },
       explication: (c) => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { aLUnite, arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { accordPluriel } from "../accords";
 import { type Cas } from "../cas";
 import {
@@ -31,6 +31,11 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre suivait l'année de l'arène, dans huit entreprises. Il suit maintenant
  * l'année N de NOVA : 7 000 enceintes de capacité par trimestre, un objectif de 4 900, 23 609
  * enceintes vendues pour 19 600 visées.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la capacité, les objectifs et les écarts sont des quantités,
+ * entières, déclarées comme telles ; le taux de réalisation se donne à deux décimales (au dixième, à
+ * un dixième près, avant).
  */
 
 export { TAUX_DE_CAPACITE_VISE };
@@ -41,11 +46,10 @@ export const ENTREPRISES_DES_OBJECTIFS = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 export const POURQUOI_LES_OBJECTIFS =
   "ce chapitre suit NOVA, dont le cours tient la capacité, les ventes de l'année N et la demande prévue de l'année suivante.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 /** Le prix d'une enceinte : les droites du curseur comptent en chiffre d'affaires. */
 const PRIX = FICHE_DE_CAPACITE.enceinte.prix;
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
+/** Une quantité calculée : à deux décimales, puis arrondie à l'unité quand elle tombe entre deux entiers. */
+const aLUniteEcrite = (x: number) => (Number.isInteger(arrondi2(x)) ? qte(x) : `${nombreAuCentieme(x)}, arrondi à l'unité : ${qte(aLUnite(x))}`);
 /** Un écart signé : « +250 », « −1 078 ». */
 const signe = (n: number) => (n > 0 ? `+${qte(n)}` : qte(n));
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -183,28 +187,28 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
       notions: ["capacity"],
       question: (c) => {
         const o = suiviDesObjectifs(c);
-        return `L'entreprise ne peut pas produire plus que la plus petite de ses deux capacités. Calculez la capacité de production retenue, l'objectif de ventes par trimestre (${pct(o.taux * 100)} de cette capacité, à l'unité), puis l'objectif de l'année (${o.trimestres.length} trimestres).`;
+        return `L'entreprise ne peut pas produire plus que la plus petite de ses deux capacités. Calculez la capacité de production retenue, l'objectif de ventes par trimestre (${pct(o.taux * 100)} de cette capacité, arrondi à l'unité), puis l'objectif de l'année (${o.trimestres.length} trimestres).`;
       },
       champs: (c) => {
         const o = suiviDesObjectifs(c);
         return [
           {
             libelle: "Capacité de production retenue, par trimestre",
+            nature: "quantite",
             attendu: o.capacite,
             calcul: `la plus petite de ${qte(o.capaciteMachines)} et ${qte(o.capaciteEquipe)} : ${qte(o.capacite)}`,
-            tolerance: 0,
           },
           {
             libelle: "Objectif de ventes par trimestre",
+            nature: "quantite",
             attendu: o.objectif,
-            calcul: `${qte(o.capacite)} × ${o.taux.toLocaleString("fr-FR")} = ${qte(o.objectif)}`,
-            tolerance: 1,
+            calcul: `${qte(o.capacite)} × ${nombreAuCentieme(o.taux)} = ${aLUniteEcrite(o.capacite * o.taux)}`,
           },
           {
             libelle: "Objectif de ventes de l'année",
+            nature: "quantite",
             attendu: o.objectifDeLAnnee,
             calcul: `${qte(o.objectif)} × ${o.trimestres.length} = ${qte(o.objectifDeLAnnee)}`,
-            tolerance: 4,
           },
         ];
       },
@@ -234,21 +238,20 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
         };
       },
       question: () =>
-        "Calculez l'écart de chaque trimestre (ventes réalisées moins objectif : négatif quand l'objectif est manqué), puis le taux de réalisation de l'année (ventes de l'année sur objectif de l'année, en pourcentage au dixième).",
+        "Calculez l'écart de chaque trimestre (ventes réalisées moins objectif : négatif quand l'objectif est manqué), puis le taux de réalisation de l'année (ventes de l'année sur objectif de l'année, en pourcentage à deux décimales).",
       champs: (c) => {
         const o = suiviDesObjectifs(c);
         return [
           ...o.trimestres.map((x) => ({
             libelle: `Écart du ${rang(x.numero)} trimestre`,
+            nature: "quantite" as const,
             attendu: x.ecart,
             calcul: `${qte(x.ventes)} − ${qte(o.objectif)} = ${signe(x.ecart)}`,
-            tolerance: 1,
           })),
           {
             libelle: "Taux de réalisation de l'année (%)",
             attendu: o.realisation,
             calcul: `${qte(o.ventesDeLAnnee)} ÷ ${qte(o.objectifDeLAnnee)} × 100 = ${pct(o.realisation)}`,
-            tolerance: 0.1,
           },
         ];
       },

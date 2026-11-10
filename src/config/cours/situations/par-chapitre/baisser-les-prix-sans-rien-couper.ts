@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { COUTS_OU_DIFFERENCIATION, ficheDe } from "../../chapitres/couts-ou-differenciation";
 import { demiMesure, enseigneDe, gammeDe, offreDeNova, qualitePercue } from "../../monde/attractivite";
@@ -23,16 +23,22 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre compare des stratégies cohérentes ; le cas mesure ce
  * que vaut une stratégie à moitié tenue. Les parts et les marges y diffèrent de celles de la
  * stratégie de coûts (le défaut « 24,4 % contre 24,4 % » de l'ancienne version est réglé).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes sont des quantités, la part du trimestre écrite à
+ * deux décimales puis arrondie à l'enceinte ; les résultats, les écarts et les effets attendent le
+ * centime (à l'euro près, avant).
  */
 
 /** Les bornes du curseur : les ventes de l'année de la demi-mesure. */
 export const VENTES_DU_CURSEUR_DE_LA_DEMI_MESURE = { min: 24_000, max: 32_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${qte(Math.round(x * 10_000) / 100)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
+/** Une part (0,3314) écrite en pourcentage, à deux décimales. */
+const pct = (x: number) => pourcent(arrondi2(x * 100));
+const auCentime = arrondi2;
 const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n });
 
 /** La demi-mesure, face à la stratégie de coûts entière et à aujourd'hui, et les écarts qui se croisent. */
@@ -69,7 +75,7 @@ export function prixBasSansRienCouper(c: Pick<Cas, "code">) {
     verdict: d.verdict,
     attractiviteDeLaDemi: premier.attractivite,
     attractivitesDesConcurrents: desConcurrents,
-    partDuTrimestre: Math.round(premier.part * 10_000) / 100,
+    partDuTrimestre: arrondi2(premier.part * 100),
     ventesDuTrimestre: premier.ventes,
     ecartAvecLesCouts: d.ecartAvecLesCouts,
     ecartAvecLeMilieu: d.ecartAvecLeMilieu,
@@ -160,9 +166,9 @@ export const BAISSER_LES_PRIX_SANS_RIEN_COUPER: Situation = {
           },
           {
             libelle: "Ventes de l'année de la proposition",
+            nature: "quantite",
             attendu: k.demi.ventes,
-            calcul: `${qte(k.partDuTrimestre)} % × ${qte(k.f.marche.parTrimestre)} = ${qte(k.ventesDuTrimestre)} ${k.f.unites} par trimestre, × ${k.f.marche.trimestres} = ${qte(k.demi.ventes)}`,
-            tolerance: 0,
+            calcul: `${qte(k.partDuTrimestre)} % × ${qte(k.f.marche.parTrimestre)} = ${qte(arrondi2((k.partDuTrimestre * k.f.marche.parTrimestre) / 100))}, arrondi à ${qte(k.ventesDuTrimestre)} ${k.f.unites} par trimestre, × ${k.f.marche.trimestres} = ${qte(k.demi.ventes)}`,
           },
           { libelle: "Marge par enceinte de la proposition", attendu: k.demi.margeUnitaire, calcul: `${eur(k.demi.offre.prix)} − ${eur(k.demi.coutVariable)} = ${eur(k.demi.margeUnitaire)}` },
         ];
@@ -186,10 +192,10 @@ export const BAISSER_LES_PRIX_SANS_RIEN_COUPER: Situation = {
         const k = prixBasSansRienCouper(c);
         const d = k.demi;
         return [
-          { libelle: "Résultat de la proposition", attendu: d.resultat, calcul: `${qte(d.ventes)} × ${eur(d.margeUnitaire)} − ${eur(d.charges)} = ${eur(d.resultat)}`, tolerance: 1 },
+          { libelle: "Résultat de la proposition", attendu: d.resultat, calcul: `${qte(d.ventes)} × ${eur(d.margeUnitaire)} − ${eur(d.charges)} = ${eur(d.resultat)}` },
           { libelle: "Coût complet d'une enceinte vendue", attendu: d.coutComplet, calcul: `${eur(d.coutVariable)} + ${eur(d.charges)} ÷ ${qte(d.ventes)} = ${eur(d.coutComplet)}` },
-          { libelle: "Écart avec la stratégie de coûts", attendu: k.ecartAvecLesCouts, calcul: `${eur(d.resultat)} − ${entre(k.couts.resultat)} = ${eur(k.ecartAvecLesCouts)}`, tolerance: 1 },
-          { libelle: "Écart avec aujourd'hui", attendu: k.ecartAvecLeMilieu, calcul: `${eur(d.resultat)} − ${entre(k.milieu.resultat)} = ${eur(k.ecartAvecLeMilieu)}`, tolerance: 1 },
+          { libelle: "Écart avec la stratégie de coûts", attendu: k.ecartAvecLesCouts, calcul: `${eur(d.resultat)} − ${entre(k.couts.resultat)} = ${eur(k.ecartAvecLesCouts)}` },
+          { libelle: "Écart avec aujourd'hui", attendu: k.ecartAvecLeMilieu, calcul: `${eur(d.resultat)} − ${entre(k.milieu.resultat)} = ${eur(k.ecartAvecLeMilieu)}` },
         ];
       },
       explication: (c) => {
@@ -215,19 +221,16 @@ export const BAISSER_LES_PRIX_SANS_RIEN_COUPER: Situation = {
             libelle: "Effet de la marge par enceinte",
             attendu: k.effetDeLaMarge,
             calcul: `(${eur(k.demi.margeUnitaire)} − ${eur(k.couts.margeUnitaire)}) × ${qte(k.demi.ventes)} = ${eur(k.effetDeLaMarge)}`,
-            tolerance: 1,
           },
           {
             libelle: "Effet du volume",
             attendu: k.effetDuVolume,
             calcul: `(${qte(k.demi.ventes)} − ${qte(k.couts.ventes)}) × ${eur(k.couts.margeUnitaire)} = ${eur(k.effetDuVolume)}`,
-            tolerance: 1,
           },
           {
             libelle: "Effet des budgets gardés",
             attendu: k.effetDesBudgets,
             calcul: `${eur(k.couts.budgets)} − ${eur(k.demi.budgets)} = ${eur(k.effetDesBudgets)}`,
-            tolerance: 1,
           },
         ];
       },

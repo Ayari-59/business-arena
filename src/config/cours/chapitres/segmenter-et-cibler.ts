@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   coutVariable,
@@ -31,6 +31,11 @@ import type { Chapitre } from "../types";
  *
  * CE QUI A CHANGÉ. Le chapitre lisait les clientèles de l'arène chez cinq entreprises ; il se joue
  * chez NOVA seule, sur ses trois clientèles.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le poids et la part de marché du segment se donnent à deux
+ * décimales, à un centième près (au dixième, avant) ; les achats faits ailleurs sont une quantité,
+ * entière.
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -43,9 +48,6 @@ const CIBLE_DU_TARIF = "etudiants" as const;
 const TARIF_DU_CURSEUR = { min: 45, max: 62 } as const;
 const TARIF_DU_LABORATOIRE = { min: 50, max: 59, pas: 0.5 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 const f = (c: Cas) => mercatiqueDe(c);
@@ -122,15 +124,15 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
       question: (c) => {
         const g = segmentation(c);
         const k = g.plusGrosse;
-        return `Le segment « ${k.nom} » rapporte ${eur(k.chiffreDAffaires)} sur ${eur(g.chiffreDAffaires)}. Calculez son poids dans le chiffre d'affaires, puis la part de marché que l'entreprise y tient (${qte(k.demande)} ventes sur ${qte(k.taille)}), en pourcentage au dixième, et le nombre d'achats du segment qui vont à d'autres vendeurs.`;
+        return `Le segment « ${k.nom} » rapporte ${eur(k.chiffreDAffaires)} sur ${eur(g.chiffreDAffaires)}. Calculez son poids dans le chiffre d'affaires, puis la part de marché que l'entreprise y tient (${qte(k.demande)} ventes sur ${qte(k.taille)}), en pourcentage à deux décimales, et le nombre d'achats du segment qui vont à d'autres vendeurs.`;
       },
       champs: (c) => {
         const g = segmentation(c);
         const k = g.plusGrosse;
         return [
-          { libelle: "Poids du segment (%)", attendu: k.poids, calcul: `${eur(k.chiffreDAffaires)} ÷ ${eur(g.chiffreDAffaires)} × 100 = ${pct(k.poids)}`, tolerance: 0.1 },
-          { libelle: "Part de marché dans le segment (%)", attendu: k.part, calcul: `${qte(k.demande)} ÷ ${qte(k.taille)} × 100 = ${pct(k.part)}`, tolerance: 0.1 },
-          { libelle: "Achats du segment faits ailleurs", attendu: k.aGagner, calcul: `${qte(k.taille)} − ${qte(k.demande)} = ${qte(k.aGagner)}` },
+          { libelle: "Poids du segment (%)", attendu: k.poids, calcul: `${eur(k.chiffreDAffaires)} ÷ ${eur(g.chiffreDAffaires)} × 100 = ${pct(k.poids)}` },
+          { libelle: "Part de marché dans le segment (%)", attendu: k.part, calcul: `${qte(k.demande)} ÷ ${qte(k.taille)} × 100 = ${pct(k.part)}` },
+          { libelle: "Achats du segment faits ailleurs", nature: "quantite", attendu: k.aGagner, calcul: `${qte(k.taille)} − ${qte(k.demande)} = ${qte(k.aGagner)}` },
         ];
       },
       explication: (c) => {

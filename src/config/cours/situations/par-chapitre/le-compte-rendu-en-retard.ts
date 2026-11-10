@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2, arrondi2 as auCentime, eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { RETARD, UNE_INFORMATION_A_TEMPS } from "../../chapitres/une-information-a-temps";
 import { FICHE_DE_CAPACITE, anneeAvecUnRetard, capaciteDuTrimestre, chargesFixesDuMois, trimestreDecide } from "../../monde/gestion-et-information";
@@ -18,6 +17,10 @@ import type { Situation } from "../types";
  * (anneeAvecUnRetard, sans retard), et le trimestre 4 rejoué avec le plan repris (trimestreDecide,
  * dans monde/gestion-et-information.ts) ; les trimestres 1 à 3 ne changent pas, et l'équipe à jour
  * n'y laisse aucun stock. Le cas rejouait l'année de l'arène, dans huit entreprises.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les écarts en enceintes sont des quantités, entières ; la part
+ * du résultat se donne à deux décimales (au dixième, avant).
  */
 
 /** Le trimestre décidé sans le compte rendu : le dernier de l'année. */
@@ -26,11 +29,7 @@ export const TRIMESTRE_DECIDE = 4;
 /** Le trimestre dont le compte rendu arrive en retard : celui d'avant. */
 export const TRIMESTRE_DU_COMPTE_RENDU = TRIMESTRE_DECIDE - RETARD;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type VerdictDuCompteRendu = "clients-repartis" | "offre-invendue" | "rien";
@@ -54,7 +53,7 @@ export function compteRendu() {
     invendusEnPlus,
     coutDuRetard,
     resultatDeLAnnee: annee.resultat,
-    partDuResultat: auDixieme((coutDuRetard / annee.resultat) * 100),
+    partDuResultat: arrondi2((coutDuRetard / annee.resultat) * 100),
     verdict: (Math.abs(coutDuRetard) < 1 ? "rien" : repartisEnPlus >= invendusEnPlus ? "clients-repartis" : "offre-invendue") as VerdictDuCompteRendu,
   };
 }
@@ -108,9 +107,9 @@ export const LE_COMPTE_RENDU_EN_RETARD: Situation = {
       champs: (c) => {
         const r = compteRendu();
         return [
-          { libelle: `Écart de plan (${c.unites})`, attendu: r.ecartDePlan, calcul: `${qte(r.repris.plan)} − ${qte(r.aJour.plan)} = ${qte(r.ecartDePlan)}` },
-          { libelle: `Écart de ventes (${c.unites})`, attendu: r.ecartDeVentes, calcul: `${qte(r.repris.ventes)} − ${qte(r.aJour.ventes)} = ${qte(r.ecartDeVentes)}` },
-          { libelle: `Écart de demande non servie (${c.unites})`, attendu: r.repartisEnPlus, calcul: `${qte(r.repris.nonServie)} − ${qte(r.aJour.nonServie)} = ${qte(r.repartisEnPlus)}` },
+          { libelle: `Écart de plan (${c.unites})`, nature: "quantite", attendu: r.ecartDePlan, calcul: `${qte(r.repris.plan)} − ${qte(r.aJour.plan)} = ${qte(r.ecartDePlan)}` },
+          { libelle: `Écart de ventes (${c.unites})`, nature: "quantite", attendu: r.ecartDeVentes, calcul: `${qte(r.repris.ventes)} − ${qte(r.aJour.ventes)} = ${qte(r.ecartDeVentes)}` },
+          { libelle: `Écart de demande non servie (${c.unites})`, nature: "quantite", attendu: r.repartisEnPlus, calcul: `${qte(r.repris.nonServie)} − ${qte(r.aJour.nonServie)} = ${qte(r.repartisEnPlus)}` },
         ];
       },
       explication: (c) => {
@@ -126,13 +125,13 @@ export const LE_COMPTE_RENDU_EN_RETARD: Situation = {
       tableau: tableauDuTrimestre,
       question: () => {
         const r = compteRendu();
-        return `Calculez le résultat perdu au trimestre ${TRIMESTRE_DECIDE} (compte rendu à temps moins plan repris), puis ce qu'il représente du résultat de l'année avec le compte rendu à temps, ${eur(r.resultatDeLAnnee)} (en %, au dixième).`;
+        return `Calculez le résultat perdu au trimestre ${TRIMESTRE_DECIDE} (compte rendu à temps moins plan repris), puis ce qu'il représente du résultat de l'année avec le compte rendu à temps, ${eur(r.resultatDeLAnnee)} (en %, à deux décimales).`;
       },
       champs: () => {
         const r = compteRendu();
         return [
           { libelle: "Résultat perdu au trimestre", attendu: r.coutDuRetard, calcul: `${eur(r.aJour.resultat)} − ${retranche(r.repris.resultat)} = ${eur(r.coutDuRetard)}` },
-          { libelle: "Part du résultat de l'année (%)", attendu: r.partDuResultat, calcul: `${eur(r.coutDuRetard)} ÷ ${eur(r.resultatDeLAnnee)} × 100 = ${pct(r.partDuResultat)}`, tolerance: 0.1 },
+          { libelle: "Part du résultat de l'année (%)", attendu: r.partDuResultat, calcul: `${eur(r.coutDuRetard)} ÷ ${eur(r.resultatDeLAnnee)} × 100 = ${pct(r.partDuResultat)}` },
         ];
       },
       explication: () => {

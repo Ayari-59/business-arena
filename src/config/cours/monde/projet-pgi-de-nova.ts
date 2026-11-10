@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { ENTREPRISES_DE_LA_DIRECTION } from "./direction-de-nova";
 import { PGI_EN_NUAGE } from "./processus-de-commande";
@@ -82,7 +83,7 @@ export function ecartDuBudget() {
   const prevu = auCentime(joursPrevus * INTEGRATEUR.parJour);
   const reel = auCentime(joursReels * INTEGRATEUR.parJour);
   const ecart = auCentime(reel - prevu);
-  return { joursPrevus, joursReels, prevu, reel, ecart, ecartPct: Math.round((ecart / prevu) * 1_000) / 10, finReelle: planning({ parametrage: PARAMETRAGE_REEL }).fin };
+  return { joursPrevus, joursReels, prevu, reel, ecart, ecartPct: arrondi2((ecart / prevu) * 100), finReelle: planning({ parametrage: PARAMETRAGE_REEL }).fin };
 }
 
 /** Le cas : la formation reportée (un retard de son début, qui ne coûte rien) et le paramétrage allongé (facturé). */

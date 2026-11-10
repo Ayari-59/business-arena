@@ -3,6 +3,7 @@ import { ENTREPRISES_DE_LA_PART_DE_MARCHE, MARCHES, MARCHE_ET_PART_DE_MARCHE } f
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { GARDER_SA_PART_DE_MARCHE, garderSaPart } from "../../src/config/cours/situations/par-chapitre/garder-sa-part-de-marche";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
@@ -15,7 +16,8 @@ import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesD
  * et Auris dans les proportions de l'année type du marché à trois (33 808 et 14 616 pour 21 576).
  */
 
-const d = (x: number) => Math.round(x * 10) / 10;
+/** Les pourcentages à deux décimales (décision du propriétaire, 10 novembre 2026) : ils se donnaient au dixième. */
+const d = arrondi2;
 const [M1, M2, N1, N2] = [6_000 + 5_600 + 6_500, 7_400 + 8_300 + 9_200, 1_270 + 1_130 + 1_418 + 960, 1_580 + 1_710 + 1_831 + 960];
 const SOUNDBOX = Math.round((N1 * 33_808) / 21_576);
 const AURIS = Math.round((N1 * 14_616) / 21_576);
@@ -33,14 +35,14 @@ describe("le marché et la part de marché", () => {
     gardesDeTexte(MARCHE_ET_PART_DE_MARCHE);
   });
 
-  it("le premier trimestre : NOVA 26,4 %, SoundBox 41,4 % (7 487), une part relative de 0,64 ; challenger ; le moins cher vend le plus", () => {
+  it("le premier trimestre : NOVA 26,4 %, SoundBox 41,36 % (7 487), une part relative de 0,64 ; challenger ; le moins cher vend le plus", () => {
     expect([M1, N1, SOUNDBOX, AURIS]).toEqual([18_100, 4_778, 7_487, 3_237]);
-    expect(attendus(MARCHE_ET_PART_DE_MARCHE, "parts")).toEqual([d((N1 / M1) * 100), d((SOUNDBOX / M1) * 100), Math.round((26.4 / 41.4) * 100) / 100]);
+    expect(attendus(MARCHE_ET_PART_DE_MARCHE, "parts")).toEqual([d((N1 / M1) * 100), d((SOUNDBOX / M1) * 100), arrondi2(26.4 / 41.36)]);
     expect(juste(MARCHE_ET_PART_DE_MARCHE, "position")).toEqual(["Le challenger : deuxième, elle cherche à prendre la place du leader"]);
     expect(juste(MARCHE_ET_PART_DE_MARCHE, "prix")).toEqual(["L'enseigne la moins chère est celle qui vend le plus"]);
   });
 
-  it("le semestre : le marché +37,6 %, NOVA +27,3 %, sa part −2 points", () => {
+  it("le semestre : le marché +37,57 %, NOVA +27,27 %, sa part −1,98 point", () => {
     expect(attendus(MARCHE_ET_PART_DE_MARCHE, "evolution")).toEqual([d((M2 / M1 - 1) * 100), d((N2 / N1 - 1) * 100), d(d((N2 / M2) * 100) - d((N1 / M1) * 100))]);
   });
 
@@ -58,10 +60,10 @@ describe("le marché et la part de marché", () => {
 });
 
 describe("garder sa part de marché", () => {
-  it("le marché du deuxième trimestre grandit de 8 % : 26 892 enceintes, 22,6 % sans ventes en plus, 6 568 pour garder 24,4 %", () => {
+  it("le marché du deuxième trimestre grandit de 8 % : 26 892 enceintes, 22,61 % sans ventes en plus, 6 568 pour garder 24,42 %", () => {
     const r = garderSaPart(NOVA);
     expect([r.marche, r.ventes, r.part, r.marchePrevu]).toEqual([M2, N2, d((N2 / M2) * 100), Math.round(M2 * 1.08)]);
-    expect([r.partSansEffort, r.ventesNecessaires]).toEqual([d((N2 / 26_892) * 100), Math.ceil((N2 * 26_892) / M2)]);
+    expect([r.partSansEffort, r.ventesNecessaires]).toEqual([d((N2 / 26_892) * 100), Math.ceil(arrondi2(26_892 * (d((N2 / M2) * 100) / 100)))]);
     expect(r.ventesNecessaires).toBe(6_568);
   });
 });

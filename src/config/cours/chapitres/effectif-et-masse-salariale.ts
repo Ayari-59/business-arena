@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENTREPRISES_DES_RESSOURCES_HUMAINES,
@@ -29,12 +29,13 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait le coût d'un salarié dans le scénario de l'arène et l'année
  * figée de l'arène ; il lit le premier exercice de NOVA : 4 salariés, 127 800 € de masse salariale,
  * 1 390 276 € de ventes.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de la masse salariale se donnent à deux décimales (au
+ * dixième, avant), les coûts, la masse et le chiffre d'affaires par salarié au centime (à l'euro près,
+ * avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les mois d'une année. */
@@ -45,9 +46,9 @@ export function masseSalariale(_c?: Cas, hausseGenerale = 0) {
   const m = masseSalarialeDeN(hausseGenerale);
   return {
     ...m,
-    partDansLesCharges: auDixieme(m.partDansLesCharges * 100),
-    tauxDeFraisDePersonnel: auDixieme(m.tauxDeFraisDePersonnel * 100),
-    caParSalarie: Math.round(m.caParSalarie),
+    partDansLesCharges: arrondi2(m.partDansLesCharges * 100),
+    tauxDeFraisDePersonnel: arrondi2(m.tauxDeFraisDePersonnel * 100),
+    caParSalarie: arrondi2(m.caParSalarie),
   };
 }
 
@@ -113,8 +114,8 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
       champs: (c) => {
         const m = masseSalariale(c);
         return [
-          { libelle: "Coût annuel d'un salarié", attendu: m.coutAnnuel, calcul: `${eur(m.coutMensuel)} × ${MOIS} mois = ${eur(m.coutAnnuel)}`, tolerance: 1 },
-          { libelle: "Masse salariale de l'année", attendu: m.masse, calcul: `${eur(m.coutAnnuel)} × ${m.effectif} salariés = ${eur(m.masse)}`, tolerance: 1 },
+          { libelle: "Coût annuel d'un salarié", attendu: m.coutAnnuel, calcul: `${eur(m.coutMensuel)} × ${MOIS} mois = ${eur(m.coutAnnuel)}` },
+          { libelle: "Masse salariale de l'année", attendu: m.masse, calcul: `${eur(m.coutAnnuel)} × ${m.effectif} salariés = ${eur(m.masse)}` },
         ];
       },
       explication: (c) => {
@@ -131,13 +132,13 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
       titre: "Ce que pèse le personnel",
       notions: ["payroll", "productivity"],
       question: () =>
-        "Calculez la part de la masse salariale dans le total des charges, puis le taux de frais de personnel (masse salariale ÷ ventes × 100), en pourcentage au dixième. Calculez enfin le chiffre d'affaires par salarié, à l'euro.",
+        "Calculez la part de la masse salariale dans le total des charges, puis le taux de frais de personnel (masse salariale ÷ ventes × 100), en pourcentage à deux décimales. Calculez enfin le chiffre d'affaires par salarié, au centime.",
       champs: (c) => {
         const m = masseSalariale(c);
         return [
-          { libelle: "Part dans les charges (%)", attendu: m.partDansLesCharges, calcul: `${eur(m.masse)} ÷ ${eur(m.charges)} × 100 = ${pct(m.partDansLesCharges)}`, tolerance: 0.1 },
-          { libelle: "Taux de frais de personnel (%)", attendu: m.tauxDeFraisDePersonnel, calcul: `${eur(m.masse)} ÷ ${eur(m.ventes)} × 100 = ${pct(m.tauxDeFraisDePersonnel)}`, tolerance: 0.1 },
-          { libelle: "Chiffre d'affaires par salarié", attendu: m.caParSalarie, calcul: `${eur(m.ventes)} ÷ ${m.effectif} = ${eur(m.caParSalarie)}`, tolerance: 1 },
+          { libelle: "Part dans les charges (%)", attendu: m.partDansLesCharges, calcul: `${eur(m.masse)} ÷ ${eur(m.charges)} × 100 = ${pct(m.partDansLesCharges)}` },
+          { libelle: "Taux de frais de personnel (%)", attendu: m.tauxDeFraisDePersonnel, calcul: `${eur(m.masse)} ÷ ${eur(m.ventes)} × 100 = ${pct(m.tauxDeFraisDePersonnel)}` },
+          { libelle: "Chiffre d'affaires par salarié", attendu: m.caParSalarie, calcul: `${eur(m.ventes)} ÷ ${m.effectif} = ${eur(m.caParSalarie)}` },
         ];
       },
       explication: (c) => {
@@ -196,7 +197,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
         const m = masseSalariale();
         return [
           { libelle: "Ventes de l'année", montant: q * m.prix },
-          { libelle: `Plafond des frais de personnel (${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes)`, montant: Math.round(q * m.prix * PLAFOND_DES_FRAIS_DE_PERSONNEL * 100) / 100, fort: true },
+          { libelle: `Plafond des frais de personnel (${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes)`, montant: arrondi2(q * m.prix * PLAFOND_DES_FRAIS_DE_PERSONNEL), fort: true },
           { libelle: `Masse salariale de ${EFFECTIF_ESSAYE} salariés`, montant: EFFECTIF_ESSAYE * m.coutAnnuel },
         ];
       },
@@ -227,7 +228,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
         const d = masseSalariale();
         return [
           { libelle: "Masse salariale de l'année", montant: m.masse, reference: d.masse },
-          { libelle: "Taux de frais de personnel", montant: auDixieme(m.tauxDeFraisDePersonnel), unite: "%", reference: d.tauxDeFraisDePersonnel, fort: true },
+          { libelle: "Taux de frais de personnel", montant: arrondi2(m.tauxDeFraisDePersonnel), unite: "%", reference: d.tauxDeFraisDePersonnel, fort: true },
           { libelle: "Plafond du président", montant: PLAFOND_DES_FRAIS_DE_PERSONNEL * 100, unite: "%" },
         ];
       },
@@ -239,7 +240,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
           indice: (p) => {
             const t = masseSalarialeDeN(p.hausse! / 100).tauxDeFraisDePersonnel;
             return t > PLAFOND_DES_FRAIS_DE_PERSONNEL
-              ? `À ${pct(p.hausse!)}, le personnel coûte ${pct(auDixieme(t * 100))} des ventes : le plafond est dépassé.`
+              ? `À ${pct(p.hausse!)}, le personnel coûte ${pct(arrondi2(t * 100))} des ventes : le plafond est dépassé.`
               : `À ${pct(p.hausse!)}, le plafond est tenu : la hausse peut-elle aller plus loin ?`;
           },
           solution: { hausse: juste },
@@ -249,7 +250,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
         const m = masseSalariale(c, p.hausse! / 100);
         const plus = masseSalarialeDeN((p.hausse! + 1) / 100);
         return [
-          `Défi relevé : à ${pct(p.hausse!)} de hausse, la masse salariale passe à ${eur(m.masse)}, ${pct(m.tauxDeFraisDePersonnel)} des ventes. À ${pct(p.hausse! + 1)}, elle en ferait ${pct(auDixieme(plus.tauxDeFraisDePersonnel * 100))}.`,
+          `Défi relevé : à ${pct(p.hausse!)} de hausse, la masse salariale passe à ${eur(m.masse)}, ${pct(m.tauxDeFraisDePersonnel)} des ventes. À ${pct(p.hausse! + 1)}, elle en ferait ${pct(arrondi2(plus.tauxDeFraisDePersonnel * 100))}.`,
           "Une hausse générale se chiffre sur la masse salariale entière, cotisations comprises, et se juge sur les ventes qui la paient.",
         ];
       },

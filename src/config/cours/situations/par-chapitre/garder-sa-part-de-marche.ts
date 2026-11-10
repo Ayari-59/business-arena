@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2, nombreAuCentieme, pct, produit2, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { MARCHE_ET_PART_DE_MARCHE, marcheEtPart } from "../../chapitres/marche-et-part-de-marche";
 import type { Situation } from "../types";
@@ -16,6 +17,12 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre mesure ce qui s'est passé dans l'année, le
  * cas prévoit le trimestre qui vient. Les chiffres du dernier trimestre sont ceux du
  * chapitre (`marcheEtPart`).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de marché se donnent à deux décimales (au dixième,
+ * avant), les points perdus au centième ; les ventes nécessaires partent de la part arrondie, comme
+ * sur la copie de l'élève, et s'arrondissent à l'unité supérieure, que le corrigé nomme (une tolérance
+ * de quelques unités couvrait l'arrondi au dixième, avant).
  */
 
 /**
@@ -25,9 +32,6 @@ import type { Situation } from "../types";
  */
 export const CROISSANCE_PREVUE_DU_MARCHE = 0.08;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -35,13 +39,14 @@ export function garderSaPart(c: Cas) {
   const m = marcheEtPart(c);
   const marche = m.fin.marche;
   const ventes = m.fin.nova.ventes;
-  const part = auDixieme((ventes / marche) * 100);
-  const marchePrevu = Math.round(marche * (1 + CROISSANCE_PREVUE_DU_MARCHE));
-  const partSansEffort = auDixieme((ventes / marchePrevu) * 100);
-  // Garder la même part, c'est vendre la même fraction du marché prévu : à l'unité
-  // supérieure, puisqu'une unité de moins laisserait la part un peu en dessous.
-  const ventesExactes = Math.round(((ventes * marchePrevu) / marche) * 10) / 10;
-  const ventesNecessaires = Math.ceil((ventes * marchePrevu) / marche - 1e-9);
+  const part = arrondi2((ventes / marche) * 100);
+  const marchePrevu = aLUnite(marche * (1 + CROISSANCE_PREVUE_DU_MARCHE));
+  const partSansEffort = arrondi2((ventes / marchePrevu) * 100);
+  // Garder la même part, c'est vendre la même fraction du marché prévu, à la part d'aujourd'hui
+  // arrondie à deux décimales, comme l'élève : à l'unité supérieure, puisqu'une unité de moins
+  // laisserait la part un peu en dessous.
+  const ventesExactes = produit2(marchePrevu, part / 100);
+  const ventesNecessaires = Math.ceil(ventesExactes - 1e-9);
   return {
     trimestre: m.fin.trimestre,
     marche,
@@ -49,12 +54,10 @@ export function garderSaPart(c: Cas) {
     part,
     marchePrevu,
     partSansEffort,
-    pointsPerdus: auDixieme(part - partSansEffort),
+    pointsPerdus: arrondi2(part - partSansEffort),
     ventesExactes,
     ventesNecessaires,
     ventesEnPlus: ventesNecessaires - ventes,
-    // Avec la part arrondie au dixième, le calcul de l'élève peut s'écarter de quelques unités.
-    toleranceVentes: Math.ceil(marchePrevu * 0.0005) + 1,
     // L'erreur classique : prendre pour soi toute la croissance du marché.
     croissanceDuMarche: marchePrevu - marche,
   };
@@ -109,12 +112,12 @@ export const GARDER_SA_PART_DE_MARCHE: Situation = {
       titre: "La part de marché et le marché prévu",
       notions: ["demand_market_share"],
       question: () =>
-        "Calculez la part de marché de l'entreprise au dernier trimestre, en pourcentage au dixième, puis la taille du marché prévue au prochain trimestre, à l'unité.",
+        "Calculez la part de marché de l'entreprise au dernier trimestre, en pourcentage à deux décimales, puis la taille du marché prévue au prochain trimestre, à l'unité.",
       champs: (c) => {
         const r = garderSaPart(c);
         return [
-          { libelle: "Part de marché au dernier trimestre (%)", attendu: r.part, tolerance: 0.1, calcul: `${qte(r.ventes)} ÷ ${qte(r.marche)} × 100 = ${pct(r.part)}` },
-          { libelle: `Taille du marché prévue (${c.unites})`, attendu: r.marchePrevu, tolerance: 1, calcul: `${qte(r.marche)} × (1 + ${pct(CROISSANCE_PREVUE_DU_MARCHE * 100)}) = ${qte(r.marchePrevu)}` },
+          { libelle: "Part de marché au dernier trimestre (%)", attendu: r.part, calcul: `${qte(r.ventes)} ÷ ${qte(r.marche)} × 100 = ${pct(r.part)}` },
+          { libelle: `Taille du marché prévue (${c.unites})`, nature: "quantite", attendu: r.marchePrevu, calcul: `${qte(r.marche)} × (1 + ${pct(CROISSANCE_PREVUE_DU_MARCHE * 100)}) = ${qte(r.marchePrevu)}` },
         ];
       },
       explication: (c) => {
@@ -130,19 +133,19 @@ export const GARDER_SA_PART_DE_MARCHE: Situation = {
       titre: "Si les ventes ne bougent pas",
       notions: ["demand_market_share"],
       question: () =>
-        "Si l'entreprise vend autant qu'au dernier trimestre, quelle sera sa part de marché au prochain trimestre, en pourcentage au dixième ? Combien de points aura-t-elle perdus ?",
+        "Si l'entreprise vend autant qu'au dernier trimestre, quelle sera sa part de marché au prochain trimestre, en pourcentage à deux décimales ? Combien de points aura-t-elle perdus ?",
       champs: (c) => {
         const r = garderSaPart(c);
         return [
-          { libelle: "Part de marché sans ventes en plus (%)", attendu: r.partSansEffort, tolerance: 0.1, calcul: `${qte(r.ventes)} ÷ ${qte(r.marchePrevu)} × 100 = ${pct(r.partSansEffort)}` },
-          { libelle: "Points de part de marché perdus", attendu: r.pointsPerdus, tolerance: 0.1, calcul: `${pct(r.part)} − ${pct(r.partSansEffort)} = ${qte(r.pointsPerdus)} point${r.pointsPerdus >= 2 ? "s" : ""}` },
+          { libelle: "Part de marché sans ventes en plus (%)", attendu: r.partSansEffort, calcul: `${qte(r.ventes)} ÷ ${qte(r.marchePrevu)} × 100 = ${pct(r.partSansEffort)}` },
+          { libelle: "Points de part de marché perdus", nature: "grandeur", attendu: r.pointsPerdus, calcul: `${pct(r.part)} − ${pct(r.partSansEffort)} = ${nombreAuCentieme(r.pointsPerdus)} point${r.pointsPerdus >= 2 ? "s" : ""}` },
         ];
       },
       explication: (c) => {
         const r = garderSaPart(c);
         return [
-          `Même sans vendre moins, ${c.entreprise} perdrait ${qte(r.pointsPerdus)} point${r.pointsPerdus >= 2 ? "s" : ""} de part de marché : ses concurrents prendraient les clients que le marché gagne. Rester immobile sur un marché qui grandit, c'est reculer.`,
-          `Le marché grandit de ${pct(CROISSANCE_PREVUE_DU_MARCHE * 100)}, mais la part ne perd pas ${qte(CROISSANCE_PREVUE_DU_MARCHE * 100)} points : elle en perd ${qte(r.pointsPerdus)}. L'écart entre deux parts de marché se compte en points, pas en pourcentage.`,
+          `Même sans vendre moins, ${c.entreprise} perdrait ${nombreAuCentieme(r.pointsPerdus)} point${r.pointsPerdus >= 2 ? "s" : ""} de part de marché : ses concurrents prendraient les clients que le marché gagne. Rester immobile sur un marché qui grandit, c'est reculer.`,
+          `Le marché grandit de ${pct(CROISSANCE_PREVUE_DU_MARCHE * 100)}, mais la part ne perd pas ${qte(CROISSANCE_PREVUE_DU_MARCHE * 100)} points : elle en perd ${nombreAuCentieme(r.pointsPerdus)}. L'écart entre deux parts de marché se compte en points, pas en pourcentage.`,
         ];
       },
     },
@@ -156,8 +159,8 @@ export const GARDER_SA_PART_DE_MARCHE: Situation = {
       champs: (c) => {
         const r = garderSaPart(c);
         return [
-          { libelle: `Ventes nécessaires (${c.unites})`, attendu: r.ventesNecessaires, tolerance: r.toleranceVentes, calcul: `${qte(r.marchePrevu)} × ${qte(r.ventes)} ÷ ${qte(r.marche)} = ${qte(r.ventesExactes)}, soit ${qte(r.ventesNecessaires)} à l'unité supérieure` },
-          { libelle: `Ventes en plus (${c.unites})`, attendu: r.ventesEnPlus, tolerance: r.toleranceVentes, calcul: `${qte(r.ventesNecessaires)} − ${qte(r.ventes)} = ${qte(r.ventesEnPlus)}` },
+          { libelle: `Ventes nécessaires (${c.unites})`, nature: "quantite", attendu: r.ventesNecessaires, calcul: `${qte(r.marchePrevu)} × ${pct(r.part)} = ${nombreAuCentieme(r.ventesExactes)}, soit ${qte(r.ventesNecessaires)} à l'unité supérieure` },
+          { libelle: `Ventes en plus (${c.unites})`, nature: "quantite", attendu: r.ventesEnPlus, calcul: `${qte(r.ventesNecessaires)} − ${qte(r.ventes)} = ${qte(r.ventesEnPlus)}` },
         ];
       },
       explication: (c) => {
@@ -188,7 +191,7 @@ export const GARDER_SA_PART_DE_MARCHE: Situation = {
           {
             texte: `Sans ventes en plus, notre part de marché perdrait ${qte(CROISSANCE_PREVUE_DU_MARCHE * 100)} points`,
             juste: false,
-            retour: `Non : c'est confondre les points et le pourcentage. Le marché grandit de ${pct(CROISSANCE_PREVUE_DU_MARCHE * 100)}, mais la part passe de ${pct(r.part)} à ${pct(r.partSansEffort)} : ${qte(r.pointsPerdus)} point${r.pointsPerdus >= 2 ? "s" : ""} de moins.`,
+            retour: `Non : c'est confondre les points et le pourcentage. Le marché grandit de ${pct(CROISSANCE_PREVUE_DU_MARCHE * 100)}, mais la part passe de ${pct(r.part)} à ${pct(r.partSansEffort)} : ${nombreAuCentieme(r.pointsPerdus)} point${r.pointsPerdus >= 2 ? "s" : ""} de moins.`,
           },
           {
             texte: `Il faut vendre ${qte(r.croissanceDuMarche)} ${c.unites} de plus, toute la croissance du marché`,

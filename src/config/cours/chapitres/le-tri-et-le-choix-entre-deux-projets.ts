@@ -1,10 +1,10 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2, eur, nombreAuCentieme, pct as pourcent, produit2, quotient2, somme2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
-import { coefficientDActualisation, delaiDeRecuperationActualise, fluxDifferentiels, fluxDuProjet, indiceDeProfitabilite, tauxDeFisher, tri, van } from "../monde/finance";
+import { coefficientAuDixMillieme, delaiAuxLignesArrondies, fluxDifferentiels, fluxDuProjet, tauxDeFisher, tri, vanAuxLignesArrondies } from "../monde/finance";
 import type { ProjetDInvestissement } from "../monde/projets-et-financement";
 import type { Chapitre, TableauDeDonnees } from "../types";
-import { ENTREPRISES_DES_PROJETS, dernierPositif, nomDeLaDate, projetsDe, toleranceDActualisation } from "./la-valeur-actuelle-nette";
+import { ENTREPRISES_DES_PROJETS, dernierPositif, nomDeLaDate, projetsDe } from "./la-valeur-actuelle-nette";
 
 /**
  * CHAPITRE : LE TAUX DE RENTABILITÉ INTERNE ET LE CHOIX ENTRE DEUX PROJETS (DSCG, UE2 Finance,
@@ -42,6 +42,15 @@ import { ENTREPRISES_DES_PROJETS, dernierPositif, nomDeLaDate, projetsDe, tolera
  * CE QUI A DISPARU, AVEC L'ARÈNE : les deux machines du catalogue rejouées douze trimestres, les
  * taux trimestriels et leurs TRI de plus de 100 % par an, les entreprises où le classement ne
  * décidait rien.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les VAN s'actualisent aux lignes arrondies (coefficients au
+ * dix-millième, chaque flux actualisé au centime), et les interpolations du TRI et du taux de Fisher
+ * partent de ces VAN au centime ; le taux de Fisher attendu est celui de l'interpolation, que l'élève
+ * calcule (la dichotomie était l'attendu, à deux centièmes près). L'annuité se lit au dix-millième
+ * (3,8897), l'indice de profitabilité et le délai actualisé au centième, sur les VAN et les flux
+ * arrondis ; le TRI global replace les flux aux coefficients du dix-millième. Les tolérances (jusqu'à
+ * 51 €) tombent à un centime.
  */
 
 /** LE BUDGET DU RATIONNEMENT (hypothèse du cours) : ce que NOVA peut engager à la date 0, sa réserve et ce que la banque accepte de prêter. */
@@ -68,13 +77,15 @@ export const ENTRETIEN_DU_CURSEUR = { min: 10_000, max: 20_000 } as const;
  * besoin.
  */
 export function triGlobal(flux: readonly number[], taux: number) {
+  // Aux lignes arrondies, comme l'élève : chaque coefficient (de capitalisation ou d'actualisation) au
+  // dix-millième, chaque flux replacé au centime, la mise et la valeur acquise sommes de ces lignes.
   const n = flux.length - 1;
   let mise = -flux[0]!;
   let valeurAcquise = 0;
   flux.forEach((f, k) => {
     if (k === 0) return;
-    if (f < 0) mise += -f * coefficientDActualisation(taux, k);
-    else valeurAcquise += f * (1 + taux) ** (n - k);
+    if (f < 0) mise = somme2(mise, produit2(-f, coefficientAuDixMillieme(taux, k)));
+    else valeurAcquise = somme2(valeurAcquise, produit2(f, arrondi((1 + taux) ** (n - k), 4)));
   });
   return { mise: auCentime(mise), valeurAcquise: auCentime(valeurAcquise), taux: (valeurAcquise / mise) ** (1 / n) - 1 };
 }
@@ -96,11 +107,11 @@ export function machineSuivante(code: string): { code: string; name: string } {
   return { code: projetsDe({ code }).b.code, name: nom.charAt(0).toUpperCase() + nom.slice(1) };
 }
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 2) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−")} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
+const pct = (x: number) => pourcent(x);
+const auCentieme = arrondi2;
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -108,9 +119,10 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
 function encadrement(flux: readonly number[], taux: number) {
   const lo = Math.floor(taux * 100);
   const hi = lo + 1;
-  const vanLo = van(flux, lo / 100);
-  const vanHi = van(flux, hi / 100);
-  return { exact: taux, pct: auCentieme(taux * 100), lo, hi, vanLo, vanHi, interpolation: auCentieme(lo + vanLo / (vanLo - vanHi)), tolerance: toleranceDActualisation(flux) };
+  const vanLo = vanAuxLignesArrondies(flux, lo / 100);
+  const vanHi = vanAuxLignesArrondies(flux, hi / 100);
+  // L'interpolation aux lignes arrondies : l'écart des deux VAN au centime, puis la part du point.
+  return { exact: taux, pct: auCentieme(taux * 100), lo, hi, vanLo, vanHi, interpolation: somme2(lo, quotient2(vanLo, somme2(vanLo, -vanHi))) };
 }
 
 export type Lettre = "A" | "B" | "C";
@@ -134,9 +146,9 @@ function calculer(c: Pick<Cas, "code">) {
   const A = fl(k.a);
   const B = fl(k.b);
   const C = fl(k.c);
-  const vanA = van(A.flux, t);
-  const vanB = van(B.flux, t);
-  const vanC = van(C.flux, t);
+  const vanA = vanAuxLignesArrondies(A.flux, t);
+  const vanB = vanAuxLignesArrondies(B.flux, t);
+  const vanC = vanAuxLignesArrondies(C.flux, t);
   const ecart = auCentime(vanB - vanA);
   const triA = tri(A.flux)!;
   const triB = tri(B.flux)!;
@@ -145,19 +157,24 @@ function calculer(c: Pick<Cas, "code">) {
   const diff = fluxDifferentiels(A.flux, B.flux);
   const fisher = tauxDeFisher(A.flux, B.flux)!;
   const encF = encadrement(diff, fisher);
-  const fisherPct = encF.pct;
-  const vanAAuFisher = van(A.flux, fisherPct / 100);
-  const vanBAuFisher = van(B.flux, fisherPct / 100);
-  const ip = { A: indiceDeProfitabilite(A.flux, t), B: indiceDeProfitabilite(B.flux, t), C: indiceDeProfitabilite(C.flux, t) };
-  const delaiA = delaiDeRecuperationActualise(A.flux, t)!;
-  const delaiB = delaiDeRecuperationActualise(B.flux, t)!;
+  // Le taux de Fisher que l'élève trouve : l'interpolation entre deux taux entiers (la dichotomie, plus
+  // fine, donne un centième de point de moins), et la VAN des deux projets à ce taux.
+  const fisherPct = encF.interpolation;
+  const vanAAuFisher = vanAuxLignesArrondies(A.flux, fisherPct / 100);
+  const vanBAuFisher = vanAuxLignesArrondies(B.flux, fisherPct / 100);
+  // L'indice de profitabilité sur la VAN au centime, au centième ; le délai aux lignes arrondies.
+  const indice = (v: number, f: readonly number[]) => quotient2(somme2(v, -f[0]!), -f[0]!);
+  const ip = { A: indice(vanA, A.flux), B: indice(vanB, B.flux), C: indice(vanC, C.flux) };
+  const delaiA = delaiAuxLignesArrondies(A.flux, t)!;
+  const delaiB = delaiAuxLignesArrondies(B.flux, t)!;
   // L'entretien de B : la VAN de B est affine dans l'entretien, (1 − t) × l'annuité par euro et par an.
   const entretienDeB = k.b.charges.find((ch) => /entretien/.test(ch.libelle))!.montants[0]!;
   const entretienDeA = k.a.charges.find((ch) => /entretien/.test(ch.libelle))!.montants[0]!;
-  const annuite = Array.from({ length: B.duree }, (_, i) => coefficientDActualisation(t, i + 1)).reduce((s, x) => s + x, 0);
-  const vanParMille = auCentime(1_000 * (1 - k.impot) * annuite);
-  const entretienMax = auCentime(entretienDeB + ecart / ((1 - k.impot) * annuite));
-  const vanDeBAvec = (e: number) => van(fl(avecLEntretien(k.b, e)).flux, t);
+  // Le coefficient d'annuité au dix-millième, (1 − (1 + t)^(−n)) ÷ t, comme dans une table financière.
+  const annuite = arrondi((1 - (1 + t) ** -B.duree) / t, 4);
+  const vanParMille = produit2(auCentime(1_000 * (1 - k.impot)), annuite);
+  const entretienMax = somme2(entretienDeB, arrondi2((ecart / vanParMille) * 1_000));
+  const vanDeBAvec = (e: number) => vanAuxLignesArrondies(fl(avecLEntretien(k.b, e)).flux, t);
   const entretienEntier = dernierPositif((e) => vanDeBAvec(e) - vanA, ENTRETIEN_DU_CURSEUR.min, ENTRETIEN_DU_CURSEUR.max, entretienMax);
   // Le rationnement : les programmes qui tiennent dans le budget, A et B ne pouvant aller ensemble.
   const projets = { A: { f: A, van: vanA, mise: -A.flux[0]! }, B: { f: B, van: vanB, mise: -B.flux[0]! }, C: { f: C, van: vanC, mise: -C.flux[0]! } };
@@ -187,7 +204,7 @@ function calculer(c: Pick<Cas, "code">) {
   // Le défi du laboratoire : la position du taux, sur le pas, où les deux VAN sont les plus proches.
   const pas = TAUX_DU_LABORATOIRE.pas;
   const positions = Array.from({ length: Math.round((TAUX_DU_LABORATOIRE.max - TAUX_DU_LABORATOIRE.min) / pas) + 1 }, (_, i) => auCentieme(TAUX_DU_LABORATOIRE.min + i * pas));
-  const ecartAuTaux = (x: number) => auCentime(van(B.flux, x / 100) - van(A.flux, x / 100));
+  const ecartAuTaux = (x: number) => auCentime(vanAuxLignesArrondies(B.flux, x / 100) - vanAuxLignesArrondies(A.flux, x / 100));
   const tauxDuDefi = positions.reduce((m, x) => (Math.abs(ecartAuTaux(x)) < Math.abs(ecartAuTaux(m)) ? x : m));
   const vanPrefere: Lettre = vanB > vanA ? "B" : "A";
   const triPrefere: Lettre = triB > triA ? "B" : "A";
@@ -216,9 +233,9 @@ function calculer(c: Pick<Cas, "code">) {
     vanAAuFisher,
     vanBAuFisher,
     ip,
-    ipPct: { A: auCentieme(ip.A), B: auCentieme(ip.B), C: auCentieme(ip.C) },
-    delaiA: auCentieme(delaiA),
-    delaiB: auCentieme(delaiB),
+    ipPct: ip,
+    delaiA,
+    delaiB,
     entretienDeA,
     entretienDeB,
     annuite,
@@ -252,8 +269,8 @@ export type DeuxLignes = ReturnType<typeof deuxLignes>;
 /** La lecture du laboratoire : les deux VAN au taux choisi, et le rendement de chaque projet selon le réinvestissement. */
 export function laboratoireDesDeuxLignes(x: DeuxLignes, pos: Readonly<Record<string, number>>) {
   const t = pos.taux! / 100;
-  const vanA = van(x.A.flux, t);
-  const vanB = van(x.B.flux, t);
+  const vanA = vanAuxLignesArrondies(x.A.flux, t);
+  const vanB = vanAuxLignesArrondies(x.B.flux, t);
   const auTri = pos.reinvestissement === AU_TRI;
   return {
     vanA,
@@ -350,19 +367,18 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
       notions: ["discounting"],
       question: (c) => {
         const x = deuxLignes(c);
-        return `Actualisez à ${pct(x.tauxPct)} les flux de chaque projet : VAN = somme des flux de la date k × (1 + ${pct(x.tauxPct)})^(−k). Calculez la VAN du projet A, celle du projet B, puis ce que B crée de plus que le projet A.`;
+        return `Actualisez à ${pct(x.tauxPct)} les flux de chaque projet : VAN = somme des flux de la date k × (1 + ${pct(x.tauxPct)})^(−k), chaque coefficient au dix-millième et chaque flux actualisé au centime. Calculez la VAN du projet A, celle du projet B, puis ce que B crée de plus que le projet A.`;
       },
       champs: (c) => {
         const x = deuxLignes(c);
-        const somme = (f: readonly number[]) => `${f.map((y, d) => `${entre(y)} × ${coefficientDActualisation(x.t, d).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`).join(" + ")}`;
+        const somme = (f: readonly number[]) => `${f.map((y, d) => `${entre(y)} × ${coefficientAuDixMillieme(x.t, d).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`).join(" + ")}`;
         return [
-          { libelle: "VAN du projet A", attendu: x.vanA, calcul: `${somme(x.A.flux)} = ${eur(x.vanA)}`, tolerance: toleranceDActualisation(x.A.flux) },
-          { libelle: "VAN du projet B", attendu: x.vanB, calcul: `${somme(x.B.flux)} = ${eur(x.vanB)}`, tolerance: toleranceDActualisation(x.B.flux) },
+          { libelle: "VAN du projet A", attendu: x.vanA, calcul: `${somme(x.A.flux)} = ${eur(x.vanA)}` },
+          { libelle: "VAN du projet B", attendu: x.vanB, calcul: `${somme(x.B.flux)} = ${eur(x.vanB)}` },
           {
             libelle: "Ce que B crée de plus que le projet A",
             attendu: x.ecart,
             calcul: `${eur(x.vanB)} − ${eur(x.vanA)} = ${eur(x.ecart)}`,
-            tolerance: toleranceDActualisation(x.A.flux) + toleranceDActualisation(x.B.flux),
           },
         ];
       },
@@ -439,8 +455,8 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         return {
           levier: "taux",
           courbes: [
-            { libelle: "VAN du projet A", valeur: (pos) => van(x.A.flux, pos.taux! / 100) },
-            { libelle: "VAN du projet B", valeur: (pos) => van(x.B.flux, pos.taux! / 100) },
+            { libelle: "VAN du projet A", valeur: (pos) => vanAuxLignesArrondies(x.A.flux, pos.taux! / 100) },
+            { libelle: "VAN du projet B", valeur: (pos) => vanAuxLignesArrondies(x.B.flux, pos.taux! / 100) },
           ],
         };
       },
@@ -452,8 +468,8 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
           indice: (pos) => {
             const e = x.ecartAuTaux(pos.taux!);
             return e > 0
-              ? `À ${pct(pos.taux!, 1)}, B crée encore ${eur(e)} de plus : montez le taux.`
-              : `À ${pct(pos.taux!, 1)}, le projet A crée ${eur(-e)} de plus : vous êtes allé trop loin, baissez le taux.`;
+              ? `À ${pct(pos.taux!)}, B crée encore ${eur(e)} de plus : montez le taux.`
+              : `À ${pct(pos.taux!)}, le projet A crée ${eur(-e)} de plus : vous êtes allé trop loin, baissez le taux.`;
           },
           solution: { taux: x.tauxDuDefi, reinvestissement: AU_TRI },
         };
@@ -463,8 +479,8 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const l = laboratoireDesDeuxLignes(x, pos);
         const g = laboratoireDesDeuxLignes(x, { taux: pos.taux!, reinvestissement: AU_TAUX_D_ACTUALISATION });
         return [
-          `À ${pct(pos.taux!, 1)}, les deux VAN se rejoignent : ${eur(l.vanA)} pour le projet A, ${eur(l.vanB)} pour B. C'est le taux d'intersection de Fisher. Sous lui, B crée le plus de valeur ; au-dessus, le projet A. Le taux d'actualisation de ${x.entreprise}, ${pct(x.tauxPct)}, est dessous : la VAN choisit B.`,
-          `Le TRI, lui, ne bouge pas avec le taux : ${pct(x.triAPct)} pour le projet A, ${pct(x.triBPct)} pour B. Il préfère le projet A à tout taux, parce qu'il suppose chaque flux replacé au TRI du projet. Replacez-les au taux d'actualisation : à ${pct(pos.taux!, 1)}, le TRI global vaut ${pct(g.rendementA)} pour le projet A et ${pct(g.rendementB)} pour B. Le projet A garde l'avantage : un taux mesure un rendement par euro, pas les euros créés.`,
+          `À ${pct(pos.taux!)}, les deux VAN se rejoignent : ${eur(l.vanA)} pour le projet A, ${eur(l.vanB)} pour B. C'est le taux d'intersection de Fisher. Sous lui, B crée le plus de valeur ; au-dessus, le projet A. Le taux d'actualisation de ${x.entreprise}, ${pct(x.tauxPct)}, est dessous : la VAN choisit B.`,
+          `Le TRI, lui, ne bouge pas avec le taux : ${pct(x.triAPct)} pour le projet A, ${pct(x.triBPct)} pour B. Il préfère le projet A à tout taux, parce qu'il suppose chaque flux replacé au TRI du projet. Replacez-les au taux d'actualisation : à ${pct(pos.taux!)}, le TRI global vaut ${pct(g.rendementA)} pour le projet A et ${pct(g.rendementB)} pour B. Le projet A garde l'avantage : un taux mesure un rendement par euro, pas les euros créés.`,
         ];
       },
     },
@@ -483,13 +499,12 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const x = deuxLignes(c);
         const e = x.encA;
         return [
-          { libelle: `VAN du projet A à ${pct(e.lo)}`, attendu: e.vanLo, calcul: `les flux du projet A actualisés à ${pct(e.lo)} : ${eur(e.vanLo)}`, tolerance: e.tolerance },
-          { libelle: `VAN du projet A à ${pct(e.hi)}`, attendu: e.vanHi, calcul: `au même calcul, à ${pct(e.hi)} : ${eur(e.vanHi)}`, tolerance: e.tolerance },
+          { libelle: `VAN du projet A à ${pct(e.lo)}`, attendu: e.vanLo, calcul: `les flux du projet A actualisés à ${pct(e.lo)} : ${eur(e.vanLo)}` },
+          { libelle: `VAN du projet A à ${pct(e.hi)}`, attendu: e.vanHi, calcul: `au même calcul, à ${pct(e.hi)} : ${eur(e.vanHi)}` },
           {
             libelle: "TRI du projet A, par interpolation (%)",
             attendu: e.interpolation,
             calcul: `${qte(e.lo)} + ${eur(e.vanLo)} ÷ (${eur(e.vanLo)} − ${entre(e.vanHi)}) = ${pct(e.interpolation)}`,
-            tolerance: 0.02,
           },
         ];
       },
@@ -513,13 +528,12 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const x = deuxLignes(c);
         const e = x.encB;
         return [
-          { libelle: "Taux entier juste sous le TRI de B (%)", attendu: e.lo, calcul: `la VAN de B est positive à ${pct(e.lo)} (${eur(e.vanLo)}) et négative à ${pct(e.hi)} (${eur(e.vanHi)}) : ${pct(e.lo)}`, tolerance: 0.01 },
-          { libelle: "VAN de B à ce taux", attendu: e.vanLo, calcul: `les flux de B actualisés à ${pct(e.lo)} : ${eur(e.vanLo)}`, tolerance: e.tolerance },
+          { libelle: "Taux entier juste sous le TRI de B (%)", attendu: e.lo, calcul: `la VAN de B est positive à ${pct(e.lo)} (${eur(e.vanLo)}) et négative à ${pct(e.hi)} (${eur(e.vanHi)}) : ${pct(e.lo)}` },
+          { libelle: "VAN de B à ce taux", attendu: e.vanLo, calcul: `les flux de B actualisés à ${pct(e.lo)} : ${eur(e.vanLo)}` },
           {
             libelle: "TRI de B, par interpolation (%)",
             attendu: e.interpolation,
             calcul: `${qte(e.lo)} + ${eur(e.vanLo)} ÷ (${eur(e.vanLo)} − ${entre(e.vanHi)}) = ${pct(e.interpolation)}`,
-            tolerance: 0.02,
           },
         ];
       },
@@ -562,7 +576,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
       notions: ["irr_payback", "discounting"],
       question: (c) => {
         const x = deuxLignes(c);
-        return `Le laboratoire a situé le croisement vers ${pct(x.tauxDuDefi, 1)}. Calculez-le : c'est le TRI des flux différentiels, B moins le projet A. Donnez le flux différentiel des dates 1 à 4, celui de la date ${x.B.duree}, le taux de Fisher, puis la VAN du projet A à ce taux arrondi au centième de point.`;
+        return `Le laboratoire a situé le croisement vers ${pct(x.tauxDuDefi)}. Calculez-le : c'est le TRI des flux différentiels, B moins le projet A. Donnez le flux différentiel des dates 1 à 4, celui de la date ${x.B.duree}, le taux de Fisher, puis la VAN du projet A à ce taux arrondi au centième de point.`;
       },
       champs: (c) => {
         const x = deuxLignes(c);
@@ -574,14 +588,12 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
           {
             libelle: "Taux de Fisher (%)",
             attendu: x.fisherPct,
-            calcul: `la VAN des flux différentiels vaut ${eur(e.vanLo)} à ${pct(e.lo)} et ${eur(e.vanHi)} à ${pct(e.hi)} : ${qte(e.lo)} + ${eur(e.vanLo)} ÷ (${eur(e.vanLo)} − ${entre(e.vanHi)}) = ${pct(e.interpolation)} ; la dichotomie donne ${pct(x.fisherPct)}`,
-            tolerance: 0.02,
+            calcul: `la VAN des flux différentiels vaut ${eur(e.vanLo)} à ${pct(e.lo)} et ${eur(e.vanHi)} à ${pct(e.hi)} : ${qte(e.lo)} + ${eur(e.vanLo)} ÷ (${eur(e.vanLo)} − ${entre(e.vanHi)}) = ${pct(e.interpolation)}`,
           },
           {
             libelle: `VAN du projet A à ${pct(x.fisherPct)}`,
             attendu: x.vanAAuFisher,
             calcul: `les flux du projet A actualisés à ${pct(x.fisherPct)} : ${eur(x.vanAAuFisher)} ; ceux de B y valent ${eur(x.vanBAuFisher)}`,
-            tolerance: toleranceDActualisation(x.A.flux),
           },
         ];
       },
@@ -667,21 +679,18 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
       },
       champs: (c) => {
         const x = deuxLignes(c);
-        const coefs = Array.from({ length: x.B.duree }, (_, i) => coefficientDActualisation(x.t, i + 1));
-        const annuite = coefs.reduce((s, y) => s + y, 0);
+        const annuite = x.annuite;
         return [
           { libelle: "Flux après impôt que coûtent 1 000 € d'entretien par an", attendu: auCentime(1_000 * (1 - x.k.impot)), calcul: `1 000 € × (1 − ${pct(x.k.impot * 100)}) = ${eur(auCentime(1_000 * (1 - x.k.impot)))}` },
           {
             libelle: "VAN retirée par 1 000 € d'entretien par an",
             attendu: x.vanParMille,
             calcul: `${eur(auCentime(1_000 * (1 - x.k.impot)))} × (1 − (1 + ${pct(x.tauxPct)})^(−${x.B.duree})) ÷ ${pct(x.tauxPct)} = ${eur(auCentime(1_000 * (1 - x.k.impot)))} × ${annuite.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} = ${eur(x.vanParMille)}`,
-            tolerance: 1,
           },
           {
             libelle: "Entretien annuel de B qui égale les deux VAN",
             attendu: x.entretienMax,
             calcul: `${eur(x.entretienDeB)} + ${eur(x.ecart)} ÷ ${eur(x.vanParMille)} × 1 000 = ${eur(x.entretienMax)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -705,10 +714,10 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const x = deuxLignes(c);
         const ipCalc = (v: number, f: readonly number[], ipp: number) => `(${eur(v)} + ${eur(-f[0]!)}) ÷ ${eur(-f[0]!)} = ${qte(ipp)}`;
         return [
-          { libelle: "Indice de profitabilité du projet A", attendu: x.ipPct.A, calcul: ipCalc(x.vanA, x.A.flux, x.ipPct.A), tolerance: 0.01 },
-          { libelle: "Indice de profitabilité de B", attendu: x.ipPct.B, calcul: ipCalc(x.vanB, x.B.flux, x.ipPct.B), tolerance: 0.01 },
-          { libelle: "Délai de récupération actualisé du projet A (années)", attendu: x.delaiA, calcul: `les flux actualisés cumulés repassent à zéro au cours de l'année ${Math.ceil(x.delaiA)} : ${qte(x.delaiA)} ans`, tolerance: 0.02 },
-          { libelle: "Délai de récupération actualisé de B (années)", attendu: x.delaiB, calcul: `les flux actualisés cumulés repassent à zéro au cours de l'année ${Math.ceil(x.delaiB)} : ${qte(x.delaiB)} ans`, tolerance: 0.02 },
+          { libelle: "Indice de profitabilité du projet A", nature: "grandeur", attendu: x.ipPct.A, calcul: ipCalc(x.vanA, x.A.flux, x.ipPct.A) },
+          { libelle: "Indice de profitabilité de B", nature: "grandeur", attendu: x.ipPct.B, calcul: ipCalc(x.vanB, x.B.flux, x.ipPct.B) },
+          { libelle: "Délai de récupération actualisé du projet A (années)", nature: "grandeur", attendu: x.delaiA, calcul: `les flux actualisés cumulés repassent à zéro au cours de l'année ${Math.ceil(x.delaiA)} : ${qte(x.delaiA)} ans` },
+          { libelle: "Délai de récupération actualisé de B (années)", nature: "grandeur", attendu: x.delaiB, calcul: `les flux actualisés cumulés repassent à zéro au cours de l'année ${Math.ceil(x.delaiB)} : ${qte(x.delaiB)} ans` },
         ];
       },
       explication: (c) => {
@@ -735,9 +744,9 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const ac = x.programmes.find((p) => p.nom === "AC")!;
         const bc = x.programmes.find((p) => p.nom === "BC")!;
         return [
-          { libelle: "Indice de profitabilité du projet C", attendu: x.ipPct.C, calcul: `(${eur(x.vanC)} + ${eur(-x.C.flux[0]!)}) ÷ ${eur(-x.C.flux[0]!)} = ${qte(x.ipPct.C)}`, tolerance: 0.01 },
-          { libelle: "VAN de la ligne manuelle et du banc", attendu: ac.van, calcul: `${eur(x.vanA)} + ${eur(x.vanC)} = ${eur(ac.van)}, pour ${eur(ac.mise)} engagés`, tolerance: 1 },
-          { libelle: "VAN de la ligne semi-automatique et du banc", attendu: bc.van, calcul: `${eur(x.vanB)} + ${eur(x.vanC)} = ${eur(bc.van)}, pour ${eur(bc.mise)} engagés`, tolerance: 1 },
+          { libelle: "Indice de profitabilité du projet C", nature: "grandeur", attendu: x.ipPct.C, calcul: `(${eur(x.vanC)} + ${eur(-x.C.flux[0]!)}) ÷ ${eur(-x.C.flux[0]!)} = ${qte(x.ipPct.C)}` },
+          { libelle: "VAN de la ligne manuelle et du banc", attendu: ac.van, calcul: `${eur(x.vanA)} + ${eur(x.vanC)} = ${eur(ac.van)}, pour ${eur(ac.mise)} engagés` },
+          { libelle: "VAN de la ligne semi-automatique et du banc", attendu: bc.van, calcul: `${eur(x.vanB)} + ${eur(x.vanC)} = ${eur(bc.van)}, pour ${eur(bc.mise)} engagés` },
         ];
       },
       explication: (c) => {
@@ -800,9 +809,9 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const n = x.A.duree;
         const calc = (g: ReturnType<typeof triGlobal>, p: number) => `valeur acquise ${eur(g.valeurAcquise)}, mise ${eur(g.mise)} : (${eur(g.valeurAcquise)} ÷ ${eur(g.mise)})^(1/${n}) − 1 = ${pct(p)}`;
         return [
-          { libelle: "TRI global du projet A (%)", attendu: x.globalAPct, calcul: `${calc(x.globalA, x.globalAPct)}, le flux négatif de la date 1 ajouté à la mise`, tolerance: 0.02 },
-          { libelle: "TRI global de B (%)", attendu: x.globalBPct, calcul: calc(x.globalB, x.globalBPct), tolerance: 0.02 },
-          { libelle: "TRI global des flux différentiels (%)", attendu: x.globalDiffPct, calcul: calc(x.globalDiff, x.globalDiffPct), tolerance: 0.02 },
+          { libelle: "TRI global du projet A (%)", attendu: x.globalAPct, calcul: `${calc(x.globalA, x.globalAPct)}, le flux négatif de la date 1 ajouté à la mise` },
+          { libelle: "TRI global de B (%)", attendu: x.globalBPct, calcul: calc(x.globalB, x.globalBPct) },
+          { libelle: "TRI global des flux différentiels (%)", attendu: x.globalDiffPct, calcul: calc(x.globalDiff, x.globalDiffPct) },
         ];
       },
       explication: (c) => {

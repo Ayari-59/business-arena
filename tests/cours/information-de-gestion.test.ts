@@ -13,6 +13,7 @@ import { LA_PART_DE_MARCHE_ANNONCEE } from "../../src/config/cours/situations/pa
 import { LE_COMPTE_RENDU_EN_RETARD } from "../../src/config/cours/situations/par-chapitre/le-compte-rendu-en-retard";
 import { LE_TRIMESTRE_LE_PLUS_FORT } from "../../src/config/cours/situations/par-chapitre/le-trimestre-le-plus-fort";
 import { UNE_SECONDE_JOURNEE_DE_FORMATION } from "../../src/config/cours/situations/par-chapitre/une-seconde-journee-de-formation";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDuProgramme, gardesDeTexte, juste, triDe } from "./gardes-de-nova";
 
 /**
@@ -29,7 +30,8 @@ import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDu
  */
 
 const c = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+/** Les pourcentages à deux décimales (décision du propriétaire, 10 novembre 2026) : ils se donnaient au dixième. */
+const auCentiemePct = arrondi2;
 const N = [4_778, 6_081, 5_810, 6_940];
 
 describe("les chapitres du lot et leurs cas, dans leurs parcours", () => {
@@ -57,8 +59,9 @@ describe("construire un indicateur juste", () => {
   it("la moyenne simple, 63 €, et le prix pondéré par les ventes ; l'indice simple croit NOVA moins chère, le pondéré la dit alignée", () => {
     expect([nova.prix, soundbox.prix, auris.prix]).toEqual([59, 51, 79]);
     expect(attendus(CONSTRUIRE_UN_INDICATEUR_JUSTE, "deux-calculs")).toEqual([(59 + 51 + 79) / 3, pondere]);
-    expect(attendus(CONSTRUIRE_UN_INDICATEUR_JUSTE, "deux-indices")).toEqual([Math.round((59 / 63) * 100), Math.round((59 / pondere) * 100)]);
-    expect(Math.round((59 / 63) * 100)).toBe(94);
+    expect(attendus(CONSTRUIRE_UN_INDICATEUR_JUSTE, "deux-indices")).toEqual([arrondi2((59 / 63) * 100), arrondi2((59 / pondere) * 100)]);
+    // Les indices à deux décimales (décision du propriétaire, 10 novembre 2026) : 93,65 et non 94.
+    expect(arrondi2((59 / 63) * 100)).toBe(93.65);
     expect(juste(CONSTRUIRE_UN_INDICATEUR_JUSTE, "ce-que-l-erreur-ferait-decider")).toEqual(["Monter son prix à tort : elle se croirait moins chère que le marché"]);
   });
 
@@ -81,9 +84,9 @@ describe("construire un indicateur juste", () => {
   });
 
   it("le cas de la part annoncée : la moyenne des six parts mensuelles, et la part du semestre, 10 859 sur 43 000", () => {
-    const parts = [1_590 / 6_000, 1_450 / 5_600, 1_738 / 6_500, 1_900 / 7_400, 2_030 / 8_300, 2_151 / 9_200].map((x) => auDixieme(x * 100));
-    expect(attendus(LA_PART_DE_MARCHE_ANNONCEE, "la-moyenne")).toEqual([auDixieme(auDixieme(parts.reduce((a, b) => a + b, 0)) / 6)]);
-    expect(attendus(LA_PART_DE_MARCHE_ANNONCEE, "la-part-du-semestre").slice(0, 3)).toEqual([10_859, 43_000, auDixieme((10_859 / 43_000) * 100)]);
+    const parts = [1_590 / 6_000, 1_450 / 5_600, 1_738 / 6_500, 1_900 / 7_400, 2_030 / 8_300, 2_151 / 9_200].map((x) => auCentiemePct(x * 100));
+    expect(attendus(LA_PART_DE_MARCHE_ANNONCEE, "la-moyenne")).toEqual([auCentiemePct(auCentiemePct(parts.reduce((a, b) => a + b, 0)) / 6)]);
+    expect(attendus(LA_PART_DE_MARCHE_ANNONCEE, "la-part-du-semestre").slice(0, 3)).toEqual([10_859, 43_000, auCentiemePct((10_859 / 43_000) * 100)]);
     expect(juste(LA_PART_DE_MARCHE_ANNONCEE, "reponse")).toEqual(["Oui : l'écart reste sous 1 point, c'est la même"]);
   });
 });
@@ -93,12 +96,12 @@ describe("des données à l'information", () => {
     gardesDeTexte(DES_DONNEES_A_L_INFORMATION);
   });
 
-  it("douze lignes, six mois et deux clientèles ; les regroupements et les parts de CampusTech, 20,1 % puis 15,8 %", () => {
+  it("douze lignes, six mois et deux clientèles ; les regroupements et les parts de CampusTech, 20,09 % puis 15,79 %", () => {
     expect(tableDesVentes().map((l) => l.ventes)).toEqual([1_270, 320, 1_130, 320, 1_418, 320, 1_580, 320, 1_710, 320, 1_831, 320]);
     expect(attendus(DES_DONNEES_A_L_INFORMATION, "regrouper")).toEqual([(1_270 + 1_130 + 1_418 + 1_580 + 1_710 + 1_831) * 59, 6 * 320 * 59]);
     const t1 = 4_778 * 59;
     const t2 = 6_081 * 59;
-    expect(attendus(DES_DONNEES_A_L_INFORMATION, "critere-et-part")).toEqual([t1, auDixieme(((960 * 59) / t1) * 100), t2, auDixieme(((960 * 59) / t2) * 100)]);
+    expect(attendus(DES_DONNEES_A_L_INFORMATION, "critere-et-part")).toEqual([t1, auCentiemePct(((960 * 59) / t1) * 100), t2, auCentiemePct(((960 * 59) / t2) * 100)]);
     expect(juste(DES_DONNEES_A_L_INFORMATION, "decider")).toEqual(["NOVA dépend moins de CampusTech : sa part recule"]);
     expect(triDe(DES_DONNEES_A_L_INFORMATION, "donnee-ou-information")["Chiffre d'affaires de CampusTech sur le semestre"]).toBe("information");
   });
@@ -116,9 +119,9 @@ describe("des données à l'information", () => {
     expect(e.defi(NOVA).solution).toEqual({ mois: 6 });
   });
 
-  it("le cas du trimestre le plus fort : le deuxième, où les particuliers pèsent 84,2 %, plus que sur le semestre", () => {
+  it("le cas du trimestre le plus fort : le deuxième, où les particuliers pèsent 84,21 %, plus que sur le semestre", () => {
     expect(attendus(LE_TRIMESTRE_LE_PLUS_FORT, "par-trimestre")).toEqual([4_778 * 59, 6_081 * 59]);
-    expect(attendus(LE_TRIMESTRE_LE_PLUS_FORT, "la-part")).toEqual([auDixieme(((5_121 * 59) / (6_081 * 59)) * 100), auDixieme((8_939 / 10_859) * 100)]);
+    expect(attendus(LE_TRIMESTRE_LE_PLUS_FORT, "la-part")).toEqual([auCentiemePct(((5_121 * 59) / (6_081 * 59)) * 100), auCentiemePct((8_939 / 10_859) * 100)]);
     expect(juste(LE_TRIMESTRE_LE_PLUS_FORT, "reponse")).toEqual(["Vers les particuliers : ils pèsent plus au trimestre le plus fort"]);
   });
 });
@@ -170,7 +173,7 @@ describe("une information qui circule à temps", () => {
     expect(a.trimestres.map((t) => t.nonServie)).toEqual([0, 6_081 - 4_778, 0, 6_940 - (5_810 + (6_081 - 5_810))]);
     expect(attendus(UNE_INFORMATION_A_TEMPS, "le-plan-en-retard")).toEqual([4_778 - 6_081, 6_081 - 5_810, 5_810 - 6_940]);
     const perdues = 1_303 + 859;
-    expect(attendus(UNE_INFORMATION_A_TEMPS, "ce-que-coute-le-retard")).toEqual([perdues, perdues * 21, auDixieme(((perdues * 21) / resultatAJour) * 100)]);
+    expect(attendus(UNE_INFORMATION_A_TEMPS, "ce-que-coute-le-retard")).toEqual([perdues, perdues * 21, auCentiemePct(((perdues * 21) / resultatAJour) * 100)]);
   });
 
   it("deux trimestres de retard : 1 303, 1 032 et 859 enceintes non servies, 67 074 €", () => {
@@ -189,7 +192,7 @@ describe("une information qui circule à temps", () => {
 
   it("le cas du compte rendu en retard : le plan du trimestre 4 calé sur 5 810, 1 130 enceintes et 23 730 € perdus", () => {
     expect(attendus(LE_COMPTE_RENDU_EN_RETARD, "les-ecarts")).toEqual([5_810 - 6_940, 5_810 - 6_940, 6_940 - 5_810]);
-    expect(attendus(LE_COMPTE_RENDU_EN_RETARD, "le-cout")).toEqual([1_130 * 21, auDixieme(((1_130 * 21) / resultatAJour) * 100)]);
+    expect(attendus(LE_COMPTE_RENDU_EN_RETARD, "le-cout")).toEqual([1_130 * 21, auCentiemePct(((1_130 * 21) / resultatAJour) * 100)]);
   });
 });
 

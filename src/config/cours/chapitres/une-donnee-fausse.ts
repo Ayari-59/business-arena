@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { aLUnite, arrondi2, arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { accordPluriel } from "../accords";
 import { type Cas } from "../cas";
 import {
@@ -42,6 +41,11 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait et rejouait l'année de l'arène, dans sept entreprises. Chez
  * NOVA, la virgule fait maintenant passer les ventes du trimestre 3 de 5 810 à 581, la prévision de
  * 5 556 à 3 813 enceintes, et coûte 36 603 € de marge au trimestre 4.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes et les prévisions sont des quantités : une prévision
+ * s'écrit d'abord à deux décimales (3 813,33), puis s'arrondit à l'enceinte (à une enceinte près,
+ * avant).
  */
 
 export { FACTEUR_DE_LA_VIRGULE, TRIMESTRES_DE_L_EXTRAIT, TRIMESTRE_DECIDE, TRIMESTRE_DE_L_ERREUR };
@@ -52,9 +56,8 @@ export const ENTREPRISES_A_PRIX_UNIQUE = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 export const POURQUOI_LA_DONNEE_FAUSSE =
   "ce chapitre contrôle que le chiffre d'affaires vaut les ventes multipliées par le prix, chez NOVA, qui vend une seule enceinte à un seul prix.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
+/** Une quantité calculée : à deux décimales, puis arrondie à l'unité quand elle tombe entre deux entiers. */
+const aLUniteEcrite = (x: number) => (Number.isInteger(arrondi2(x)) ? qte(x) : `${nombreAuCentieme(x)}, arrondi à l'unité : ${qte(aLUnite(x))}`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** L'extrait, sa donnée fausse, les deux prévisions de la moyenne, et le trimestre 4 sur chacune. */
@@ -191,15 +194,25 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
       titre: "Corriger, puis prévoir",
       notions: ["revenue", "capacity"],
       question: () =>
-        `Corrigez les ventes du trimestre ${E} à partir du chiffre d'affaires et du prix. Puis calculez la prévision du trimestre ${D}, la moyenne des ventes des trimestres ${PREMIER} à ${DERNIER}, à l'unité : d'abord avec la donnée fausse, ensuite avec la donnée corrigée.`,
+        `Corrigez les ventes du trimestre ${E} à partir du chiffre d'affaires et du prix. Puis calculez la prévision du trimestre ${D}, la moyenne des ventes des trimestres ${PREMIER} à ${DERNIER}, arrondie à l'unité : d'abord avec la donnée fausse, ensuite avec la donnée corrigée.`,
       champs: (c) => {
         const r = donneeFausse(c);
         const f = r.fausse;
         const n = r.lignes.length;
         return [
-          { libelle: `Ventes corrigées du trimestre ${E} (${c.unites})`, attendu: f.ventes, calcul: `${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)}` },
-          { libelle: `Prévision avec la donnée fausse (${c.unites})`, attendu: r.previsionFausse, calcul: `(${r.lignes.map((l) => qte(l.saisie)).join(" + ")}) ÷ ${n} = ${qte(r.previsionFausse)}`, tolerance: 1 },
-          { libelle: `Prévision avec la donnée corrigée (${c.unites})`, attendu: r.previsionJuste, calcul: `(${r.lignes.map((l) => qte(l.ventes)).join(" + ")}) ÷ ${n} = ${qte(r.previsionJuste)}`, tolerance: 1 },
+          { libelle: `Ventes corrigées du trimestre ${E} (${c.unites})`, nature: "quantite", attendu: f.ventes, calcul: `${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)}` },
+          {
+            libelle: `Prévision avec la donnée fausse (${c.unites})`,
+            nature: "quantite",
+            attendu: r.previsionFausse,
+            calcul: `(${r.lignes.map((l) => qte(l.saisie)).join(" + ")}) ÷ ${n} = ${aLUniteEcrite(r.lignes.reduce((t, l) => t + l.saisie, 0) / n)}`,
+          },
+          {
+            libelle: `Prévision avec la donnée corrigée (${c.unites})`,
+            nature: "quantite",
+            attendu: r.previsionJuste,
+            calcul: `(${r.lignes.map((l) => qte(l.ventes)).join(" + ")}) ÷ ${n} = ${aLUniteEcrite(r.lignes.reduce((t, l) => t + l.ventes, 0) / n)}`,
+          },
         ];
       },
       explication: (c) => {
@@ -235,7 +248,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
       champs: (c) => {
         const r = donneeFausse(c);
         return [
-          { libelle: `Ventes perdues (${c.unites})`, attendu: r.ventesPerdues, calcul: `${qte(r.juste.vendues)} − ${qte(r.faux.vendues)} = ${qte(r.ventesPerdues)}` },
+          { libelle: `Ventes perdues (${c.unites})`, nature: "quantite", attendu: r.ventesPerdues, calcul: `${qte(r.juste.vendues)} − ${qte(r.faux.vendues)} = ${qte(r.ventesPerdues)}` },
           { libelle: "Marge perdue", attendu: r.margePerdue, calcul: `${eur(r.juste.marge)} − ${eur(r.faux.marge)} = ${eur(r.margePerdue)}` },
         ];
       },

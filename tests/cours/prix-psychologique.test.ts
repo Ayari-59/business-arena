@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PRIX_PSYCHOLOGIQUE } from "../../src/config/cours/chapitres/prix-psychologique";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { UNE_PROMOTION_TROP_FORTE, promotionTropForte } from "../../src/config/cours/situations/par-chapitre/une-promotion-trop-forte";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
@@ -13,7 +14,8 @@ import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesD
  * perd 15 % à partir de 60 € ; 38 € de coût variable.
  */
 
-const d = (x: number) => Math.round(x * 10) / 10;
+/** Les pourcentages à deux décimales (décision du propriétaire, 10 novembre 2026) : ils se donnaient au dixième. */
+const d = arrondi2;
 const familles = (p: number) => (5_000 - 55 * p) * (p >= 60 ? 0.85 : 1);
 
 describe("le prix psychologique", () => {
@@ -32,11 +34,11 @@ describe("le prix psychologique", () => {
     expect(juste(PRIX_PSYCHOLOGIQUE, "avantageux")).toEqual(["Mélomanes"]);
   });
 
-  it("de 59,90 € à 60,10 € : 15,5 % de demande perdue pour 0,33 % de hausse, 47 fois plus", () => {
+  it("de 59,90 € à 60,10 € : 15,55 % de demande perdue pour 0,33 % de hausse, 47,12 fois plus", () => {
     const perte = d((1 - familles(60.1) / familles(59.9)) * 100);
     const hausse = Math.round((60.1 / 59.9 - 1) * 10_000) / 100;
-    expect([perte, hausse]).toEqual([15.5, 0.33]);
-    expect(attendus(PRIX_PSYCHOLOGIQUE, "seuil")).toEqual([hausse, Math.round(perte / hausse)]);
+    expect([perte, hausse]).toEqual([15.55, 0.33]);
+    expect(attendus(PRIX_PSYCHOLOGIQUE, "seuil")).toEqual([hausse, arrondi2(perte / hausse)]);
     expect(juste(PRIX_PSYCHOLOGIQUE, "virgule-quatre-vingt-dix")).toEqual(["59,90 € : rester sous le seuil psychologique"]);
   });
 
@@ -56,7 +58,9 @@ describe("le prix psychologique", () => {
 describe("une promotion trop forte ?", () => {
   it("30 % de remise : 41,30 €, au-dessus des 39 € ; la marge passe de 21 € à 3,30 €", () => {
     const r = promotionTropForte(NOVA);
-    expect([r.prixPromo, r.ecartAuNormal, r.baisseMaximale, r.ecartALaMefiance, r.credible]).toEqual([41.3, -30, d((1 - 39 / 59) * 100), 2.3, true]);
-    expect([r.margeAvant, r.margeApres, r.baisseDeLaMarge]).toEqual([21, 3.3, d((1 - 3.3 / 21) * 100)]);
+    // Le cas « Une promotion trop forte » est d'un autre lot du chantier « deux décimales » : il garde ses taux au dixième.
+    const auDixieme = (x: number) => Math.round(x * 10) / 10;
+    expect([r.prixPromo, r.ecartAuNormal, r.baisseMaximale, r.ecartALaMefiance, r.credible]).toEqual([41.3, -30, auDixieme((1 - 39 / 59) * 100), 2.3, true]);
+    expect([r.margeAvant, r.margeApres, r.baisseDeLaMarge]).toEqual([21, 3.3, auDixieme((1 - 3.3 / 21) * 100)]);
   });
 });

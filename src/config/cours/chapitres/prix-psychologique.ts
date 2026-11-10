@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { clienteleDuSeuil, coutVariable, grille, prixPsychologique as lirePrix, prixRemise, remiseLaPlusForte } from "../monde/economie-et-marketing";
 import { POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
@@ -22,16 +22,17 @@ import { SEGMENTATIONS } from "./segmenter-et-cibler";
  *
  * CE QUI A CHANGÉ. Le chapitre lisait les repères du moteur de l'arène chez cinq entreprises ; il se
  * joue chez NOVA seule, sur les repères de la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'écart au prix jugé normal et la demande perdue se donnent à
+ * deux décimales (au dixième, avant), et le rapport entre la demande perdue et la hausse de prix au
+ * centième, sur ces deux pourcentages arrondis (à l'unité, à 10 % près, avant).
  */
 
 /** Les bornes du curseur (la remise, en %) et du laboratoire (le prix, au dixième d'euro). */
 const REMISE_DU_CURSEUR = { min: 0, max: 50 } as const;
 const PRIX_DU_LABORATOIRE = { min: 58, max: 61, pas: 0.1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const pct2 = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 const f = (c: Cas) => mercatiqueDe(c);
@@ -99,13 +100,13 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
       notions: ["psych_price"],
       question: (c) => {
         const p = prixPsychologique(c);
-        return `${c.entreprise} vend à ${eur(p.prix)}. La clientèle « ${p.etudie.nom} » juge normal un prix de ${eur(p.etudie.normal)}. Calculez l'écart du prix de l'entreprise au prix jugé normal, en pourcentage au dixième (positif s'il est plus cher), puis ce qui sépare le prix de l'entreprise du seuil psychologique de ${eur(p.seuil)}.`;
+        return `${c.entreprise} vend à ${eur(p.prix)}. La clientèle « ${p.etudie.nom} » juge normal un prix de ${eur(p.etudie.normal)}. Calculez l'écart du prix de l'entreprise au prix jugé normal, en pourcentage à deux décimales (positif s'il est plus cher), puis ce qui sépare le prix de l'entreprise du seuil psychologique de ${eur(p.seuil)}.`;
       },
       champs: (c) => {
         const p = prixPsychologique(c);
         const ecart = Math.round((p.seuil - p.prix) * 100) / 100;
         return [
-          { libelle: "Écart au prix jugé normal (%)", attendu: p.etudie.ecart, calcul: `(${eur(p.prix)} ÷ ${eur(p.etudie.normal)} − 1) × 100 = ${pct(p.etudie.ecart)}`, tolerance: 0.1 },
+          { libelle: "Écart au prix jugé normal (%)", attendu: p.etudie.ecart, calcul: `(${eur(p.prix)} ÷ ${eur(p.etudie.normal)} − 1) × 100 = ${pct(p.etudie.ecart)}` },
           { libelle: "Écart au seuil psychologique (€)", attendu: ecart, calcul: `${eur(p.seuil)} − ${eur(p.prix)} = ${eur(ecart)}` },
         ];
       },
@@ -148,19 +149,19 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
       notions: ["psych_price", "price_elasticity"],
       question: (c) => {
         const p = prixPsychologique(c);
-        return `Un test en ligne l'a montré : la clientèle « ${p.etudie.nom} » demande ${qte(p.demandeSous)} ${c.unites} par trimestre à ${eur(p.sous)}, mais ${qte(p.demandeDessus)} à ${eur(p.dessus)}, soit ${pct(p.perte)} de moins. Calculez la hausse de prix, en pourcentage au centième, puis le rapport entre la demande perdue et la hausse de prix, à l'unité.`;
+        return `Un test en ligne l'a montré : la clientèle « ${p.etudie.nom} » demande ${nombreAuCentieme(p.demandeSous)} ${c.unites} par trimestre à ${eur(p.sous)}, mais ${nombreAuCentieme(p.demandeDessus)} à ${eur(p.dessus)}, soit ${pct(p.perte)} de moins. Calculez la hausse de prix, en pourcentage au centième, puis le rapport entre la demande perdue et la hausse de prix, au centième.`;
       },
       champs: (c) => {
         const p = prixPsychologique(c);
         return [
-          { libelle: "Hausse de prix (%)", attendu: p.hausse, calcul: `(${eur(p.dessus)} ÷ ${eur(p.sous)} − 1) × 100 = ${pct2(p.hausse)}`, tolerance: 0.01 },
-          { libelle: "Demande perdue ÷ hausse de prix", attendu: p.rapport, calcul: `${qte(p.perte)} ÷ ${qte(p.hausse)} = ${qte(p.rapport)}`, tolerance: Math.max(1, Math.round(p.rapport * 0.1)) },
+          { libelle: "Hausse de prix (%)", attendu: p.hausse, calcul: `(${eur(p.dessus)} ÷ ${eur(p.sous)} − 1) × 100 = ${pct(p.hausse)}` },
+          { libelle: "Demande perdue ÷ hausse de prix", nature: "grandeur", attendu: p.rapport, calcul: `${nombreAuCentieme(p.perte)} ÷ ${nombreAuCentieme(p.hausse)} = ${nombreAuCentieme(p.rapport)}` },
         ];
       },
       explication: (c) => {
         const p = prixPsychologique(c);
         return [
-          `Loin du seuil, chaque point de prix en plus coûte environ ${qte(p.elasticite)} points de demande à cette clientèle. Au seuil de ${eur(p.seuil)}, une hausse de ${pct2(p.hausse)} en coûte ${pct(p.perte)} : ${qte(p.rapport)} fois plus que la hausse elle-même. Le client ne voit pas ${centimes(p)} : il voit un prix qui passe la barre.`,
+          `Loin du seuil, chaque point de prix en plus coûte environ ${nombreAuCentieme(p.elasticite)} points de demande à cette clientèle. Au seuil de ${eur(p.seuil)}, une hausse de ${pct(p.hausse)} en coûte ${pct(p.perte)} : ${nombreAuCentieme(p.rapport)} fois plus que la hausse elle-même. Le client ne voit pas ${centimes(p)} : il voit un prix qui passe la barre.`,
         ];
       },
     },
@@ -185,7 +186,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
           {
             texte: `${eur(p.dessus)} : ${centimes(p)} de plus sur chaque vente`,
             juste: false,
-            retour: `Non : ${centimes(p)} de plus par vente, mais ${pct(p.perte)} de la demande perdue. Sur cent ventes, l'entreprise gagnerait ${eur((p.dessus - p.sous) * 100)}, mais perdrait environ ${qte(Math.round(p.perte))} ventes.`,
+            retour: `Non : ${centimes(p)} de plus par vente, mais ${pct(p.perte)} de la demande perdue. Sur cent ventes, l'entreprise gagnerait ${eur((p.dessus - p.sous) * 100)}, mais perdrait environ ${nombreAuCentieme(Math.round(p.perte))} ventes.`,
           },
           {
             texte: "C'est pareil : quelques centimes ne changent rien",

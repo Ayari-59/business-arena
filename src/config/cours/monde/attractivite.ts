@@ -10,6 +10,7 @@ import type {
   StrategieDeNova,
   Trimestre,
 } from "./marche-a-trois";
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 
 /**
  * LE MODÈLE DU MARCHÉ À TROIS : NOVA, SoundBox et Auris se partagent un marché, trimestre par
@@ -47,12 +48,17 @@ import type {
  * CONVENTIONS : les montants sont au centime ; les attractivités, les parts, les qualités et les
  * capitaux ne sont pas arrondis (c'est l'affichage qui arrondit). Une demande s'arrondit à
  * l'enceinte la plus proche chaque trimestre ; les ventes sont la demande, dans la limite de la
- * capacité. Les indices de la carte s'arrondissent à l'unité, sur un prix moyen au centime et une
- * qualité moyenne au centième (comme l'élève les écrit). Un écart négatif est une perte.
+ * capacité. Les indices de la carte se donnent à deux décimales, sur un prix moyen au centime et une
+ * qualité moyenne au centième (comme l'élève les écrit) ; les écarts entre deux indices et la distance
+ * entre deux enseignes aussi, la distance partant des écarts arrondis. Un écart négatif est une perte.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les indices de la carte s'arrondissaient à l'unité, et la
+ * distance au dixième. Le reste du modèle (l'année, le capital-image, le label) ne change pas.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
+const auCentieme = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** Une qualité, une image ou un capital, débarrassé du bruit des virgules flottantes. */
 const net = (x: number) => Math.round(x * 1e9) / 1e9 + 0;
@@ -403,10 +409,11 @@ export function lirePosition(f: FicheDuMarche, indicePrix: number, indiceQualite
  * La carte du marché d'une année : le prix moyen du marché (le chiffre d'affaires des trois
  * enseignes ÷ leurs ventes, au centime), la qualité moyenne (la moyenne des trois qualités perçues,
  * au centième), et pour chaque enseigne ses deux indices (prix ÷ prix moyen × 100, qualité ÷ qualité
- * moyenne × 100, à l'unité) et sa lecture.
+ * moyenne × 100, à deux décimales) et sa lecture.
  *
  * L'ESPACE LIBRE, selon la règle du cours : les enseignes rangées par indice de prix, la distance
- * entre deux voisines se mesure sur les deux indices (√(écart de prix² + écart de qualité²)) ; la
+ * entre deux voisines se mesure sur les deux indices (√(écart de prix² + écart de qualité²), au
+ * centième, sur les écarts arrondis) ; la
  * place libre est le milieu des deux voisines les plus éloignées : son prix est la moyenne de leurs
  * prix (au centime), sa qualité la moyenne de leurs qualités (au centième). Le plus grand écart de
  * prix seul (l'ancienne lecture) est rendu à côté, pour comparer.
@@ -419,16 +426,16 @@ export function carteDuMarche(f: FicheDuMarche, leviers: Partial<LeviersDuMarche
   const sommeDesQualites = net(somme(a.enseignes.map((e) => e.qualite)));
   const qualiteMoyenne = auCentieme(sommeDesQualites / a.enseignes.length);
   const enseignes = a.enseignes.map((e) => {
-    const indicePrix = Math.round((e.offre.prix / prixMoyen) * 100);
-    const indiceQualite = Math.round((e.qualite / qualiteMoyenne) * 100);
+    const indicePrix = arrondi2((e.offre.prix / prixMoyen) * 100);
+    const indiceQualite = arrondi2((e.qualite / qualiteMoyenne) * 100);
     return { code: e.code, nom: e.nom, prix: e.offre.prix, qualite: e.qualite, part: e.part, resultat: e.resultat, indicePrix, indiceQualite, lecture: lirePosition(f, indicePrix, indiceQualite) };
   });
   const rangees = [...enseignes].sort((x, y) => x.indicePrix - y.indicePrix);
   const voisines = rangees.slice(1).map((haut, k) => {
     const bas = rangees[k]!;
-    const ecartDePrix = haut.indicePrix - bas.indicePrix;
-    const ecartDeQualite = haut.indiceQualite - bas.indiceQualite;
-    return { bas, haut, ecartDePrix, ecartDeQualite, distance: Math.hypot(ecartDePrix, ecartDeQualite) };
+    const ecartDePrix = arrondi2(haut.indicePrix - bas.indicePrix);
+    const ecartDeQualite = arrondi2(haut.indiceQualite - bas.indiceQualite);
+    return { bas, haut, ecartDePrix, ecartDeQualite, distance: arrondi2(Math.hypot(ecartDePrix, ecartDeQualite)) };
   });
   const plusEloignees = voisines.reduce((g, x) => (x.distance > g.distance ? x : g), voisines[0]!);
   const plusGrandEcartDePrix = voisines.reduce((g, x) => (x.ecartDePrix > g.ecartDePrix ? x : g), voisines[0]!);
@@ -436,8 +443,8 @@ export function carteDuMarche(f: FicheDuMarche, leviers: Partial<LeviersDuMarche
     entre: plusEloignees,
     prix: auCentime((plusEloignees.bas.prix + plusEloignees.haut.prix) / 2),
     qualite: auCentieme((plusEloignees.bas.qualite + plusEloignees.haut.qualite) / 2),
-    indicePrix: (plusEloignees.bas.indicePrix + plusEloignees.haut.indicePrix) / 2,
-    indiceQualite: (plusEloignees.bas.indiceQualite + plusEloignees.haut.indiceQualite) / 2,
+    indicePrix: arrondi2((plusEloignees.bas.indicePrix + plusEloignees.haut.indicePrix) / 2),
+    indiceQualite: arrondi2((plusEloignees.bas.indiceQualite + plusEloignees.haut.indiceQualite) / 2),
   };
   const meilleure = [...enseignes].sort((x, y) => y.resultat - x.resultat)[0]!;
   return { annee: a, chiffreDAffaires, ventes, prixMoyen, sommeDesQualites, qualiteMoyenne, enseignes, nova: enseignes[0]!, voisines, espaceLibre, plusGrandEcartDePrix, meilleure };
@@ -475,7 +482,7 @@ export function allerDansLEspaceLibre(f: FicheDuMarche) {
     prixSeul: prixSeul.nova,
     avecLaQualite: avecLaQualite?.nova ?? null,
     variationDuPrix: place.prix / aujourdhui.offre.prix - 1,
-    indiceDePrixDeLaPlace: Math.round((place.prix / carte.prixMoyen) * 100),
+    indiceDePrixDeLaPlace: arrondi2((place.prix / carte.prixMoyen) * 100),
     ecartPrixSeul,
     ecartAvecLaQualite,
     verdict,

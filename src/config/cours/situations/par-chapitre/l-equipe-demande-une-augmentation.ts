@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { remuneration } from "../../chapitres/remuneration-et-motivation";
 import { ENTREPRISES_DES_RESSOURCES_HUMAINES, TAUX_PATRONAL, remunerationDeNPlus1 } from "../../monde/ressources-humaines-de-nova";
@@ -22,14 +22,15 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène avec des salaires 10 % plus hauts, dont le
  * moteur tirait la motivation ; il se joue chez NOVA : 12 780 € par an, contre 24 975 € pour un
  * départ.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part du marché se donne à deux décimales (au dixième, avant),
+ * le coût de la hausse au centime (à l'euro près, avant).
  */
 
 /** La hausse que demandent les opérateurs : 10 % du salaire brut, l'ordre de grandeur d'un rattrapage du marché. */
 export const HAUSSE_DEMANDEE = 0.1;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** Les mois d'une année. */
 const MOIS = 12;
@@ -37,17 +38,17 @@ const MOIS = 12;
 /** La hausse demandée : son coût sur l'année, la place de l'équipe face au marché, et le départ qu'elle évite. */
 export function hausseDemandee(_c?: Cas) {
   const r0 = remuneration();
-  const augmentation = Math.round(r0.salaire * HAUSSE_DEMANDEE * 100) / 100;
+  const augmentation = arrondi2(r0.salaire * HAUSSE_DEMANDEE);
   const r = remunerationDeNPlus1(augmentation);
   const auSeuil = remunerationDeNPlus1(r0.augmentationAuSeuil);
   return {
     r0,
     r,
     augmentation,
-    partApres: auDixieme(r.part * 100),
+    partApres: arrondi2(r.part * 100),
     coutAuSeuil: auSeuil.coutDeLAugmentation,
     // Les erreurs classiques : oublier les cotisations patronales, ou ne compter qu'un mois.
-    sansLesPatronales: Math.round(augmentation * MOIS * r.operateurs * 100) / 100,
+    sansLesPatronales: arrondi2(augmentation * MOIS * r.operateurs),
   };
 }
 
@@ -105,13 +106,13 @@ export const L_EQUIPE_DEMANDE_UNE_AUGMENTATION: Situation = {
       titre: "Ce que coûte la hausse",
       notions: ["pay_and_motivation", "payroll"],
       question: () =>
-        "Calculez la hausse du brut d'un opérateur par mois, son coût sur l'année pour toute l'équipe, cotisations patronales comprises, puis la part du marché que paierait le salaire augmenté (au dixième).",
+        "Calculez la hausse du brut d'un opérateur par mois, son coût sur l'année pour toute l'équipe, cotisations patronales comprises, puis la part du marché que paierait le salaire augmenté (à deux décimales).",
       champs: () => {
         const k = hausseDemandee();
         return [
-          { libelle: "Hausse du brut par mois", attendu: k.augmentation, calcul: `${eur(k.r0.salaire)} × ${pct(HAUSSE_DEMANDEE * 100)} = ${eur(k.augmentation)}`, tolerance: 0.01 },
-          { libelle: "Coût de la hausse sur l'année", attendu: k.r.coutDeLAugmentation, calcul: `${eur(k.augmentation)} × ${MOIS} × ${k.r.operateurs} × ${(1 + TAUX_PATRONAL).toLocaleString("fr-FR")} = ${eur(k.r.coutDeLAugmentation)}`, tolerance: 1 },
-          { libelle: "Part du marché après la hausse (%)", attendu: k.partApres, calcul: `${eur(k.r.salaire)} ÷ ${eur(k.r0.marcheNPlus1)} × 100 = ${pct(k.partApres)}`, tolerance: 0.1 },
+          { libelle: "Hausse du brut par mois", attendu: k.augmentation, calcul: `${eur(k.r0.salaire)} × ${pct(HAUSSE_DEMANDEE * 100)} = ${eur(k.augmentation)}` },
+          { libelle: "Coût de la hausse sur l'année", attendu: k.r.coutDeLAugmentation, calcul: `${eur(k.augmentation)} × ${MOIS} × ${k.r.operateurs} × ${nombreAuCentieme(1 + TAUX_PATRONAL)} = ${eur(k.r.coutDeLAugmentation)}` },
+          { libelle: "Part du marché après la hausse (%)", attendu: k.partApres, calcul: `${eur(k.r.salaire)} ÷ ${eur(k.r0.marcheNPlus1)} × 100 = ${pct(k.partApres)}` },
         ];
       },
       explication: () => {

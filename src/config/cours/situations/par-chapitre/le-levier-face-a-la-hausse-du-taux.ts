@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { L_EFFET_DE_LEVIER, auCentieme, dE, enPct, eur, levierDeLEscale, nombre, pct, points, rentabilitesDe } from "../../chapitres/l-effet-de-levier";
 import { bilanApres, seuilDeMassue } from "../../monde/finance";
@@ -24,6 +25,10 @@ import type { Situation } from "../types";
  * LA CONVENTION DES SEUILS, celle du chapitre : à endettement net inchangé, celui du 31 décembre de
  * la fiche. Le seuil de massue au taux relevé est donc les charges financières au taux relevé ×
  * actif économique ÷ endettement net de la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux et les écarts en points se donnent au centième, chaque
+ * ligne partant des taux arrondis ; le seuil de massue attend le centime (à l'euro près, avant).
  */
 
 export type Verdict = "tient" | "s-inverse" | "deja";
@@ -31,7 +36,7 @@ export type Verdict = "tient" | "s-inverse" | "deja";
 /** Les bornes du curseur du résultat d'exploitation, en euros. */
 export const RESULTAT_DU_CURSEUR_DU_CAS = { min: 50_000, max: 400_000 } as const;
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 || 0;
+const auCentime = arrondi2;
 
 const calculs = new Map<string, ReturnType<typeof calculer>>();
 
@@ -131,14 +136,13 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
         const x = levierFaceALaHausse(c);
         const a2 = x.r2.a;
         return [
-          { libelle: "Re au taux relevé (%)", attendu: x.r2.re, calcul: `${eur(a2.resultatDExploitationApresImpot)} ÷ ${eur(a2.actifEconomique)} × 100 = ${pct(x.r2.re)}`, tolerance: 0.01 },
+          { libelle: "Re au taux relevé (%)", attendu: x.r2.re, calcul: `${eur(a2.resultatDExploitationApresImpot)} ÷ ${eur(a2.actifEconomique)} × 100 = ${pct(x.r2.re)}` },
           {
             libelle: "i au taux relevé (%)",
             attendu: x.r2.i,
             calcul: `${eur(a2.chargesFinancieres)} × (1 − ${nombre(x.t)}) = ${eur(a2.chargesFinancieresApresImpot)} ; ${eur(a2.chargesFinancieresApresImpot)} ÷ ${eur(a2.endettementNet)} × 100 = ${pct(x.r2.i)}`,
-            tolerance: 0.01,
           },
-          { libelle: "Rcp au taux relevé (%)", attendu: x.r2.rcp, calcul: `${eur(a2.resultatNet)} ÷ ${eur(a2.capitauxPropres)} × 100 = ${pct(x.r2.rcp)}`, tolerance: 0.01 },
+          { libelle: "Rcp au taux relevé (%)", attendu: x.r2.rcp, calcul: `${eur(a2.resultatNet)} ÷ ${eur(a2.capitauxPropres)} × 100 = ${pct(x.r2.rcp)}` },
         ];
       },
       explication: (c) => {
@@ -205,19 +209,16 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
             libelle: "Seuil de massue au taux relevé",
             attendu: x.seuilAuTauxReleve,
             calcul: `${eur(x.chargesAuTauxReleve)} × ${eur(x.a.actifEconomique)} ÷ ${eur(x.a.endettementNet)} = ${eur(x.seuilAuTauxReleve)}`,
-            tolerance: 1,
           },
           {
             libelle: "Baisse supportable au taux relevé (%)",
             attendu: x.baisseAuTauxReleve,
             calcul: `(${eur(x.b.resultatDExploitation)} − ${eur(x.seuilAuTauxReleve)}) ÷ ${eur(x.b.resultatDExploitation)} × 100 = ${pct(x.baisseAuTauxReleve)}`,
-            tolerance: 0.01,
           },
           {
             libelle: "Baisse supportable au taux actuel (%)",
             attendu: x.baisseSupportable,
             calcul: `Le seuil au taux actuel est ${eur(x.a.chargesFinancieres)} × ${eur(x.a.actifEconomique)} ÷ ${eur(x.a.endettementNet)} = ${eur(x.a.seuilDeMassue)} ; (${eur(x.b.resultatDExploitation)} − ${eur(x.a.seuilDeMassue)}) ÷ ${eur(x.b.resultatDExploitation)} × 100 = ${pct(x.baisseSupportable)}`,
-            tolerance: 0.01,
           },
         ];
       },
@@ -238,9 +239,9 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
       champs: (c) => {
         const x = levierFaceALaHausse(c);
         return [
-          { libelle: "Coût de l'endettement net au taux actuel, i (%)", attendu: x.r.i, calcul: `${eur(x.a.chargesFinancieresApresImpot)} ÷ ${eur(x.a.endettementNet)} × 100 = ${pct(x.r.i)}`, tolerance: 0.01 },
-          { libelle: "Taux de l'emprunt où le levier s'inverse (%)", attendu: x.tauxLimite, calcul: `i suit le taux : ${pct(x.taux)} × ${pct(x.r.re)} ÷ ${pct(x.r.i)} = ${pct(x.tauxLimite)}`, tolerance: 0.02 },
-          { libelle: "Marge sous le taux limite, au taux relevé (points)", attendu: x.margeAuTauxReleve, calcul: `${pct(x.tauxLimite)} − ${pct(x.tauxReleve)} = ${points(x.margeAuTauxReleve)}`, tolerance: 0.02 },
+          { libelle: "Coût de l'endettement net au taux actuel, i (%)", attendu: x.r.i, calcul: `${eur(x.a.chargesFinancieresApresImpot)} ÷ ${eur(x.a.endettementNet)} × 100 = ${pct(x.r.i)}` },
+          { libelle: "Taux de l'emprunt où le levier s'inverse (%)", attendu: x.tauxLimite, calcul: `i suit le taux : ${pct(x.taux)} × ${pct(x.r.re)} ÷ ${pct(x.r.i)} = ${pct(x.tauxLimite)}` },
+          { libelle: "Marge sous le taux limite, au taux relevé (points)", nature: "grandeur", attendu: x.margeAuTauxReleve, calcul: `${pct(x.tauxLimite)} − ${pct(x.tauxReleve)} = ${points(x.margeAuTauxReleve)}` },
         ];
       },
       explication: (c) => {

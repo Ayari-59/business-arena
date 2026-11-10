@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { DEMANDE_ET_PRIX, demandeEtPrix } from "../../src/config/cours/chapitres/demande-et-prix";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { REPERCUTER_LA_HAUSSE_DU_FOURNISSEUR, hausseDuFournisseur } from "../../src/config/cours/situations/par-chapitre/repercuter-la-hausse-du-fournisseur";
@@ -14,7 +15,8 @@ import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesD
  * ligne de 7 000 enceintes.
  */
 
-const d = (x: number) => Math.round(x * 10) / 10;
+/** À deux décimales (décision du propriétaire, 10 novembre 2026) : les variations se donnaient au dixième. */
+const d = arrondi2;
 const demande = (p: number) => Math.floor(16_755 - 203 * p + 1e-9);
 const marge = (p: number) => Math.round(Math.min(demande(p), 7_000) * (p - 38) * 100) / 100;
 
@@ -31,9 +33,9 @@ describe("la demande répond au prix", () => {
     gardesDeTexte(DEMANDE_ET_PRIX);
   });
 
-  it("l'élasticité : +10 % de prix, −25,1 % de demande, −2,51 ; élastique ; le chiffre d'affaires baisse", () => {
+  it("l'élasticité : +10 % de prix, −25,07 % de demande, −2,51 ; élastique ; le chiffre d'affaires baisse", () => {
     expect([demande(53.1), demande(59), demande(64.9)]).toEqual([5_975, 4_778, 3_580]);
-    expect(attendus(DEMANDE_ET_PRIX, "elasticite")).toEqual([10, d((3_580 / 4_778 - 1) * 100), Math.round((-25.1 / 10) * 100) / 100]);
+    expect(attendus(DEMANDE_ET_PRIX, "elasticite")).toEqual([10, d((3_580 / 4_778 - 1) * 100), arrondi2(-25.07 / 10)]);
     expect(juste(DEMANDE_ET_PRIX, "elastique")).toEqual(["Élastique : elle baisse plus que le prix ne monte"]);
     expect(attendus(DEMANDE_ET_PRIX, "chiffre-d-affaires")).toEqual([4_778 * 59, Math.round(3_580 * 64.9), d((Math.round(3_580 * 64.9) / (4_778 * 59) - 1) * 100)]);
     expect(demandeEtPrix(NOVA).gagneDemandeEnBaissant).toBe(d((5_975 / 4_778 - 1) * 100));
@@ -52,9 +54,9 @@ describe("la demande répond au prix", () => {
 });
 
 describe("répercuter la hausse du fournisseur", () => {
-  it("5 % de hausse : 61,95 €, −12,55 % de demande, 4 178 enceintes, 258 827 € de chiffre d'affaires", () => {
+  it("5 % de hausse : 61,95 €, −12,55 % de demande, 4 178 enceintes, 258 827,10 € de chiffre d'affaires", () => {
     const r = hausseDuFournisseur(NOVA);
-    expect([r.nouveauPrix, r.variationDemande, r.demandePrevue, r.caPrevu]).toEqual([61.95, -12.55, Math.round(4_778 * (1 - 0.1255)), Math.round(4_178 * 61.95)]);
-    expect(r.variationCa).toBe(d((Math.round(4_178 * 61.95) / (4_778 * 59) - 1) * 100));
+    expect([r.nouveauPrix, r.variationDemande, r.demandePrevue, r.caPrevu]).toEqual([61.95, -12.55, Math.round(4_778 * (1 - 0.1255)), arrondi2(4_178 * 61.95)]);
+    expect(r.variationCa).toBe(d((arrondi2(4_178 * 61.95) / (4_778 * 59) - 1) * 100));
   });
 });

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   AUGMENTATIONS_ESSAYEES,
@@ -31,11 +31,13 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre rejouait l'année de l'arène avec des salaires baissés de 10 %, dont le
  * moteur tirait la motivation et les démissions ; il suit maintenant les opérateurs de NOVA : 25 €
  * par mois les gardent, pour 1 704 € par an, quand un départ coûterait 24 975 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts du marché se donnent à deux décimales (au dixième,
+ * avant) ; le salaire au seuil, le coût de l'augmentation et le coût du départ attendent le centime (à
+ * l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 /** Les mois d'une année. */
 const MOIS = 12;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -43,7 +45,7 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
 /** Le salaire de N + 1 face au marché, et ce que coûtent l'augmentation et le départ (le cas de la hausse demandée le reprend). */
 export function remuneration(_c?: Cas, augmentation = 0, prime = 0) {
   const r = remunerationDeNPlus1(augmentation, prime);
-  return { ...r, partEnNPct: auDixieme(r.partEnN * 100), partPct: auDixieme(r.part * 100), seuilPct: Math.round(r.seuil * 100) };
+  return { ...r, partEnNPct: arrondi2(r.partEnN * 100), partPct: arrondi2(r.part * 100), seuilPct: Math.round(r.seuil * 100) };
 }
 
 export const REMUNERATION_ET_MOTIVATION: Chapitre = {
@@ -100,13 +102,13 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
       type: "montants",
       titre: "Le salaire face au marché",
       notions: ["pay_and_motivation"],
-      question: () => "Calculez la part du marché que paie l'entreprise en N, puis en N + 1 (salaire ÷ salaire du marché × 100, au dixième), et le plus petit salaire, à l'euro, qui atteint le seuil de démission en N + 1.",
+      question: () => "Calculez la part du marché que paie l'entreprise en N, puis en N + 1 (salaire ÷ salaire du marché × 100, à deux décimales), et le plus petit salaire, à l'euro, qui atteint le seuil de démission en N + 1.",
       champs: (c) => {
         const r = remuneration(c);
         return [
-          { libelle: "Part du marché en N (%)", attendu: r.partEnNPct, calcul: `${eur(r.salaire)} ÷ ${eur(r.marcheN)} × 100 = ${pct(r.partEnNPct)}`, tolerance: 0.1 },
-          { libelle: "Part du marché en N + 1 (%)", attendu: r.partPct, calcul: `${eur(r.salaire)} ÷ ${eur(r.marcheNPlus1)} × 100 = ${pct(r.partPct)}`, tolerance: 0.1 },
-          { libelle: "Salaire au seuil en N + 1", attendu: r.salaireAuSeuil, calcul: `${eur(r.marcheNPlus1)} × ${pct(r.seuilPct)} = ${eur(r.salaireAuSeuil)}`, tolerance: 0 },
+          { libelle: "Part du marché en N (%)", attendu: r.partEnNPct, calcul: `${eur(r.salaire)} ÷ ${eur(r.marcheN)} × 100 = ${pct(r.partEnNPct)}` },
+          { libelle: "Part du marché en N + 1 (%)", attendu: r.partPct, calcul: `${eur(r.salaire)} ÷ ${eur(r.marcheNPlus1)} × 100 = ${pct(r.partPct)}` },
+          { libelle: "Salaire au seuil en N + 1", attendu: r.salaireAuSeuil, calcul: `${eur(r.marcheNPlus1)} × ${pct(r.seuilPct)} = ${eur(r.salaireAuSeuil)}` },
         ];
       },
       explication: (c) => {
@@ -173,8 +175,8 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
       champs: (c) => {
         const r = remuneration(c, r0().augmentationAuSeuil);
         return [
-          { libelle: "Coût de l'augmentation sur l'année", attendu: r.coutDeLAugmentation, calcul: `${eur(r.augmentation)} × ${MOIS} × ${r.operateurs} × ${(1 + TAUX_PATRONAL).toLocaleString("fr-FR")} = ${eur(r.coutDeLAugmentation)}`, tolerance: 1 },
-          { libelle: "Coût du départ", attendu: r.coutDuDepart, calcul: `${eur(r.depart.margePerdue)} + ${eur(r.depart.recrutement)} − ${eur(r.depart.salairesNonVerses)} = ${eur(r.coutDuDepart)}`, tolerance: 1 },
+          { libelle: "Coût de l'augmentation sur l'année", attendu: r.coutDeLAugmentation, calcul: `${eur(r.augmentation)} × ${MOIS} × ${r.operateurs} × ${nombreAuCentieme(1 + TAUX_PATRONAL)} = ${eur(r.coutDeLAugmentation)}` },
+          { libelle: "Coût du départ", attendu: r.coutDuDepart, calcul: `${eur(r.depart.margePerdue)} + ${eur(r.depart.recrutement)} − ${eur(r.depart.salairesNonVerses)} = ${eur(r.coutDuDepart)}` },
         ];
       },
       explication: (c) => {
@@ -238,7 +240,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
       lecture: (_c, p) => {
         const r = remunerationDeNPlus1(p.augmentation!, p.prime!);
         return [
-          { libelle: "Part du marché payée chaque mois", montant: auDixieme(r.part * 100), unite: "%" },
+          { libelle: "Part du marché payée chaque mois", montant: arrondi2(r.part * 100), unite: "%" },
           { libelle: "Opérateur qui part", montant: r.garde ? 0 : 1, unite: "opérateur" },
           { libelle: "Coût de l'augmentation et de la prime", montant: r.cout },
           { libelle: "Coût de l'année, départ compris", montant: r.coutDeLAnnee, fort: true },
@@ -252,7 +254,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
           indice: (p) => {
             const r = remunerationDeNPlus1(p.augmentation!, p.prime!);
             return !r.garde
-              ? `À ${pct(auDixieme(r.part * 100))} du marché chaque mois, un opérateur part${p.prime! > 0 ? ", prime ou pas" : ""} : l'année coûte ${eur(r.coutDeLAnnee)}.`
+              ? `À ${pct(arrondi2(r.part * 100))} du marché chaque mois, un opérateur part${p.prime! > 0 ? ", prime ou pas" : ""} : l'année coûte ${eur(r.coutDeLAnnee)}.`
               : `L'équipe est gardée, pour ${eur(r.coutDeLAnnee)} : pouvez-vous la garder pour moins cher ?`;
           },
           solution: { augmentation: juste.augmentation, prime: juste.prime },

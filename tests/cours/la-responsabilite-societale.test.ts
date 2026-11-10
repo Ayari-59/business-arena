@@ -180,7 +180,9 @@ function verifierLesTextes(ch: Chapitre) {
       expect(new Set(champs.map((x) => x.libelle)).size, e.id).toBe(champs.length);
       for (const x of champs) {
         expect(Number.isFinite(x.attendu), `${e.id} : ${x.libelle}`).toBe(true);
-        expect(Math.round(x.attendu * 100) / 100, `${e.id} : ${x.libelle}`).toBe(x.attendu);
+        // Au centième, sauf un coefficient (l'exposant de e), qui se garde au dix-millième.
+        const pas = x.nature === "coefficient" ? 10_000 : 100;
+        expect(Math.round(x.attendu * pas) / pas, `${e.id} : ${x.libelle}`).toBe(x.attendu);
       }
       // Sur un écart, la question dit avec quel signe le donner.
       if (champs.some((x) => /^Écart/.test(x.libelle))) expect(e.question(cas, etat), e.id).toMatch(/Négatif pour un écart (favorable|défavorable)/);
@@ -294,15 +296,16 @@ describe("le capital-image et son plafond, refaits à la main", () => {
   const c1 = Math.round((1 - K) * e * 100) / 100;
   const c2 = Math.round((K * c1 + (1 - K) * e) * 100) / 100;
 
-  it("l'effort ln 2 = 0,69, le capital 0,24 puis 0,40, l'attractivité du trimestre 2 relevée de 5,3 %", () => {
+  it("l'effort ln 2 = 0,69, le capital 0,24 puis 0,40, l'attractivité du trimestre 2 relevée de 5,28 %", () => {
     expect([e, c1, c2]).toEqual([0.69, 0.24, 0.4]);
     expect(attendus(ch, "capital")).toEqual({
       "Effort d'un trimestre": e,
       "Capital-image à la fin du trimestre 1": c1,
       "Capital-image à la fin du trimestre 2": c2,
-      "Hausse d'attractivité au trimestre 2 (%)": Math.round(S * c1 * 1000) / 10,
+      "Hausse d'attractivité au trimestre 2 (%)": centime(S * c1 * 100),
     });
-    expect(Math.round(S * c1 * 1000) / 10).toBe(5.3);
+    // À deux décimales (décision du propriétaire, 10 novembre 2026) : 5,28 % et non 5,3 %.
+    expect(centime(S * c1 * 100)).toBe(5.28);
     // Sans arrondir, la fin du trimestre 3 et de l'année : 0,50 et 0,57.
     expect(fins([E, E, E, E]).map(centime)).toEqual([0.24, 0.4, 0.5, 0.57]);
   });
@@ -338,16 +341,20 @@ describe("le capital-image et son plafond, refaits à la main", () => {
     expect([plancher, centime(plancher - E), Math.round(e * (1 - Math.pow(K, 4)) * 100) / 100]).toEqual([12_165.03, 165.03, 0.57]);
   });
 
-  it("le budget constant du label au trimestre 4 : un effort de 0,97, 19 498,02 € par trimestre, 58 494,06 € sur les trimestres 1 à 3", () => {
-    const eff = SEUIL / (1 - Math.pow(K, 3));
+  it("le budget constant du label au trimestre 4 : un effort de 0,9651, 19 500,60 € par trimestre, 58 501,80 € sur les trimestres 1 à 3", () => {
+    // L'effort est l'exposant de e : un coefficient, au dix-millième supérieur (0,9650 laisserait le
+    // capital sous le seuil), et le budget se calcule sur lui, comme l'élève (décision du 10 novembre 2026).
+    const exact = SEUIL / (1 - Math.pow(K, 3));
+    const eff = Math.ceil(exact * 10_000) / 10_000;
     const budget = centime(E * (Math.exp(eff) - 1));
     expect(attendus(ch, "le-budget-constant")).toEqual({
-      "Effort à tenir chaque trimestre": Math.round(eff * 100) / 100,
+      "Effort à tenir chaque trimestre": eff,
       "Budget constant par trimestre": budget,
       "Coût des trimestres 1 à 3": centime(3 * budget),
     });
-    expect([Math.round(eff * 100) / 100, budget, centime(3 * budget)]).toEqual([0.97, 19_498.02, 58_494.06]);
-    expect(fins([budget, budget, budget])[2]).toBeCloseTo(SEUIL, 6);
+    expect([eff, budget, centime(3 * budget)]).toEqual([0.9651, 19_500.6, 58_501.8]);
+    expect(Math.round(exact * 10_000) / 10_000 * (1 - Math.pow(K, 3))).toBeLessThan(SEUIL);
+    expect(fins([budget, budget, budget])[2]).toBeGreaterThanOrEqual(SEUIL);
   });
 });
 
@@ -381,18 +388,21 @@ describe("l'inertie : dépenser tard compte plus, refait à la main", () => {
     expect(centime(E * (Math.exp(SEUIL / (1 - K)) - 1))).toBe(76_668.67);
   });
 
-  it("à rebours : après 4 000 et 16 000 €, il faut 33 268,77 € au trimestre 3 (53 268,77 € en tout)", () => {
-    const k2 = (1 - K) * (K * effort(4_000) + effort(16_000));
-    const eff = (SEUIL - K * k2) / (1 - K);
+  it("à rebours : après 4 000 et 16 000 €, il faut 33 272,81 € au trimestre 3 (53 272,81 € en tout)", () => {
+    // Chaque ligne au dix-millième (décision du 10 novembre 2026) : les efforts 0,2877 et 0,8473, le
+    // capital 0,3620, l'effort du trimestre 3 au dix-millième supérieur, et le budget sur cet effort.
+    const dixMillieme = (x: number) => Math.round(x * 10_000) / 10_000;
+    const k2 = dixMillieme((1 - K) * (K * dixMillieme(effort(4_000)) + dixMillieme(effort(16_000))));
+    const eff = Math.ceil(((SEUIL - K * k2) / (1 - K)) * 10_000) / 10_000;
     const budget = centime(E * (Math.exp(eff) - 1));
     expect(attendus(ch, "a-rebours")).toEqual({
-      "Capital à la fin du trimestre 2": centime(k2),
-      "Effort nécessaire au trimestre 3": centime(eff),
+      "Capital à la fin du trimestre 2": k2,
+      "Effort nécessaire au trimestre 3": eff,
       "Budget du trimestre 3": budget,
       "Coût des trimestres 1 à 3": centime(20_000 + budget),
     });
-    expect([centime(k2), centime(eff), budget, centime(20_000 + budget)]).toEqual([0.36, 1.33, 33_268.77, 53_268.77]);
-    expect(fins([4_000, 16_000, budget])[2]).toBeCloseTo(SEUIL, 6);
+    expect([k2, eff, budget, centime(20_000 + budget)]).toEqual([0.362, 1.3278, 33_272.81, 53_272.81]);
+    expect(fins([4_000, 16_000, budget])[2]).toBeGreaterThanOrEqual(SEUIL);
   });
 
   it("la critique du plan le moins cher : le logarithme, pas le poids seul", () => {

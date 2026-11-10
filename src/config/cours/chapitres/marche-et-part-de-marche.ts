@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { ENTREPRISES_DU_COURS } from "../metiers";
 import { marcheEtPart as lireLeMarche, partDe, prixDeNova, ventesPourLaPart } from "../monde/economie-et-marketing";
@@ -22,6 +22,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * CE QUI A CHANGÉ. Le chapitre lisait le premier et le dernier trimestre de l'arène chez cinq
  * entreprises ; il se joue chez NOVA seule, sur le semestre du monde du cours.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de marché et les évolutions se donnent à deux
+ * décimales (26,40 % et non 26,4 %), à un centième près ; la part relative et la variation en points
+ * partent de ces parts arrondies, au centième. Elles se donnaient au dixième, à un dixième près (deux
+ * centièmes pour la part relative).
  */
 
 /**
@@ -40,9 +46,6 @@ const seuilDAlerte = (c: Cas) => Math.round(mercatiqueDe(c).gestion.seuilsDAlert
 /** Le laboratoire : les ventes du 2e trimestre, à l'enceinte. */
 const VENTES_ESSAYEES = { min: 6_000, max: 7_000, pas: 1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /** « de » devant un nom, élidé devant une voyelle : « d'Auris », « de NOVA ». */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -114,23 +117,23 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
       notions: ["demand_market_share"],
       question: (c) => {
         const m = marcheEtPart(c);
-        return `Le marché compte ${qte(m.debut.marche)} ${c.unites}. Calculez la part de marché ${dE(c.entreprise)} (${qte(m.debut.nova.ventes)} vendues), celle de son premier concurrent, ${m.premierConcurrent.nom} (${qte(m.premierConcurrent.ventes)}), en pourcentage au dixième, puis la part de marché relative ${dE(c.entreprise)}, au centième.`;
+        return `Le marché compte ${qte(m.debut.marche)} ${c.unites}. Calculez la part de marché ${dE(c.entreprise)} (${qte(m.debut.nova.ventes)} vendues), celle de son premier concurrent, ${m.premierConcurrent.nom} (${qte(m.premierConcurrent.ventes)}), en pourcentage à deux décimales, puis la part de marché relative ${dE(c.entreprise)}, au centième.`;
       },
       champs: (c) => {
         const m = marcheEtPart(c);
         const e = m.debut.nova;
         return [
-          { libelle: `Part de marché ${dE(c.entreprise)} (%)`, attendu: e.part, calcul: `${qte(e.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(e.part)}`, tolerance: 0.1 },
-          { libelle: "Part de marché du premier concurrent (%)", attendu: m.premierConcurrent.part, calcul: `${qte(m.premierConcurrent.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(m.premierConcurrent.part)}`, tolerance: 0.1 },
-          { libelle: "Part de marché relative", attendu: m.partRelative, calcul: `${pct(e.part)} ÷ ${pct(m.premierConcurrent.part)} = ${qte(m.partRelative)}`, tolerance: 0.02 },
+          { libelle: `Part de marché ${dE(c.entreprise)} (%)`, attendu: e.part, calcul: `${qte(e.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(e.part)}` },
+          { libelle: "Part de marché du premier concurrent (%)", attendu: m.premierConcurrent.part, calcul: `${qte(m.premierConcurrent.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(m.premierConcurrent.part)}` },
+          { libelle: "Part de marché relative", nature: "grandeur", attendu: m.partRelative, calcul: `${pct(e.part)} ÷ ${pct(m.premierConcurrent.part)} = ${nombreAuCentieme(m.partRelative)}` },
         ];
       },
       explication: (c) => {
         const m = marcheEtPart(c);
         return [
           m.partRelative >= 1
-            ? `Une part relative de ${qte(m.partRelative)} : ${c.entreprise} vend plus que son premier concurrent. Au-dessus de 1, l'entreprise est le leader du marché.`
-            : `Une part relative de ${qte(m.partRelative)} : ${c.entreprise} vend moins que son premier concurrent. Sous 1, l'entreprise n'est pas le leader ; plus la part relative est faible, plus l'écart est grand.`,
+            ? `Une part relative de ${nombreAuCentieme(m.partRelative)} : ${c.entreprise} vend plus que son premier concurrent. Au-dessus de 1, l'entreprise est le leader du marché.`
+            : `Une part relative de ${nombreAuCentieme(m.partRelative)} : ${c.entreprise} vend moins que son premier concurrent. Sous 1, l'entreprise n'est pas le leader ; plus la part relative est faible, plus l'écart est grand.`,
           `Les trois enseignes réunies font ${pct(100 - m.autres)} du marché : le reste, ${pct(m.autres)}, va aux petits vendeurs.`,
         ];
       },
@@ -156,7 +159,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
         return options.map((o) => ({
           texte: o.texte,
           juste: o.code === position,
-          retour: o.code === position ? o.vrai : `Non : ${c.entreprise} est ${m.rang === 1 ? "première" : `${m.rang}e`} des trois par les ventes, avec une part de marché relative de ${qte(m.partRelative)}.`,
+          retour: o.code === position ? o.vrai : `Non : ${c.entreprise} est ${m.rang === 1 ? "première" : `${m.rang}e`} des trois par les ventes, avec une part de marché relative de ${nombreAuCentieme(m.partRelative)}.`,
         }));
       },
     },
@@ -217,21 +220,21 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
           ],
         };
       },
-      question: (c) => `Du premier au deuxième trimestre, calculez l'évolution de la taille du marché, celle des ventes ${dE(c.entreprise)}, en pourcentage au dixième, puis la variation de sa part de marché, en points.`,
+      question: (c) => `Du premier au deuxième trimestre, calculez l'évolution de la taille du marché, celle des ventes ${dE(c.entreprise)}, en pourcentage à deux décimales, puis la variation de sa part de marché, en points, au centième.`,
       champs: (c) => {
         const m = marcheEtPart(c);
         return [
-          { libelle: "Évolution du marché (%)", attendu: m.evolutionDuMarche, calcul: `(${qte(m.fin.marche)} ÷ ${qte(m.debut.marche)} − 1) × 100 = ${pct(m.evolutionDuMarche)}`, tolerance: 0.1 },
-          { libelle: "Évolution des ventes (%)", attendu: m.evolutionDesVentes, calcul: `(${qte(m.fin.nova.ventes)} ÷ ${qte(m.debut.nova.ventes)} − 1) × 100 = ${pct(m.evolutionDesVentes)}`, tolerance: 0.1 },
-          { libelle: "Variation de la part de marché (points)", attendu: m.points, calcul: `${pct(m.fin.nova.part)} − ${pct(m.debut.nova.part)} = ${qte(m.points)} points`, tolerance: 0.1 },
+          { libelle: "Évolution du marché (%)", attendu: m.evolutionDuMarche, calcul: `(${qte(m.fin.marche)} ÷ ${qte(m.debut.marche)} − 1) × 100 = ${pct(m.evolutionDuMarche)}` },
+          { libelle: "Évolution des ventes (%)", attendu: m.evolutionDesVentes, calcul: `(${qte(m.fin.nova.ventes)} ÷ ${qte(m.debut.nova.ventes)} − 1) × 100 = ${pct(m.evolutionDesVentes)}` },
+          { libelle: "Variation de la part de marché (points)", nature: "grandeur", attendu: m.points, calcul: `${pct(m.fin.nova.part)} − ${pct(m.debut.nova.part)} = ${nombreAuCentieme(m.points)} points` },
         ];
       },
       explication: (c) => {
         const m = marcheEtPart(c);
         return [
           m.evolutionDesVentes < m.evolutionDuMarche
-            ? `Le marché grandit de ${pct(m.evolutionDuMarche)}, les ventes ${dE(c.entreprise)} de ${pct(m.evolutionDesVentes)} : elles suivent moins vite que le marché, et la part de marché recule de ${qte(Math.abs(m.points))} points. Une entreprise peut vendre plus et perdre du terrain.`
-            : `Le marché grandit de ${pct(m.evolutionDuMarche)}, les ventes ${dE(c.entreprise)} de ${pct(m.evolutionDesVentes)} : elles vont plus vite que le marché, et la part de marché gagne ${qte(m.points)} points.`,
+            ? `Le marché grandit de ${pct(m.evolutionDuMarche)}, les ventes ${dE(c.entreprise)} de ${pct(m.evolutionDesVentes)} : elles suivent moins vite que le marché, et la part de marché recule de ${nombreAuCentieme(Math.abs(m.points))} points. Une entreprise peut vendre plus et perdre du terrain.`
+            : `Le marché grandit de ${pct(m.evolutionDuMarche)}, les ventes ${dE(c.entreprise)} de ${pct(m.evolutionDesVentes)} : elles vont plus vite que le marché, et la part de marché gagne ${nombreAuCentieme(m.points)} points.`,
           "Une part de marché se compte en points : passer de 20 % à 15 %, c'est perdre 5 points, pas 5 %.",
         ];
       },
@@ -335,7 +338,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
       texte: (c) => {
         const m = marcheEtPart(c);
         return [
-          `Au premier trimestre, ${c.entreprise} tient ${pct(m.debut.nova.part)} d'un marché de ${qte(m.debut.marche)} ${c.unites}, avec une part relative de ${qte(m.partRelative)} face à son premier concurrent, ${m.premierConcurrent.nom}. Au deuxième, elle vend plus, et sa part recule de ${qte(Math.abs(m.points))} points.`,
+          `Au premier trimestre, ${c.entreprise} tient ${pct(m.debut.nova.part)} d'un marché de ${qte(m.debut.marche)} ${c.unites}, avec une part relative de ${nombreAuCentieme(m.partRelative)} face à son premier concurrent, ${m.premierConcurrent.nom}. Au deuxième, elle vend plus, et sa part recule de ${nombreAuCentieme(Math.abs(m.points))} points.`,
           "La part de marché ne se lit jamais seule : il faut la taille du marché pour savoir ce qu'elle représente, la part du premier concurrent pour savoir où l'on se situe, et son évolution pour savoir si l'on gagne ou si l'on perd du terrain. Dans l'arène, le marché du tour donne votre part et celle de vos concurrents.",
         ];
       },

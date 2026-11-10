@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { ENTREPRISES_DE_LA_DEMANDE, demandeEtPrix } from "../chapitres/demande-et-prix";
@@ -10,7 +10,6 @@ import { POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de
 import type { Situation } from "./types";
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE : QUEL PRIX POUR LA SAISON ? (Bac STMG, mercatique, palier 1).
@@ -25,12 +24,13 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  * répond au prix » et « Le prix psychologique », appelés tels quels. Il joue dans le monde du cours
  * (monde/economie-et-marketing.ts) : la droite de demande du trimestre, la ligne de 7 000 enceintes,
  * le coût variable de 38 €, le premier trimestre du marché, les repères des familles.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de marché, les variations et les écarts au prix normal
+ * se donnent à deux décimales (au dixième, avant), la part relative et l'élasticité au centième ; le
+ * chiffre d'affaires et la marge à chaque prix, au centime (à l'euro, avant).
  */
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const ratio = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /** « a », « a et b », « a, b et c ». */
 const enListe = (t: string[]) => (t.length < 2 ? t.join("") : `${t.slice(0, -1).join(", ")} et ${t.at(-1)}`);
@@ -49,7 +49,7 @@ export function prixDeLaSaison(c: Cas) {
   const cap = capacite(f);
   const prix = [d.bas, d.base, d.haut].map((x, i) => {
     const t = trimestreAuPrix(f, x.prix);
-    return { nom: NOMS[i]!, prix: x.prix, demande: t.demande, ventes: t.ventes, chiffreDAffaires: Math.round(t.chiffreDAffaires), marge: Math.round(t.marge) };
+    return { nom: NOMS[i]!, prix: x.prix, demande: t.demande, ventes: t.ventes, chiffreDAffaires: t.chiffreDAffaires, marge: t.marge };
   });
   const meilleur = prix.reduce((a, b) => (b.marge > a.marge ? b : a));
   const plusGrosCa = prix.reduce((a, b) => (b.chiffreDAffaires > a.chiffreDAffaires ? b : a));
@@ -63,8 +63,8 @@ export function prixDeLaSaison(c: Cas) {
         normal: psy.etudie.normal,
         tropBas: psy.etudie.tropBas,
         seuil: psy.seuil,
-        ecartBas: auDixieme((d.bas.prix / psy.etudie.normal - 1) * 100),
-        ecartHaut: auDixieme((d.haut.prix / psy.etudie.normal - 1) * 100),
+        ecartBas: arrondi2((d.bas.prix / psy.etudie.normal - 1) * 100),
+        ecartHaut: arrondi2((d.haut.prix / psy.etudie.normal - 1) * 100),
       }
     : null;
   return { d, cvu, capacite: cap, prix, meilleur, plusGrosCa, marche, reperes };
@@ -145,22 +145,22 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
       notions: ["demand_market_share"],
       si: aUnMarche,
       question: () =>
-        "Calculez la part de marché de l'entreprise, puis celle du principal concurrent (ventes ÷ marché × 100, au dixième), et la part de marché relative (la part de l'entreprise ÷ celle du concurrent, au centième).",
+        "Calculez la part de marché de l'entreprise, puis celle du principal concurrent (ventes ÷ marché × 100, à deux décimales), et la part de marché relative (la part de l'entreprise ÷ celle du concurrent, au centième).",
       champs: (c) => {
         const m = prixDeLaSaison(c).marche!;
         const e = m.debut.nova;
         return [
-          { libelle: "Part de marché de l'entreprise (%)", attendu: e.part, calcul: `${qte(e.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(e.part)}`, tolerance: 0.1 },
-          { libelle: "Part de marché du concurrent (%)", attendu: m.premierConcurrent.part, calcul: `${qte(m.premierConcurrent.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(m.premierConcurrent.part)}`, tolerance: 0.1 },
-          { libelle: "Part de marché relative", attendu: m.partRelative, calcul: `${pct(e.part)} ÷ ${pct(m.premierConcurrent.part)} = ${ratio(m.partRelative)}`, tolerance: 0.01 },
+          { libelle: "Part de marché de l'entreprise (%)", attendu: e.part, calcul: `${qte(e.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(e.part)}` },
+          { libelle: "Part de marché du concurrent (%)", attendu: m.premierConcurrent.part, calcul: `${qte(m.premierConcurrent.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(m.premierConcurrent.part)}` },
+          { libelle: "Part de marché relative", nature: "grandeur", attendu: m.partRelative, calcul: `${pct(e.part)} ÷ ${pct(m.premierConcurrent.part)} = ${nombreAuCentieme(m.partRelative)}` },
         ];
       },
       explication: (c) => {
         const m = prixDeLaSaison(c).marche!;
         return [
           m.partRelative >= 1
-            ? `Avec une part relative de ${ratio(m.partRelative)}, ${c.entreprise} vend plus que son principal concurrent : c'est elle que les autres regardent quand elle change de prix.`
-            : `Avec une part relative de ${ratio(m.partRelative)}, ${c.entreprise} vend moins que ${m.premierConcurrent.nom} : un prix trop haut l'éloignerait encore du premier.`,
+            ? `Avec une part relative de ${nombreAuCentieme(m.partRelative)}, ${c.entreprise} vend plus que son principal concurrent : c'est elle que les autres regardent quand elle change de prix.`
+            : `Avec une part relative de ${nombreAuCentieme(m.partRelative)}, ${c.entreprise} vend moins que ${m.premierConcurrent.nom} : un prix trop haut l'éloignerait encore du premier.`,
         ];
       },
     },
@@ -170,21 +170,21 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
       titre: "Comment la demande répond au prix",
       notions: ["price_elasticity"],
       question: () =>
-        "Entre le prix actuel et le prix haut, calculez la variation de la demande et celle du prix (en %, au dixième), puis l'élasticité de la demande au prix (variation de la demande ÷ variation du prix, au centième).",
+        "Entre le prix actuel et le prix haut, calculez la variation de la demande et celle du prix (en %, à deux décimales), puis l'élasticité de la demande au prix (variation de la demande ÷ variation du prix, au centième).",
       champs: (c) => {
         const { d } = prixDeLaSaison(c);
         return [
-          { libelle: "Variation de la demande (%)", attendu: d.variationDemande, calcul: `(${qte(d.haut.demande)} ÷ ${qte(d.base.demande)} − 1) × 100 = ${pct(d.variationDemande)}`, tolerance: 0.1 },
-          { libelle: "Variation du prix (%)", attendu: d.variationPrix, calcul: `(${eur(d.haut.prix)} ÷ ${eur(d.base.prix)} − 1) × 100 = ${pct(d.variationPrix)}`, tolerance: 0.1 },
-          { libelle: "Élasticité de la demande au prix", attendu: d.elasticite, calcul: `${pct(d.variationDemande)} ÷ ${pct(d.variationPrix)} = ${ratio(d.elasticite)}`, tolerance: 0.02 },
+          { libelle: "Variation de la demande (%)", attendu: d.variationDemande, calcul: `(${qte(d.haut.demande)} ÷ ${qte(d.base.demande)} − 1) × 100 = ${pct(d.variationDemande)}` },
+          { libelle: "Variation du prix (%)", attendu: d.variationPrix, calcul: `(${eur(d.haut.prix)} ÷ ${eur(d.base.prix)} − 1) × 100 = ${pct(d.variationPrix)}` },
+          { libelle: "Élasticité de la demande au prix", nature: "grandeur", attendu: d.elasticite, calcul: `${pct(d.variationDemande)} ÷ ${pct(d.variationPrix)} = ${nombreAuCentieme(d.elasticite)}` },
         ];
       },
       explication: (c) => {
         const { d } = prixDeLaSaison(c);
         return [
           d.elastique
-            ? `L'élasticité vaut ${ratio(d.elasticite)} : la demande baisse plus vite que le prix ne monte. Une hausse de prix fait perdre plus de clients qu'elle ne rapporte par client.`
-            : `L'élasticité vaut ${ratio(d.elasticite)} : la demande baisse moins vite que le prix ne monte. Les clients tiennent au produit plus qu'au prix.`,
+            ? `L'élasticité vaut ${nombreAuCentieme(d.elasticite)} : la demande baisse plus vite que le prix ne monte. Une hausse de prix fait perdre plus de clients qu'elle ne rapporte par client.`
+            : `L'élasticité vaut ${nombreAuCentieme(d.elasticite)} : la demande baisse moins vite que le prix ne monte. Les clients tiennent au produit plus qu'au prix.`,
         ];
       },
     },
@@ -196,14 +196,14 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
       si: aDesReperes,
       question: (c) => {
         const k = prixDeLaSaison(c).reperes!;
-        return `Calculez l'écart du prix bas, puis du prix haut, au prix que la clientèle « ${k.clientele} » juge normal (prix ÷ prix normal − 1, en %, au dixième, négatif sous le prix normal).`;
+        return `Calculez l'écart du prix bas, puis du prix haut, au prix que la clientèle « ${k.clientele} » juge normal (prix ÷ prix normal − 1, en %, à deux décimales, négatif sous le prix normal).`;
       },
       champs: (c) => {
         const r = prixDeLaSaison(c);
         const k = r.reperes!;
         return [
-          { libelle: "Écart du prix bas au prix normal (%)", attendu: k.ecartBas, calcul: `(${eur(r.d.bas.prix)} ÷ ${eur(k.normal)} − 1) × 100 = ${pct(k.ecartBas)}`, tolerance: 0.1 },
-          { libelle: "Écart du prix haut au prix normal (%)", attendu: k.ecartHaut, calcul: `(${eur(r.d.haut.prix)} ÷ ${eur(k.normal)} − 1) × 100 = ${pct(k.ecartHaut)}`, tolerance: 0.1 },
+          { libelle: "Écart du prix bas au prix normal (%)", attendu: k.ecartBas, calcul: `(${eur(r.d.bas.prix)} ÷ ${eur(k.normal)} − 1) × 100 = ${pct(k.ecartBas)}` },
+          { libelle: "Écart du prix haut au prix normal (%)", attendu: k.ecartHaut, calcul: `(${eur(r.d.haut.prix)} ÷ ${eur(k.normal)} − 1) × 100 = ${pct(k.ecartHaut)}` },
         ];
       },
       explication: (c) => {
@@ -228,7 +228,7 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
       titre: "Ce que rapporterait chaque prix",
       notions: ["price_elasticity", "revenue"],
       question: () =>
-        "À chaque prix, les ventes sont la demande attendue, dans la limite de la capacité. Calculez le chiffre d'affaires attendu à chaque prix, puis la marge attendue (les ventes × (prix − coût variable)), à l'euro.",
+        "À chaque prix, les ventes sont la demande attendue, dans la limite de la capacité. Calculez le chiffre d'affaires attendu à chaque prix, puis la marge attendue (les ventes × (prix − coût variable)), au centime.",
       champs: (c) => {
         const r = prixDeLaSaison(c);
         return [
@@ -236,13 +236,11 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
             libelle: `Chiffre d'affaires à ${eur(p.prix)}`,
             attendu: p.chiffreDAffaires,
             calcul: `${qte(p.ventes)} × ${eur(p.prix)} = ${eur(p.chiffreDAffaires)}`,
-            tolerance: 1,
           })),
           ...r.prix.map((p) => ({
             libelle: `Marge à ${eur(p.prix)}`,
             attendu: p.marge,
             calcul: `${qte(p.ventes)} × (${eur(p.prix)} − ${eur(r.cvu)}) = ${eur(p.marge)}`,
-            tolerance: 1,
           })),
         ];
       },
@@ -278,7 +276,7 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
           {
             texte: "N'importe lequel : la demande ne dépend pas du prix",
             juste: false,
-            retour: `Non : l'élasticité vaut ${ratio(r.d.elasticite)}. Entre le prix bas et le prix haut, la demande passe de ${qte(r.d.bas.demande)} à ${qte(r.d.haut.demande)} ${c.unites}.`,
+            retour: `Non : l'élasticité vaut ${nombreAuCentieme(r.d.elasticite)}. Entre le prix bas et le prix haut, la demande passe de ${qte(r.d.bas.demande)} à ${qte(r.d.haut.demande)} ${c.unites}.`,
           },
         ];
       },

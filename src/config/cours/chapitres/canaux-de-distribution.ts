@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { DELAI_MAXIMAL_CONVENU } from "../monde/delais-et-tva";
 import {
@@ -43,6 +43,11 @@ import type { Chapitre } from "../types";
  *
  * CE QUI A CHANGÉ. Le chapitre lisait l'arène chez PIXEL & CO et NOVA ; il se joue chez NOVA seule, sur
  * le premier trimestre du monde du cours : 3 818 enceintes en direct, 960 par CampusTech.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part du canal indirect se donne à deux décimales (au dixième,
+ * avant), le coût du délai et le coût par unité au centime, à un centime près (à l'euro et à deux
+ * centimes, avant).
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -52,9 +57,6 @@ export const DISTRIBUTIONS: readonly string[] = ENTREPRISES_DU_MARCHE_DE_NOVA;
 const DELAI_DU_CURSEUR = { min: 0, max: 90 } as const;
 const REMISE_DU_LABORATOIRE = { min: 0, max: 30, pas: 1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 const f = (c: Cas) => mercatiqueDe(c);
@@ -117,13 +119,13 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
       notions: ["distribution_commission"],
       question: (c) => {
         const k = canauxDeDistribution(c);
-        return `Au premier trimestre, ${c.entreprise} vend ${qte(k.direct.ventes)} ${c.unites} en direct et ${qte(k.intermediaire.ventes)} par ${k.nomIndirect}. Calculez la part du canal indirect dans les ventes, en pourcentage au dixième, puis ce que l'intermédiaire lui doit, hors taxes (chiffre d'affaires moins commission).`;
+        return `Au premier trimestre, ${c.entreprise} vend ${qte(k.direct.ventes)} ${c.unites} en direct et ${qte(k.intermediaire.ventes)} par ${k.nomIndirect}. Calculez la part du canal indirect dans les ventes, en pourcentage à deux décimales, puis ce que l'intermédiaire lui doit, hors taxes (chiffre d'affaires moins commission).`;
       },
       champs: (c) => {
         const k = canauxDeDistribution(c);
         const total = k.direct.ventes + k.intermediaire.ventes;
         return [
-          { libelle: "Part du canal indirect (%)", attendu: k.partDesVentes, calcul: `${qte(k.intermediaire.ventes)} ÷ ${qte(total)} × 100 = ${pct(k.partDesVentes)}`, tolerance: 0.1 },
+          { libelle: "Part du canal indirect (%)", attendu: k.partDesVentes, calcul: `${qte(k.intermediaire.ventes)} ÷ ${qte(total)} × 100 = ${pct(k.partDesVentes)}` },
           { libelle: "Montant dû par l'intermédiaire", attendu: k.du, calcul: `${eur(k.intermediaire.chiffreDAffaires)} − ${eur(k.intermediaire.commission)} = ${eur(k.du)}` },
         ];
       },
@@ -145,8 +147,8 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
       champs: (c) => {
         const k = canauxDeDistribution(c);
         return [
-          { libelle: "Coût du délai de paiement", attendu: k.coutDuDelai, calcul: `${eur(k.du)} × ${qte(1 + k.tva)} × ${pct(k.tauxDeLEmprunt)} × ${qte(k.delai)} ÷ 360 = ${eur(k.coutDuDelai)}`, tolerance: 1 },
-          { libelle: "Coût de l'intermédiaire par unité", attendu: k.coutParUnite, calcul: `(${eur(k.intermediaire.commission)} + ${eur(k.coutDuDelai)}) ÷ ${qte(k.intermediaire.ventes)} = ${eur(k.coutParUnite)}`, tolerance: 0.02 },
+          { libelle: "Coût du délai de paiement", attendu: k.coutDuDelai, calcul: `${eur(k.du)} × ${nombreAuCentieme(1 + k.tva)} × ${pct(k.tauxDeLEmprunt)} × ${qte(k.delai)} ÷ 360 = ${eur(k.coutDuDelai)}` },
+          { libelle: "Coût de l'intermédiaire par unité", attendu: k.coutParUnite, calcul: `(${eur(k.intermediaire.commission)} + ${eur(k.coutDuDelai)}) ÷ ${qte(k.intermediaire.ventes)} = ${eur(k.coutParUnite)}` },
         ];
       },
       explication: (c) => {

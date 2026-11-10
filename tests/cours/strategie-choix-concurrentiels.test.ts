@@ -74,7 +74,8 @@ function carteMain(prix: number, q: number, image = 0) {
   const ca = ventesDe(a) * prix + ventesSB(a) * 51 + ventesAU(a) * 79;
   const pm = centime(ca / (ventesDe(a) + ventesSB(a) + ventesAU(a)));
   const qm = centime((q + Q_SB + Q_AU) / 3);
-  return { ca, pm, qm, ip: Math.round((prix / pm) * 100), iq: Math.round((q / qm) * 100), ipSB: Math.round((51 / pm) * 100), iqSB: Math.round((Q_SB / qm) * 100), ipAU: Math.round((79 / pm) * 100), iqAU: Math.round((Q_AU / qm) * 100) };
+  // Les indices à deux décimales (décision du propriétaire, 10 novembre 2026) : ils s'arrondissaient à l'unité.
+  return { ca, pm, qm, ip: centime((prix / pm) * 100), iq: centime((q / qm) * 100), ipSB: centime((51 / pm) * 100), iqSB: centime((Q_SB / qm) * 100), ipAU: centime((79 / pm) * 100), iqAU: centime((Q_AU / qm) * 100) };
 }
 
 // Les stratégies, à la main : la gamme standard (34 €, 0,92), actuelle (38 €, 1,00), soignée (43 €, 1,28).
@@ -587,7 +588,7 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
     expect(c0.ca).toBe(19_112 * 59 + 29_948 * 51 + 12_944 * 79);
     expect([c0.ca, c0.pm, c0.qm]).toEqual([3_677_532, centime(3_677_532 / (19_112 + 29_948 + 12_944)), 1.08]);
     expect(c0.pm).toBe(59.31);
-    expect([c0.ip, c0.iq, c0.ipSB, c0.iqSB, c0.ipAU, c0.iqAU]).toEqual([99, 93, 86, 83, 133, 124]);
+    expect([c0.ip, c0.iq, c0.ipSB, c0.iqSB, c0.ipAU, c0.iqAU]).toEqual([99.48, 92.59, 85.99, 83.33, 133.2, 124.07]);
     expect(attendus(ch, "carte")).toEqual({ "Prix moyen du marché": c0.pm, "Indice de prix de NOVA": c0.ip, "Qualité moyenne du marché": c0.qm, "Indice de qualité de NOVA": c0.iq });
     const tri = ch.etapes.find((e) => e.id === "strategies") as EtapeTri;
     expect(Object.fromEntries(tri.elements(cas).map((x) => [x.libelle, [x.montant, x.categorie]]))).toEqual({
@@ -602,9 +603,9 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
     expect(attendus(ch, "la-qualite-qu-il-faut")).toEqual({
       "Qualité moyenne des deux concurrents": centime((Q_SB + Q_AU) / 2),
       "Qualité moyenne du marché, NOVA en gamme soignée": qm,
-      "Indice de qualité de NOVA en gamme soignée": Math.round((1.28 / qm) * 100),
+      "Indice de qualité de NOVA en gamme soignée": centime((1.28 / qm) * 100),
     });
-    expect([centime((Q_SB + Q_AU) / 2), qm, Math.round((1.28 / qm) * 100)]).toEqual([1.12, 1.17, 109]);
+    expect([centime((Q_SB + Q_AU) / 2), qm, centime((1.28 / qm) * 100)]).toEqual([1.12, 1.17, 109.4]);
   });
 
   it("les résultats des concurrents ; l'espace libre mesuré sur les deux indices ; les coins vides", () => {
@@ -615,14 +616,14 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       "Résultat d'Auris": resultatAU(attr(59, 1)),
     });
     expect([resultatSB(attr(59, 1)), resultatAU(attr(59, 1))]).toEqual([-15_196, 70_488]);
-    const dixieme = (x: number) => Math.round(x * 10) / 10;
+    // La distance au centième, sur les écarts d'indices arrondis au centième.
     expect(attendus(ch, "l-espace-libre")).toEqual({
-      "Distance entre SoundBox et NOVA": dixieme(Math.sqrt((c0.ip - c0.ipSB) ** 2 + (c0.iq - c0.iqSB) ** 2)),
-      "Distance entre NOVA et Auris": dixieme(Math.sqrt((c0.ipAU - c0.ip) ** 2 + (c0.iqAU - c0.iq) ** 2)),
+      "Distance entre SoundBox et NOVA": centime(Math.sqrt(centime(c0.ip - c0.ipSB) ** 2 + centime(c0.iq - c0.iqSB) ** 2)),
+      "Distance entre NOVA et Auris": centime(Math.sqrt(centime(c0.ipAU - c0.ip) ** 2 + centime(c0.iqAU - c0.iq) ** 2)),
       "Prix de la place libre": (59 + 79) / 2,
       "Qualité de la place libre": centime((1 + Q_AU) / 2),
     });
-    expect(Object.values(attendus(ch, "l-espace-libre"))).toEqual([16.4, 46, 69, 1.17]);
+    expect(Object.values(attendus(ch, "l-espace-libre"))).toEqual([16.36, 46.13, 69, 1.17]);
     // Les coins vides : NOVA au prix d'Auris avec son enceinte ; la gamme soignée au prix d'aujourd'hui, que la ligne borne.
     const aCher = attr(79, 1);
     const aGen = attr(59, 1.28);
@@ -644,10 +645,10 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       "Indice de prix de NOVA cette année": c1.ip,
       "Indice de qualité de NOVA cette année": c1.iq,
     });
-    expect([c1.ca, c1.pm, c1.qm, c1.ip, c1.iq]).toEqual([3_852_632, 62.13, 1.17, 111, 109]);
-    // Le prix moyen monte avec NOVA : la place visée à l'indice 116 au prix moyen d'aujourd'hui est lue à 111.
-    expect(Math.round((69 / c0.pm) * 100)).toBe(116);
-    expect([c1.ipSB, c1.iqSB, c1.ipAU, c1.iqAU]).toEqual([82, 77, 127, 115]);
+    expect([c1.ca, c1.pm, c1.qm, c1.ip, c1.iq]).toEqual([3_852_632, 62.13, 1.17, 111.06, 109.4]);
+    // Le prix moyen monte avec NOVA : la place visée à l'indice 116,34 au prix moyen d'aujourd'hui est lue à 111,06.
+    expect(centime((69 / c0.pm) * 100)).toBe(116.34);
+    expect([c1.ipSB, c1.iqSB, c1.ipAU, c1.iqAU]).toEqual([82.09, 76.92, 127.15, 114.53]);
   });
 
   it("les curseurs, refaits à la main : le prix qui passe la barre, le volume qu'il faudrait à SoundBox", () => {
@@ -659,9 +660,9 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       droites: [55, centime(barre), 80, centime(barre)],
       lecture: { "Prix de vente": 63, "Prix moyen du marché, tenu": c0.pm, "Prix de l'indice 105": centime(barre), "Au-dessus de la barre de": centime(63 - barre) },
     });
-    // La vraie année à 63 € : le prix moyen monte, et l'indice n'est que de 104.
+    // La vraie année à 63 € : le prix moyen monte, et l'indice n'est que de 104,37.
     const c63 = carteMain(63, 1);
-    expect([c63.pm, c63.ip, c63.iq]).toEqual([60.36, 104, 93]);
+    expect([c63.pm, c63.ip, c63.iq]).toEqual([60.36, 104.37, 92.59]);
     expect(strategiesDesConcurrents(cas).carteAuPrixQuiPasse.nova.indicePrix).toBe(c63.ip);
     // SoundBox : 23 € × q − 704 000 € face au résultat d'Auris.
     const q = Math.ceil((70_488 + 704_000) / 23);
@@ -705,13 +706,13 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
     expect([r1, r1 - R_MILIEU]).toEqual([62_412, 51_256]);
     // Au seul prix de 69 €, la gamme d'aujourd'hui reste intermédiaire, et perd ; un budget qualité doublé ne suffit pas non plus.
     const seul = carteMain(69, 1);
-    expect([seul.ip, seul.iq]).toEqual([113, 93]);
+    expect([seul.ip, seul.iq]).toEqual([112.58, 92.59]);
     expect(l.d.atteint({ prix: 69, gamme: 1, qualite: 4_000 })).toBe(false);
     expect(l.d.atteint({ prix: 59, gamme: 1, qualite: 8_000 })).toBe(false);
     // La gamme standard n'est jamais lue en différenciation ; la gamme soignée l'est dès 65 € au budget d'aujourd'hui.
     for (let p = 50; p <= 80; p++) expect(l.d.atteint({ prix: p, gamme: 0, qualite: 4_000 }), `${p} €`).toBe(false);
     expect([64, 65].map((p) => l.d.atteint({ prix: p, gamme: 2, qualite: 4_000 }))).toEqual([false, true]);
-    expect([carteMain(64, 1.28).ip, carteMain(65, 1.28).ip]).toEqual([105, 106]);
+    expect([carteMain(64, 1.28).ip, carteMain(65, 1.28).ip]).toEqual([104.88, 106.05]);
   });
 
   it("le graphique de la carte : le résultat selon le prix, et la ligne d'aujourd'hui", () => {
@@ -781,11 +782,11 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
   it("la place : son prix et sa qualité", () => {
     expect(attendus(s, "la-place")).toEqual({
       "Prix de la place": 69,
-      "Variation du prix (%)": Math.round((69 / 59 - 1) * 1_000) / 10,
-      "Indice de prix de la place": Math.round((69 / 59.31) * 100),
+      "Variation du prix (%)": centime((69 / 59 - 1) * 100),
+      "Indice de prix de la place": centime((69 / 59.31) * 100),
       "Qualité de la place": centime((1 + Q_AU) / 2),
     });
-    expect(Object.values(attendus(s, "la-place"))).toEqual([69, 16.9, 116, 1.17]);
+    expect(Object.values(attendus(s, "la-place"))).toEqual([69, 16.95, 116.34, 1.17]);
   });
 
   it("les deux façons d'y aller, refaites à la main", () => {

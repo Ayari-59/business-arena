@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur as eurPartage, nombreAuCentieme, pct as pctPartage } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { analyseDuBilan, bilanApres, structureAuLevier, type RisqueDeLActivite } from "../monde/finance";
 import {
@@ -52,6 +52,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     marge, le seuil de massue monte avec la dette), a-rebours (le résultat d'exploitation qu'il
  *     faut pour une rentabilité des associés visée), la-limite-de-la-relation (une critique : la
  *     relation ne dit rien du risque) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux s'écrivent à deux décimales (3,70 % et non 3,7 %), le
+ * levier et les écarts en points sont des grandeurs au centième, et chaque relation part des taux
+ * arrondis, comme l'élève ; les tolérances de deux centièmes et d'un euro tombent à un centième.
  */
 
 /** L'effet de levier se lit sur un bilan endetté : celui de L'ESCALE. */
@@ -97,20 +102,20 @@ export const LABORATOIRE_DU_LEVIER = {
 export const LEVIER_DU_DEFI = 2;
 
 /** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-export const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+export const eur = eurPartage;
 export const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-/** Un nombre à la française, deux décimales au plus : 0,25. */
-export const nombre = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-/** Un taux déjà en pour cent : 6,83 %. */
-export const pct = (t: number) => `${nombre(t)} %`;
+/** Un nombre à la française, au centième : 0,25 ; 3,70. */
+export const nombre = nombreAuCentieme;
+/** Un taux déjà en pour cent, à deux décimales : 6,83 %, 3,70 %. */
+export const pct = pctPartage;
 /** Un écart de taux, en points : « 1,51 point », « 3,06 points ». */
 export const points = (t: number) => `${nombre(t)} ${Math.abs(t) < 2 ? "point" : "points"}`;
 /** Au centième, sans zéro négatif. */
-export const auCentieme = (x: number) => Math.round(x * 100) / 100 || 0;
+export const auCentieme = arrondi2;
 /** Un taux en fraction, en pour cent au centième, comme l'élève le tape. */
 export const enPct = (x: number) => auCentieme(x * 100);
 export const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const auCentime = (x: number) => Math.round(x * 100) / 100 || 0;
+const auCentime = arrondi2;
 
 /**
  * Les rentabilités d'un bilan, au centième de point comme l'élève les tape. Les valeurs exactes
@@ -451,14 +456,13 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
         const { a, r } = levierDeLEscale(c);
         const effet = auCentieme((r.re - r.i) * r.levier);
         return [
-          { libelle: "Levier financier, D/CP", attendu: r.levier, calcul: `${eur(a.endettementNet)} ÷ ${eur(a.capitauxPropres)} = ${nombre(r.levier)}`, tolerance: 0.01 },
+          { libelle: "Levier financier, D/CP", nature: "grandeur", attendu: r.levier, calcul: `${eur(a.endettementNet)} ÷ ${eur(a.capitauxPropres)} = ${nombre(r.levier)}` },
           {
             libelle: "Rcp par la relation du levier (%)",
             attendu: r.rcpParLaRelation,
             calcul: `${pct(r.re)} + (${pct(r.re)} − ${pct(r.i)}) × ${nombre(r.levier)} = ${pct(r.re)} ${effet >= 0 ? "+" : "−"} ${points(Math.abs(effet))} = ${pct(r.rcpParLaRelation)}`,
-            tolerance: 0.02,
           },
-          { libelle: "Rcp par le résultat net (%)", attendu: r.rcp, calcul: `${eur(a.resultatNet)} ÷ ${eur(a.capitauxPropres)} × 100 = ${pct(r.rcp)}`, tolerance: 0.01 },
+          { libelle: "Rcp par le résultat net (%)", attendu: r.rcp, calcul: `${eur(a.resultatNet)} ÷ ${eur(a.capitauxPropres)} × 100 = ${pct(r.rcp)}` },
         ];
       },
       explication: (c) => {
@@ -487,10 +491,9 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
             libelle: "Seuil de massue",
             attendu: a.seuilDeMassue,
             calcul: `Re = i quand résultat d'exploitation × (1 − t) ÷ actif économique = charges financières × (1 − t) ÷ endettement net : l'impôt s'y simplifie, ${eur(a.chargesFinancieres)} × ${eur(a.actifEconomique)} ÷ ${eur(a.endettementNet)} = ${eur(a.seuilDeMassue)}`,
-            tolerance: 1,
           },
-          { libelle: "Marge avant la massue", attendu: margeAvantLaMassue, calcul: `${eur(b.resultatDExploitation)} − ${retranche(a.seuilDeMassue)} = ${eur(margeAvantLaMassue)}`, tolerance: 1 },
-          { libelle: "Baisse du résultat d'exploitation supportable (%)", attendu: baisseSupportable, calcul: `${eur(margeAvantLaMassue)} ÷ ${eur(b.resultatDExploitation)} × 100 = ${pct(baisseSupportable)}`, tolerance: 0.01 },
+          { libelle: "Marge avant la massue", attendu: margeAvantLaMassue, calcul: `${eur(b.resultatDExploitation)} − ${retranche(a.seuilDeMassue)} = ${eur(margeAvantLaMassue)}` },
+          { libelle: "Baisse du résultat d'exploitation supportable (%)", attendu: baisseSupportable, calcul: `${eur(margeAvantLaMassue)} ÷ ${eur(b.resultatDExploitation)} × 100 = ${pct(baisseSupportable)}` },
         ];
       },
       explication: (c) => {
@@ -588,9 +591,8 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
             libelle: "Taux limite de l'emprunt (%)",
             attendu: tauxLimite,
             calcul: `i est proportionnel au taux : il égale Re au taux actuel × Re ÷ i, soit ${pct(taux)} × ${pct(r.re)} ÷ ${pct(r.i)} = ${pct(tauxLimite)}`,
-            tolerance: 0.02,
           },
-          { libelle: "Marge sous le taux limite (points)", attendu: margeSousLeTauxLimite, calcul: `${pct(tauxLimite)} − ${pct(taux)} = ${points(margeSousLeTauxLimite)}`, tolerance: 0.02 },
+          { libelle: "Marge sous le taux limite (points)", nature: "grandeur", attendu: margeSousLeTauxLimite, calcul: `${pct(tauxLimite)} − ${pct(taux)} = ${points(margeSousLeTauxLimite)}` },
         ];
       },
       explication: (c) => {
@@ -631,9 +633,9 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
         const { r, r2, variation } = levierDeLEscale(c);
         const a2 = r2.a;
         return [
-          { libelle: "Levier avec l'apport, D/CP", attendu: r2.levier, calcul: `${eur(a2.endettementNet)} ÷ ${eur(a2.capitauxPropres)} = ${nombre(r2.levier)}`, tolerance: 0.01 },
-          { libelle: "Rcp avec l'apport (%)", attendu: r2.rcp, calcul: `${eur(a2.resultatNet)} ÷ ${eur(a2.capitauxPropres)} × 100 = ${pct(r2.rcp)}`, tolerance: 0.01 },
-          { libelle: "Variation de la Rcp (points)", attendu: variation, calcul: `${pct(r2.rcp)} − ${pct(r.rcp)} = ${points(variation)}`, tolerance: 0.02 },
+          { libelle: "Levier avec l'apport, D/CP", nature: "grandeur", attendu: r2.levier, calcul: `${eur(a2.endettementNet)} ÷ ${eur(a2.capitauxPropres)} = ${nombre(r2.levier)}` },
+          { libelle: "Rcp avec l'apport (%)", attendu: r2.rcp, calcul: `${eur(a2.resultatNet)} ÷ ${eur(a2.capitauxPropres)} × 100 = ${pct(r2.rcp)}` },
+          { libelle: "Variation de la Rcp (points)", nature: "grandeur", attendu: variation, calcul: `${pct(r2.rcp)} − ${pct(r.rcp)} = ${points(variation)}` },
         ];
       },
       explication: (c) => {
@@ -706,7 +708,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
             attendu: mauvaise.rcp,
             calcul: `(${eur(RESULTAT_DE_LA_MAUVAISE_ANNEE)} − ${eur(a.chargesFinancieres)}) × (1 − ${nombre(b.tauxDeLImpot)}) = ${eur(net)} ; ${eur(net)} ÷ ${eur(a.capitauxPropres)} × 100 = ${pct(mauvaise.rcp)}`,
           },
-          { libelle: "Effet de levier de la mauvaise année (points)", attendu: effetMauvaise, calcul: `${pct(mauvaise.rcp)} − ${pct(mauvaise.re)} = ${points(effetMauvaise)}`, tolerance: 0.02 },
+          { libelle: "Effet de levier de la mauvaise année (points)", nature: "grandeur", attendu: effetMauvaise, calcul: `${pct(mauvaise.rcp)} − ${pct(mauvaise.re)} = ${points(effetMauvaise)}` },
         ];
       },
       explication: (c) => {

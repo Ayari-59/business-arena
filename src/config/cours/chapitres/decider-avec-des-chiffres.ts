@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, qte, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   BUDGETS_ESSAYES,
@@ -38,6 +37,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre rejouait l'année de l'arène sans la publicité de l'élève, dans neuf
  * entreprises. Il compare maintenant deux années du marché à trois : avec 16 000 € de publicité,
  * NOVA vend 648 enceintes de plus, il en faudrait 762 ; elle gagne 2 392 € de moins.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes à gagner et les ventes gagnées sont des quantités,
+ * entières ; les ventes à gagner s'écrivent d'abord à deux décimales, puis s'arrondissent à l'unité
+ * supérieure, que le corrigé nomme.
  */
 
 /** Les deux choix du dirigeant, en part de la publicité envisagée : la faire, ou s'en passer. */
@@ -53,8 +57,6 @@ export const POURQUOI_DECIDER =
 /** La publicité de NOVA une fois sa gamme lancée : celle de ses trois références, par mois. */
 const PUBLICITE_DE_LA_GAMME = GAMME_DE_NOVA.references.reduce((t, r) => t + r.publicite, 0);
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const ventesEcrites = (n: number) => (Math.abs(n) === 1 ? `${qte(n)} vente` : `${qte(n)} ventes`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -146,8 +148,13 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
       champs: () => {
         const k = deuxChoix();
         return [
-          { libelle: "Marge d'une vente", attendu: k.margeParVente, calcul: `${eur(k.sans.marge)} ÷ ${qte(k.sans.ventes)} = ${eur(k.margeParVente)}`, tolerance: 0.01 },
-          { libelle: "Ventes que la publicité doit faire gagner", attendu: k.ventesAGagner, calcul: `${eur(k.budget)} ÷ ${eur(k.margeParVente)} = ${qte(k.ventesAGagner)}, à l'unité supérieure` },
+          { libelle: "Marge d'une vente", attendu: k.margeParVente, calcul: `${eur(k.sans.marge)} ÷ ${qte(k.sans.ventes)} = ${eur(k.margeParVente)}` },
+          {
+            libelle: "Ventes que la publicité doit faire gagner",
+            nature: "quantite",
+            attendu: k.ventesAGagner,
+            calcul: `${eur(k.budget)} ÷ ${eur(k.margeParVente)} = ${nombreAuCentieme(quotient2(k.budget, k.margeParVente))}, soit ${qte(k.ventesAGagner)} à l'unité supérieure : une vente de moins ne paierait pas la publicité`,
+          },
         ];
       },
       explication: (c) => {
@@ -219,7 +226,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
       champs: () => {
         const k = deuxChoix();
         return [
-          { libelle: "Ventes gagnées grâce à la publicité", attendu: k.ventesGagnees, calcul: `${qte(k.avec.ventes)} − ${qte(k.sans.ventes)} = ${qte(k.ventesGagnees)}` },
+          { libelle: "Ventes gagnées grâce à la publicité", nature: "quantite", attendu: k.ventesGagnees, calcul: `${qte(k.avec.ventes)} − ${qte(k.sans.ventes)} = ${qte(k.ventesGagnees)}` },
           { libelle: "Marge gagnée grâce à la publicité", attendu: k.margeGagnee, calcul: `${eur(k.avec.marge)} − ${eur(k.sans.marge)} = ${eur(k.margeGagnee)}` },
           { libelle: "Écart de résultat de l'année, avec moins sans", attendu: k.ecartDeResultat, calcul: `${eur(k.avec.resultat)} − ${eur(k.sans.resultat)} = ${eur(k.ecartDeResultat)}` },
         ];

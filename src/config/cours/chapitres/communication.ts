@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { communication as lireLaCampagne, grille, meilleurBudget, trimestreAuBudget, ventesPourPayer } from "../monde/economie-et-marketing";
 import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
@@ -34,6 +34,10 @@ import type { Chapitre } from "../types";
  * ventes du trimestre, la campagne ne se paie pas ; une campagne de notoriété, qui fait connaître une
  * nouvelle référence à sa cible, se juge sur d'autres indicateurs (personnes touchées, coût pour
  * mille contacts, notoriété avant et après). Mêmes chiffres, un seul monde.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes en plus sont une quantité, entière ; le coût d'une
+ * vente gagnée et le gain de la campagne se donnent au centime.
  */
 
 /** La publicité de NOVA une fois sa gamme lancée : celle de ses trois références, par mois. */
@@ -46,8 +50,6 @@ export const COMMUNICATIONS: readonly string[] = ENTREPRISES_DU_MARCHE_DE_NOVA;
 const VENTES_DU_CURSEUR = { min: 0, max: 400 } as const;
 const BUDGETS_DU_LABORATOIRE = { min: 0, max: 8_000, pas: 1_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 const f = (c: Cas) => mercatiqueDe(c);
@@ -116,7 +118,7 @@ export const COMMUNICATION: Chapitre = {
       champs: (c) => {
         const k = communication(c);
         return [
-          { libelle: "Ventes en plus", attendu: k.ventesEnPlus, calcul: `${qte(k.jouee.ventes)} − ${qte(k.sans.ventes)} = ${qte(k.ventesEnPlus)}` },
+          { libelle: "Ventes en plus", nature: "quantite", attendu: k.ventesEnPlus, calcul: `${qte(k.jouee.ventes)} − ${qte(k.sans.ventes)} = ${qte(k.ventesEnPlus)}` },
           { libelle: "Coût d'une vente gagnée", attendu: k.coutParVente, calcul: `${eur(k.jouee.budget)} ÷ ${qte(k.ventesEnPlus)} = ${eur(k.coutParVente)}` },
           { libelle: "Gain de la campagne", attendu: k.gain, calcul: `(${eur(k.jouee.marge)} − ${eur(k.sans.marge)}) − ${eur(k.jouee.budget)} = ${eur(k.gain)}` },
         ];
