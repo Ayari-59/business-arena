@@ -120,7 +120,7 @@ async function ChapitrePage({
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
           diplome={demande}
         />
-        {diaporama && <Diaporama chapitre={chapitre.code} entreprise={choisie.code} />}
+        {diaporama && <Diaporama chapitre={chapitre.code} entreprise={choisie.code} diplome={demande} />}
         <AuBureau chapitre={chapitre.code} />
         <EnEnquete chapitre={chapitre.code} />
         <EnScenario chapitre={chapitre.code} />
@@ -134,13 +134,13 @@ async function ChapitrePage({
  * LE DIAPORAMA DE L'ENSEIGNANT (config/cours/diaporamas.ts) : un lien de téléchargement, montré au seul
  * enseignant sous licence (../acces.ts, `diaporamaPermis`). La route refait le contrôle.
  */
-function Diaporama({ chapitre, entreprise }: { chapitre: string; entreprise: string }) {
+function Diaporama({ chapitre, entreprise, diplome }: { chapitre: string; entreprise: string; diplome: string | null }) {
   return (
     <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="Pour projeter en classe" data-diaporama-du-chapitre="">
       <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Pour projeter en classe</p>
       <p className="text-sm text-slate-300">
         <a
-          href={`${lienDuDiaporama(chapitre)}?entreprise=${entreprise}`}
+          href={`${lienDuDiaporama(chapitre)}?entreprise=${entreprise}${diplome ? `&diplome=${diplome}` : ""}`}
           download={fichierDuDiaporama(chapitre)}
           data-diaporama={chapitre}
           className="font-semibold text-amber-300 underline-offset-4 hover:underline"
