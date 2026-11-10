@@ -199,6 +199,16 @@ export const THEMES: readonly Theme[] = [
       "une-offre-pour-un-besoin",
       "le-client-a-l-ere-numerique",
       // lot C STMG (fin)
+      // lot D STMG : mercatique de terminale (début)
+      "positionner-l-offre",
+      "l-experience-client",
+      "les-politiques-tarifaires",
+      "le-parcours-client",
+      "vendre-en-ligne",
+      "le-plan-de-communication",
+      "fideliser-grace-au-numerique",
+      "influence-communaute-et-e-reputation",
+      // lot D STMG (fin)
     ],
     familles: ["hotel-remplir"],
   },

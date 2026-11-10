@@ -53,9 +53,10 @@ describe("les matières couvertes en entier et le repère « en cours »", () =>
     const gf = stmg.filter((b) => b.partie === "Terminale, gestion et finance");
     expect(gf.length).toBe(3);
     expect(gf.every((b) => !b.enCours)).toBe(true);
-    const mercatique = stmg.filter((b) => b.partie === "Terminale, mercatique");
-    expect(mercatique.length).toBeGreaterThan(0);
-    expect(mercatique.every((b) => b.enCours)).toBe(true);
+    // lots C, D et E STMG : la partie commune, la mercatique et les ressources humaines sont couvertes en entier ; les systèmes d'information de gestion, pas encore.
+    const sig = stmg.filter((b) => b.partie === "Terminale, systèmes d'information de gestion");
+    expect(sig.length).toBeGreaterThan(0);
+    expect(sig.every((b) => b.enCours)).toBe(true);
   });
 
   it("tous les thèmes officiels du bac STMG sont sur la page, vides compris, et un thème vide est « en cours »", () => {

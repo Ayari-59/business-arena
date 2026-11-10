@@ -562,6 +562,24 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/rejoindre-le-cluster-de-l-audio.ts",
   "situations/par-chapitre/amortir-sur-8-ans.ts",
   // lot C STMG (fin)
+  // lot D STMG : mercatique de terminale (début)
+  "chapitres/positionner-l-offre.ts",
+  "situations/par-chapitre/campustech-veut-son-logo.ts",
+  "chapitres/l-experience-client.ts",
+  "situations/par-chapitre/une-soiree-le-mardi.ts",
+  "chapitres/les-politiques-tarifaires.ts",
+  "situations/par-chapitre/le-congres-de-juillet.ts",
+  "chapitres/le-parcours-client.ts",
+  "situations/par-chapitre/le-module-augmente.ts",
+  "chapitres/vendre-en-ligne.ts",
+  "situations/par-chapitre/la-place-de-marche-negocie.ts",
+  "chapitres/le-plan-de-communication.ts",
+  "situations/par-chapitre/toute-la-campagne-a-la-radio.ts",
+  "chapitres/fideliser-grace-au-numerique.ts",
+  "situations/par-chapitre/relancer-les-dormantes.ts",
+  "chapitres/influence-communaute-et-e-reputation.ts",
+  "situations/par-chapitre/l-influenceuse-du-haut-verdasse.ts",
+  // lot D STMG (fin)
   // lot E STMG : les ressources humaines et la communication de terminale, et leurs cas.
   "chapitres/recruter-et-integrer.ts",
   "chapitres/evaluer-le-travail.ts",
@@ -860,6 +878,24 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "situations/par-chapitre/rejoindre-le-cluster-de-l-audio.ts",
   "situations/par-chapitre/amortir-sur-8-ans.ts",
   // lot C STMG (fin)
+  // lot D STMG : mercatique de terminale (début)
+  "chapitres/positionner-l-offre.ts",
+  "situations/par-chapitre/campustech-veut-son-logo.ts",
+  "chapitres/l-experience-client.ts",
+  "situations/par-chapitre/une-soiree-le-mardi.ts",
+  "chapitres/les-politiques-tarifaires.ts",
+  "situations/par-chapitre/le-congres-de-juillet.ts",
+  "chapitres/le-parcours-client.ts",
+  "situations/par-chapitre/le-module-augmente.ts",
+  "chapitres/vendre-en-ligne.ts",
+  "situations/par-chapitre/la-place-de-marche-negocie.ts",
+  "chapitres/le-plan-de-communication.ts",
+  "situations/par-chapitre/toute-la-campagne-a-la-radio.ts",
+  "chapitres/fideliser-grace-au-numerique.ts",
+  "situations/par-chapitre/relancer-les-dormantes.ts",
+  "chapitres/influence-communaute-et-e-reputation.ts",
+  "situations/par-chapitre/l-influenceuse-du-haut-verdasse.ts",
+  // lot D STMG (fin)
   // lot E STMG : les ressources humaines et la communication de terminale, et leurs cas.
   "chapitres/recruter-et-integrer.ts",
   "chapitres/evaluer-le-travail.ts",

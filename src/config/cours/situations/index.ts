@@ -243,6 +243,16 @@ import { CHIFFRER_LES_ORDINATEURS } from "./par-chapitre/chiffrer-les-ordinateur
 import { REJOINDRE_LE_CLUSTER_DE_L_AUDIO } from "./par-chapitre/rejoindre-le-cluster-de-l-audio";
 import { AMORTIR_SUR_8_ANS } from "./par-chapitre/amortir-sur-8-ans";
 // lot C STMG (fin des imports)
+// lot D STMG : mercatique de terminale (début des imports)
+import { CAMPUSTECH_VEUT_SON_LOGO } from "./par-chapitre/campustech-veut-son-logo";
+import { UNE_SOIREE_LE_MARDI } from "./par-chapitre/une-soiree-le-mardi";
+import { LE_CONGRES_DE_JUILLET } from "./par-chapitre/le-congres-de-juillet";
+import { LE_MODULE_AUGMENTE } from "./par-chapitre/le-module-augmente";
+import { LA_PLACE_DE_MARCHE_NEGOCIE } from "./par-chapitre/la-place-de-marche-negocie";
+import { TOUTE_LA_CAMPAGNE_A_LA_RADIO } from "./par-chapitre/toute-la-campagne-a-la-radio";
+import { RELANCER_LES_DORMANTES } from "./par-chapitre/relancer-les-dormantes";
+import { L_INFLUENCEUSE_DU_HAUT_VERDASSE } from "./par-chapitre/l-influenceuse-du-haut-verdasse";
+// lot D STMG (fin des imports)
 // lot E STMG : les ressources humaines et la communication de terminale (début des imports)
 import { UN_SAISONNIER_OU_UN_INTERIMAIRE } from "./par-chapitre/un-saisonnier-ou-un-interimaire";
 import { UNE_PRIME_SUR_LES_DESSERTS } from "./par-chapitre/une-prime-sur-les-desserts";
@@ -512,6 +522,16 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   REJOINDRE_LE_CLUSTER_DE_L_AUDIO,
   AMORTIR_SUR_8_ANS,
   // lot C STMG (fin)
+  // lot D STMG : mercatique de terminale (début)
+  CAMPUSTECH_VEUT_SON_LOGO,
+  UNE_SOIREE_LE_MARDI,
+  LE_CONGRES_DE_JUILLET,
+  LE_MODULE_AUGMENTE,
+  LA_PLACE_DE_MARCHE_NEGOCIE,
+  TOUTE_LA_CAMPAGNE_A_LA_RADIO,
+  RELANCER_LES_DORMANTES,
+  L_INFLUENCEUSE_DU_HAUT_VERDASSE,
+  // lot D STMG (fin)
   // lot E STMG : les ressources humaines et la communication de terminale (début)
   UN_SAISONNIER_OU_UN_INTERIMAIRE,
   UNE_PRIME_SUR_LES_DESSERTS,

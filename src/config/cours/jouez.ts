@@ -2033,6 +2033,67 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       "Au compte de résultat, relevez le coût des achats du tour et le résultat. Si le prix de vos achats montait de 10 %, que resterait-il du résultat ? Au marché du tour écoulé, combien de concurrents vendent à vos clients : qu'est-ce qui menace le plus votre performance ?",
   }),
   // lot A STMG (fin)
+  // lot D STMG : mercatique de terminale (début)
+  "positionner-l-offre": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, relevez le prix et la part de marché de chaque concurrent : lequel vend le moins cher, lequel le plus cher ? Où votre prix vous place-t-il entre les deux, et la clientèle qui vous achète le plus est-elle celle que votre positionnement vise ?",
+  }),
+  "l-experience-client": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "À chaque tour, relevez les couverts demandés et servis par clientèle. Quelle clientèle laissez-vous repartir sans la servir ? Une attente trop longue, c'est une expérience ratée : laquelle de vos clientèles en souffre le plus ?",
+  }),
+  "les-politiques-tarifaires": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez quatre tours : gardez « ${prix} » aux deux premiers, puis montez-le de ${Math.round(ECART_DE_PRIX * 100)} % au troisième, l'été, et revenez au prix de départ au quatrième.`,
+      lieux: ["marche-du-tour", "indicateurs"],
+      chercher:
+        "Au tour de l'été, avez-vous encore refusé des clients ? Votre chiffre d'affaires a-t-il monté, avec moins de nuitées ou autant ? C'est le principe du prix différencié : faire payer plus quand la demande dépasse ce que l'hôtel peut servir.",
+    };
+  },
+  "le-parcours-client": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, relevez les ventes de chaque clientèle. Laquelle viendrait d'abord voir la collection en ligne avant d'entrer en boutique ? Pour laquelle un retrait en boutique d'un article réservé sur le site compterait le plus ?",
+  }),
+  "vendre-en-ligne": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Relevez les ventes de chaque clientèle, puis au compte de résultat la marge que laisse une enceinte. Si une place de marché prenait une commission sur chaque vente, combien vous resterait-il par enceinte ? Combien de ventes nouvelles faudrait-il pour que ce canal rapporte ?",
+  }),
+  "le-plan-de-communication": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Au compte de résultat, relevez ce que la publicité a coûté sur le tour. Au marché du tour, relevez les adhérents de chaque clientèle. Combien d'adhésions nouvelles faudrait-il pour que cette dépense se paie, et quelle clientèle votre communication devrait-elle viser d'abord ?",
+  }),
+  "fideliser-grace-au-numerique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Comparez les ventes des clientes fidèles d'un tour à l'autre : sont-elles plus régulières que celles des passants ? Une cliente qui revient chaque mois vaut combien de passants qui ne reviennent pas ?",
+  }),
+  "influence-communaute-et-e-reputation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Relevez les nouveaux adhérents du tour et ce que la publicité a coûté : combien vous a coûté chaque adhérent gagné ? Si une campagne sur les réseaux sociaux coûtait moins par contact, combien de contacts faudrait-il pour gagner autant d'adhérents ?",
+  }),
+  // lot D STMG (fin)
 };
 
 /**

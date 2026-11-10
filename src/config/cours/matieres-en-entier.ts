@@ -182,6 +182,26 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
       "Audit du chantier STMG, section 3, puis le lot C, au niveau du lycée. 3.1 : « Éthique, transparence et égalité » (éthique et déontologie, éthique des affaires et des organisations publiques, lobbying, greenwashing et social washing, normalisation comptable et transparence, discriminations et égalité entre les femmes et les hommes, mécénat, démocratie participative). 3.2 : « Les modes de vie changent » (temps, lieu et organisation du travail, déconnexion, modes de consommation). 3.3 : « Données et algorithmes » (données personnelles et stratégiques, transparence des algorithmes, chaîne de blocs). 3.4 : « S'implanter sur un territoire » (implantation, délocalisation, relocalisation, écosystème d'affaires, cluster, écosystème d'innovation, pouvoirs publics locaux). « La responsabilité sociétale » et « Ce que rapporte l'engagement » restent sous ce thème, pour aller plus loin.",
   },
   // lot C STMG (fin)
+  // lot D STMG : mercatique de terminale, les trois thèmes (début)
+  {
+    formation: "stmg",
+    bloc: "Thème 1 · La définition de l'offre",
+    partie: "Terminale, mercatique",
+    preuve: "Audit du chantier STMG (8 novembre 2026, section 4, annexe 2 de l'arrêté du 19 juillet 2019), question par question. Lot D du chantier STMG. 1.1 « Segmenter et cibler » et « Positionner l'offre : marque, gamme, types de marketing ». 1.2 « L'expérience client et la valeur perçue », la valeur perçue partagée avec « Les formes de la valeur » de la SGN. 1.3 « Le prix psychologique », « La demande répond au prix » et « Les politiques tarifaires ».",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 2 · La distribution de l'offre",
+    partie: "Terminale, mercatique",
+    preuve: "Audit du chantier STMG (8 novembre 2026, section 4, annexe 2 de l'arrêté du 19 juillet 2019), question par question. Lot D du chantier STMG. 2.1 « Les canaux de distribution » et son complément (intensive, sélective ou exclusive, unités physiques et virtuelles, désintermédiation et réintermédiation, ECR). 2.2 « Le parcours client : ROPO, cross-canal, omnicanal ». 2.3 « Vendre en ligne : e-commerce, m-commerce, place de marché ».",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 3 · La communication de l'offre",
+    partie: "Terminale, mercatique",
+    preuve: "Audit du chantier STMG (8 novembre 2026, section 4, annexe 2 de l'arrêté du 19 juillet 2019), question par question. Lot D du chantier STMG. 3.1 « Ce que rapporte la communication » et « Le plan de communication : objectifs, cibles, médias, copy strategy ». 3.2 « Fidéliser grâce au numérique : programme, valeur vie, gestion de la relation client » et « Influence, communauté et e-réputation ».",
+  },
+  // lot D STMG (fin)
   // lot E STMG : les ressources humaines et la communication de terminale, leurs trois thèmes et leurs neuf questions (début)
   {
     formation: "stmg",

@@ -10,6 +10,7 @@ import {
   venteAuDistributeur,
 } from "../monde/economie-et-marketing";
 import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
+import { COMPARATEUR, DISTRIBUTION_DES_ENSEIGNES, intermediaireDeNova } from "../monde/strategies-de-distribution";
 import type { Chapitre } from "../types";
 
 /**
@@ -21,6 +22,12 @@ import type { Chapitre } from "../types";
  * chiffre ce que coûte l'intermédiaire par enceinte, et pèse ce qu'il apporte. Puis l'expérience : un
  * curseur (le délai le plus long dont l'attente reste acceptable) et un laboratoire (la remise la plus
  * forte qu'un distributeur peut obtenir).
+ *
+ * LE COMPLÉMENT DE TERMINALE (lot D du chantier STMG, question 2.1 : « Peut-on se passer d'intermédiaires ? »).
+ * Avant la synthèse, cinq étapes couvrent le reste de la question : la distribution intensive, sélective
+ * ou exclusive des trois enseignes du marché, les unités commerciales physiques et virtuelles, la désintermédiation (NOVA vend en direct) et la
+ * réintermédiation (un comparateur s'intercale), et l'ECR, le réassort partagé avec CampusTech
+ * (monde/strategies-de-distribution.ts).
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/economie-et-marketing.ts) : les ventes du semestre de
  * nova-gestion.ts (les particuliers en ligne, qui paient à la commande ; CampusTech, une chaîne de
@@ -68,6 +75,8 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
     "Calculer la part d'un canal dans les ventes",
     "Chiffrer ce que coûte un intermédiaire par unité vendue",
     "Peser les avantages et les coûts d'un canal",
+    "Choisir une distribution intensive, sélective ou exclusive",
+    "Dire ce que sont la désintermédiation, la réintermédiation et l'ECR",
   ],
   libre: false,
   entreprises: { codes: DISTRIBUTIONS, pourquoi: POURQUOI_LE_MARCHE_DE_NOVA },
@@ -259,6 +268,74 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
       },
     },
     {
+      id: "intensive-selective-exclusive",
+      objectifs: [4],
+      type: "tri",
+      titre: "Partout, chez quelques-uns, ou chez un seul",
+      notions: ["distribution_commission", "segmentation"],
+      question: () => "Une entreprise choisit aussi combien d'intermédiaires vendent son produit. Rangez chaque enseigne du marché sous sa stratégie de distribution.",
+      categories: [
+        { code: "intensive", libelle: "Intensive : partout" },
+        { code: "selective", libelle: "Sélective : quelques intermédiaires choisis" },
+        { code: "exclusive", libelle: "Exclusive : un seul par zone" },
+      ],
+      elements: () => DISTRIBUTION_DES_ENSEIGNES.map((x) => ({ libelle: x.libelle, montant: 0, categorie: x.strategie, pourquoi: x.pourquoi })),
+      relance: "L'enseigne cherche-t-elle à être partout, chez des revendeurs choisis, ou chez un seul ?",
+      explication: () => ["Plus la distribution est large, plus le produit est vu, et moins l'enseigne contrôle sa présentation et son prix. Le haut de gamme choisit peu de revendeurs ; le produit courant veut être partout."],
+    },
+    {
+      id: "les-unites-commerciales",
+      objectifs: [5],
+      type: "choix",
+      titre: "Des magasins et un site",
+      notions: ["distribution_commission"],
+      question: (c) => `${intermediaireDeNova()} vend dans ses magasins sur les campus ; ${c.entreprise} vend sur son site. Qu'est-ce qui distingue ces deux unités commerciales ?`,
+      options: () => [
+        { texte: "L'une est physique, l'autre virtuelle", juste: true, retour: "Oui : un magasin est une unité commerciale physique, où le client vient ; un site ou une application est une unité commerciale virtuelle, ouverte partout et à toute heure. Une enseigne combine souvent les deux." },
+        { texte: "Seul le magasin est une unité commerciale", juste: false, retour: "Non : un site qui vend est aussi une unité commerciale, virtuelle. Il a sa vitrine, son stock et ses clients." },
+        { texte: "Le site vend toujours moins cher que le magasin", juste: false, retour: "Non : le prix ne fait pas la différence. Ce qui les distingue, c'est le lieu de la vente." },
+      ],
+    },
+    {
+      id: "la-desintermediation",
+      objectifs: [5],
+      type: "choix",
+      titre: "Se passer d'intermédiaires",
+      notions: ["distribution_commission"],
+      question: (c) => `${c.entreprise} vend la plupart de ses ${c.unites} sur son propre site, sans grossiste ni magasin. Comment appelle-t-on ce mouvement ?`,
+      options: () => [
+        { texte: "La désintermédiation", juste: true, retour: "Oui : le numérique permet au fabricant de vendre directement au client, sans les intermédiaires d'autrefois. Il garde leur marge, mais fait leur travail : la vitrine, l'expédition, le service après-vente." },
+        { texte: "La réintermédiation", juste: false, retour: "Non : la réintermédiation, c'est le retour d'un intermédiaire, souvent en ligne, entre le fabricant et le client." },
+        { texte: "La distribution intensive", juste: false, retour: "Non : la distribution intensive cherche au contraire le plus d'intermédiaires possible." },
+      ],
+    },
+    {
+      id: "la-reintermediation",
+      objectifs: [5],
+      type: "choix",
+      titre: "Un intermédiaire revient",
+      notions: ["distribution_commission"],
+      question: (c) => `De plus en plus de clients arrivent sur le site de ${c.entreprise} par ${COMPARATEUR.nom}, payé à chaque visite qu'il envoie. Peut-on vraiment se passer d'intermédiaires ?`,
+      options: () => [
+        { texte: "Rarement : d'autres reviennent", juste: true, retour: "Oui : c'est la réintermédiation. Le comparateur, la place de marché, l'application de livraison s'intercalent à nouveau entre le fabricant et le client, et se font payer." },
+        { texte: "Oui : en ligne, le client vient toujours seul", juste: false, retour: "Non : le client en ligne passe souvent par un moteur de recherche, un comparateur ou une plateforme, qui se font payer pour l'envoyer." },
+        { texte: "Non : il faut revenir aux grossistes", juste: false, retour: "Non : le grossiste ne revient pas ; ce sont des intermédiaires nouveaux, souvent numériques, qui prennent sa place." },
+      ],
+    },
+    {
+      id: "l-ecr",
+      objectifs: [5],
+      type: "choix",
+      titre: "Travailler avec son distributeur",
+      notions: ["distribution_commission", "stock"],
+      question: (c) => `${intermediaireDeNova()} transmet chaque soir à ${c.entreprise} ses ventes magasin par magasin, et ${c.entreprise} réassortit chaque magasin sans attendre de commande. C'est une démarche d'ECR (Efficient Consumer Response). Que vise-t-elle ?`,
+      options: () => [
+        { texte: "Mieux servir, avec moins de stock", juste: true, retour: "Oui : le fabricant et le distributeur partagent l'information pour répondre ensemble à la demande du consommateur : moins de ruptures en rayon, moins de stock dormant, des coûts plus bas pour les deux." },
+        { texte: "Faire payer le distributeur plus tôt", juste: false, retour: "Non : l'ECR ne change pas le délai de paiement. Il porte sur le réassort et l'offre en rayon." },
+        { texte: "Remplacer le distributeur par le site", juste: false, retour: "Non : l'ECR suppose au contraire de travailler avec le distributeur, pas de s'en passer." },
+      ],
+    },
+    {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
@@ -267,7 +344,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
         const k = canauxDeDistribution(c);
         return [
           `Au premier trimestre, ${k.nomIndirect} apporte ${pct(k.partDesVentes)} des ventes ${dE(c.entreprise)}, et coûte ${eur(k.coutParUnite)} par ${c.unite} de plus que la vente directe, à ses conditions ; son retard y ajoute.`,
-          "Choisir ses canaux, c'est arbitrer entre la marge, gardée entière en direct, et la portée, que donne un intermédiaire. La plupart des entreprises combinent les deux : on parle de distribution multicanal. Dans l'arène, relevez à chaque tour les ventes de chaque clientèle, intermédiaire compris.",
+          "Choisir ses canaux, c'est arbitrer entre la marge, gardée entière en direct, et la portée, que donne un intermédiaire. La plupart des entreprises combinent les deux : on parle de distribution multicanal. Et l'on choisit combien d'intermédiaires : partout, quelques-uns, ou un seul. Dans l'arène, relevez à chaque tour les ventes de chaque clientèle, intermédiaire compris.",
         ];
       },
       repere: () => "Un canal indirect se juge sur les clients qu'il apporte, comparés à ce qu'il coûte par unité : commission, délai de paiement, et marge cédée.",

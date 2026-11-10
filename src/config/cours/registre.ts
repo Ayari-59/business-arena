@@ -225,6 +225,16 @@ import { DONNEES_ET_ALGORITHMES } from "./chapitres/donnees-et-algorithmes";
 import { S_IMPLANTER_SUR_UN_TERRITOIRE } from "./chapitres/s-implanter-sur-un-territoire";
 import { INVESTIR_AMORTIR_CLOTURER } from "./chapitres/investir-amortir-cloturer";
 // lot C STMG (fin des imports)
+// lot D STMG : mercatique de terminale (début des imports)
+import { POSITIONNER_L_OFFRE } from "./chapitres/positionner-l-offre";
+import { L_EXPERIENCE_CLIENT } from "./chapitres/l-experience-client";
+import { LES_POLITIQUES_TARIFAIRES } from "./chapitres/les-politiques-tarifaires";
+import { LE_PARCOURS_CLIENT } from "./chapitres/le-parcours-client";
+import { VENDRE_EN_LIGNE } from "./chapitres/vendre-en-ligne";
+import { LE_PLAN_DE_COMMUNICATION } from "./chapitres/le-plan-de-communication";
+import { FIDELISER_GRACE_AU_NUMERIQUE } from "./chapitres/fideliser-grace-au-numerique";
+import { INFLUENCE_COMMUNAUTE_ET_E_REPUTATION } from "./chapitres/influence-communaute-et-e-reputation";
+// lot D STMG (fin des imports)
 // lot E STMG : les ressources humaines et la communication de terminale (début des imports)
 import { RECRUTER_ET_INTEGRER } from "./chapitres/recruter-et-integrer";
 import { EVALUER_LE_TRAVAIL } from "./chapitres/evaluer-le-travail";
@@ -493,6 +503,16 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "La demande répond au prix",
       "Ce que rapporte la communication",
       "Les canaux de distribution",
+      // lot D STMG : mercatique de terminale (début)
+      "Positionner l'offre : marque, gamme, types de marketing",
+      "L'expérience client et la valeur perçue",
+      "Les politiques tarifaires : prix différencié, yield management, forfait",
+      "Le parcours client : ROPO, cross-canal, omnicanal",
+      "Vendre en ligne : e-commerce, m-commerce, place de marché",
+      "Le plan de communication : objectifs, cibles, médias, copy strategy",
+      "Fidéliser grâce au numérique : programme, valeur vie, gestion de la relation client",
+      "Influence, communauté et e-réputation",
+      // lot D STMG (fin)
     ],
   },
   "stmg-gf": {
@@ -717,6 +737,18 @@ const CHAPITRES_DU_LOT_C_STMG: readonly Chapitre[] = [
   INVESTIR_AMORTIR_CLOTURER,
 ];
 // lot C STMG (fin)
+// lot D STMG : les chapitres de mercatique de terminale, dans l'ordre du programme.
+const CHAPITRES_DU_LOT_D_STMG: readonly Chapitre[] = [
+  POSITIONNER_L_OFFRE,
+  L_EXPERIENCE_CLIENT,
+  LES_POLITIQUES_TARIFAIRES,
+  LE_PARCOURS_CLIENT,
+  VENDRE_EN_LIGNE,
+  LE_PLAN_DE_COMMUNICATION,
+  FIDELISER_GRACE_AU_NUMERIQUE,
+  INFLUENCE_COMMUNAUTE_ET_E_REPUTATION,
+];
+// lot D STMG (fin)
 
 // lot E STMG : les ressources humaines et la communication de terminale, dans l'ordre du programme.
 const CHAPITRES_DU_LOT_E_STMG: readonly Chapitre[] = [
@@ -739,6 +771,9 @@ export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, DU_RESULT
   // lot C STMG : la partie commune de terminale, puis les versions lycée de la gestion et finance.
   ...CHAPITRES_DU_LOT_C_STMG,
   // lot C STMG (fin)
+  // lot D STMG : la mercatique de terminale.
+  ...CHAPITRES_DU_LOT_D_STMG,
+  // fin du lot D STMG.
   // lot E STMG : les ressources humaines et la communication de terminale.
   ...CHAPITRES_DU_LOT_E_STMG,
   // lot E STMG (fin)
