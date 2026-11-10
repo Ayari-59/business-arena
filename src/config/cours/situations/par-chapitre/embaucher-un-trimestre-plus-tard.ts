@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { recrutement } from "../../chapitres/recruter";
 import { MOIS_DE_L_EXERCICE } from "../../monde/exercice-de-nova";
@@ -22,13 +22,15 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène avec l'embauche au trimestre 2 ; il se joue chez
  * NOVA : lancé en avril, le recrutement coûte 21 637,50 € au lieu de 29 625 €, pour les mêmes
  * 800 enceintes de plus.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes de la recrue sont des quantités, entières ; les
+ * coûts, l'économie et la marge perdue attendent le centime (à l'euro près, avant).
  */
 
 /** Le mois où le président propose de lancer le recrutement : un trimestre après celui du chapitre. */
 export const MOIS_DU_RECRUTEMENT_DECALE = MOIS_DU_RECRUTEMENT + 3;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const mois = (m: number) => MOIS_DE_L_EXERCICE[m - 1]!;
 
 export type Verdict = "aucune" | "maintenant" | "attendre";
@@ -37,11 +39,11 @@ export type Verdict = "aucune" | "maintenant" | "attendre";
 export function embaucheDecalee(_c?: Cas) {
   const tot = recrutement(undefined, { poste: 1, moisDuRecrutement: MOIS_DU_RECRUTEMENT });
   const tard = recrutement(undefined, { poste: 1, moisDuRecrutement: MOIS_DU_RECRUTEMENT_DECALE });
-  const economie = Math.round((tot.coutDeLaRecrue - tard.coutDeLaRecrue) * 100) / 100;
+  const economie = arrondi2(tot.coutDeLaRecrue - tard.coutDeLaRecrue);
   const ventesPerduesEnAttendant = tot.enceintesDeLaRecrue - tard.enceintesDeLaRecrue;
   const margePerdueEnAttendant = ventesPerduesEnAttendant * tot.marge;
   const verdict: Verdict = tot.enceintesDeLaRecrue <= 0 && tard.enceintesDeLaRecrue <= 0 ? "aucune" : margePerdueEnAttendant < economie ? "attendre" : "maintenant";
-  return { tot, tard, economie, ventesPerduesEnAttendant, margePerdueEnAttendant, gainDeLAttente: Math.round((economie - margePerdueEnAttendant) * 100) / 100, verdict };
+  return { tot, tard, economie, ventesPerduesEnAttendant, margePerdueEnAttendant, gainDeLAttente: arrondi2(economie - margePerdueEnAttendant), verdict };
 }
 
 export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
@@ -101,9 +103,9 @@ export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
       champs: () => {
         const k = embaucheDecalee();
         return [
-          { libelle: `Coût, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT)}`, attendu: k.tot.coutDeLaRecrue, calcul: `${eur(k.tot.recrutement)} + ${eur(k.tot.coutMensuel)} × ${k.tot.moisDeLaRecrue} = ${eur(k.tot.coutDeLaRecrue)}`, tolerance: 1 },
-          { libelle: `Coût, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}`, attendu: k.tard.coutDeLaRecrue, calcul: `${eur(k.tard.recrutement)} + ${eur(k.tard.coutMensuel)} × ${k.tard.moisDeLaRecrue} = ${eur(k.tard.coutDeLaRecrue)}`, tolerance: 1 },
-          { libelle: "Économie de l'attente", attendu: k.economie, calcul: `${eur(k.tot.coutDeLaRecrue)} − ${eur(k.tard.coutDeLaRecrue)} = ${eur(k.economie)}`, tolerance: 1 },
+          { libelle: `Coût, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT)}`, attendu: k.tot.coutDeLaRecrue, calcul: `${eur(k.tot.recrutement)} + ${eur(k.tot.coutMensuel)} × ${k.tot.moisDeLaRecrue} = ${eur(k.tot.coutDeLaRecrue)}` },
+          { libelle: `Coût, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}`, attendu: k.tard.coutDeLaRecrue, calcul: `${eur(k.tard.recrutement)} + ${eur(k.tard.coutMensuel)} × ${k.tard.moisDeLaRecrue} = ${eur(k.tard.coutDeLaRecrue)}` },
+          { libelle: "Économie de l'attente", attendu: k.economie, calcul: `${eur(k.tot.coutDeLaRecrue)} − ${eur(k.tard.coutDeLaRecrue)} = ${eur(k.economie)}` },
         ];
       },
       explication: () => {
@@ -121,9 +123,9 @@ export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
       champs: () => {
         const k = embaucheDecalee();
         return [
-          { libelle: `Enceintes de la recrue, lancé en ${mois(MOIS_DU_RECRUTEMENT)}`, attendu: k.tot.enceintesDeLaRecrue, calcul: `${qte(k.tot.joue.production)} − ${qte(k.tot.sans.joue.production)} = ${qte(k.tot.enceintesDeLaRecrue)}`, tolerance: 0 },
-          { libelle: `Enceintes de la recrue, lancé en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}`, attendu: k.tard.enceintesDeLaRecrue, calcul: `${qte(k.tard.joue.production)} − ${qte(k.tard.sans.joue.production)} = ${qte(k.tard.enceintesDeLaRecrue)}`, tolerance: 0 },
-          { libelle: "Marge que l'attente fait perdre", attendu: k.margePerdueEnAttendant, calcul: `(${qte(k.tot.enceintesDeLaRecrue)} − ${qte(k.tard.enceintesDeLaRecrue)}) × ${eur(k.tot.marge)} = ${eur(k.margePerdueEnAttendant)}`, tolerance: 1 },
+          { libelle: `Enceintes de la recrue, lancé en ${mois(MOIS_DU_RECRUTEMENT)}`, nature: "quantite", attendu: k.tot.enceintesDeLaRecrue, calcul: `${qte(k.tot.joue.production)} − ${qte(k.tot.sans.joue.production)} = ${qte(k.tot.enceintesDeLaRecrue)}` },
+          { libelle: `Enceintes de la recrue, lancé en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}`, nature: "quantite", attendu: k.tard.enceintesDeLaRecrue, calcul: `${qte(k.tard.joue.production)} − ${qte(k.tard.sans.joue.production)} = ${qte(k.tard.enceintesDeLaRecrue)}` },
+          { libelle: "Marge que l'attente fait perdre", attendu: k.margePerdueEnAttendant, calcul: `(${qte(k.tot.enceintesDeLaRecrue)} − ${qte(k.tard.enceintesDeLaRecrue)}) × ${eur(k.tot.marge)} = ${eur(k.margePerdueEnAttendant)}` },
         ];
       },
       explication: () => {

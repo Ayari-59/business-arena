@@ -1,5 +1,4 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2, arrondi2 as auCentime, eur, pct, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
 import { POURQUOI_PRIX_COUT_MARGE, prixCoutMarge } from "../../chapitres/prix-cout-marge";
@@ -22,6 +21,12 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  * synthèse « Suivre la baisse du concurrent » fait jouer le prix). Seuls les achats
  * augmentent ; les autres coûts par unité, le prix et les quantités sont ceux du mois de
  * janvier de NOVA (monde/gestion-et-information.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de marque et la hausse du prix se donnent à deux
+ * décimales (au dixième, avant) ; le nouveau prix se calcule sur le taux de marque à deux décimales,
+ * 39,76 € ÷ (1 − 35,59 %) = 61,73 €, et les « ≈ » et « sans arrondir le taux » disparaissent avec les
+ * tolérances de 0,05 € et d'un dixième.
  */
 
 /**
@@ -30,8 +35,6 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  */
 export const HAUSSE_DES_ACHATS = 0.08;
 
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function fournisseurQuiAugmente(c: Cas) {
@@ -40,14 +43,13 @@ export function fournisseurQuiAugmente(c: Cas) {
   const hausseParUnite = auCentime(nouveauxAchats - m.matiere);
   const nouveauCout = auCentime(nouveauxAchats + m.autres);
   const margeSansHausseDePrix = auCentime(m.prix - nouveauCout);
-  const tauxDeMarqueSansHausse = auDixieme((margeSansHausseDePrix / m.prix) * 100);
-  // Garder le taux de marque, c'est garder le rapport du prix au coût : le prix suit le
-  // coût dans la même proportion. L'élève qui passe par le taux de marque au dixième,
-  // comme au chapitre (prix = coût ÷ (1 − taux de marque)), trouve un prix voisin :
-  // l'écart entre les deux est admis.
-  const nouveauPrix = auCentime((nouveauCout * m.prix) / m.cout);
-  const prixParLeTaux = auCentime(nouveauCout / (1 - m.tauxDeMarque / 100));
-  const hausseDuPrix = auDixieme((nouveauPrix / m.prix - 1) * 100);
+  const tauxDeMarqueSansHausse = arrondi2((margeSansHausseDePrix / m.prix) * 100);
+  // Garder le taux de marque : prix = coût ÷ (1 − taux de marque), comme au chapitre, sur le taux à
+  // deux décimales que l'élève vient d'écrire (35,59 %), et la ligne suivante part de ce prix.
+  // (Le rapport exact du prix au coût, coût × prix ÷ ancien coût, tombe au même centime ici.)
+  const nouveauPrix = quotient2(nouveauCout, 1 - m.tauxDeMarque / 100);
+  const prixParLeTaux = nouveauPrix;
+  const hausseDuPrix = arrondi2((nouveauPrix / m.prix - 1) * 100);
   return {
     ...m,
     nouveauxAchats,
@@ -57,11 +59,9 @@ export function fournisseurQuiAugmente(c: Cas) {
     tauxDeMarqueSansHausse,
     nouveauPrix,
     prixParLeTaux,
-    tolerancePrix: Math.max(0.05, auCentime(Math.abs(prixParLeTaux - nouveauPrix)) + 0.02),
     nouvelleMarge: auCentime(nouveauPrix - nouveauCout),
     hausseDuPrix,
-    toleranceHausse: Math.max(0.1, auDixieme(Math.abs((prixParLeTaux / m.prix - 1) * 100 - hausseDuPrix)) + 0.1),
-    hausseDuCout: auDixieme((nouveauCout / m.cout - 1) * 100),
+    hausseDuCout: arrondi2((nouveauCout / m.cout - 1) * 100),
     // Les erreurs classiques de la dernière question.
     prixPlusLaHausse: auCentime(m.prix + hausseParUnite),
     prixHausseDuTaux: auCentime(m.prix * (1 + HAUSSE_DES_ACHATS)),
@@ -118,13 +118,13 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       titre: "La marge d'aujourd'hui",
       notions: ["margin_rates", "markup_coefficient"],
       question: () =>
-        "Commencez par aujourd'hui : le coût d'une unité, la marge qu'elle laisse, puis le taux de marque, en pourcentage, au dixième.",
+        "Commencez par aujourd'hui : le coût d'une unité, la marge qu'elle laisse, puis le taux de marque, en pourcentage, à deux décimales.",
       champs: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
           { libelle: "Coût d'une unité", attendu: r.cout, calcul: `${eur(r.matiere)} + ${eur(r.autres)} = ${eur(r.cout)}` },
           { libelle: "Marge d'une unité", attendu: r.marge, calcul: `${eur(r.prix)} − ${eur(r.cout)} = ${eur(r.marge)}` },
-          { libelle: "Taux de marque (%)", attendu: r.tauxDeMarque, tolerance: 0.1, calcul: `${eur(r.marge)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarque)}` },
+          { libelle: "Taux de marque (%)", attendu: r.tauxDeMarque, calcul: `${eur(r.marge)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarque)}` },
         ];
       },
       explication: (c) => {
@@ -140,14 +140,14 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       titre: "Si le prix ne bouge pas",
       notions: ["margin_rates"],
       question: () =>
-        `Seuls les achats augmentent de ${pct(HAUSSE_DES_ACHATS * 100)}. Si le prix de vente ne bouge pas, que deviennent les achats par unité, le coût d'une unité, sa marge, et le taux de marque (au dixième) ?`,
+        `Seuls les achats augmentent de ${pct(HAUSSE_DES_ACHATS * 100)}. Si le prix de vente ne bouge pas, que deviennent les achats par unité, le coût d'une unité, sa marge, et le taux de marque (à deux décimales) ?`,
       champs: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
           { libelle: "Achats par unité après la hausse", attendu: r.nouveauxAchats, calcul: `${eur(r.matiere)} × (1 + ${pct(HAUSSE_DES_ACHATS * 100)}) = ${eur(r.nouveauxAchats)}` },
           { libelle: "Nouveau coût d'une unité", attendu: r.nouveauCout, calcul: `${eur(r.nouveauxAchats)} + ${eur(r.autres)} = ${eur(r.nouveauCout)}` },
           { libelle: "Marge d'une unité, au prix d'aujourd'hui", attendu: r.margeSansHausseDePrix, calcul: `${eur(r.prix)} − ${eur(r.nouveauCout)} = ${eur(r.margeSansHausseDePrix)}` },
-          { libelle: "Taux de marque, au prix d'aujourd'hui (%)", attendu: r.tauxDeMarqueSansHausse, tolerance: 0.1, calcul: `${eur(r.margeSansHausseDePrix)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarqueSansHausse)}` },
+          { libelle: "Taux de marque, au prix d'aujourd'hui (%)", attendu: r.tauxDeMarqueSansHausse, calcul: `${eur(r.margeSansHausseDePrix)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarqueSansHausse)}` },
         ];
       },
       explication: (c) => {
@@ -163,20 +163,18 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       titre: "Le prix qui garde le taux de marque",
       notions: ["margin_rates", "markup_coefficient"],
       question: () =>
-        "Le taux de marque rapporte la marge au prix de vente : le coût est donc la part du prix qui ne reste pas. Quel prix hors taxes garde le taux de marque d'aujourd'hui avec le nouveau coût ? De combien monte-t-il, en pourcentage, au dixième ?",
+        "Le taux de marque rapporte la marge au prix de vente : le coût est donc la part du prix qui ne reste pas. Quel prix hors taxes garde le taux de marque d'aujourd'hui avec le nouveau coût ? Calculez-le au centime, sur le taux de marque à deux décimales. De combien monte-t-il, en pourcentage, à deux décimales ?",
       champs: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
           {
             libelle: "Nouveau prix de vente, hors taxes",
             attendu: r.nouveauPrix,
-            tolerance: r.tolerancePrix,
-            calcul: `${eur(r.nouveauCout)} ÷ (1 − ${pct(r.tauxDeMarque)}) ≈ ${eur(r.prixParLeTaux)} ; sans arrondir le taux, ${eur(r.nouveauCout)} × ${eur(r.prix)} ÷ ${eur(r.cout)} = ${eur(r.nouveauPrix)}`,
+            calcul: `${eur(r.nouveauCout)} ÷ (1 − ${pct(r.tauxDeMarque)}) = ${eur(r.nouveauPrix)}`,
           },
           {
             libelle: "Hausse du prix de vente (%)",
             attendu: r.hausseDuPrix,
-            tolerance: r.toleranceHausse,
             calcul: `(${eur(r.nouveauPrix)} ÷ ${eur(r.prix)} − 1) × 100 = ${pct(r.hausseDuPrix)}`,
           },
         ];

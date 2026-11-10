@@ -1,7 +1,7 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent, produit2, quotient2, somme2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
-import { coefficientDActualisation, fluxDuProjet, tri, van, type FluxDuProjet } from "../monde/finance";
+import { coefficientAuDixMillieme, fluxDuProjet, tri, vanAuxLignesArrondies, type FluxDuProjet } from "../monde/finance";
 import {
   BETA_DE_L_ACTIF_DE_NOVA,
   PRIME_DE_RISQUE_DU_MARCHE,
@@ -57,6 +57,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A DISPARU, AVEC L'ARÈNE : le taux trimestriel équivalent (les flux sont annuels), le rejeu
  * avec et sans la machine, l'écart entre l'impôt calculé et l'impôt prélevé par le moteur, les
  * entreprises où la machine ne faisait rien vendre. Le TRI vient au chapitre suivant.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les coefficients d'actualisation se lisent au dix-millième,
+ * comme dans une table financière, chaque flux actualisé au centime, et la VAN est la somme de ces
+ * flux arrondis (monde/finance.ts, `vanAuxLignesArrondies`), comme sur la copie de l'élève ; elle se
+ * calculait sur les coefficients exacts, à un demi dix-millième de chaque flux près (21 € sur la VAN
+ * du projet A). La pente des ventes part des deux VAN au centime, et le seuil de cette pente, à deux
+ * décimales.
  */
 
 /** Les projets d'investissement se chiffrent chez NOVA, la seule entreprise du cours dont les projets ont une fiche. */
@@ -139,8 +147,8 @@ export function laboratoireDeLaGamme(p: ProjetDInvestissement, impot: number, x:
   const t = x.taux! / 100;
   const compte = x.bfr === BFR_COMPTE;
   const flux = compte ? f.flux : sans;
-  const vanAvecLeBfr = van(f.flux, t);
-  const vanSansLeBfr = van(sans, t);
+  const vanAvecLeBfr = vanAuxLignesArrondies(f.flux, t);
+  const vanSansLeBfr = vanAuxLignesArrondies(sans, t);
   return {
     f,
     flux,
@@ -154,12 +162,12 @@ export function laboratoireDeLaGamme(p: ProjetDInvestissement, impot: number, x:
   };
 }
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 2) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−")} %`;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
+const pct = (x: number) => pourcent(x);
 const coef4 = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+const auCentieme = arrondi2;
 /** Le nom d'une date du projet : la date 0 est le 1er janvier N+1, la date k la fin de N+k. */
 export const nomDeLaDate = (k: number) => (k === 0 ? "Date 0 (1er janvier N+1)" : `Date ${k} (fin de N+${k})`);
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
@@ -170,10 +178,12 @@ export const enChiffres = (libelle: string) => libelle.replace(/\bdeux\b/g, "2")
 const nomDu = (pr: { nom: string }) => pr.nom.replace(/, ventes perdues$/, "");
 
 /**
- * L'écart admis sur une valeur actuelle : l'élève qui lit ses coefficients à quatre décimales, comme
- * dans une table financière, s'écarte d'au plus un demi dix-millième de chaque flux.
+ * L'écart admis sur une valeur actuelle : un centime (décision du propriétaire, 10 novembre 2026). Le
+ * corrigé actualise comme l'élève, aux coefficients du dix-millième et aux lignes arrondies au centime
+ * (monde/finance.ts, `vanAuxLignesArrondies`) ; l'écart d'un demi dix-millième de chaque flux qu'on
+ * admettait, sur une VAN exacte, n'a plus lieu d'être. Gardé pour les cas qui le lisent.
  */
-export const toleranceDActualisation = (flux: readonly number[]) => Math.max(1, Math.ceil(flux.reduce((s, f) => s + Math.abs(f), 0) * 0.00005));
+export const toleranceDActualisation = (_flux: readonly number[]) => 0.01;
 
 /**
  * La plus petite position entière où une fonction croissante devient positive (le seuil d'un
@@ -212,10 +222,10 @@ function calculer(c: Pick<Cas, "code">) {
   const tauxPct = auCentieme(t * 100);
   const f = fluxDuProjet(p, { tauxDeLImpot: k.impot });
   const sans = fluxSansLeBfr(f);
-  const vanDuProjet = van(f.flux, t);
-  const vanSansLeBfr = van(sans, t);
-  const coefs = f.flux.map((_, d) => coefficientDActualisation(t, d));
-  const actualises = f.flux.map((x, d) => auCentime(x * coefs[d]!));
+  const vanDuProjet = vanAuxLignesArrondies(f.flux, t);
+  const vanSansLeBfr = vanAuxLignesArrondies(sans, t);
+  const coefs = f.flux.map((_, d) => coefficientAuDixMillieme(t, d));
+  const actualises = f.flux.map((x, d) => produit2(x, coefs[d]!));
   const guidee = f.annees[ANNEE_GUIDEE - 1]!;
   const lancement = f.annees[0]!;
   const [go, studio, one] = p.produits;
@@ -224,16 +234,17 @@ function calculer(c: Pick<Cas, "code">) {
   const dotations = guidee.dotations;
   const sommeDesFlux = auCentime(f.flux.slice(1).reduce((s, x) => s + x, 0));
   // Le BFR : la valeur actuelle de ce qui revient à la fin du projet, et le coût du BFR en VAN.
-  const vaDuBfrRecupere = auCentime(f.recuperationDuBfr * coefs[f.duree]!);
-  const coutDuBfr = auCentime(vanSansLeBfr - vanDuProjet);
+  const vaDuBfrRecupere = produit2(f.recuperationDuBfr, coefs[f.duree]!);
+  const coutDuBfr = somme2(vanSansLeBfr, -vanDuProjet);
   // La sensibilité aux ventes : la VAN est affine dans les ventes (les quantités, le chiffre d'affaires, le BFR et l'impôt les suivent).
-  const vanAuxVentes = (pourCent: number) => van(fluxDuProjet(p, { ventes: pourCent / 100, tauxDeLImpot: k.impot }).flux, t);
+  const vanAuxVentes = (pourCent: number) => vanAuxLignesArrondies(fluxDuProjet(p, { ventes: pourCent / 100, tauxDeLImpot: k.impot }).flux, t);
   const VENTES_BASSES = 80;
   const vanAuxVentesBasses = vanAuxVentes(VENTES_BASSES);
-  const penteDesVentes = (vanDuProjet - vanAuxVentesBasses) / (100 - VENTES_BASSES);
-  const seuilDesVentes = auCentieme(100 - vanDuProjet / penteDesVentes);
+  // Chaque ligne arrondie : la pente au centime, puis le seuil sur cette pente.
+  const penteDesVentes = quotient2(somme2(vanDuProjet, -vanAuxVentesBasses), 100 - VENTES_BASSES);
+  const seuilDesVentes = somme2(100, -quotient2(vanDuProjet, penteDesVentes));
   // Le prix de NOVA Studio : la VAN est affine dans son prix.
-  const vanAuPrix = (prix: number) => van(fluxDuProjet(p, { prix: { [studio!.code]: prix }, tauxDeLImpot: k.impot }).flux, t);
+  const vanAuPrix = (prix: number) => vanAuxLignesArrondies(fluxDuProjet(p, { prix: { [studio!.code]: prix }, tauxDeLImpot: k.impot }).flux, t);
   const penteDuPrix = auCentime(vanDuProjet - vanAuPrix(studio!.prix - 1));
   const prixPlancher = auCentieme(studio!.prix - vanDuProjet / penteDuPrix);
   // Le laboratoire : la durée la plus courte qui crée encore de la valeur, BFR compté, au taux et aux ventes du plan.
@@ -266,14 +277,12 @@ function calculer(c: Pick<Cas, "code">) {
     vaDuBfrRecupere,
     coutDuBfr,
     partDuBfr: auCentieme((coutDuBfr / vanDuProjet) * 100),
-    tolerance: toleranceDActualisation(f.flux),
-    toleranceSansBfr: toleranceDActualisation(sans),
-    vaDeCent: auCentime(100 * coefs[f.duree]!),
-    vaDuFluxGuide: auCentime(guidee.fluxDExploitation * coefs[ANNEE_GUIDEE]!),
+    vaDeCent: produit2(100, coefs[f.duree]!),
+    vaDuFluxGuide: produit2(guidee.fluxDExploitation, coefs[ANNEE_GUIDEE]!),
     vanAuxVentes,
     VENTES_BASSES,
     vanAuxVentesBasses,
-    penteDesVentes: auCentime(penteDesVentes),
+    penteDesVentes,
     seuilDesVentes,
     margeDesVentes: auCentieme(100 - seuilDesVentes),
     seuilEntierDesVentes: premierPositif(vanAuxVentes, VENTES_DU_CURSEUR.min, VENTES_DU_CURSEUR.max, seuilDesVentes),
@@ -471,12 +480,11 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
             attendu: x.tauxPct,
             calcul: `${pct(TAUX_SANS_RISQUE * 100)} + ${qte(BETA_DE_L_ACTIF_DE_NOVA)} × ${pct(PRIME_DE_RISQUE_DU_MARCHE * 100)} = ${pct(x.tauxPct)}`,
           },
-          { libelle: `Valeur actuelle de 100 € reçus à la date ${x.f.duree}`, attendu: x.vaDeCent, calcul: `100 × ${coef4(x.coefs[x.f.duree]!)} = ${eur(x.vaDeCent)}`, tolerance: 0.01 },
+          { libelle: `Valeur actuelle de 100 € reçus à la date ${x.f.duree}`, attendu: x.vaDeCent, calcul: `100 × ${coef4(x.coefs[x.f.duree]!)} = ${eur(x.vaDeCent)}` },
           {
             libelle: `Valeur actuelle du flux de N+${ANNEE_GUIDEE}`,
             attendu: x.vaDuFluxGuide,
             calcul: `${eur(x.guidee.fluxDExploitation)} × (1 + ${pct(x.tauxPct)})^(−${ANNEE_GUIDEE}) = ${eur(x.guidee.fluxDExploitation)} × ${coef4(x.coefs[ANNEE_GUIDEE]!)} = ${eur(x.vaDuFluxGuide)}`,
-            tolerance: toleranceDActualisation([x.guidee.fluxDExploitation]),
           },
         ];
       },
@@ -590,7 +598,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
           avant.vanSansLeBfr > 0
             ? `Basculez le BFR sur « oublié » : à ${qte(d - 1)} ans, la VAN paraîtrait de ${eur(avant.vanSansLeBfr)}. Oublier le BFR ferait accepter un projet qui détruit de la valeur. Le graphique le montre à chaque taux : la courbe du BFR oublié passe au-dessus de l'autre.`
             : `Basculez le BFR sur « oublié » : la VAN monte à chaque durée, et à chaque taux sur le graphique. L'oubli flatte toujours le projet.`,
-          `La VAN selon le taux n'est pas une droite : elle baisse vite d'abord, puis moins vite. Au plan, elle coupe zéro vers ${pct(auCentieme(x.tri * 100), 1)} : c'est le taux de rentabilité interne, l'objet du chapitre suivant.`,
+          `La VAN selon le taux n'est pas une droite : elle baisse vite d'abord, puis moins vite. Au plan, elle coupe zéro vers ${pct(auCentieme(x.tri * 100))} : c'est le taux de rentabilité interne, l'objet du chapitre suivant.`,
         ];
       },
     },
@@ -688,7 +696,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
       },
       question: (c) => {
         const x = gammeDuChapitre(c);
-        return `Dressez le tableau des flux de trésorerie disponibles du projet A, BFR compris, et donnez-en quatre dates. Puis actualisez à ${pct(x.tauxPct)} et calculez la VAN.`;
+        return `Dressez le tableau des flux de trésorerie disponibles du projet A, BFR compris, et donnez-en quatre dates. Puis actualisez à ${pct(x.tauxPct)}, chaque coefficient au dix-millième et chaque flux actualisé au centime, et calculez la VAN.`;
       },
       champs: (c) => {
         const x = gammeDuChapitre(c);
@@ -708,7 +716,6 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
             libelle: "VAN du projet A",
             attendu: x.van,
             calcul: `${x.f.flux.map((fl, d) => `${entre(fl)} × ${coef4(x.coefs[d]!)}`).join(" + ")} = ${eur(x.van)}`,
-            tolerance: x.tolerance,
           },
         ];
       },
@@ -736,19 +743,16 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
             libelle: "VAN si l'on oubliait le BFR",
             attendu: x.vanSansLeBfr,
             calcul: `${x.sans.map((fl, d) => `${entre(fl)} × ${coef4(x.coefs[d]!)}`).join(" + ")} = ${eur(x.vanSansLeBfr)}`,
-            tolerance: x.toleranceSansBfr,
           },
           {
             libelle: `Valeur actuelle du BFR récupéré à la date ${n}`,
             attendu: x.vaDuBfrRecupere,
             calcul: `${eur(x.f.recuperationDuBfr)} × ${coef4(x.coefs[n]!)} = ${eur(x.vaDuBfrRecupere)}`,
-            tolerance: toleranceDActualisation([x.f.recuperationDuBfr]),
           },
           {
             libelle: "Coût du BFR en VAN",
             attendu: x.coutDuBfr,
             calcul: `${eur(x.vanSansLeBfr)} − ${eur(x.van)} = ${eur(x.coutDuBfr)}`,
-            tolerance: x.toleranceSansBfr + x.tolerance,
           },
         ];
       },
@@ -845,7 +849,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
           { libelle: `Chiffre d'affaires de N+${ANNEE_GUIDEE}`, montant: a.chiffreDAffaires },
           { libelle: `Flux d'exploitation de N+${ANNEE_GUIDEE}`, montant: a.fluxDExploitation },
           { libelle: `BFR de N+${ANNEE_GUIDEE}`, montant: a.bfr },
-          { libelle: "VAN du projet", montant: van(f.flux, x.t), fort: true },
+          { libelle: "VAN du projet", montant: vanAuxLignesArrondies(f.flux, x.t), fort: true },
         ];
       },
       droites: (c) => {
@@ -882,19 +886,16 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
             libelle: `VAN à ${pct(x.VENTES_BASSES)} du plan`,
             attendu: x.vanAuxVentesBasses,
             calcul: `les quantités, le chiffre d'affaires, le BFR et l'impôt à ${pct(x.VENTES_BASSES)} : flux de ${f.flux.map(entre).join(", ")}, actualisés à ${pct(x.tauxPct)} : ${eur(x.vanAuxVentesBasses)}`,
-            tolerance: toleranceDActualisation(f.flux),
           },
           {
             libelle: "VAN apportée par un point de ventes",
             attendu: x.penteDesVentes,
             calcul: `(${eur(x.van)} − ${entre(x.vanAuxVentesBasses)}) ÷ ${qte(100 - x.VENTES_BASSES)} = ${eur(x.penteDesVentes)}`,
-            tolerance: Math.ceil(toleranceDActualisation(f.flux) / 10) + 1,
           },
           {
             libelle: "Ventes qui annulent la VAN (% du plan)",
             attendu: x.seuilDesVentes,
             calcul: `100 − ${eur(x.van)} ÷ ${eur(x.penteDesVentes)} = ${pct(x.seuilDesVentes)}`,
-            tolerance: 0.05,
           },
         ];
       },
@@ -930,7 +931,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
         return [
           { libelle: `Marge sur coût variable d'une ${nomDu(x.studio)}`, montant: auCentime(prix - x.studio.coutVariable) },
           { libelle: `Flux d'exploitation de N+${ANNEE_GUIDEE}`, montant: f.annees[ANNEE_GUIDEE - 1]!.fluxDExploitation },
-          { libelle: "VAN du projet", montant: van(f.flux, x.t), fort: true },
+          { libelle: "VAN du projet", montant: vanAuxLignesArrondies(f.flux, x.t), fort: true },
         ];
       },
       droites: (c) => {

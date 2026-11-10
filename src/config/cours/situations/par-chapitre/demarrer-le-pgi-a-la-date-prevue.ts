@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_PROJET, INTEGRATEUR, retardsDuCas } from "../../monde/projet-pgi-de-nova";
 import type { Situation } from "../types";
 
@@ -9,10 +9,12 @@ import type { Situation } from "../types";
  * Le chapitre planifiait le projet et trouvait la marge de la reprise ; le cas lit 2 retards, l'un sur
  * une tâche qui a de la marge, l'autre sur une tâche critique, et fait décider le président.
  * Hypothèses : monde/projet-pgi-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la nouvelle fin du projet est un jour du planning, une quantité
+ * entière, déclarée comme telle.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const jours = (n: number) => `${qte(n)} jour${Math.abs(n) >= 2 ? "s" : ""}`;
 
 export const DEMARRER_LE_PGI_A_LA_DATE_PREVUE: Situation = {
@@ -49,7 +51,7 @@ export const DEMARRER_LE_PGI_A_LA_DATE_PREVUE: Situation = {
       champs: () => {
         const k = retardsDuCas();
         return [
-          { libelle: "Nouvelle fin du projet (jour)", attendu: k.fin, calcul: `Le paramétrage, critique, décale tout de ${jours(k.parametrage)} : ${qte(k.prevue)} + ${qte(k.parametrage)} = ${qte(k.fin)} ; la formation reste dans sa marge de ${jours(k.margeDeLaFormation)}` },
+          { libelle: "Nouvelle fin du projet (jour)", nature: "quantite", attendu: k.fin, calcul: `Le paramétrage, critique, décale tout de ${jours(k.parametrage)} : ${qte(k.prevue)} + ${qte(k.parametrage)} = ${qte(k.fin)} ; la formation reste dans sa marge de ${jours(k.margeDeLaFormation)}` },
           { libelle: "Surcoût de l'intégrateur", attendu: k.surcout, calcul: `${qte(k.parametrage)} × ${eur(INTEGRATEUR.parJour)} = ${eur(k.surcout)}` },
         ];
       },

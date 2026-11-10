@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   chercherLePrix as chercher,
@@ -40,6 +40,10 @@ import { ENTREPRISES_DU_MARCHE, dE, enUnites, rang } from "./l-offre-et-la-deman
  * CE QUI A CHANGÉ. L'arène rejouait le trimestre prix après prix, chez six entreprises ; le chapitre
  * lit la droite de NOVA seule : 4 778 enceintes demandées à 59 €, 7 173 à 47,20 €, l'équilibre entre
  * 47,20 € et 50,15 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'écart entre la demande et l'offre est une quantité, entière,
+ * déclarée comme telle (il attendait l'unité exacte, à zéro près).
  */
 
 /** Le trimestre du chapitre : le premier de l'année. */
@@ -52,8 +56,6 @@ export const PAS_DU_TATONNEMENT = 0.1;
 const PRIX_DU_CURSEUR = { min: 40, max: 59 } as const;
 const PRIX_DU_LABORATOIRE = { min: 45, max: 59, pas: 0.1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export type { SituationDuMarche };
 
@@ -268,8 +270,8 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
       champs: (c) => {
         const p = prixDEquilibre(c);
         return [
-          { libelle: `Demande − offre, à ${eur(p.depart.prix)}`, attendu: ecartDemandeOffre(p.depart), calcul: calculDeLEcart(p.depart), tolerance: 0 },
-          { libelle: `Demande − offre, à ${eur(p.dernier.prix)}`, attendu: ecartDemandeOffre(p.dernier), calcul: calculDeLEcart(p.dernier), tolerance: 0 },
+          { libelle: `Demande − offre, à ${eur(p.depart.prix)}`, nature: "quantite", attendu: ecartDemandeOffre(p.depart), calcul: calculDeLEcart(p.depart) },
+          { libelle: `Demande − offre, à ${eur(p.dernier.prix)}`, nature: "quantite", attendu: ecartDemandeOffre(p.dernier), calcul: calculDeLEcart(p.dernier) },
         ];
       },
       explication: (c) => {
@@ -311,7 +313,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
       },
       champs: (c) => {
         const p = prixDEquilibre(c);
-        return [{ libelle: `Demande − offre, à ${eur(p.milieu.prix)}`, attendu: ecartDemandeOffre(p.milieu), calcul: calculDeLEcart(p.milieu), tolerance: 0 }];
+        return [{ libelle: `Demande − offre, à ${eur(p.milieu.prix)}`, nature: "quantite", attendu: ecartDemandeOffre(p.milieu), calcul: calculDeLEcart(p.milieu) }];
       },
       explication: (c) => {
         const p = prixDEquilibre(c);

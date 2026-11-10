@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   capacite,
@@ -33,6 +33,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait l'année de l'arène, rejouée à trois prix, chez six
  * entreprises. Il se joue chez NOVA seule, sur un trimestre : 4 778 enceintes demandées à 59 €,
  * autant mises en vente (toute la demande de N a été servie).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les achats, les demandes et les quantités échangées sont des
+ * quantités, entières, déclarées comme telles (elles attendaient l'unité exacte, à zéro près).
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -51,9 +55,6 @@ const QUANTITE_MINIMALE_DU_CURSEUR = 4_000;
 /** Les bornes du laboratoire : le prix, à l'euro. */
 const PRIX_ESSAYES = { min: 48, max: 66, pas: 1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
 /** « de » devant un nom : élidé devant une voyelle. */
 export const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** « que » devant un nom : élidé devant une voyelle. */
@@ -213,8 +214,8 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
       champs: (c) => {
         const s = saisonDuMarche(f(c));
         return [
-          { libelle: "Achats du semestre", attendu: s.total, calcul: `${s.mois.map((m) => qte(m.ventes)).join(" + ")} = ${qte(s.total)}`, tolerance: 0 },
-          { libelle: "Écart entre le mois le plus fort et le plus faible", attendu: s.ecart, calcul: `${qte(s.plusFort.ventes)} − ${qte(s.plusFaible.ventes)} = ${qte(s.ecart)}`, tolerance: 0 },
+          { libelle: "Achats du semestre", nature: "quantite", attendu: s.total, calcul: `${s.mois.map((m) => qte(m.ventes)).join(" + ")} = ${qte(s.total)}` },
+          { libelle: "Écart entre le mois le plus fort et le plus faible", nature: "quantite", attendu: s.ecart, calcul: `${qte(s.plusFort.ventes)} − ${qte(s.plusFaible.ventes)} = ${qte(s.ecart)}` },
         ];
       },
       explication: (c) => {
@@ -237,9 +238,9 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
       champs: (c) => {
         const m = marcheDuTrimestre(c);
         return [
-          { libelle: "Quantité échangée", attendu: m.echangee, calcul: `la plus petite de ${qte(m.demande)} et ${qte(m.offre)} : ${qte(m.echangee)}`, tolerance: 0 },
-          { libelle: "Demande non servie", attendu: m.nonServie, calcul: `${qte(m.demande)} − ${qte(m.echangee)} = ${qte(m.nonServie)}`, tolerance: 0 },
-          { libelle: "Offre non vendue", attendu: m.nonVendue, calcul: `${qte(m.offre)} − ${qte(m.echangee)} = ${qte(m.nonVendue)}`, tolerance: 0 },
+          { libelle: "Quantité échangée", nature: "quantite", attendu: m.echangee, calcul: `la plus petite de ${qte(m.demande)} et ${qte(m.offre)} : ${qte(m.echangee)}` },
+          { libelle: "Demande non servie", nature: "quantite", attendu: m.nonServie, calcul: `${qte(m.demande)} − ${qte(m.echangee)} = ${qte(m.nonServie)}` },
+          { libelle: "Offre non vendue", nature: "quantite", attendu: m.nonVendue, calcul: `${qte(m.offre)} − ${qte(m.echangee)} = ${qte(m.nonVendue)}` },
         ];
       },
       explication: (c) => {
@@ -313,8 +314,8 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
       champs: (c) => {
         const d = troisPrix(f(c));
         return [
-          { libelle: "Demande reçue en plus, au prix bas", attendu: d.demandeEnPlus, calcul: `${qte(d.bas.demande)} − ${qte(d.base.demande)} = ${qte(d.demandeEnPlus)}`, tolerance: 0 },
-          { libelle: "Quantité échangée en plus, au prix bas", attendu: d.echangeeEnPlus, calcul: `${qte(d.bas.echangee)} − ${qte(d.base.echangee)} = ${qte(d.echangeeEnPlus)}`, tolerance: 0 },
+          { libelle: "Demande reçue en plus, au prix bas", nature: "quantite", attendu: d.demandeEnPlus, calcul: `${qte(d.bas.demande)} − ${qte(d.base.demande)} = ${qte(d.demandeEnPlus)}` },
+          { libelle: "Quantité échangée en plus, au prix bas", nature: "quantite", attendu: d.echangeeEnPlus, calcul: `${qte(d.bas.echangee)} − ${qte(d.base.echangee)} = ${qte(d.echangeeEnPlus)}` },
         ];
       },
       explication: (c) => {

@@ -1,8 +1,8 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2, eur, nombreAuCentieme, pct, produit2, quotient2, somme2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
-import { ENTREPRISES_DES_PROJETS, LA_VALEUR_ACTUELLE_NETTE, gammeDuChapitre, premierPositif, toleranceDActualisation } from "../../chapitres/la-valeur-actuelle-nette";
+import { ENTREPRISES_DES_PROJETS, LA_VALEUR_ACTUELLE_NETTE, gammeDuChapitre, premierPositif } from "../../chapitres/la-valeur-actuelle-nette";
 import { auCentime } from "../../monde/amortissement";
-import { coefficientDActualisation, fluxDuProjet, van } from "../../monde/finance";
+import { coefficientAuDixMillieme, fluxDuProjet, vanAuxLignesArrondies } from "../../monde/finance";
 import type { Situation } from "../types";
 
 /**
@@ -23,6 +23,12 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * flux sont ceux de `fluxDuProjet`, arrêté plus tôt.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les VAN s'actualisent aux lignes arrondies, comme au chapitre ;
+ * ce qui manque se capitalise au coefficient du dix-millième (1,2950), le prix minimal en part au
+ * centime, et sa part de la valeur nette comptable à deux décimales (à 50 centimes, un euro et deux
+ * centièmes près, avant).
  */
 
 /** L'ARRÊT DU PROJET (hypothèse du cas) : l'atelier sera repris à la fin de N+3, pour une autre fabrication. */
@@ -33,12 +39,11 @@ export const PRIX_DE_LA_LIGNE_AU_CURSEUR = { min: 10_000 } as const;
 
 export type Verdict = "trois-ans-detruisent" | "trois-ans-creent";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
 const coef4 = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+const auCentieme = arrondi2;
 
 const calculs = new Map<string, ReturnType<typeof calculer>>();
 
@@ -56,17 +61,20 @@ function calculer(c: Pick<Cas, "code">) {
   const n = DUREE_AVANT_LA_REVENTE;
   const court = fluxDuProjet(x.p, { duree: n, tauxDeLImpot: x.k.impot });
   const unAnDePlus = fluxDuProjet(x.p, { duree: n + 1, tauxDeLImpot: x.k.impot });
-  const vanCourte = van(court.flux, x.t);
-  const vanUnAnDePlus = van(unAnDePlus.flux, x.t);
+  const vanCourte = vanAuxLignesArrondies(court.flux, x.t);
+  const vanUnAnDePlus = vanAuxLignesArrondies(unAnDePlus.flux, x.t);
   const [ligne, moules] = court.residuels;
   const actifLigne = x.p.actifs[0]!;
   // Le prix de cession de la ligne, levier du curseur : la VAN du projet raccourci est affine dans ce prix.
   const vanAuPrix = (prix: number) =>
-    van(fluxDuProjet({ ...x.p, actifs: x.p.actifs.map((a, i) => (i === 0 ? { ...a, tauxDeReprise: prix / ligne!.vnc } : a)) }, { duree: n, tauxDeLImpot: x.k.impot }).flux, x.t);
+    vanAuxLignesArrondies(fluxDuProjet({ ...x.p, actifs: x.p.actifs.map((a, i) => (i === 0 ? { ...a, tauxDeReprise: prix / ligne!.vnc } : a)) }, { duree: n, tauxDeLImpot: x.k.impot }).flux, x.t);
   // À rebours : la valeur résiduelle nette qui manque à la date n, puis le prix de cession qui la donne.
-  const manque = auCentime(-vanCourte / coefficientDActualisation(x.t, n));
-  const nettePourZero = auCentime(ligne!.nette + manque);
-  const prixMinimal = auCentime((nettePourZero - x.k.impot * ligne!.vnc) / (1 - x.k.impot));
+  // Chaque ligne arrondie : le coefficient de capitalisation au dix-millième (1,09^3 = 1,2950), ce qui
+  // manque au centime, puis le prix de cession sur ce manque.
+  const capitalisation = arrondi((1 + x.t) ** n, 4);
+  const manque = produit2(-vanCourte, capitalisation);
+  const nettePourZero = somme2(ligne!.nette, manque);
+  const prixMinimal = quotient2(somme2(nettePourZero, -auCentime(x.k.impot * ligne!.vnc)), 1 - x.k.impot);
   const verdict: Verdict = vanCourte <= 0 ? "trois-ans-detruisent" : "trois-ans-creent";
   return {
     x,
@@ -79,6 +87,7 @@ function calculer(c: Pick<Cas, "code">) {
     moules: moules!,
     actifLigne,
     vanAuPrix,
+    capitalisation,
     manque,
     nettePourZero,
     prixMinimal,
@@ -184,7 +193,7 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
         const r = revendrePlusTot(c);
         const n = r.n;
         const a = r.court.annees[n - 1]!;
-        const coefs = r.court.flux.map((_, d) => coefficientDActualisation(r.x.t, d));
+        const coefs = r.court.flux.map((_, d) => coefficientAuDixMillieme(r.x.t, d));
         const p = r.unAnDePlus;
         const b = p.annees[n]!;
         return [
@@ -197,13 +206,11 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
             libelle: `VAN du projet arrêté à la fin de N+${n}`,
             attendu: r.vanCourte,
             calcul: `${r.court.flux.map((f, d) => `${entre(f)} × ${coef4(coefs[d]!)}`).join(" + ")} = ${eur(r.vanCourte)}`,
-            tolerance: toleranceDActualisation(r.court.flux),
           },
           {
             libelle: `VAN du projet arrêté à la fin de N+${n + 1}`,
             attendu: r.vanUnAnDePlus,
             calcul: `la valeur résiduelle nette vaut ${eur(p.valeurResiduelle)} à la fin de N+${n + 1}, le BFR récupéré ${eur(p.recuperationDuBfr)} : flux de la date ${n + 1} = ${eur(b.fluxDExploitation)} + ${eur(p.valeurResiduelle)} + ${eur(p.recuperationDuBfr)}${p.variationsDuBfr[n] ? ` − ${entre(p.variationsDuBfr[n]!)}` : ""} = ${eur(p.flux[n + 1]!)}, la date ${n} gardant son flux de ${eur(p.flux[n]!)}, et la VAN ${eur(r.vanUnAnDePlus)}`,
-            tolerance: toleranceDActualisation(p.flux),
           },
         ];
       },
@@ -268,7 +275,7 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
       notions: ["depreciation", "discounting"],
       question: (c) => {
         const r = revendrePlusTot(c);
-        return `Retrouvez au centime le prix que le curseur a montré. Calculez ce qui manque à la valeur résiduelle nette, à la date ${r.n}, pour annuler la VAN, puis le prix de cession de la ligne qui le rendrait, et ce qu'il représente de sa valeur nette comptable.`;
+        return `Retrouvez au centime le prix que le curseur a montré. Calculez ce qui manque à la valeur résiduelle nette, à la date ${r.n}, pour annuler la VAN, puis le prix de cession de la ligne qui le rendrait, et ce qu'il représente de sa valeur nette comptable. Le coefficient de capitalisation se lit au dix-millième.`;
       },
       champs: (c) => {
         const r = revendrePlusTot(c);
@@ -277,20 +284,17 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
           {
             libelle: `Valeur résiduelle nette qui manque à la date ${r.n}`,
             attendu: r.manque,
-            calcul: `${eur(-r.vanCourte)} × (1 + ${pct(r.x.tauxPct)})^${r.n} = ${eur(r.manque)}`,
-            tolerance: 0.5,
+            calcul: `${eur(-r.vanCourte)} × (1 + ${pct(r.x.tauxPct)})^${r.n} = ${eur(-r.vanCourte)} × ${coef4(r.capitalisation)} = ${eur(r.manque)}`,
           },
           {
             libelle: "Prix de cession minimal de la ligne",
             attendu: r.prixMinimal,
             calcul: `la valeur résiduelle nette vaut prix × (1 − ${pct(t * 100)}) + ${pct(t * 100)} × ${eur(r.ligne.vnc)} ; il la faut à ${eur(r.ligne.nette)} + ${eur(r.manque)} = ${eur(r.nettePourZero)} : (${eur(r.nettePourZero)} − ${eur(auCentime(t * r.ligne.vnc))}) ÷ ${qte(1 - t)} = ${eur(r.prixMinimal)}`,
-            tolerance: 1,
           },
           {
             libelle: "Part de la valeur nette comptable (%)",
             attendu: r.partMinimale,
-            calcul: `${eur(r.prixMinimal)} ÷ ${eur(r.ligne.vnc)} = ${pct(r.partMinimale)}`,
-            tolerance: 0.02,
+            calcul: `${eur(r.prixMinimal)} ÷ ${eur(r.ligne.vnc)} × 100 = ${pct(r.partMinimale)}`,
           },
         ];
       },

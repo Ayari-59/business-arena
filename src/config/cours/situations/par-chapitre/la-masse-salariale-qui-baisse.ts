@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { indicateursSociaux } from "../../chapitres/indicateurs-sociaux";
 import { ENTREPRISES_DES_RESSOURCES_HUMAINES, FICHE_RH } from "../../monde/ressources-humaines-de-nova";
@@ -19,13 +19,16 @@ import type { Situation } from "../types";
  *
  * CE QUI A CHANGÉ. Le cas lisait l'année de l'arène aux salaires baissés ; il se joue chez NOVA :
  * 5 325 € de salaires non versés, pour 27 300 € de marge perdue et 3 000 € de recrutement.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'évolution de la masse salariale se donne à deux décimales (au
+ * dixième, avant), l'effectif moyen est une grandeur au centième, les enceintes perdues une quantité ;
+ * les montants attendent le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
+const auCentieme = arrondi2;
 
 /** Le tableau de bord du chapitre, et ce que la masse salariale en dit. */
 export function masseQuiBaisse(_c?: Cas) {
@@ -34,10 +37,10 @@ export function masseQuiBaisse(_c?: Cas) {
   return {
     s,
     baisse,
-    evolutionDeLaMasse: auDixieme((s.masse / s.masseDuPlan - 1) * 100),
+    evolutionDeLaMasse: arrondi2((s.masse / s.masseDuPlan - 1) * 100),
     effectifDuPlan: FICHE_RH.plan.operateurs,
-    evolutionDeLEffectif: auDixieme((s.effectifMoyen / FICHE_RH.plan.operateurs - 1) * 100),
-    marge: Math.round((s.margePerdue / s.ventesPerdues) * 100) / 100,
+    evolutionDeLEffectif: arrondi2((s.effectifMoyen / FICHE_RH.plan.operateurs - 1) * 100),
+    marge: arrondi2(s.margePerdue / s.ventesPerdues),
     /** Ce que le départ a coûté, une fois retirés les salaires qu'il n'a pas fallu verser. */
     coutNet: s.coutDuDepart,
   };
@@ -96,13 +99,13 @@ export const LA_MASSE_SALARIALE_QUI_BAISSE: Situation = {
       type: "montants",
       titre: "La masse salariale et l'effectif",
       notions: ["payroll", "dashboard"],
-      question: () => "Calculez la baisse de la masse salariale face au prévu, son évolution en pourcentage (au dixième), puis l'effectif moyen de l'année (mois de salaire payés ÷ 12, au centième).",
+      question: () => "Calculez la baisse de la masse salariale face au prévu, son évolution en pourcentage (à deux décimales), puis l'effectif moyen de l'année (mois de salaire payés ÷ 12, au centième).",
       champs: () => {
         const k = masseQuiBaisse();
         return [
-          { libelle: "Baisse de la masse salariale", attendu: k.baisse, calcul: `${eur(k.s.masseDuPlan)} − ${eur(k.s.masse)} = ${eur(k.baisse)}`, tolerance: 1 },
-          { libelle: "Évolution de la masse salariale (%)", attendu: k.evolutionDeLaMasse, calcul: `(${eur(k.s.masse)} − ${eur(k.s.masseDuPlan)}) ÷ ${eur(k.s.masseDuPlan)} × 100 = ${pct(k.evolutionDeLaMasse)}`, tolerance: 0.1 },
-          { libelle: "Effectif moyen de l'année", attendu: k.s.effectifMoyenAuCentieme, calcul: `${qte(k.s.moisPayes)} ÷ 12 = ${qte(k.s.effectifMoyenAuCentieme)}`, tolerance: 0.01 },
+          { libelle: "Baisse de la masse salariale", attendu: k.baisse, calcul: `${eur(k.s.masseDuPlan)} − ${eur(k.s.masse)} = ${eur(k.baisse)}` },
+          { libelle: "Évolution de la masse salariale (%)", attendu: k.evolutionDeLaMasse, calcul: `(${eur(k.s.masse)} − ${eur(k.s.masseDuPlan)}) ÷ ${eur(k.s.masseDuPlan)} × 100 = ${pct(k.evolutionDeLaMasse)}` },
+          { libelle: "Effectif moyen de l'année", nature: "grandeur", attendu: k.s.effectifMoyenAuCentieme, calcul: `${qte(k.s.moisPayes)} ÷ 12 = ${qte(k.s.effectifMoyenAuCentieme)}` },
         ];
       },
       explication: () => {
@@ -124,9 +127,9 @@ export const LA_MASSE_SALARIALE_QUI_BAISSE: Situation = {
       champs: () => {
         const k = masseQuiBaisse();
         return [
-          { libelle: "Enceintes perdues", attendu: k.s.ventesPerdues, calcul: `${qte(k.s.trimestres.reduce((t, x) => t + x.ventesDuPlan, 0))} − ${qte(k.s.trimestres.reduce((t, x) => t + x.ventes, 0))} = ${qte(k.s.ventesPerdues)}`, tolerance: 0 },
-          { libelle: "Marge perdue", attendu: k.s.margePerdue, calcul: `${qte(k.s.ventesPerdues)} × ${eur(k.marge)} = ${eur(k.s.margePerdue)}`, tolerance: 1 },
-          { libelle: "Coût du départ", attendu: k.coutNet, calcul: `${eur(k.s.margePerdue)} + ${eur(k.s.recrutement)} − ${eur(k.baisse)} = ${eur(k.coutNet)}`, tolerance: 1 },
+          { libelle: "Enceintes perdues", nature: "quantite", attendu: k.s.ventesPerdues, calcul: `${qte(k.s.trimestres.reduce((t, x) => t + x.ventesDuPlan, 0))} − ${qte(k.s.trimestres.reduce((t, x) => t + x.ventes, 0))} = ${qte(k.s.ventesPerdues)}` },
+          { libelle: "Marge perdue", attendu: k.s.margePerdue, calcul: `${qte(k.s.ventesPerdues)} × ${eur(k.marge)} = ${eur(k.s.margePerdue)}` },
+          { libelle: "Coût du départ", attendu: k.coutNet, calcul: `${eur(k.s.margePerdue)} + ${eur(k.s.recrutement)} − ${eur(k.baisse)} = ${eur(k.coutNet)}` },
         ];
       },
       explication: () => {

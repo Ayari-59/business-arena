@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { ENTREPRISES_DE_LA_DIRECTION } from "./direction-de-nova";
 import { VENTES_DES_PARTICULIERS } from "./nova-gestion";
@@ -34,7 +35,7 @@ const COMMANDES_DE_JUIN = VENTES_DES_PARTICULIERS[5];
 export function adressesDeJanvier() {
   const commandes = COMMANDES_DE_JANVIER;
   const colis = COLIS_REVENUS.janvier;
-  return { commandes, colis, tauxPct: Math.round((colis / commandes) * 1_000) / 10, cout: auCentime(colis * COUT_D_UN_COLIS_REVENU) };
+  return { commandes, colis, tauxPct: arrondi2((colis / commandes) * 100), cout: auCentime(colis * COUT_D_UN_COLIS_REVENU) };
 }
 
 /** Ce que coûtent, en un mois, les adresses fausses de n commandes, au taux de janvier. */

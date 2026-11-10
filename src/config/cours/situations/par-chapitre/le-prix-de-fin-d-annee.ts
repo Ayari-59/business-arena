@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { dE, rang } from "../../chapitres/l-offre-et-la-demande";
 import {
@@ -30,13 +30,15 @@ import type { Situation } from "../types";
  *
  * Le cas est neuf par sa question : le chapitre cherche le prix du 1er trimestre ; la fin d'année a sa
  * propre demande (la saison) et sa propre offre, et donc son propre prix.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'écart entre la demande et l'offre est une quantité, entière,
+ * déclarée comme telle (il attendait l'unité exacte, à zéro près).
  */
 
 /** Le trimestre du cas : le 4e, la fin d'année. */
 export const TRIMESTRE_DE_FIN_D_ANNEE = 4 as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR");
 
 export const prixDeFinDAnnee = (c: Cas) => chercherLePrix(c, TRIMESTRE_DE_FIN_D_ANNEE);
 
@@ -96,8 +98,8 @@ export const LE_PRIX_DE_FIN_D_ANNEE: Situation = {
       champs: (c) => {
         const p = prixDeFinDAnnee(c);
         return [
-          { libelle: `Demande − offre, à ${eur(p.depart.prix)}`, attendu: ecartDemandeOffre(p.depart), calcul: calculDeLEcart(p.depart), tolerance: 0 },
-          { libelle: `Demande − offre, à ${eur(p.dernier.prix)}`, attendu: ecartDemandeOffre(p.dernier), calcul: calculDeLEcart(p.dernier), tolerance: 0 },
+          { libelle: `Demande − offre, à ${eur(p.depart.prix)}`, nature: "quantite", attendu: ecartDemandeOffre(p.depart), calcul: calculDeLEcart(p.depart) },
+          { libelle: `Demande − offre, à ${eur(p.dernier.prix)}`, nature: "quantite", attendu: ecartDemandeOffre(p.dernier), calcul: calculDeLEcart(p.dernier) },
         ];
       },
       explication: (c) => {
@@ -117,7 +119,7 @@ export const LE_PRIX_DE_FIN_D_ANNEE: Situation = {
       },
       champs: (c) => {
         const p = prixDeFinDAnnee(c);
-        return [{ libelle: `Demande − offre, à ${eur(p.milieu.prix)}`, attendu: ecartDemandeOffre(p.milieu), calcul: calculDeLEcart(p.milieu), tolerance: 0 }];
+        return [{ libelle: `Demande − offre, à ${eur(p.milieu.prix)}`, nature: "quantite", attendu: ecartDemandeOffre(p.milieu), calcul: calculDeLEcart(p.milieu) }];
       },
       explication: (c) => {
         const p = prixDeFinDAnnee(c);

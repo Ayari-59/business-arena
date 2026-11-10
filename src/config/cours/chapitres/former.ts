@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { MOIS_PAR_TRIMESTRE } from "../monde/nova-capacite";
 import {
@@ -32,10 +32,13 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre rejouait l'année de l'arène avec un budget de formation, dont le
  * moteur tirait un gain de productivité ; il chiffre maintenant un stage chez NOVA : 3 200 €,
  * 800 enceintes de plus, 13 600 € gagnés dans l'année.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes montées et vendues sont des quantités, entières ;
+ * une capacité par mois s'écrit à deux décimales puis s'arrondit à l'unité inférieure, que le corrigé
+ * nomme. La marge, le coût et le gain attendent le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const minutes = (m: number) => `${qte(m)} minute${m > 1 ? "s" : ""}`;
 
@@ -51,8 +54,8 @@ export function formation(_c?: Cas, minutesApres?: number) {
     embauche,
     enceintesDeLEmbauche,
     coutDeLEmbauche: embauche.coutDeLaRecrue,
-    coutParEnceinteFormee: f.enceintesEnPlus > 0 ? Math.round((f.cout / f.enceintesEnPlus) * 100) / 100 : 0,
-    coutParEnceinteEmbauche: enceintesDeLEmbauche > 0 ? Math.round((embauche.coutDeLaRecrue / enceintesDeLEmbauche) * 100) / 100 : 0,
+    coutParEnceinteFormee: f.enceintesEnPlus > 0 ? arrondi2(f.cout / f.enceintesEnPlus) : 0,
+    coutParEnceinteEmbauche: enceintesDeLEmbauche > 0 ? arrondi2(embauche.coutDeLaRecrue / enceintesDeLEmbauche) : 0,
     /** Le plus haut coût du stage par opérateur, à l'euro, que la marge gagnée paie encore. */
     coutMaximalParOperateur: Math.floor(f.margeEnPlus / f.operateurs + 1e-9),
   };
@@ -124,10 +127,15 @@ export const FORMER: Chapitre = {
       champs: (c) => {
         const f = formation(c);
         return [
-          { libelle: `Par opérateur et par mois (${c.unites})`, attendu: f.parMois, calcul: `${qte(f.heuresParMois * 60)} ÷ ${qte(f.minutes)} = ${qte(f.parMois)}`, tolerance: 0 },
-          { libelle: `Capacité de l'équipe par trimestre (${c.unites})`, attendu: f.equipe, calcul: `${qte(f.parMois)} × ${f.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(f.equipe)}`, tolerance: 0 },
-          { libelle: `Ventes en plus dans l'année (${c.unites})`, attendu: f.enceintesEnPlus, calcul: `${qte(f.joue.production)} − ${qte(f.sansFormation.production)} = ${qte(f.enceintesEnPlus)}`, tolerance: 0 },
-          { libelle: "Marge gagnée", attendu: f.margeEnPlus, calcul: `${qte(f.enceintesEnPlus)} × ${eur(f.marge)} = ${eur(f.margeEnPlus)}`, tolerance: 1 },
+          {
+            libelle: `Par opérateur et par mois (${c.unites})`,
+            nature: "quantite",
+            attendu: f.parMois,
+            calcul: `${qte(f.heuresParMois * 60)} ÷ ${qte(f.minutes)} = ${Number.isInteger(arrondi2((f.heuresParMois * 60) / f.minutes)) ? qte(f.parMois) : `${nombreAuCentieme((f.heuresParMois * 60) / f.minutes)}, soit ${qte(f.parMois)} à l'unité inférieure : une enceinte commencée n'est pas montée`}`,
+          },
+          { libelle: `Capacité de l'équipe par trimestre (${c.unites})`, nature: "quantite", attendu: f.equipe, calcul: `${qte(f.parMois)} × ${f.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(f.equipe)}` },
+          { libelle: `Ventes en plus dans l'année (${c.unites})`, nature: "quantite", attendu: f.enceintesEnPlus, calcul: `${qte(f.joue.production)} − ${qte(f.sansFormation.production)} = ${qte(f.enceintesEnPlus)}` },
+          { libelle: "Marge gagnée", attendu: f.margeEnPlus, calcul: `${qte(f.enceintesEnPlus)} × ${eur(f.marge)} = ${eur(f.margeEnPlus)}` },
         ];
       },
       explication: (c) => {
@@ -147,8 +155,8 @@ export const FORMER: Chapitre = {
       champs: (c) => {
         const f = formation(c);
         return [
-          { libelle: "Coût du stage", attendu: f.cout, calcul: `${f.minutesGagnees} × ${eur(COUT_D_UNE_MINUTE_GAGNEE_PAR_OPERATEUR)} × ${f.operateurs} = ${eur(f.cout)}`, tolerance: 1 },
-          { libelle: "Ce que le stage rapporte dans l'année", attendu: f.gain, calcul: `${eur(f.margeEnPlus)} − ${eur(f.cout)} = ${eur(f.gain)}`, tolerance: 1 },
+          { libelle: "Coût du stage", attendu: f.cout, calcul: `${f.minutesGagnees} × ${eur(COUT_D_UNE_MINUTE_GAGNEE_PAR_OPERATEUR)} × ${f.operateurs} = ${eur(f.cout)}` },
+          { libelle: "Ce que le stage rapporte dans l'année", attendu: f.gain, calcul: `${eur(f.margeEnPlus)} − ${eur(f.cout)} = ${eur(f.gain)}` },
         ];
       },
       explication: (c) => {

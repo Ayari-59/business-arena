@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ficheDe } from "../../chapitres/couts-ou-differenciation";
 import { LIRE_LA_STRATEGIE_DES_CONCURRENTS, NOMS_DES_STRATEGIES_LUES, dE, strategiesDesConcurrents } from "../../chapitres/lire-la-strategie-des-concurrents";
@@ -21,18 +21,24 @@ import type { Situation } from "../types";
  * (le volume que la qualité retient, le coût de la gamme), retrouve au curseur les ventes qu'il faut
  * à la place pour égaler aujourd'hui, et répond. La bonne réponse n'est pas « y aller » ou « rester »
  * seulement : y aller en y amenant la qualité ; le distracteur chiffré est « y placer son prix ».
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la variation du prix se donne à deux décimales (au dixième,
+ * avant), l'indice de prix de la place aussi (à l'unité, avant) ; les ventes sont des quantités, la
+ * part du trimestre écrite à deux décimales puis arrondie à l'enceinte ; les résultats et les écarts
+ * attendent le centime (à l'euro près, avant).
  */
 
 /** Les bornes du curseur : les ventes de l'année à la place, avec la gamme soignée. */
 export const VENTES_DU_CURSEUR_DE_LA_PLACE = { min: 12_000, max: 22_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${qte(Math.round(x * 10_000) / 100)} %`;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
+/** Une part (0,3314) écrite en pourcentage, à deux décimales. */
+const pct = (x: number) => pourcent(arrondi2(x * 100));
 const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n });
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 
 export type ReponseALaDirectrice = "avec-la-qualite" | "prix-seul" | "rester";
@@ -73,9 +79,9 @@ export function espaceLibre(c: Pick<Cas, "code">) {
     attractiviteSeul: tSeul.attractivite,
     attractiviteAvec: tAvec.attractivite,
     attractivitesDesConcurrents: desConcurrents,
-    partSeul: Math.round(tSeul.part * 10_000) / 100,
-    partAvec: Math.round(tAvec.part * 10_000) / 100,
-    variation: auDixieme(x.variationDuPrix * 100),
+    partSeul: arrondi2(tSeul.part * 100),
+    partAvec: arrondi2(tAvec.part * 100),
+    variation: arrondi2(x.variationDuPrix * 100),
     indiceDeLaPlace: x.indiceDePrixDeLaPlace,
     lectureSeul: k.carteAuPrixSeul.nova,
     lectureAvec: k.carteALaPlace.nova,
@@ -150,16 +156,16 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
       notions: ["segmentation", "price_elasticity"],
       question: (c) => {
         const e = espaceLibre(c);
-        return `Donnez le prix de la place (la moyenne des prix des deux voisines), ce qu'il change au prix ${dE(e.f.entreprise)}, en pourcentage au dixième, l'indice de prix qu'il donnerait au prix moyen d'aujourd'hui, et la qualité de la place (la moyenne de leurs qualités perçues).`;
+        return `Donnez le prix de la place (la moyenne des prix des deux voisines), ce qu'il change au prix ${dE(e.f.entreprise)}, en pourcentage à deux décimales, l'indice de prix qu'il donnerait au prix moyen d'aujourd'hui, à deux décimales, et la qualité de la place (la moyenne de leurs qualités perçues).`;
       },
       champs: (c) => {
         const e = espaceLibre(c);
         const p = e.place;
         return [
           { libelle: "Prix de la place", attendu: p.prix, calcul: `(${eur(p.entre.bas.prix)} + ${eur(p.entre.haut.prix)}) ÷ 2 = ${eur(p.prix)}` },
-          { libelle: "Variation du prix (%)", attendu: e.variation, calcul: `(${eur(p.prix)} ÷ ${eur(e.aujourdhui.offre.prix)} − 1) × 100 = ${qte(e.variation)} %`, tolerance: 0.1 },
-          { libelle: "Indice de prix de la place", attendu: e.indiceDeLaPlace, calcul: `${eur(p.prix)} ÷ ${eur(e.k.carte.prixMoyen)} × 100 = ${qte(e.indiceDeLaPlace)}`, tolerance: 1 },
-          { libelle: "Qualité de la place", attendu: p.qualite, calcul: `(${dec(p.entre.bas.qualite)} + ${dec(p.entre.haut.qualite)}) ÷ 2 = ${dec(p.qualite)}` },
+          { libelle: "Variation du prix (%)", attendu: e.variation, calcul: `(${eur(p.prix)} ÷ ${eur(e.aujourdhui.offre.prix)} − 1) × 100 = ${pourcent(e.variation)}` },
+          { libelle: "Indice de prix de la place", nature: "grandeur", attendu: e.indiceDeLaPlace, calcul: `${eur(p.prix)} ÷ ${eur(e.k.carte.prixMoyen)} × 100 = ${qte(e.indiceDeLaPlace)}` },
+          { libelle: "Qualité de la place", nature: "grandeur", attendu: p.qualite, calcul: `(${dec(p.entre.bas.qualite)} + ${dec(p.entre.haut.qualite)}) ÷ 2 = ${dec(p.qualite)}` },
         ];
       },
       explication: (c) => {
@@ -190,12 +196,12 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
           },
           {
             libelle: "Ventes de l'année par le seul prix",
+            nature: "quantite",
             attendu: s.ventes,
-            calcul: `${qte(e.partSeul)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(s.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(s.ventes)}`,
-            tolerance: 0,
+            calcul: `${qte(e.partSeul)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(arrondi2((e.partSeul * e.f.marche.parTrimestre) / 100))}, arrondi à ${qte(s.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(s.ventes)}`,
           },
-          { libelle: "Résultat par le seul prix", attendu: s.resultat, calcul: `${qte(s.ventes)} × (${eur(s.offre.prix)} − ${eur(s.coutVariable)}) − ${eur(s.charges)} = ${eur(s.resultat)}`, tolerance: 1 },
-          { libelle: "Écart avec aujourd'hui, par le seul prix", attendu: e.ecartSeul, calcul: `${eur(s.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartSeul)}`, tolerance: 1 },
+          { libelle: "Résultat par le seul prix", attendu: s.resultat, calcul: `${qte(s.ventes)} × (${eur(s.offre.prix)} − ${eur(s.coutVariable)}) − ${eur(s.charges)} = ${eur(s.resultat)}` },
+          { libelle: "Écart avec aujourd'hui, par le seul prix", attendu: e.ecartSeul, calcul: `${eur(s.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartSeul)}` },
         ];
       },
       explication: (c) => {
@@ -227,12 +233,12 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
           },
           {
             libelle: "Ventes de l'année avec la qualité",
+            nature: "quantite",
             attendu: v.ventes,
-            calcul: `${qte(e.partAvec)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(v.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(v.ventes)}`,
-            tolerance: 0,
+            calcul: `${qte(e.partAvec)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(arrondi2((e.partAvec * e.f.marche.parTrimestre) / 100))}, arrondi à ${qte(v.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(v.ventes)}`,
           },
-          { libelle: "Résultat avec la qualité", attendu: v.resultat, calcul: `${qte(v.ventes)} × (${eur(v.offre.prix)} − ${eur(v.coutVariable)}) − ${eur(v.charges)} = ${eur(v.resultat)}`, tolerance: 1 },
-          { libelle: "Écart avec aujourd'hui, avec la qualité", attendu: e.ecartAvec, calcul: `${eur(v.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartAvec)}`, tolerance: 1 },
+          { libelle: "Résultat avec la qualité", attendu: v.resultat, calcul: `${qte(v.ventes)} × (${eur(v.offre.prix)} − ${eur(v.coutVariable)}) − ${eur(v.charges)} = ${eur(v.resultat)}` },
+          { libelle: "Écart avec aujourd'hui, avec la qualité", attendu: e.ecartAvec, calcul: `${eur(v.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartAvec)}` },
         ];
       },
       explication: (c) => {
@@ -259,19 +265,16 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
             libelle: "Effet des ventes retenues par la qualité",
             attendu: e.effetDuVolume,
             calcul: `(${qte(e.avec.ventes)} − ${qte(e.seul.ventes)}) × ${eur(e.avec.margeUnitaire)} = ${eur(e.effetDuVolume)}`,
-            tolerance: 1,
           },
           {
             libelle: "Effet du coût de la gamme",
             attendu: e.effetDeLaGamme,
             calcul: `(${eur(e.avec.margeUnitaire)} − ${eur(e.seul.margeUnitaire)}) × ${qte(e.seul.ventes)} = ${eur(e.effetDeLaGamme)}`,
-            tolerance: 1,
           },
           {
             libelle: "Écart entre les deux façons d'y aller",
             attendu: e.ecartEntreLesDeux,
             calcul: `${eur(e.effetDuVolume)} + ${entre(e.effetDeLaGamme)}${e.effetDesBudgets !== 0 ? ` + ${entre(e.effetDesBudgets)}` : ""} = ${eur(e.ecartEntreLesDeux)}, soit ${eur(e.avec.resultat)} − ${entre(e.seul.resultat)}`,
-            tolerance: 1,
           },
         ];
       },

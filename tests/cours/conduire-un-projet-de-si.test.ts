@@ -45,8 +45,8 @@ describe("planning, marge, coût et recette", () => {
     expect(e.defi(undefined as never).solution).toEqual({ retard: 6 });
   });
 
-  it("l'écart de coût : 11 050 €, 13 000 €, 1 950 €, 17,6 %", () => {
-    expect(attendusT(CH, "l-ecart-de-cout")).toEqual([11_050, 13_000, 1_950, 17.6]);
+  it("l'écart de coût : 11 050 €, 13 000 €, 1 950 €, 17,65 %", () => {
+    expect(attendusT(CH, "l-ecart-de-cout")).toEqual([11_050, 13_000, 1_950, 17.65]);
     expect(ecartDuBudget().finReelle).toBe(26);
   });
 

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   ENTREPRISES_DU_PROJET,
@@ -26,11 +26,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA, qui met en place le PGI en nuage de « Le processus
  * et le PGI » : monde/projet-pgi-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'écart en pourcentage du prévu se donne à deux décimales, à un
+ * centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const jours = (n: number) => `${qte(n)} jour${Math.abs(n) >= 2 ? "s" : ""}`;
 const lettreDe = (code: string) => TACHES.find((t) => t.code === code)!.lettre;
 
@@ -200,7 +201,7 @@ export const CONDUIRE_UN_PROJET_DE_SI: Chapitre = {
           { libelle: "Coût prévu", attendu: k.prevu, calcul: `${qte(k.joursPrevus)} × ${eur(INTEGRATEUR.parJour)} = ${eur(k.prevu)}` },
           { libelle: "Coût réel", attendu: k.reel, calcul: `${qte(k.joursReels)} × ${eur(INTEGRATEUR.parJour)} = ${eur(k.reel)}` },
           { libelle: "Écart", attendu: k.ecart, calcul: `${eur(k.reel)} − ${eur(k.prevu)} = ${eur(k.ecart)}` },
-          { libelle: "Écart en % du prévu", attendu: k.ecartPct, tolerance: 0.1, calcul: `${eur(k.ecart)} ÷ ${eur(k.prevu)} × 100 = ${pct(k.ecartPct)}` },
+          { libelle: "Écart en % du prévu", attendu: k.ecartPct, calcul: `${eur(k.ecart)} ÷ ${eur(k.prevu)} × 100 = ${pct(k.ecartPct)}` },
         ];
       },
       explication: () => {

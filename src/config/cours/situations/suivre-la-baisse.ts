@@ -1,5 +1,4 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2, arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { BAISSE_DE_PRIX, POURQUOI_PRIX_COUT_MARGE, prixCoutMarge } from "../chapitres/prix-cout-marge";
@@ -19,11 +18,14 @@ import type { Situation } from "./types";
  * « Le seuil de rentabilité », que la situation reprend dans un ordre que l'élève
  * doit trouver seul. Les chiffres sont ceux du mois de janvier de NOVA (monde/gestion-et-information.ts), et la
  * baisse étudiée est celle du chapitre « Prix, coût et marge » (BAISSE_DE_PRIX).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la baisse de la marge et la hausse des ventes se donnent à deux
+ * décimales (au dixième, avant) ; les unités à vendre et le seuil sont des quantités, écrites d'abord
+ * à deux décimales puis arrondies à l'unité supérieure, que le corrigé nomme ; la marge et le résultat
+ * du mois, au centime (à l'euro près, avant).
  */
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function baisseDuConcurrent(c: Cas) {
@@ -34,7 +36,7 @@ export function baisseDuConcurrent(c: Cas) {
   const quantiteNecessaire =
     m.margeBaissee > 0 ? Math.ceil(m.margeDuMois / m.margeBaissee - 1e-9) : null;
   const hausse =
-    quantiteNecessaire !== null ? auDixieme((quantiteNecessaire / m.quantite - 1) * 100) : null;
+    quantiteNecessaire !== null ? arrondi2((quantiteNecessaire / m.quantite - 1) * 100) : null;
   const seuilApres =
     m.margeBaissee > 0 ? Math.ceil(m.chargesFixes / m.margeBaissee - 1e-9) : null;
   return {
@@ -104,8 +106,8 @@ export const SUIVRE_LA_BAISSE: Situation = {
         const m = baisseDuConcurrent(c);
         return [
           { libelle: "Marge d'une unité", attendu: m.marge, calcul: `${eur(m.prix)} − (${eur(m.matiere)} + ${eur(m.autres)}) = ${eur(m.marge)}` },
-          { libelle: "Marge du mois", attendu: m.margeDuMois, calcul: `${eur(m.marge)} × ${qte(m.quantite)} = ${eur(m.margeDuMois)}`, tolerance: 1 },
-          { libelle: "Résultat du mois", attendu: m.resultat, calcul: `${eur(m.margeDuMois)} − ${eur(m.chargesFixes)} = ${eur(m.resultat)}`, tolerance: 1 },
+          { libelle: "Marge du mois", attendu: m.margeDuMois, calcul: `${eur(m.marge)} × ${qte(m.quantite)} = ${eur(m.margeDuMois)}` },
+          { libelle: "Résultat du mois", attendu: m.resultat, calcul: `${eur(m.margeDuMois)} − ${eur(m.chargesFixes)} = ${eur(m.resultat)}` },
         ];
       },
       explication: (c) => {
@@ -123,13 +125,13 @@ export const SUIVRE_LA_BAISSE: Situation = {
       titre: "Avec un prix plus bas",
       notions: ["margin_rates"],
       question: () =>
-        `Si l'entreprise suit la baisse de ${pct(BAISSE_DE_PRIX * 100)}, que devient le prix d'une unité, et sa marge ? De combien la marge d'une unité baisse-t-elle, en pourcentage, au dixième ?`,
+        `Si l'entreprise suit la baisse de ${pct(BAISSE_DE_PRIX * 100)}, que devient le prix d'une unité, et sa marge ? De combien la marge d'une unité baisse-t-elle, en pourcentage, à deux décimales ?`,
       champs: (c) => {
         const m = baisseDuConcurrent(c);
         return [
           { libelle: "Nouveau prix", attendu: m.prixBaisse, calcul: `${eur(m.prix)} × (1 − ${pct(BAISSE_DE_PRIX * 100)}) = ${eur(m.prixBaisse)}` },
           { libelle: "Nouvelle marge d'une unité", attendu: m.margeBaissee, calcul: `${eur(m.prixBaisse)} − ${eur(m.cout)} = ${eur(m.margeBaissee)}` },
-          { libelle: "Baisse de la marge d'une unité (%)", attendu: m.baisseDeLaMarge, calcul: `(${eur(m.marge)} − ${eur(m.margeBaissee)}) ÷ ${eur(m.marge)} × 100 = ${pct(m.baisseDeLaMarge)}`, tolerance: 0.1 },
+          { libelle: "Baisse de la marge d'une unité (%)", attendu: m.baisseDeLaMarge, calcul: `(${eur(m.marge)} − ${eur(m.margeBaissee)}) ÷ ${eur(m.marge)} × 100 = ${pct(m.baisseDeLaMarge)}` },
         ];
       },
       explication: (c) => {
@@ -146,12 +148,17 @@ export const SUIVRE_LA_BAISSE: Situation = {
       notions: ["breakeven"],
       si: vendable,
       question: () =>
-        "Pour garder la même marge du mois, donc le même résultat, combien d'unités faudrait-il vendre au nouveau prix (à l'unité supérieure) ? Quelle hausse des ventes cela représente-t-il, en pourcentage, au dixième ?",
+        "Pour garder la même marge du mois, donc le même résultat, combien d'unités faudrait-il vendre au nouveau prix (à l'unité supérieure) ? Quelle hausse des ventes cela représente-t-il, en pourcentage, à deux décimales ?",
       champs: (c) => {
         const m = baisseDuConcurrent(c);
         return [
-          { libelle: "Unités à vendre", attendu: m.quantiteNecessaire!, calcul: `${eur(m.margeDuMois)} ÷ ${eur(m.margeBaissee)}, arrondi à l'unité supérieure = ${qte(m.quantiteNecessaire!)}` },
-          { libelle: "Hausse des ventes (%)", attendu: m.hausse!, calcul: `(${qte(m.quantiteNecessaire!)} ÷ ${qte(m.quantite)} − 1) × 100 = ${pct(m.hausse!)}`, tolerance: 0.1 },
+          {
+            libelle: "Unités à vendre",
+            nature: "quantite",
+            attendu: m.quantiteNecessaire!,
+            calcul: `${eur(m.margeDuMois)} ÷ ${eur(m.margeBaissee)} = ${nombreAuCentieme(quotient2(m.margeDuMois, m.margeBaissee))}, soit ${qte(m.quantiteNecessaire!)} à l'unité supérieure : une de moins ne garderait pas la marge du mois`,
+          },
+          { libelle: "Hausse des ventes (%)", attendu: m.hausse!, calcul: `(${qte(m.quantiteNecessaire!)} ÷ ${qte(m.quantite)} − 1) × 100 = ${pct(m.hausse!)}` },
         ];
       },
       explication: (c) => {
@@ -172,7 +179,12 @@ export const SUIVRE_LA_BAISSE: Situation = {
       champs: (c) => {
         const m = baisseDuConcurrent(c);
         return [
-          { libelle: "Seuil de rentabilité (unités)", attendu: m.seuilApres!, calcul: `${eur(m.chargesFixes)} ÷ ${eur(m.margeBaissee)}, arrondi à l'unité supérieure = ${qte(m.seuilApres!)}` },
+          {
+            libelle: "Seuil de rentabilité (unités)",
+            nature: "quantite",
+            attendu: m.seuilApres!,
+            calcul: `${eur(m.chargesFixes)} ÷ ${eur(m.margeBaissee)} = ${nombreAuCentieme(quotient2(m.chargesFixes, m.margeBaissee))}, soit ${qte(m.seuilApres!)} à l'unité supérieure : une de moins ne couvrirait pas les charges fixes`,
+          },
         ];
       },
       explication: (c) => {

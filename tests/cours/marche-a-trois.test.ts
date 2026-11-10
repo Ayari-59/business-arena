@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MARCHE_A_TROIS, MARCHES_DU_COURS, type FicheDuMarche } from "../../src/config/cours/monde/marche-a-trois";
 import { QUALITE } from "../../src/config/cours/monde/nova-capacite";
 import { AUTRES_COUTS_PAR_ENCEINTE, CAPACITE_DU_TRIMESTRE, CHARGES_FIXES_DU_MOIS, COMPOSANTS_PAR_ENCEINTE, PRIX_DE_L_ENCEINTE } from "../../src/config/cours/monde/nova-gestion";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import {
   allerDansLEspaceLibre,
   anneeAvec,
@@ -420,17 +421,18 @@ describe("la carte du marché et l'espace libre", () => {
     expect(c.qualiteMoyenne).toBe(1.08);
   });
 
-  it("les indices et les lectures : NOVA (99, 93) intermédiaire, SoundBox (86, 83) les coûts, Auris (133, 124) la différenciation", () => {
+  it("les indices et les lectures : NOVA (99,48, 92,59) intermédiaire, SoundBox (85,99, 83,33) les coûts, Auris (133,2, 124,07) la différenciation", () => {
+    // Les indices à deux décimales (décision du propriétaire, 10 novembre 2026) : ils s'arrondissaient à l'unité.
     const attendu = [
-      ["NOVA", Math.round((59 / 59.31) * 100), Math.round((1 / 1.08) * 100), "intermediaire"],
-      ["SoundBox", Math.round((51 / 59.31) * 100), Math.round((0.9 / 1.08) * 100), "couts"],
-      ["Auris", Math.round((79 / 59.31) * 100), Math.round((1.34 / 1.08) * 100), "differenciation"],
+      ["NOVA", arrondi2((59 / 59.31) * 100), arrondi2((1 / 1.08) * 100), "intermediaire"],
+      ["SoundBox", arrondi2((51 / 59.31) * 100), arrondi2((0.9 / 1.08) * 100), "couts"],
+      ["Auris", arrondi2((79 / 59.31) * 100), arrondi2((1.34 / 1.08) * 100), "differenciation"],
     ];
     expect(c.enseignes.map((e) => [e.nom, e.indicePrix, e.indiceQualite, e.lecture])).toEqual(attendu);
     expect(attendu.map((x) => [x[1], x[2]])).toEqual([
-      [99, 93],
-      [86, 83],
-      [133, 124],
+      [99.48, 92.59],
+      [85.99, 83.33],
+      [133.2, 124.07],
     ]);
     // Aucune lecture n'est au bord de la règle : chaque indice est à 4 points au moins des seuils (95, 105 en prix ; 100 en qualité).
     for (const e of c.enseignes) {
@@ -442,18 +444,19 @@ describe("la carte du marché et l'espace libre", () => {
     expect(lirePosition(f, 106, 101)).toBe("differenciation");
   });
 
-  it("l'espace libre se lit sur les deux indices : entre NOVA et Auris (46,0 points), pas entre SoundBox et NOVA (16,4)", () => {
+  it("l'espace libre se lit sur les deux indices : entre NOVA et Auris (46,13 points), pas entre SoundBox et NOVA (16,36)", () => {
+    // Les écarts et la distance au centième, la distance partant des écarts arrondis.
     expect(c.voisines.map((v) => [v.bas.nom, v.haut.nom, v.ecartDePrix, v.ecartDeQualite])).toEqual([
-      ["SoundBox", "NOVA", 99 - 86, 93 - 83],
-      ["NOVA", "Auris", 133 - 99, 124 - 93],
+      ["SoundBox", "NOVA", arrondi2(99.48 - 85.99), arrondi2(92.59 - 83.33)],
+      ["NOVA", "Auris", arrondi2(133.2 - 99.48), arrondi2(124.07 - 92.59)],
     ]);
-    expect(c.voisines[0]!.distance).toBeCloseTo(Math.sqrt(13 * 13 + 10 * 10), 12);
-    expect(c.voisines[1]!.distance).toBeCloseTo(Math.sqrt(34 * 34 + 31 * 31), 12);
+    expect(c.voisines[0]!.distance).toBe(arrondi2(Math.sqrt(13.49 * 13.49 + 9.26 * 9.26)));
+    expect(c.voisines[1]!.distance).toBe(arrondi2(Math.sqrt(33.72 * 33.72 + 31.48 * 31.48)));
     expect(c.espaceLibre.entre.bas.nom).toBe("NOVA");
     expect(c.espaceLibre.entre.haut.nom).toBe("Auris");
     expect(c.espaceLibre.prix).toBe((59 + 79) / 2);
     expect(c.espaceLibre.qualite).toBe(auCentime((1 + 1.34) / 2));
-    expect([c.espaceLibre.prix, c.espaceLibre.qualite, c.espaceLibre.indicePrix, c.espaceLibre.indiceQualite]).toEqual([69, 1.17, 116, 108.5]);
+    expect([c.espaceLibre.prix, c.espaceLibre.qualite, c.espaceLibre.indicePrix, c.espaceLibre.indiceQualite]).toEqual([69, 1.17, arrondi2((99.48 + 133.2) / 2), arrondi2((92.59 + 124.07) / 2)]);
     // Ici, le plus grand écart de prix seul désigne les mêmes voisines : ce qui change, c'est que la place a une qualité.
     expect(c.plusGrandEcartDePrix).toBe(c.espaceLibre.entre);
   });
@@ -486,11 +489,11 @@ describe("la carte du marché et l'espace libre", () => {
 describe("aller dans l'espace libre", () => {
   const x = allerDansLEspaceLibre(f);
 
-  it("la place : 69 €, +16,9 % sur le prix de NOVA, l'indice 116 ; sa qualité (1,17) demande la gamme soignée", () => {
+  it("la place : 69 €, +16,95 % sur le prix de NOVA, l'indice 116,34 ; sa qualité (1,17) demande la gamme soignée", () => {
     expect(x.place.prix).toBe(69);
-    expect(Math.round(x.variationDuPrix * 1000) / 10).toBe(16.9);
-    expect(x.indiceDePrixDeLaPlace).toBe(Math.round((69 / 59.31) * 100));
-    expect(x.indiceDePrixDeLaPlace).toBe(116);
+    expect(arrondi2(x.variationDuPrix * 100)).toBe(16.95);
+    expect(x.indiceDePrixDeLaPlace).toBe(arrondi2((69 / 59.31) * 100));
+    expect(x.indiceDePrixDeLaPlace).toBe(116.34);
     expect(gammePourLaQualite(f, 1.17)).toBe("soignee");
     expect(gammePourLaQualite(f, 1)).toBe("actuelle");
     expect(gammePourLaQualite(f, 0.9)).toBe("standard");

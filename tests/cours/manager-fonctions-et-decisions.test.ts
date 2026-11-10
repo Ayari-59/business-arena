@@ -34,11 +34,13 @@ describe("les fonctions et les décisions", () => {
     expect(Object.values(triDe(MANAGER_FONCTIONS_ET_DECISIONS, "prive-ou-public")).sort()).toEqual(["les-deux", "prive", "prive", "public", "public", "public"]);
   });
 
-  it("l'efficacité de l'année N : 23 609 ÷ 19 600 = 120,5 %, et 127 800 ÷ 23 609 = 5,41 € de personnel par enceinte", () => {
+  it("l'efficacité de l'année N : 23 609 ÷ 19 600 = 120,45 %, et 127 800 ÷ 23 609 = 5,41 € de personnel par enceinte", () => {
     const cout = 4 * 1_875 * 1.42 * 12;
     expect(cout).toBe(127_800);
-    expect(attendus(MANAGER_FONCTIONS_ET_DECISIONS, "evaluer-l-efficacite")).toEqual([Math.round((23_609 / (0.7 * 7_000 * 4)) * 1000) / 10, Math.round((cout / 23_609) * 100) / 100]);
-    expect(attendus(MANAGER_FONCTIONS_ET_DECISIONS, "evaluer-l-efficacite")).toEqual([120.5, 5.41]);
+    expect(attendus(MANAGER_FONCTIONS_ET_DECISIONS, "evaluer-l-efficacite")).toEqual([Math.round((23_609 / (0.7 * 7_000 * 4)) * 10_000) / 100, Math.round((cout / 23_609) * 100) / 100]);
+    // Le taux de réalisation vient de monde/gestion-et-information.ts, à deux décimales depuis le lot 3
+    // du chantier « deux décimales » (10 novembre 2026) : 120,45 % et non 120,5 %.
+    expect(attendus(MANAGER_FONCTIONS_ET_DECISIONS, "evaluer-l-efficacite")).toEqual([120.45, 5.41]);
     expect(juste(MANAGER_FONCTIONS_ET_DECISIONS, "ce-qui-les-distingue")).toEqual(["Ses effets sur le devenir de l'organisation, et le niveau où elle se prend"]);
   });
 });

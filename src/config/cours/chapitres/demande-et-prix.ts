@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutVariable, demandeEtPrix as lireLaDemande, grille, meilleurPrix, prixDeNova, trimestreAuPrix } from "../monde/economie-et-marketing";
 import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
@@ -20,6 +20,12 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait le premier trimestre rejoué par l'arène chez toutes les
  * entreprises ; il se joue chez NOVA seule, sur la droite de la fiche : 5 975, 4 778 et 3 580
  * enceintes demandées à 53,10 €, 59 € et 64,90 €, une élasticité de −2,51.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les variations du prix, de la demande et du chiffre d'affaires
+ * se donnent à deux décimales, et l'élasticité part des deux variations arrondies, au centième (les
+ * variations au dixième, à un dixième près, et l'élasticité à deux centièmes, avant) ; les chiffres
+ * d'affaires au centime (à deux euros, avant).
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -29,9 +35,6 @@ export const ENTREPRISES_DE_LA_DEMANDE: readonly string[] = ENTREPRISES_DU_MARCH
 const PRIX_DU_CURSEUR = { min: 59, max: 75 } as const;
 const PRIX_DU_LABORATOIRE = { min: 54, max: 70, pas: 1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 const f = (c: Cas) => mercatiqueDe(c);
 
@@ -99,19 +102,19 @@ export const DEMANDE_ET_PRIX: Chapitre = {
       notions: ["price_elasticity"],
       question: (c) => {
         const d = demandeEtPrix(c);
-        return `Du prix pratiqué (${eur(d.base.prix)}) au prix ${qte(d.ecart)} % plus cher (${eur(d.haut.prix)}), la demande passe de ${qte(d.base.demande)} à ${qte(d.haut.demande)}. Calculez le taux de variation du prix et celui de la demande, en pourcentage au dixième, puis l'élasticité de la demande au prix, au centième.`;
+        return `Du prix pratiqué (${eur(d.base.prix)}) au prix ${qte(d.ecart)} % plus cher (${eur(d.haut.prix)}), la demande passe de ${qte(d.base.demande)} à ${qte(d.haut.demande)}. Calculez le taux de variation du prix et celui de la demande, en pourcentage à deux décimales, puis l'élasticité de la demande au prix, au centième.`;
       },
       champs: (c) => {
         const d = demandeEtPrix(c);
         return [
-          { libelle: "Variation du prix (%)", attendu: d.variationPrix, calcul: `(${eur(d.haut.prix)} ÷ ${eur(d.base.prix)} − 1) × 100 = ${pct(d.variationPrix)}`, tolerance: 0.1 },
-          { libelle: "Variation de la demande (%)", attendu: d.variationDemande, calcul: `(${qte(d.haut.demande)} ÷ ${qte(d.base.demande)} − 1) × 100 = ${pct(d.variationDemande)}`, tolerance: 0.1 },
-          { libelle: "Élasticité", attendu: d.elasticite, calcul: `${qte(d.variationDemande)} ÷ ${qte(d.variationPrix)} = ${qte(d.elasticite)}`, tolerance: 0.02 },
+          { libelle: "Variation du prix (%)", attendu: d.variationPrix, calcul: `(${eur(d.haut.prix)} ÷ ${eur(d.base.prix)} − 1) × 100 = ${pct(d.variationPrix)}` },
+          { libelle: "Variation de la demande (%)", attendu: d.variationDemande, calcul: `(${qte(d.haut.demande)} ÷ ${qte(d.base.demande)} − 1) × 100 = ${pct(d.variationDemande)}` },
+          { libelle: "Élasticité", nature: "grandeur", attendu: d.elasticite, calcul: `${nombreAuCentieme(d.variationDemande)} ÷ ${nombreAuCentieme(d.variationPrix)} = ${nombreAuCentieme(d.elasticite)}` },
         ];
       },
       explication: (c) => {
         const d = demandeEtPrix(c);
-        return [`Une élasticité de ${qte(d.elasticite)} : quand le prix monte de 1 %, la demande baisse d'environ ${qte(Math.abs(d.elasticite))} %. Elle est négative parce que prix et demande vont en sens contraire.`];
+        return [`Une élasticité de ${nombreAuCentieme(d.elasticite)} : quand le prix monte de 1 %, la demande baisse d'environ ${nombreAuCentieme(Math.abs(d.elasticite))} %. Elle est négative parce que prix et demande vont en sens contraire.`];
       },
     },
     {
@@ -120,7 +123,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
       type: "choix",
       titre: "Élastique ou peu élastique",
       notions: ["price_elasticity"],
-      question: (c) => `Avec une élasticité de ${qte(demandeEtPrix(c).elasticite)}, comment qualifier la demande adressée à ${c.entreprise} ?`,
+      question: (c) => `Avec une élasticité de ${nombreAuCentieme(demandeEtPrix(c).elasticite)}, comment qualifier la demande adressée à ${c.entreprise} ?`,
       options: (c) => {
         const d = demandeEtPrix(c);
         return [
@@ -128,15 +131,15 @@ export const DEMANDE_ET_PRIX: Chapitre = {
             texte: "Élastique : elle baisse plus que le prix ne monte",
             juste: d.elastique,
             retour: d.elastique
-              ? `Oui : ${qte(d.elasticite)}, au-delà de 1 en valeur absolue. Une hausse de ${pct(d.variationPrix)} fait perdre ${pct(Math.abs(d.variationDemande))} de la demande : les clients comparent, et partent vite quand le prix monte.`
-              : `Non : ${qte(d.elasticite)}, moins de 1 en valeur absolue. La demande baisse moins que le prix ne monte.`,
+              ? `Oui : ${nombreAuCentieme(d.elasticite)}, au-delà de 1 en valeur absolue. Une hausse de ${pct(d.variationPrix)} fait perdre ${pct(Math.abs(d.variationDemande))} de la demande : les clients comparent, et partent vite quand le prix monte.`
+              : `Non : ${nombreAuCentieme(d.elasticite)}, moins de 1 en valeur absolue. La demande baisse moins que le prix ne monte.`,
           },
           {
             texte: "Peu élastique : elle baisse moins que le prix ne monte",
             juste: !d.elastique,
             retour: !d.elastique
-              ? `Oui : ${qte(d.elasticite)}, moins de 1 en valeur absolue.`
-              : `Non : ${qte(d.elasticite)}, au-delà de 1 en valeur absolue. La demande baisse plus que le prix ne monte.`,
+              ? `Oui : ${nombreAuCentieme(d.elasticite)}, moins de 1 en valeur absolue.`
+              : `Non : ${nombreAuCentieme(d.elasticite)}, au-delà de 1 en valeur absolue. La demande baisse plus que le prix ne monte.`,
           },
           {
             texte: "Elle ne réagit pas au prix",
@@ -154,14 +157,14 @@ export const DEMANDE_ET_PRIX: Chapitre = {
       notions: ["price_elasticity", "revenue"],
       question: (c) => {
         const d = demandeEtPrix(c);
-        return `Si ${c.entreprise} servait toute la demande, quel chiffre d'affaires ferait-elle au prix pratiqué (${qte(d.base.demande)} × ${eur(d.base.prix)}), puis au prix ${qte(d.ecart)} % plus cher (${qte(d.haut.demande)} × ${eur(d.haut.prix)}) ? Calculez ensuite la variation, en pourcentage au dixième.`;
+        return `Si ${c.entreprise} servait toute la demande, quel chiffre d'affaires ferait-elle au prix pratiqué (${qte(d.base.demande)} × ${eur(d.base.prix)}), puis au prix ${qte(d.ecart)} % plus cher (${qte(d.haut.demande)} × ${eur(d.haut.prix)}) ? Calculez ensuite la variation, en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const d = demandeEtPrix(c);
         return [
-          { libelle: "Chiffre d'affaires au prix pratiqué", attendu: d.caAvant, calcul: `${qte(d.base.demande)} × ${eur(d.base.prix)} = ${eur(d.caAvant)}`, tolerance: 2 },
-          { libelle: "Chiffre d'affaires au prix plus cher", attendu: d.caApres, calcul: `${qte(d.haut.demande)} × ${eur(d.haut.prix)} = ${eur(d.caApres)}`, tolerance: 2 },
-          { libelle: "Variation du chiffre d'affaires (%)", attendu: d.variationCa, calcul: `(${eur(d.caApres)} ÷ ${eur(d.caAvant)} − 1) × 100 = ${pct(d.variationCa)}`, tolerance: 0.1 },
+          { libelle: "Chiffre d'affaires au prix pratiqué", attendu: d.caAvant, calcul: `${qte(d.base.demande)} × ${eur(d.base.prix)} = ${eur(d.caAvant)}` },
+          { libelle: "Chiffre d'affaires au prix plus cher", attendu: d.caApres, calcul: `${qte(d.haut.demande)} × ${eur(d.haut.prix)} = ${eur(d.caApres)}` },
+          { libelle: "Variation du chiffre d'affaires (%)", attendu: d.variationCa, calcul: `(${eur(d.caApres)} ÷ ${eur(d.caAvant)} − 1) × 100 = ${pct(d.variationCa)}` },
         ];
       },
       explication: (c) => {
@@ -286,7 +289,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
       texte: (c) => {
         const d = demandeEtPrix(c);
         return [
-          `Chez ${c.entreprise}, l'élasticité de la demande au prix vaut ${qte(d.elasticite)} : la demande est ${d.elastique ? "élastique" : "peu élastique"}, et une hausse de ${pct(d.variationPrix)} ${d.variationCa < 0 ? "ferait baisser" : "ferait monter"} de ${pct(Math.abs(d.variationCa))} le chiffre d'affaires que la demande apporterait.`,
+          `Chez ${c.entreprise}, l'élasticité de la demande au prix vaut ${nombreAuCentieme(d.elasticite)} : la demande est ${d.elastique ? "élastique" : "peu élastique"}, et une hausse de ${pct(d.variationPrix)} ${d.variationCa < 0 ? "ferait baisser" : "ferait monter"} de ${pct(Math.abs(d.variationCa))} le chiffre d'affaires que la demande apporterait.`,
           `Avant de toucher à un prix, le mercaticien regarde donc l'élasticité, puis la marge : une demande élastique pousse à la prudence sur les hausses, mais le prix qui laisse le plus de marge à ${c.entreprise} n'est pas forcément le plus bas. Dans l'arène, montez votre prix d'un tour à l'autre et calculez votre élasticité.`,
         ];
       },

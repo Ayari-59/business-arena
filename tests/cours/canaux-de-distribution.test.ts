@@ -28,8 +28,8 @@ describe("les canaux de distribution", () => {
     gardesDeTexte(CANAUX_DE_DISTRIBUTION);
   });
 
-  it("CampusTech : 20,1 % des ventes, 56 640 € dus, 566,40 € d'attente, 0,59 € par enceinte", () => {
-    expect(attendus(CANAUX_DE_DISTRIBUTION, "part")).toEqual([Math.round((960 / 4_778) * 1_000) / 10, DU]);
+  it("CampusTech : 20,09 % des ventes, 56 640 € dus, 566,40 € d'attente, 0,59 € par enceinte", () => {
+    expect(attendus(CANAUX_DE_DISTRIBUTION, "part")).toEqual([Math.round((960 / 4_778) * 10_000) / 100, DU]);
     expect(attendus(CANAUX_DE_DISTRIBUTION, "cout")).toEqual([attente(DU, 60), c(attente(DU, 60) / 960)]);
     expect(attente(DU, 60)).toBe(566.4);
     expect(juste(CANAUX_DE_DISTRIBUTION, "avantage")).toEqual(["Il lui apporte des clients qu'elle n'atteindrait pas seule"]);

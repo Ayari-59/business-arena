@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { acomptes, eligibleAuTauxReduit, impotDuBenefice, resultatFiscal, solde } from "../monde/finance";
 import {
@@ -56,6 +56,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * prélevait sur le résultat cumulé de l'exercice en cours, le trimestre de perte qui les faisait
  * rendre. Le cours suit maintenant le droit : des acomptes sur l'impôt de l'exercice précédent, un
  * solde après la clôture, une dette d'impôt au bilan.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux effectifs se donnent à deux décimales, à un centième
+ * près (à un dixième près, avant).
  */
 
 /**
@@ -111,12 +115,9 @@ const EXERCICES: Readonly<Record<string, ExerciceFiscal>> = { nova: EXERCICE_N1_
 /** L'exercice de l'entreprise, lu par son code. */
 export const exerciceDe = (c: Pick<Cas, "code">): ExerciceFiscal => EXERCICES[c.code]!;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-/** Un taux déjà en pour cent : 25 donne « 25 % ». */
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
 /** Une fraction en pour cent, au centième de point : 0,222607 donne 22,26. */
-const enPct = (x: number) => Math.round(x * 10_000) / 100;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
+const enPct = (x: number) => arrondi2(x * 100);
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => auCentime(xs.reduce((s, x) => s + x, 0));
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -460,7 +461,6 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
             libelle: "Taux effectif (%)",
             attendu: x.tauxEffectif,
             calcul: `${eur(x.impot)} ÷ ${eur(x.e.resultatComptable)} × 100 = ${pct(x.tauxEffectif)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -727,7 +727,6 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
             libelle: "Taux effectif sans le taux réduit (%)",
             attendu: x.tauxEffectifSansTauxReduit,
             calcul: `${eur(x.sansTauxReduit)} ÷ ${eur(x.e.resultatComptable)} × 100 = ${pct(x.tauxEffectifSansTauxReduit)}`,
-            tolerance: 0.1,
           },
         ];
       },

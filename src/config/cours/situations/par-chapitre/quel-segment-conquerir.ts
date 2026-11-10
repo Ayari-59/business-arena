@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { aLUnite, arrondi2, arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { accord, accordPluriel } from "../../accords";
 import type { Cas } from "../../cas";
 import { SEGMENTER_ET_CIBLER, segmentation } from "../../chapitres/segmenter-et-cibler";
@@ -8,7 +7,6 @@ import { mercatiqueDe } from "../../monde/mercatique-de-nova";
 import type { Situation } from "../types";
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE DU CHAPITRE « SEGMENTER ET CIBLER » : QUEL SEGMENT CONQUÉRIR ?
@@ -25,6 +23,11 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  * gamme, promotion), le cas chiffre ce que rapporterait un même objectif dans chaque
  * segment. Les segments sont ceux du chapitre (`segmentation`) ; le prix et le coût variable
  * d'une unité, ceux du mois du cas (`cas.ts`).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de marché se donnent à deux décimales, à un centième
+ * près (au dixième, avant) ; les ventes en plus sont une quantité, entière ; le chiffre d'affaires et
+ * la marge en plus, au centime (à l'euro près, avant).
  */
 
 /**
@@ -34,8 +37,6 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  */
 export const POINTS_A_GAGNER = 5;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function segmentAConquerir(c: Cas) {
@@ -46,7 +47,7 @@ export function segmentAConquerir(c: Cas) {
   const segments = g.clienteles.map((k) => ({
     ...k,
     // Des points de part de marché se comptent sur la taille du segment, pas sur nos ventes.
-    ventesEnPlus: Math.round((k.taille * POINTS_A_GAGNER) / 100),
+    ventesEnPlus: aLUnite((k.taille * POINTS_A_GAGNER) / 100),
   }));
   const meilleur = segments.reduce((a, b) => (b.ventesEnPlus > a.ventesEnPlus ? b : a));
   // L'autre erreur classique : viser le segment où l'on est déjà le plus fort.
@@ -54,7 +55,7 @@ export function segmentAConquerir(c: Cas) {
   const caEnPlus = auCentime(meilleur.ventesEnPlus * prix);
   const margeEnPlus = auCentime(meilleur.ventesEnPlus * margeUnitaire);
   // L'erreur classique : prendre 5 % de nos ventes dans le segment au lieu de 5 points du segment.
-  const ventesSurNosVentes = Math.round((meilleur.demande * POINTS_A_GAGNER) / 100);
+  const ventesSurNosVentes = aLUnite((meilleur.demande * POINTS_A_GAGNER) / 100);
   return {
     prix,
     coutVariable,
@@ -122,21 +123,20 @@ export const QUEL_SEGMENT_CONQUERIR: Situation = {
       titre: "La part de marché dans chaque segment",
       notions: ["segmentation", "demand_market_share"],
       question: () =>
-        "Calculez la part de marché que l'entreprise tient dans chaque segment (ventes ÷ taille du segment × 100), en pourcentage au dixième.",
+        "Calculez la part de marché que l'entreprise tient dans chaque segment (ventes ÷ taille du segment × 100), en pourcentage à deux décimales.",
       champs: (c) =>
         segmentAConquerir(c).segments.map((k) => ({
           libelle: `Part de marché dans « ${k.nom} » (%)`,
           attendu: k.part,
-          tolerance: 0.1,
           calcul: `${qte(k.demande)} ÷ ${qte(k.taille)} × 100 = ${pct(k.part)}`,
         })),
       explication: (c) => {
         const r = segmentAConquerir(c);
         const parts = r.segments.map((k) => k.part);
-        const ecart = Math.round((Math.max(...parts) - Math.min(...parts)) * 10) / 10;
+        const ecart = arrondi2(Math.max(...parts) - Math.min(...parts));
         return [
           ecart < 5
-            ? `${c.entreprise} tient une part voisine dans chaque segment : à peine ${qte(ecart)} point${ecart >= 2 ? "s" : ""} d'écart. Ce n'est donc pas la part déjà tenue qui départagera les segments, c'est leur taille.`
+            ? `${c.entreprise} tient une part voisine dans chaque segment : à peine ${nombreAuCentieme(ecart)} point${ecart >= 2 ? "s" : ""} d'écart. Ce n'est donc pas la part déjà tenue qui départagera les segments, c'est leur taille.`
             : `Les parts de marché diffèrent nettement d'un segment à l'autre, de ${pct(Math.min(...parts))} à ${pct(Math.max(...parts))}. Mais un objectif en points se compte sur la taille du segment : c'est elle qui dira où il rapporte le plus.`,
         ];
       },
@@ -151,9 +151,9 @@ export const QUEL_SEGMENT_CONQUERIR: Situation = {
       champs: (c) =>
         segmentAConquerir(c).segments.map((k) => ({
           libelle: `Ventes en plus dans « ${k.nom} » (${c.unites})`,
+          nature: "quantite" as const,
           attendu: k.ventesEnPlus,
-          tolerance: 1,
-          calcul: `${qte(k.taille)} × ${qte(POINTS_A_GAGNER)} % = ${qte(k.ventesEnPlus)}`,
+          calcul: `${qte(k.taille)} × ${qte(POINTS_A_GAGNER)} % = ${Number.isInteger(arrondi2((k.taille * POINTS_A_GAGNER) / 100)) ? qte(k.ventesEnPlus) : `${nombreAuCentieme((k.taille * POINTS_A_GAGNER) / 100)}, arrondi à l'unité : ${qte(k.ventesEnPlus)}`}`,
         })),
       explication: (c) => {
         const r = segmentAConquerir(c);
@@ -174,9 +174,9 @@ export const QUEL_SEGMENT_CONQUERIR: Situation = {
       champs: (c) => {
         const r = segmentAConquerir(c);
         return [
-          { libelle: "Chiffre d'affaires en plus", attendu: r.caEnPlus, tolerance: 1, calcul: `${qte(r.meilleur.ventesEnPlus)} × ${eur(r.prix)} = ${eur(r.caEnPlus)}` },
+          { libelle: "Chiffre d'affaires en plus", attendu: r.caEnPlus, calcul: `${qte(r.meilleur.ventesEnPlus)} × ${eur(r.prix)} = ${eur(r.caEnPlus)}` },
           { libelle: `Marge d'${accord(c, "un")} ${c.unite}`, attendu: r.margeUnitaire, calcul: `${eur(r.prix)} − ${eur(r.coutVariable)} = ${eur(r.margeUnitaire)}` },
-          { libelle: "Marge en plus", attendu: r.margeEnPlus, tolerance: 1, calcul: `${qte(r.meilleur.ventesEnPlus)} × ${eur(r.margeUnitaire)} = ${eur(r.margeEnPlus)}` },
+          { libelle: "Marge en plus", attendu: r.margeEnPlus, calcul: `${qte(r.meilleur.ventesEnPlus)} × ${eur(r.margeUnitaire)} = ${eur(r.margeEnPlus)}` },
         ];
       },
       explication: (c) => {

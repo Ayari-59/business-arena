@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2, arrondi2 as auCentime, eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { PART_STABLE, POURQUOI_LES_DONNEES, extraitDesVentes, ordinal, tableDesVentes } from "../../chapitres/des-donnees-a-l-information";
 import { ENTREPRISES_DE_LA_GESTION_DE_BASE } from "../../monde/gestion-et-information";
@@ -21,11 +20,12 @@ import type { Situation } from "../types";
  *
  * LE CAS JOUE DANS LE MONDE DU COURS, chez NOVA seule : la table des ventes du semestre. Il lisait la
  * table des enseignes de l'année de l'arène, dans neuf entreprises.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des particuliers se donnent à deux décimales, à un
+ * centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const NOMS_DES_TRIMESTRES = ["premier", "deuxième"] as const;
@@ -39,13 +39,13 @@ export function trimestreLePlusFort(c?: Cas) {
     const du = lignes.filter((l) => l.trimestre === t);
     const total = auCentime(du.reduce((s, l) => s + l.chiffreDAffaires, 0));
     const particuliers = auCentime(du.filter((l) => l.clientele === "particuliers").reduce((s, l) => s + l.chiffreDAffaires, 0));
-    return { trimestre: t, total, particuliers, part: auDixieme((particuliers / total) * 100), lignes: du };
+    return { trimestre: t, total, particuliers, part: arrondi2((particuliers / total) * 100), lignes: du };
   });
   const plusFort = trimestres.reduce((m, x) => (x.total > m.total ? x : m), trimestres[0]!);
   const totalDuSemestre = auCentime(trimestres.reduce((s, x) => s + x.total, 0));
   const particuliersDuSemestre = auCentime(trimestres.reduce((s, x) => s + x.particuliers, 0));
-  const partDuSemestre = auDixieme((particuliersDuSemestre / totalDuSemestre) * 100);
-  const ecart = auDixieme(plusFort.part - partDuSemestre);
+  const partDuSemestre = arrondi2((particuliersDuSemestre / totalDuSemestre) * 100);
+  const ecart = arrondi2(plusFort.part - partDuSemestre);
   const place: PlaceAuPlusFort = ecart < -PART_STABLE ? "moins" : ecart > PART_STABLE ? "plus" : "autant";
   return { trimestres, plusFort, totalDuSemestre, particuliersDuSemestre, partDuSemestre, ecart, place };
 }
@@ -97,12 +97,12 @@ export const LE_TRIMESTRE_LE_PLUS_FORT: Situation = {
       type: "montants",
       titre: "La part des particuliers",
       notions: ["revenue"],
-      question: (c) => `Calculez, en pourcentage au dixième, la part des particuliers dans le chiffre d'affaires ${dE(c.entreprise)} au trimestre le plus fort, puis sur le semestre entier.`,
+      question: (c) => `Calculez, en pourcentage à deux décimales, la part des particuliers dans le chiffre d'affaires ${dE(c.entreprise)} au trimestre le plus fort, puis sur le semestre entier.`,
       champs: () => {
         const k = trimestreLePlusFort();
         return [
-          { libelle: "Part des particuliers, trimestre le plus fort (%)", attendu: k.plusFort.part, calcul: `${eur(k.plusFort.particuliers)} ÷ ${eur(k.plusFort.total)} × 100 = ${pct(k.plusFort.part)}`, tolerance: 0.1 },
-          { libelle: "Part des particuliers, semestre entier (%)", attendu: k.partDuSemestre, calcul: `${eur(k.particuliersDuSemestre)} ÷ ${eur(k.totalDuSemestre)} × 100 = ${pct(k.partDuSemestre)}`, tolerance: 0.1 },
+          { libelle: "Part des particuliers, trimestre le plus fort (%)", attendu: k.plusFort.part, calcul: `${eur(k.plusFort.particuliers)} ÷ ${eur(k.plusFort.total)} × 100 = ${pct(k.plusFort.part)}` },
+          { libelle: "Part des particuliers, semestre entier (%)", attendu: k.partDuSemestre, calcul: `${eur(k.particuliersDuSemestre)} ÷ ${eur(k.totalDuSemestre)} × 100 = ${pct(k.partDuSemestre)}` },
         ];
       },
       explication: () => {

@@ -31,6 +31,7 @@ import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre } from "../../src/config/cours/types";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { NOVA, VIDE, attendus, etape, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDuProgramme, gardesDeTexte, juste } from "./gardes-de-nova";
 
 /**
@@ -114,14 +115,14 @@ describe("du salaire brut au coût pour l'entreprise", () => {
 });
 
 describe("l'effectif et la masse salariale", () => {
-  it("31 950 € par salarié et par an, 127 800 € de masse salariale, 9,7 % des charges, 9,2 % des ventes, 347 569 € par salarié", () => {
+  it("31 950 € par salarié et par an, 127 800 € de masse salariale, 9,72 % des charges, 9,19 % des ventes, 347 569 € par salarié", () => {
     expect(attendus(EFFECTIF_ET_MASSE_SALARIALE, "masse")).toEqual([2_662.5 * 12, 31_950 * 4]);
     expect(attendus(EFFECTIF_ET_MASSE_SALARIALE, "poids")).toEqual([
-      Math.round((127_800 / 1_314_984.62) * 1000) / 10,
-      Math.round((127_800 / 1_390_276) * 1000) / 10,
-      Math.round(1_390_276 / 4),
+      arrondi2((127_800 / 1_314_984.62) * 100),
+      arrondi2((127_800 / 1_390_276) * 100),
+      arrondi2(1_390_276 / 4),
     ]);
-    expect(attendus(EFFECTIF_ET_MASSE_SALARIALE, "poids")).toEqual([9.7, 9.2, 347_569]);
+    expect(attendus(EFFECTIF_ET_MASSE_SALARIALE, "poids")).toEqual([9.72, 9.19, 347_569]);
     expect(juste(EFFECTIF_ET_MASSE_SALARIALE, "embauche")).toEqual([`De ${montantEcrit(31_950)}, son coût annuel`]);
   });
 
@@ -188,8 +189,8 @@ describe("former pour être plus efficace", () => {
 });
 
 describe("rémunération et motivation", () => {
-  it("96,2 % du marché en N, 93,8 % en N + 1, sous le seuil : 1 900 € le gardent, 1 704 € par an, face à 24 975 € pour un départ", () => {
-    expect(attendus(REMUNERATION_ET_MOTIVATION, "le-marche")).toEqual([96.2, 93.8, Math.ceil(2_000 * 0.95)]);
+  it("96,15 % du marché en N, 93,75 % en N + 1, sous le seuil : 1 900 € le gardent, 1 704 € par an, face à 24 975 € pour un départ", () => {
+    expect(attendus(REMUNERATION_ET_MOTIVATION, "le-marche")).toEqual([96.15, 93.75, Math.ceil(2_000 * 0.95)]);
     // Le départ : 1 300 enceintes perdues × 21 €, 3 000 € de recrutement, 2 mois de salaire non versés.
     expect(attendus(REMUNERATION_ET_MOTIVATION, "le-cout-de-chaque-choix")).toEqual([25 * 12 * 4 * 1.42, 1_300 * 21 + 3_000 - 2 * 2_662.5]);
     expect(juste(REMUNERATION_ET_MOTIVATION, "sans-rien-changer")).toEqual(["Le départ d'un opérateur, payé sous le seuil"]);
@@ -209,9 +210,9 @@ describe("rémunération et motivation", () => {
 });
 
 describe("les indicateurs sociaux", () => {
-  it("46 mois payés : 3,83 salariés en moyenne, 26,1 % de rotation, 6 976,82 heures prévues, 3,5 % d'absentéisme", () => {
-    expect(attendus(INDICATEURS_SOCIAUX, "rotation")).toEqual([3.83, Math.round((1 / (46 / 12)) * 1000) / 10]);
-    expect(attendus(INDICATEURS_SOCIAUX, "absenteisme")).toEqual([c2(46 * 151.67), Math.round((HEURES_D_ABSENCE / 6_976.82) * 1000) / 10]);
+  it("46 mois payés : 3,83 salariés en moyenne, 26,11 % de rotation, 6 976,82 heures prévues, 3,5 % d'absentéisme", () => {
+    expect(attendus(INDICATEURS_SOCIAUX, "rotation")).toEqual([3.83, arrondi2((1 / 3.83) * 100)]);
+    expect(attendus(INDICATEURS_SOCIAUX, "absenteisme")).toEqual([c2(46 * 151.67), arrondi2((HEURES_D_ABSENCE / 6_976.82) * 100)]);
     expect(HEURES_D_ABSENCE).toBe(244);
     expect(attendus(INDICATEURS_SOCIAUX, "absenteisme")[1]).toBe(3.5);
   });
@@ -259,9 +260,9 @@ describe("les cas pratiques du parcours", () => {
     expect([r.enveloppe, r.parSalarie, r.brut, r.salariales, r.net]).toEqual([13_902.76, 3_475.69, c2(3_475.69 / 1.42), c2(2_447.67 * 0.22), c2(2_447.67 - 538.49)]);
   });
 
-  it("l'augmentation générale de 3 % : 131 634 € de masse salariale, 9,5 % des ventes", () => {
+  it("l'augmentation générale de 3 % : 131 634 € de masse salariale, 9,47 % des ventes", () => {
     const r = augmentationGenerale(NOVA);
-    expect([r.masseApres, r.tauxApres, r.ventesNecessaires]).toEqual([127_800 * 1.03, 9.5, c2(1_390_276 * 1.03)]);
+    expect([r.masseApres, r.tauxApres, r.ventesNecessaires]).toEqual([127_800 * 1.03, 9.47, c2(131_634 / 0.0919)]);
   });
 
   it("embaucher un trimestre plus tard : lancé en avril, 21 637,50 € au lieu de 29 625 €, et les mêmes 800 enceintes", () => {
@@ -277,13 +278,13 @@ describe("les cas pratiques du parcours", () => {
     expect([k.d.minutes, k.d.cout, k.d.equipe, k.enceintesEnPlus, k.d.gain, k.f.gain, k.verdict]).toEqual([11, 4 * 400 * 4, Math.floor(9_000 / 11) * 12, 0, 16_800 - 6_400, 13_600, "garder"]);
   });
 
-  it("l'équipe demande 10 % : 187,50 € par mois, 12 780 € par an, 103,1 % du marché", () => {
+  it("l'équipe demande 10 % : 187,50 € par mois, 12 780 € par an, 103,13 % du marché", () => {
     const k = hausseDemandee();
-    expect([k.augmentation, k.r.coutDeLAugmentation, k.partApres, k.sansLesPatronales]).toEqual([187.5, 187.5 * 12 * 4 * 1.42, 103.1, 187.5 * 48]);
+    expect([k.augmentation, k.r.coutDeLAugmentation, k.partApres, k.sansLesPatronales]).toEqual([187.5, 187.5 * 12 * 4 * 1.42, 103.13, 187.5 * 48]);
   });
 
-  it("la masse salariale qui baisse : 5 325 € de moins, −4,2 %, pour 27 300 € de marge perdue et 24 975 € de coût", () => {
+  it("la masse salariale qui baisse : 5 325 € de moins, −4,17 %, pour 27 300 € de marge perdue et 24 975 € de coût", () => {
     const k = masseQuiBaisse();
-    expect([k.baisse, k.evolutionDeLaMasse, k.s.margePerdue, k.coutNet]).toEqual([2 * 2_662.5, Math.round((122_475 / 127_800 - 1) * 1000) / 10, 1_300 * 21, 27_300 + 3_000 - 5_325]);
+    expect([k.baisse, k.evolutionDeLaMasse, k.s.margePerdue, k.coutNet]).toEqual([2 * 2_662.5, arrondi2((122_475 / 127_800 - 1) * 100), 1_300 * 21, 27_300 + 3_000 - 5_325]);
   });
 });

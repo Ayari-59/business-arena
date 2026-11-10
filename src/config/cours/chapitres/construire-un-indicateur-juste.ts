@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, qte } from "../../../pedagogy/cours/deux-decimales";
 import { type Cas } from "../cas";
 import {
   ECART_ALIGNE,
@@ -39,6 +38,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait l'année de l'arène, dans huit entreprises. Chez NOVA, la
  * moyenne simple vaut maintenant 63 € et le prix pondéré 59,31 € : l'indice simple, 94, la croit
  * moins chère que le marché ; l'indice pondéré, 99, la dit au prix du marché.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les deux indices de prix se donnent à deux décimales, à un
+ * centième près (à l'unité, à un point près, avant).
  */
 
 export { ECART_ALIGNE, positionDe, type Position };
@@ -47,8 +50,6 @@ export type ErreurDeDecision = "monter" | "baisser" | "rester" | "aucune";
 export const POURQUOI_L_INDICATEUR =
   "ce chapitre compare NOVA à SoundBox et Auris, les enseignes avec qui elle partage son marché, sur l'année que le cours tient.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const aE = (nom: string) => `à ${nom}`;
 
@@ -89,9 +90,9 @@ export function tableDesEnseignes(c: Cas): TableauDeDonnees {
 function ceQueCroitLEntreprise(c: Cas) {
   const k = indicateurDuPrix(c);
   if (k.positionSimple === k.positionPonderee) {
-    return `Avec la moyenne simple comme avec le prix pondéré, ${c.entreprise} est ${NOMS_DES_POSITIONS[k.positionPonderee]} (indices ${qte(k.indiceSimple)} et ${qte(k.indicePondere)}).`;
+    return `Avec la moyenne simple comme avec le prix pondéré, ${c.entreprise} est ${NOMS_DES_POSITIONS[k.positionPonderee]} (indices ${nombreAuCentieme(k.indiceSimple)} et ${nombreAuCentieme(k.indicePondere)}).`;
   }
-  return `Avec la moyenne simple, ${c.entreprise} se croit ${NOMS_DES_POSITIONS[k.positionSimple]} (indice ${qte(k.indiceSimple)}) ; avec le prix pondéré, elle est ${NOMS_DES_POSITIONS[k.positionPonderee]} (indice ${qte(k.indicePondere)}).`;
+  return `Avec la moyenne simple, ${c.entreprise} se croit ${NOMS_DES_POSITIONS[k.positionSimple]} (indice ${nombreAuCentieme(k.indiceSimple)}) ; avec le prix pondéré, elle est ${NOMS_DES_POSITIONS[k.positionPonderee]} (indice ${nombreAuCentieme(k.indicePondere)}).`;
 }
 
 export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
@@ -169,13 +170,11 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
             libelle: "Moyenne simple des prix",
             attendu: k.moyenneSimple,
             calcul: `(${k.enseignes.map((e) => eur(e.prix)).join(" + ")}) ÷ ${qte(k.enseignes.length)} = ${eur(k.sommeDesPrix)} ÷ ${qte(k.enseignes.length)} = ${eur(k.moyenneSimple)}`,
-            tolerance: 0.01,
           },
           {
             libelle: "Prix moyen pondéré par les ventes",
             attendu: k.prixPondere,
             calcul: `${eur(k.chiffreTotal)} ÷ ${qte(k.ventesTotales)} = ${eur(k.prixPondere)}`,
-            tolerance: 0.01,
           },
         ];
       },
@@ -232,22 +231,22 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
       notions: ["price_elasticity", "dashboard"],
       question: (c) => {
         const k = indicateurDuPrix(c);
-        return `L'indice de prix compare le prix de l'entreprise à celui du marché : prix de l'entreprise ÷ prix du marché × 100. Calculez-le à l'unité pour ${c.entreprise} (prix moyen : ${eur(k.entreprise.prix)}), avec la moyenne simple, puis avec le prix pondéré.`;
+        return `L'indice de prix compare le prix de l'entreprise à celui du marché : prix de l'entreprise ÷ prix du marché × 100. Calculez-le à deux décimales pour ${c.entreprise} (prix moyen : ${eur(k.entreprise.prix)}), avec la moyenne simple, puis avec le prix pondéré.`;
       },
       champs: (c) => {
         const k = indicateurDuPrix(c);
         return [
           {
             libelle: "Indice de prix, avec la moyenne simple",
+            nature: "grandeur",
             attendu: k.indiceSimple,
-            calcul: `${eur(k.entreprise.prix)} ÷ ${eur(k.moyenneSimple)} × 100 = ${qte(k.indiceSimple)}`,
-            tolerance: 1,
+            calcul: `${eur(k.entreprise.prix)} ÷ ${eur(k.moyenneSimple)} × 100 = ${nombreAuCentieme(k.indiceSimple)}`,
           },
           {
             libelle: "Indice de prix, avec le prix pondéré",
+            nature: "grandeur",
             attendu: k.indicePondere,
-            calcul: `${eur(k.entreprise.prix)} ÷ ${eur(k.prixPondere)} × 100 = ${qte(k.indicePondere)}`,
-            tolerance: 1,
+            calcul: `${eur(k.entreprise.prix)} ÷ ${eur(k.prixPondere)} × 100 = ${nombreAuCentieme(k.indicePondere)}`,
           },
         ];
       },
@@ -264,7 +263,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
       question: (c) => `${ceQueCroitLEntreprise(c)} Si la direction se fiait à la moyenne simple, que déciderait-elle ?`,
       options: (c) => {
         const k = indicateurDuPrix(c);
-        const vrai = `Le prix que paient les clients du marché est ${eur(k.prixPondere)} ; ${c.entreprise} vend à ${eur(k.entreprise.prix)}, indice ${qte(k.indicePondere)}.`;
+        const vrai = `Le prix que paient les clients du marché est ${eur(k.prixPondere)} ; ${c.entreprise} vend à ${eur(k.entreprise.prix)}, indice ${nombreAuCentieme(k.indicePondere)}.`;
         const non = `Non. ${vrai}`;
         return [
           {
@@ -372,8 +371,8 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
           indice: (p) => {
             const k = indicateurDuPrix(undefined, p.prix!);
             return k.positionPonderee === "aligne"
-              ? `À ${eur(p.prix!)}, l'indice pondéré est de ${qte(k.indicePondere)} : NOVA est encore au prix du marché. Un prix plus haut l'y laisserait-il ?`
-              : `À ${eur(p.prix!)}, l'indice pondéré est de ${qte(k.indicePondere)} : NOVA n'est plus au prix du marché.`;
+              ? `À ${eur(p.prix!)}, l'indice pondéré est de ${nombreAuCentieme(k.indicePondere)} : NOVA est encore au prix du marché. Un prix plus haut l'y laisserait-il ?`
+              : `À ${eur(p.prix!)}, l'indice pondéré est de ${nombreAuCentieme(k.indicePondere)} : NOVA n'est plus au prix du marché.`;
           },
           solution: { prix: juste },
         };
@@ -381,7 +380,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
       explication: (c, p) => {
         const k = indicateurDuPrix(c, p.prix!);
         return [
-          `Défi relevé : à ${eur(p.prix!)}, l'indice pondéré est de ${qte(k.indicePondere)}. Avec la moyenne simple, ${c.entreprise} se croirait à l'indice ${qte(k.indiceSimple)} : ${NOMS_DES_POSITIONS[k.positionSimple]}.`,
+          `Défi relevé : à ${eur(p.prix!)}, l'indice pondéré est de ${nombreAuCentieme(k.indicePondere)}. Avec la moyenne simple, ${c.entreprise} se croirait à l'indice ${nombreAuCentieme(k.indiceSimple)} : ${NOMS_DES_POSITIONS[k.positionSimple]}.`,
           "Les deux indices ne disent pas la même chose, et seul le pondéré mesure ce que paient les clients. Un indicateur juste se calcule toujours avec la même formule : sinon, il change de sens quand les ventes bougent.",
         ];
       },

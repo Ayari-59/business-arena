@@ -1,4 +1,4 @@
-import { aLUnite, produit2, quotient2, somme2, taux2 } from "../../../pedagogy/cours/deux-decimales";
+import { aLUnite, arrondi2, produit2, quotient2, somme2, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { anneeAvec, anneeDuMarche, type AnneeDuMarche } from "./attractivite";
 import { capaciteDeLEquipe } from "./capacite";
@@ -36,13 +36,18 @@ import { NOVA_GESTION, type CodeDeClientele, type FicheDeGestion } from "./nova-
  * tests/cours/gestion-et-information.test.ts refait chaque chiffre à la main.
  *
  * CONVENTIONS : hors taxes, sauf ce qui passe par la banque (toutes taxes comprises, comme dans le
- * budget de trésorerie) ; les quantités à l'enceinte ; les montants au centime.
+ * budget de trésorerie) ; les quantités à l'enceinte ; les montants au centime ; les pourcentages, les
+ * indices et les écarts en points à deux décimales.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les pourcentages et les écarts en points se donnaient au dixième,
+ * les indices de prix à l'unité ; une prévision ou un objectif en enceintes reste une quantité, que
+ * le corrigé écrit d'abord à deux décimales, puis arrondie à l'unité.
  */
 
 const somme = (xs: readonly number[]) => auCentime(xs.reduce((t, x) => t + x, 0));
 /** Arrondi à l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 /** Les entreprises des chapitres du lot : NOVA seule, celle dont le monde du cours tient le semestre, l'exercice, le marché et la capacité. */
 export const ENTREPRISES_DE_LA_GESTION_DE_BASE: readonly string[] = [NOVA_GESTION.code];
@@ -392,7 +397,7 @@ export function richesseDuMarche(f: FicheDuMarche = FICHE_DU_MARCHE, strategie: 
     consommations: total((e) => e.consommations),
     valeurAjoutee,
     salaires,
-    partDesSalaires: auDixieme((salaires / valeurAjoutee) * 100),
+    partDesSalaires: arrondi2((salaires / valeurAjoutee) * 100),
     plusGrandeValeur: enseignes.reduce((g, x) => (x.valeurAjoutee > g.valeurAjoutee ? x : g)),
     plusGrosChiffre: enseignes.reduce((g, x) => (x.production > g.production ? x : g)),
     enPerte: enseignes.filter((e) => e.benefice < 0),
@@ -486,8 +491,8 @@ export function hausseDesSalaires(hausse = HAUSSE_DEMANDEE) {
     ecartDeSalaires,
     ecartDImpot,
     ecartDeResultat,
-    partDesAssocies: auDixieme((-ecartDeResultat / ecartDeSalaires) * 100),
-    partDeLEtat: auDixieme((-ecartDImpot / ecartDeSalaires) * 100),
+    partDesAssocies: arrondi2((-ecartDeResultat / ecartDeSalaires) * 100),
+    partDeLEtat: arrondi2((-ecartDImpot / ecartDeSalaires) * 100),
     quiPaie: (-ecartDeResultat >= -ecartDImpot ? "associes" : "etat") as QuiPaie,
   };
 }
@@ -633,7 +638,7 @@ export function ventesDeLAnnee(f: FicheDeLaCapacite = FICHE_DE_CAPACITE, annee: 
 /** L'objectif posé en janvier, et une année suivie face à lui. */
 export function suiviDesObjectifs(f: FicheDeLaCapacite = FICHE_DE_CAPACITE, taux = TAUX_DE_CAPACITE_VISE, annee: "N" | "N+1" = "N") {
   const cap = capaciteDuTrimestre(f);
-  const objectif = Math.round(cap.capacite * taux);
+  const objectif = aLUnite(cap.capacite * taux);
   const trimestres = ventesDeLAnnee(f, annee).map((x, i) => ({
     numero: i + 1,
     ...x,
@@ -653,7 +658,7 @@ export function suiviDesObjectifs(f: FicheDeLaCapacite = FICHE_DE_CAPACITE, taux
     ventesDeLAnnee: ventesTotales,
     demandeDeLAnnee: demandeTotale,
     ecartDeLAnnee: ventesTotales - objectifDeLAnnee,
-    realisation: auDixieme((ventesTotales / objectifDeLAnnee) * 100),
+    realisation: arrondi2((ventesTotales / objectifDeLAnnee) * 100),
     tenus: trimestres.filter((x) => x.tenu).length,
     pire: trimestres.reduce((m, x) => (x.ecart < m.ecart ? x : m)),
     verdict: (ventesTotales >= objectifDeLAnnee ? "tenu" : demandeTotale >= objectifDeLAnnee ? "a-revoir" : "mal-pose") as VerdictDeLObjectif,
@@ -698,8 +703,8 @@ export function indicateurDuPrix(f: FicheDuMarche = FICHE_DU_MARCHE, prixDeNova?
   const ventesTotales = enseignes.reduce((t, e) => t + e.ventes, 0);
   const chiffreTotal = somme(enseignes.map((e) => e.chiffreDAffaires));
   const prixPondere = auCentime(chiffreTotal / ventesTotales);
-  const indiceSimple = Math.round((nova.prix / moyenneSimple) * 100);
-  const indicePondere = Math.round((nova.prix / prixPondere) * 100);
+  const indiceSimple = arrondi2((nova.prix / moyenneSimple) * 100);
+  const indicePondere = arrondi2((nova.prix / prixPondere) * 100);
   return {
     enseignes,
     nova,
@@ -777,15 +782,15 @@ export function donneesALInformation(f: FicheDeGestion = FICHE_DE_GESTION) {
   const trimestre = (t: 1 | 2) => {
     const tout = total((l) => l.trimestre === t);
     const campustech = total((l) => l.trimestre === t && l.clientele === "campustech");
-    return { total: tout, campustech, particuliers: auCentime(tout - campustech), part: auDixieme((campustech / tout) * 100) };
+    return { total: tout, campustech, particuliers: auCentime(tout - campustech), part: arrondi2((campustech / tout) * 100) };
   };
   const premier = trimestre(1);
   const second = trimestre(2);
-  const ecart = auDixieme(second.part - premier.part);
+  const ecart = arrondi2(second.part - premier.part);
   const parMois = f.semestre.mois.map((m, k) => {
     const tout = total((l) => l.mois === k + 1);
     const campustech = total((l) => l.mois === k + 1 && l.clientele === "campustech");
-    return { nom: m.nom, total: tout, campustech, part: auDixieme((campustech / tout) * 100) };
+    return { nom: m.nom, total: tout, campustech, part: arrondi2((campustech / tout) * 100) };
   });
   return {
     lignes,
@@ -853,7 +858,7 @@ export function extraitDuTableur(f: FicheDeLaCapacite = FICHE_DE_CAPACITE) {
 /** La prévision du trimestre 4 selon une règle, sur l'extrait juste ou faux, à l'enceinte. */
 export function prevision(f: FicheDeLaCapacite = FICHE_DE_CAPACITE, regle: RegleDePrevision = "moyenne", juste = true) {
   const valeurs = extraitDuTableur(f).map((l) => (juste ? l.ventes : l.saisie));
-  return Math.round(regle === "moyenne" ? valeurs.reduce((t, x) => t + x, 0) / valeurs.length : valeurs.at(-1)!);
+  return aLUnite(regle === "moyenne" ? valeurs.reduce((t, x) => t + x, 0) / valeurs.length : valeurs.at(-1)!);
 }
 
 /**
@@ -887,11 +892,11 @@ export function donneeFausse(f: FicheDeLaCapacite = FICHE_DE_CAPACITE) {
     fausse,
     prix: f.enceinte.prix,
     sommeJuste: lignes.reduce((t, l) => t + l.ventes, 0),
-    sommeFausse: auDixieme(lignes.reduce((t, l) => t + l.saisie, 0)),
+    sommeFausse: arrondi2(lignes.reduce((t, l) => t + l.saisie, 0)),
     previsionJuste,
     previsionFausse,
     ecartDePrevision: previsionJuste - previsionFausse,
-    ecartDePrevisionEnPourcentage: auDixieme(((previsionJuste - previsionFausse) / previsionJuste) * 100),
+    ecartDePrevisionEnPourcentage: arrondi2(((previsionJuste - previsionFausse) / previsionJuste) * 100),
     juste,
     faux,
     ventesPerdues: juste.vendues - faux.vendues,
@@ -990,7 +995,7 @@ export function informationATemps(f: FicheDeLaCapacite = FICHE_DE_CAPACITE) {
     sens: (plusTouche.ecart < 0 ? "trop-bas" : plusTouche.ecart > 0 ? "trop-haut" : "egal") as SensDuPlan,
     ventesPerdues: aJour.ventes - enRetard.ventes,
     coutDuRetard,
-    partDuResultat: auDixieme((coutDuRetard / aJour.resultat) * 100),
+    partDuResultat: arrondi2((coutDuRetard / aJour.resultat) * 100),
     coutDuRetardLong,
     verdict: (coutDuRetardLong >= 2 * coutDuRetard ? "au-moins-le-double" : coutDuRetardLong >= coutDuRetard ? "plus-mais-moins-du-double" : "moins") as VerdictDuRetardLong,
   };

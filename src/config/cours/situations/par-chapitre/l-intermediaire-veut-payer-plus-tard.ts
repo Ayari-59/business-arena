@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
 import { CANAUX_DE_DISTRIBUTION, canauxDeDistribution } from "../../chapitres/canaux-de-distribution";
@@ -9,7 +8,6 @@ import { mercatiqueDe } from "../../monde/mercatique-de-nova";
 import type { Situation } from "../types";
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LES CANAUX DE DISTRIBUTION » : L'INTERMÉDIAIRE VEUT PAYER
@@ -28,6 +26,10 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  * au-delà de 60 jours serait un retard, et la réponse le rappelle. Il joue dans le monde du cours
  * (monde/economie-et-marketing.ts) : le premier trimestre de NOVA, le coût variable de 38 €, le taux
  * de l'emprunt.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les coûts du délai, le coût par unité et la marge qui reste se
+ * donnent au centime, à un centime près (à l'euro et à deux centimes, avant).
  */
 
 /**
@@ -37,8 +39,6 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  */
 export const JOURS_DEMANDES_EN_PLUS = 30;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function intermediairePaiePlusTard(c: Cas) {
@@ -136,7 +136,7 @@ export const L_INTERMEDIAIRE_VEUT_PAYER_PLUS_TARD: Situation = {
         const r = intermediairePaiePlusTard(c);
         return [
           { libelle: "Montant dû hors taxes", attendu: r.du, calcul: `${eur(r.k.intermediaire.chiffreDAffaires)} − ${eur(r.k.intermediaire.commission)} = ${eur(r.du)}` },
-          { libelle: "Coût du délai d'aujourd'hui", attendu: r.k.coutDuDelai, tolerance: 1, calcul: `${eur(r.du)} × ${qte(1 + r.k.tva)} × ${pct(r.k.tauxDeLEmprunt)} × ${qte(r.k.delai)} ÷ 360 = ${eur(r.k.coutDuDelai)}` },
+          { libelle: "Coût du délai d'aujourd'hui", attendu: r.k.coutDuDelai, calcul: `${eur(r.du)} × ${nombreAuCentieme(1 + r.k.tva)} × ${pct(r.k.tauxDeLEmprunt)} × ${qte(r.k.delai)} ÷ 360 = ${eur(r.k.coutDuDelai)}` },
         ];
       },
       explication: (c) => {
@@ -156,9 +156,9 @@ export const L_INTERMEDIAIRE_VEUT_PAYER_PLUS_TARD: Situation = {
       champs: (c) => {
         const r = intermediairePaiePlusTard(c);
         return [
-          { libelle: "Coût du délai demandé", attendu: r.coutDuDelaiDemande, tolerance: 1, calcul: `${eur(r.du)} × ${qte(1 + r.k.tva)} × ${pct(r.k.tauxDeLEmprunt)} × ${qte(r.delaiDemande)} ÷ 360 = ${eur(r.coutDuDelaiDemande)}` },
-          { libelle: "Coût en plus sur le trimestre", attendu: r.surcout, tolerance: 1, calcul: `${eur(r.coutDuDelaiDemande)} − ${eur(r.k.coutDuDelai)} = ${eur(r.surcout)}` },
-          { libelle: "Coût de l'intermédiaire par unité", attendu: r.coutParUniteApres, tolerance: 0.02, calcul: `(${eur(r.k.intermediaire.commission)} + ${eur(r.coutDuDelaiDemande)}) ÷ ${qte(r.k.intermediaire.ventes)} = ${eur(r.coutParUniteApres)}` },
+          { libelle: "Coût du délai demandé", attendu: r.coutDuDelaiDemande, calcul: `${eur(r.du)} × ${nombreAuCentieme(1 + r.k.tva)} × ${pct(r.k.tauxDeLEmprunt)} × ${qte(r.delaiDemande)} ÷ 360 = ${eur(r.coutDuDelaiDemande)}` },
+          { libelle: "Coût en plus sur le trimestre", attendu: r.surcout, calcul: `${eur(r.coutDuDelaiDemande)} − ${eur(r.k.coutDuDelai)} = ${eur(r.surcout)}` },
+          { libelle: "Coût de l'intermédiaire par unité", attendu: r.coutParUniteApres, calcul: `(${eur(r.k.intermediaire.commission)} + ${eur(r.coutDuDelaiDemande)}) ÷ ${qte(r.k.intermediaire.ventes)} = ${eur(r.coutParUniteApres)}` },
         ];
       },
       explication: (c) => {
@@ -179,7 +179,7 @@ export const L_INTERMEDIAIRE_VEUT_PAYER_PLUS_TARD: Situation = {
         const r = intermediairePaiePlusTard(c);
         return [
           { libelle: `Marge d'${accord(c, "un")} ${c.unite}`, attendu: r.margeUnitaire, calcul: `${eur(r.k.intermediaire.prix)} − ${eur(r.coutVariable)} = ${eur(r.margeUnitaire)}` },
-          { libelle: "Marge qui reste après l'intermédiaire", attendu: r.margeQuiReste, tolerance: 0.02, calcul: `${eur(r.margeUnitaire)} − ${eur(r.coutParUniteApres)} = ${eur(r.margeQuiReste)}` },
+          { libelle: "Marge qui reste après l'intermédiaire", attendu: r.margeQuiReste, calcul: `${eur(r.margeUnitaire)} − ${eur(r.coutParUniteApres)} = ${eur(r.margeQuiReste)}` },
         ];
       },
       explication: (c) => {

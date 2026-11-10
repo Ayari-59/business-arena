@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { formation } from "../../chapitres/former";
 import { MOIS_PAR_TRIMESTRE } from "../../monde/nova-capacite";
@@ -22,13 +22,16 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène, dont le moteur tirait des rendements
  * décroissants ; il se joue chez NOVA, où la ligne borne le gain : la seconde moitié du budget,
  * 3 200 €, ne fait vendre aucune enceinte de plus.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les capacités et les ventes en plus sont des quantités,
+ * entières, déclarées comme telles ; les coûts et les gains attendent le centime (à l'euro près,
+ * avant).
  */
 
 /** Le budget que propose la direction, en multiples de celui du chapitre : le double, deux fois plus de minutes gagnées. */
 export const MULTIPLE_DU_BUDGET = 2;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export type Verdict = "doubler" | "garder" | "aucun";
 
@@ -98,10 +101,10 @@ export const DOUBLER_LE_BUDGET_DE_FORMATION: Situation = {
       champs: () => {
         const k = budgetDouble();
         return [
-          { libelle: "Capacité de l'équipe, stage du chapitre", attendu: k.f.equipe, calcul: `${qte(k.f.parMois)} × ${k.f.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(k.f.equipe)}`, tolerance: 0 },
-          { libelle: "Capacité de l'équipe, stage doublé", attendu: k.d.equipe, calcul: `${qte(k.d.parMois)} × ${k.d.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(k.d.equipe)}`, tolerance: 0 },
-          { libelle: "Ventes en plus, stage du chapitre", attendu: k.f.enceintesEnPlus, calcul: `${qte(k.f.joue.production)} − ${qte(k.f.sansFormation.production)} = ${qte(k.f.enceintesEnPlus)}`, tolerance: 0 },
-          { libelle: "Ventes en plus, stage doublé", attendu: k.d.enceintesEnPlus, calcul: `${qte(k.d.joue.production)} − ${qte(k.d.sansFormation.production)} = ${qte(k.d.enceintesEnPlus)}`, tolerance: 0 },
+          { libelle: "Capacité de l'équipe, stage du chapitre", nature: "quantite", attendu: k.f.equipe, calcul: `${qte(k.f.parMois)} × ${k.f.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(k.f.equipe)}` },
+          { libelle: "Capacité de l'équipe, stage doublé", nature: "quantite", attendu: k.d.equipe, calcul: `${qte(k.d.parMois)} × ${k.d.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(k.d.equipe)}` },
+          { libelle: "Ventes en plus, stage du chapitre", nature: "quantite", attendu: k.f.enceintesEnPlus, calcul: `${qte(k.f.joue.production)} − ${qte(k.f.sansFormation.production)} = ${qte(k.f.enceintesEnPlus)}` },
+          { libelle: "Ventes en plus, stage doublé", nature: "quantite", attendu: k.d.enceintesEnPlus, calcul: `${qte(k.d.joue.production)} − ${qte(k.d.sansFormation.production)} = ${qte(k.d.enceintesEnPlus)}` },
         ];
       },
       explication: () => {
@@ -120,10 +123,10 @@ export const DOUBLER_LE_BUDGET_DE_FORMATION: Situation = {
       champs: () => {
         const k = budgetDouble();
         return [
-          { libelle: "Coût de la seconde moitié", attendu: k.coutEnPlus, calcul: `${eur(k.d.cout)} − ${eur(k.f.cout)} = ${eur(k.coutEnPlus)}`, tolerance: 1 },
-          { libelle: "Enceintes qu'elle fait vendre en plus", attendu: k.enceintesEnPlus, calcul: `${qte(k.d.enceintesEnPlus)} − ${qte(k.f.enceintesEnPlus)} = ${qte(k.enceintesEnPlus)}`, tolerance: 0 },
-          { libelle: "Ce que rapporte le stage du chapitre", attendu: k.f.gain, calcul: `${eur(k.f.margeEnPlus)} − ${eur(k.f.cout)} = ${eur(k.f.gain)}`, tolerance: 1 },
-          { libelle: "Ce que rapporte le stage doublé", attendu: k.d.gain, calcul: `${eur(k.d.margeEnPlus)} − ${eur(k.d.cout)} = ${eur(k.d.gain)}`, tolerance: 1 },
+          { libelle: "Coût de la seconde moitié", attendu: k.coutEnPlus, calcul: `${eur(k.d.cout)} − ${eur(k.f.cout)} = ${eur(k.coutEnPlus)}` },
+          { libelle: "Enceintes qu'elle fait vendre en plus", nature: "quantite", attendu: k.enceintesEnPlus, calcul: `${qte(k.d.enceintesEnPlus)} − ${qte(k.f.enceintesEnPlus)} = ${qte(k.enceintesEnPlus)}` },
+          { libelle: "Ce que rapporte le stage du chapitre", attendu: k.f.gain, calcul: `${eur(k.f.margeEnPlus)} − ${eur(k.f.cout)} = ${eur(k.f.gain)}` },
+          { libelle: "Ce que rapporte le stage doublé", attendu: k.d.gain, calcul: `${eur(k.d.margeEnPlus)} − ${eur(k.d.cout)} = ${eur(k.d.gain)}` },
         ];
       },
       explication: () => {

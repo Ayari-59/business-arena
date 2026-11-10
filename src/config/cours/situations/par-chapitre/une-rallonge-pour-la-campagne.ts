@@ -1,12 +1,10 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { aLUnite, arrondi2 as auCentime, eur, pct, qte, somme2 } from "../../../../pedagogy/cours/deux-decimales";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
 import { COMMUNICATION, communication } from "../../chapitres/communication";
 import type { Situation } from "../types";
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE DU CHAPITRE « CE QUE RAPPORTE LA COMMUNICATION » : UNE RALLONGE POUR LA
@@ -22,6 +20,10 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  * Le cas est neuf par sa question : le chapitre juge la campagne entière, depuis zéro, le
  * cas juge les euros ajoutés à une campagne qui existe déjà. Les budgets sont ceux
  * du chapitre (`communication`, `campagne.ts`).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes gagnées sont des quantités, entières ; les coûts, la
+ * marge et le gain se donnent au centime.
  */
 
 /**
@@ -31,8 +33,6 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  */
 export const FACTEUR_DE_LA_RALLONGE = 1.5;
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
 /** La hausse de budget demandée, en pourcentage du budget de la campagne. */
 const HAUSSE_DU_BUDGET = pct((FACTEUR_DE_LA_RALLONGE - 1) * 100);
 
@@ -43,7 +43,7 @@ export function rallongeDeLaCampagne(c: Cas) {
   const rallonge = k.budgets.find((b) => b.facteur === FACTEUR_DE_LA_RALLONGE)!;
   const budgetEnPlus = rallonge.budget - jouee.budget;
   const ventesEnPlus = rallonge.ventes - jouee.ventes;
-  const margeEnPlus = Math.round((rallonge.marge - jouee.marge) * 100) / 100;
+  const margeEnPlus = somme2(rallonge.marge, -jouee.marge);
   return {
     sans: k.sans,
     jouee,
@@ -54,11 +54,11 @@ export function rallongeDeLaCampagne(c: Cas) {
     ventesEnPlus,
     coutParVenteEnPlus: ventesEnPlus > 0 ? auCentime(budgetEnPlus / ventesEnPlus) : null,
     margeEnPlus,
-    gain: margeEnPlus - budgetEnPlus,
+    gain: somme2(margeEnPlus, -budgetEnPlus),
     // L'erreur classique : compter les ventes depuis le trimestre sans campagne, pas depuis le budget de la campagne.
     ventesDepuisZero: rallonge.ventes - k.sans.ventes,
     // L'erreur classique : croire que chaque euro en plus fait vendre autant que les premiers.
-    ventesAuMemeCout: Math.round(budgetEnPlus / k.coutParVente),
+    ventesAuMemeCout: aLUnite(budgetEnPlus / k.coutParVente),
   };
 }
 
@@ -119,8 +119,8 @@ export const UNE_RALLONGE_POUR_LA_CAMPAGNE: Situation = {
       champs: (c) => {
         const r = rallongeDeLaCampagne(c);
         return [
-          { libelle: "Ventes gagnées par la campagne de l'agence", attendu: r.ventesDeLaCampagne, calcul: `${qte(r.jouee.ventes)} − ${qte(r.sans.ventes)} = ${qte(r.ventesDeLaCampagne)}` },
-          { libelle: "Coût d'une vente gagnée", attendu: r.coutParVente, tolerance: 0.01, calcul: `${eur(r.jouee.budget)} ÷ ${qte(r.ventesDeLaCampagne)} = ${eur(r.coutParVente)}` },
+          { libelle: "Ventes gagnées par la campagne de l'agence", nature: "quantite", attendu: r.ventesDeLaCampagne, calcul: `${qte(r.jouee.ventes)} − ${qte(r.sans.ventes)} = ${qte(r.ventesDeLaCampagne)}` },
+          { libelle: "Coût d'une vente gagnée", attendu: r.coutParVente, calcul: `${eur(r.jouee.budget)} ÷ ${qte(r.ventesDeLaCampagne)} = ${eur(r.coutParVente)}` },
         ];
       },
       explication: (c) => {
@@ -143,9 +143,9 @@ export const UNE_RALLONGE_POUR_LA_CAMPAGNE: Situation = {
         const r = rallongeDeLaCampagne(c);
         return [
           { libelle: "Budget en plus", attendu: r.budgetEnPlus, calcul: `${eur(r.rallonge.budget)} − ${eur(r.jouee.budget)} = ${eur(r.budgetEnPlus)}` },
-          { libelle: `Ventes en plus (${c.unites})`, attendu: r.ventesEnPlus, calcul: `${qte(r.rallonge.ventes)} − ${qte(r.jouee.ventes)} = ${qte(r.ventesEnPlus)}` },
+          { libelle: `Ventes en plus (${c.unites})`, nature: "quantite", attendu: r.ventesEnPlus, calcul: `${qte(r.rallonge.ventes)} − ${qte(r.jouee.ventes)} = ${qte(r.ventesEnPlus)}` },
           ...(r.coutParVenteEnPlus !== null
-            ? [{ libelle: "Coût d'une vente gagnée par la rallonge", attendu: r.coutParVenteEnPlus, tolerance: 0.01, calcul: `${eur(r.budgetEnPlus)} ÷ ${qte(r.ventesEnPlus)} = ${eur(r.coutParVenteEnPlus)}` }]
+            ? [{ libelle: "Coût d'une vente gagnée par la rallonge", attendu: r.coutParVenteEnPlus, calcul: `${eur(r.budgetEnPlus)} ÷ ${qte(r.ventesEnPlus)} = ${eur(r.coutParVenteEnPlus)}` }]
             : []),
         ];
       },

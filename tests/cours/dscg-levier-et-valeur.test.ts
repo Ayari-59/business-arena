@@ -41,6 +41,7 @@ import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSim
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 
 /**
  * DSCG FINANCE : L'EFFET DE LEVIER ET LA CRÉATION DE VALEUR, CHEZ L'ESCALE DU MONDE DU COURS, ET
@@ -471,10 +472,11 @@ describe("la création de valeur chez L'ESCALE, refaite à la main", () => {
     const e = attendus(ch, "eva");
     expect(e).toEqual({ "Re moins CMPC (points)": centime(re - cmpc), "EVA de l'année": eva, "Résultat d'exploitation qui annule l'EVA": coutDuCapital / (1 - t) });
     expect(centime(re - cmpc)).toBe(4.52);
-    // La tolérance admet le chemin des taux arrondis : 4,52 % × 2 150 000 € = 97 180 €.
+    // L'EVA se calcule en euros, sans passer par les taux arrondis (décision du 10 novembre 2026) : le
+    // corrigé n'admet plus 4,52 % × 2 150 000 € = 97 180 €, à 215 € près ; il attend le centime.
     const champ = (ch.etapes.find((x) => x.id === "eva") as EtapeMontants).champs(cas, etatVide)[1]!;
-    expect(Math.abs((4.52 / 100) * AE - eva)).toBeLessThanOrEqual(champ.tolerance!);
-    expect(champ.tolerance).toBe(215);
+    expect(champ.tolerance ?? 0.01).toBe(0.01);
+    expect(champ.attendu).toBe(eva);
     expect(attendus(ch, "residuel")).toEqual({ "Exigence des associés": exigence, "Résultat résiduel": RN - exigence });
   });
 
@@ -488,15 +490,16 @@ describe("la création de valeur chez L'ESCALE, refaite à la main", () => {
     const cp = CPouverture + rn;
     const d = ae - cp;
     const k = TAUX_SANS_RISQUE + BETA_DE_L_ACTIF_DE_L_ESCALE * (1 + ((1 - t) * d) / cp) * PRIME_DE_RISQUE_DU_MARCHE;
-    const evaAvec = centime(rn - k * cp);
-    expect([rex, ff, rn, ae, cp, d]).toEqual([360_900, 62_600, 223_725, 2_366_000, 1_079_050, 1_286_950]);
-    expect(evaAvec).toBe(93_228.9);
-    expect(attendus(ch, "la-salle-de-seminaire")).toEqual({ "Variation du résultat net": rn - RN, "EVA avec la salle": evaAvec, "Variation de l'EVA": centime(evaAvec - eva) });
-    expect([rn - RN, centime(evaAvec - eva)]).toEqual([4_050, -3_896.1]);
-    // Le chemin du kcp arrondi (12,09 %) tient dans la tolérance.
-    const champ = (ch.etapes.find((x) => x.id === "la-salle-de-seminaire") as EtapeMontants).champs(cas, etatVide)[1]!;
+    // L'EVA avec la salle part du kcp du tableau à deux décimales, 12,09 %, comme l'élève (décision du
+    // 10 novembre 2026) : 223 725 € − 130 457,15 € ; au kcp non arrondi, elle valait 93 228,90 €.
     expect(pc(k)).toBe(12.09);
-    expect(Math.abs(rn - 0.1209 * cp - evaAvec)).toBeLessThanOrEqual(champ.tolerance!);
+    const evaAvec = centime(rn - arrondi2(0.1209 * cp));
+    expect([rex, ff, rn, ae, cp, d]).toEqual([360_900, 62_600, 223_725, 2_366_000, 1_079_050, 1_286_950]);
+    expect(evaAvec).toBe(93_267.85);
+    expect(attendus(ch, "la-salle-de-seminaire")).toEqual({ "Variation du résultat net": rn - RN, "EVA avec la salle": evaAvec, "Variation de l'EVA": centime(evaAvec - eva) });
+    expect([rn - RN, centime(evaAvec - eva)]).toEqual([4_050, -3_857.15]);
+    const champ = (ch.etapes.find((x) => x.id === "la-salle-de-seminaire") as EtapeMontants).champs(cas, etatVide)[1]!;
+    expect(champ.tolerance ?? 0.01).toBe(0.01);
     // La salle rapporte 11 250 € après impôt sur 216 000 € : 5,21 %, sous le CMPC.
     expect([(39_000 - dotation) * (1 - t), 240_000 - dotation, pc(((39_000 - dotation) * (1 - t)) / (240_000 - dotation))]).toEqual([11_250, 216_000, 5.21]);
     expect(juste(ch, "la-salle-cree-t-elle")).toBe("Non : elle rapporte moins que ne coûte le capital qu'elle mobilise, même si le résultat net monte");
