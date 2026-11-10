@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { COUT_D_UN_JOUR_D_ABSENCE } from "./cohesion-de-nova";
 import { ENTREPRISES_DE_LA_DIRECTION, FICHE_DE_DIRECTION } from "./direction-de-nova";
@@ -20,6 +21,10 @@ import { ENTREPRISES_DE_LA_DIRECTION, FICHE_DE_DIRECTION } from "./direction-de-
  *   · LA PRÉVENTION : une visseuse ergonomique, suspendue et à réaction compensée, coûte 1 800 € par
  *     poste ; la ligne compte 2 postes de vissage, et le médecin du travail estime qu'équipés, ils
  *     éviteraient les arrêts de la tendinite.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de fréquence se donnait au dixième, il est au
+ * centième, comme le taux de gravité.
  */
 
 export const ENTREPRISES_DE_LA_SANTE = ENTREPRISES_DE_LA_DIRECTION;
@@ -35,8 +40,8 @@ export const HEURES_TRAVAILLEES = f.operateurs.nombre * f.operateurs.heuresParMo
 /** Le taux de fréquence et le taux de gravité de l'année, au dixième et au centième. */
 export function indicateursDeSecurite() {
   const a = ANNEE_DE_LA_SANTE;
-  const frequence = Math.round(((a.accidentsAvecArret * 1_000_000) / HEURES_TRAVAILLEES) * 10) / 10;
-  const gravite = Math.round(((a.joursDArretDesAccidents * 1_000) / HEURES_TRAVAILLEES) * 100) / 100;
+  const frequence = arrondi2((a.accidentsAvecArret * 1_000_000) / HEURES_TRAVAILLEES);
+  const gravite = arrondi2((a.joursDArretDesAccidents * 1_000) / HEURES_TRAVAILLEES);
   return { heures: HEURES_TRAVAILLEES, frequence, gravite };
 }
 

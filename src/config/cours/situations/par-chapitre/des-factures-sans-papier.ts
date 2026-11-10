@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_NUMERIQUE, facturesElectroniques } from "../../monde/numerique-de-la-ligne";
 import type { Situation } from "../types";
 
@@ -8,10 +8,13 @@ import type { Situation } from "../types";
  *
  * Le chapitre chiffrait des capteurs sur la ligne ; le cas chiffre la dématérialisation des factures de
  * fournisseurs. Hypothèses : monde/numerique-de-la-ligne.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures gagnées sont une grandeur, au centième ; les
+ * montants au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 export const DES_FACTURES_SANS_PAPIER: Situation = {
   code: "des-factures-sans-papier",
@@ -47,7 +50,7 @@ export const DES_FACTURES_SANS_PAPIER: Situation = {
       champs: () => {
         const k = facturesElectroniques();
         return [
-          { libelle: "Heures gagnées dans l'année", attendu: k.heuresGagnees, calcul: `${qte(k.parAn)} × (${qte(k.minutesPapier)} − ${qte(k.minutesElectronique)}) ÷ 60 = ${qte(k.heuresGagnees)}` },
+          { libelle: "Heures gagnées dans l'année", nature: "grandeur", attendu: k.heuresGagnees, calcul: `${qte(k.parAn)} × (${qte(k.minutesPapier)} − ${qte(k.minutesElectronique)}) ÷ 60 = ${qte(k.heuresGagnees)}` },
           { libelle: "Ce qu'elles valent", attendu: k.economie, calcul: `${qte(k.heuresGagnees)} × ${eur(k.coutHoraire)} = ${eur(k.economie)}` },
           { libelle: "Gain de l'année", attendu: k.gain, calcul: `${eur(k.economie)} − ${eur(k.plateforme)} = ${eur(k.gain)}` },
         ];

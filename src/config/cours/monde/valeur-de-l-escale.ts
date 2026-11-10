@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { anneeDeLHotel, trimestreDeLHotel } from "./hotel";
 import { L_ESCALE } from "./l-escale";
 
@@ -13,10 +14,15 @@ import { L_ESCALE } from "./l-escale";
  *   · les 400 avis publiés sur l'année par les clients de L'ESCALE, étoile par étoile ;
  *   · la note moyenne des deux concurrents sur les mêmes sites (3,6 et 4,6) ;
  *   · le prix que Le Comptoir affichera l'hiver prochain (72 €, le cas « Le Comptoir baisse son prix »).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des salariés et des associés et le taux de
+ * satisfaction se donnaient au dixième, ils sont à deux décimales. Le chiffre d'affaires et le
+ * résultat de l'année, lus sur hotel.ts, s'arrondissent au centime à l'entrée de ce fichier, et les
+ * parts en repartent.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** Les avis de l'année : le nombre d'avis à 5, 4, 3, 2 et 1 étoile. */
 export const AVIS_DE_L_ESCALE: Readonly<Record<5 | 4 | 3 | 2 | 1, number>> = { 5: 180, 4: 140, 3: 40, 2: 24, 1: 16 };
@@ -37,19 +43,21 @@ export function valeurDeLEscale() {
   const nombreDAvis = avis.reduce((t, x) => t + x.n, 0);
   const points = avis.reduce((t, x) => t + x.etoiles * x.n, 0);
   const satisfaits = AVIS_DE_L_ESCALE[5] + AVIS_DE_L_ESCALE[4];
+  const chiffreDAffaires = auCentime(a.chiffreDAffaires);
+  const resultat = auCentime(a.resultat);
   return {
     vendues: a.vendues,
-    chiffreDAffaires: a.chiffreDAffaires,
-    resultat: a.resultat,
+    chiffreDAffaires,
+    resultat,
     personnel,
     /** La part du chiffre d'affaires qui revient aux salariés, et celle qui reste aux associés (le résultat), en %. */
-    partDesSalariesPct: auDixieme((personnel / a.chiffreDAffaires) * 100),
-    partDesAssociesPct: auDixieme((a.resultat / a.chiffreDAffaires) * 100),
+    partDesSalariesPct: arrondi2((personnel / chiffreDAffaires) * 100),
+    partDesAssociesPct: arrondi2((resultat / chiffreDAffaires) * 100),
     nombreDAvis,
     points,
-    noteMoyenne: Math.round((points / nombreDAvis) * 100) / 100,
+    noteMoyenne: arrondi2(points / nombreDAvis),
     satisfaits,
-    tauxDeSatisfactionPct: auDixieme((satisfaits / nombreDAvis) * 100),
+    tauxDeSatisfactionPct: arrondi2((satisfaits / nombreDAvis) * 100),
   };
 }
 

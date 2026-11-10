@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { LA_TABLE_D_AUGUSTIN } from "../monde/la-table-d-augustin";
 import {
   MOMENTS_DE_LA_SOIREE,
@@ -34,14 +34,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/experience-du-bistrot.ts), chez LA TABLE D'AUGUSTIN
  * seule : le ticket moyen, les coûts d'un couvert, la salle et les clientèles de la fiche ; l'enquête et
  * la soirée du chef sont des hypothèses nommées dans la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les écarts entre le perçu et l'attendu sont des grandeurs, au
+ * centième (à 0,05 près, avant) ; le taux de clients satisfaits est à deux décimales
+ * (monde/experience-du-bistrot.ts).
  */
 
 export const ENTREPRISES_DE_L_EXPERIENCE = ["bistrot"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const note = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
 
 function leBistrot(): TableauDeDonnees {
   const f = LA_TABLE_D_AUGUSTIN;
@@ -57,7 +58,7 @@ function lEnquete(): TableauDeDonnees {
   return {
     titre: `L'enquête de satisfaction, ${qte(s.repondants)} clients (notes sur 10)`,
     colonnes: ["Attendu", "Perçu"],
-    lignes: s.criteres.map((k) => ({ libelle: k.libelle, valeurs: [note(k.attendu), note(k.percu)] })),
+    lignes: s.criteres.map((k) => ({ libelle: k.libelle, valeurs: [nombreAuCentieme(k.attendu), nombreAuCentieme(k.percu)] })),
   };
 }
 
@@ -126,14 +127,14 @@ export const L_EXPERIENCE_CLIENT: Chapitre = {
         const r = rapidite();
         const k = cuisine();
         return [
-          { libelle: "Écart sur la rapidité du service", attendu: r.ecart, tolerance: 0.05, calcul: `${note(r.percu)} − ${note(r.attendu)} = ${note(r.ecart)}` },
-          { libelle: "Écart sur la cuisine", attendu: k.ecart, tolerance: 0.05, calcul: `${note(k.percu)} − ${note(k.attendu)} = ${note(k.ecart)}` },
+          { libelle: "Écart sur la rapidité du service", nature: "grandeur", attendu: r.ecart, calcul: `${nombreAuCentieme(r.percu)} − ${nombreAuCentieme(r.attendu)} = ${nombreAuCentieme(r.ecart)}` },
+          { libelle: "Écart sur la cuisine", nature: "grandeur", attendu: k.ecart, calcul: `${nombreAuCentieme(k.percu)} − ${nombreAuCentieme(k.attendu)} = ${nombreAuCentieme(k.ecart)}` },
         ];
       },
       explication: () => {
         const r = rapidite();
         const k = cuisine();
-        return [`Un écart positif, c'est une attente dépassée : la cuisine fait mieux que prévu (${note(k.ecart)}). Un écart négatif, c'est une déception : la rapidité du service reste en retard de ${note(-r.ecart)} point${-r.ecart >= 2 ? "s" : ""}.`];
+        return [`Un écart positif, c'est une attente dépassée : la cuisine fait mieux que prévu (${nombreAuCentieme(k.ecart)}). Un écart négatif, c'est une déception : la rapidité du service reste en retard de ${nombreAuCentieme(-r.ecart)} point${-r.ecart >= 2 ? "s" : ""}.`];
       },
     },
     {
@@ -147,9 +148,9 @@ export const L_EXPERIENCE_CLIENT: Chapitre = {
       options: () => {
         const s = satisfactionDuBistrot();
         return [
-          { texte: s.pire.libelle, juste: true, retour: `Oui : c'est le plus grand écart négatif, ${note(s.pire.ecart)}. Les clients en attendaient beaucoup, et en ont perçu bien moins.` },
+          { texte: s.pire.libelle, juste: true, retour: `Oui : c'est le plus grand écart négatif, ${nombreAuCentieme(s.pire.ecart)}. Les clients en attendaient beaucoup, et en ont perçu bien moins.` },
           { texte: "Le cadre, moins bien noté que la cuisine", juste: false, retour: "Non : le cadre est moins bien noté, mais les clients n'en attendaient pas plus : l'écart est positif. Une note basse n'est pas une déception si l'attente était basse." },
-          { texte: s.meilleur.libelle, juste: false, retour: `Non : c'est le point fort du bistrot, ${note(s.meilleur.ecart)} au-dessus de l'attente. On le garde, on ne le corrige pas.` },
+          { texte: s.meilleur.libelle, juste: false, retour: `Non : c'est le point fort du bistrot, ${nombreAuCentieme(s.meilleur.ecart)} au-dessus de l'attente. On le garde, on ne le corrige pas.` },
         ];
       },
     },
@@ -165,7 +166,7 @@ export const L_EXPERIENCE_CLIENT: Chapitre = {
       },
       champs: () => {
         const s = satisfactionDuBistrot();
-        return [{ libelle: "Taux de clients satisfaits (%)", attendu: s.tauxDeSatisfaits, tolerance: 0.1, calcul: `${qte(s.satisfaits)} ÷ ${qte(s.repondants)} × 100 = ${pct(s.tauxDeSatisfaits)}` }];
+        return [{ libelle: "Taux de clients satisfaits (%)", attendu: s.tauxDeSatisfaits, calcul: `${qte(s.satisfaits)} ÷ ${qte(s.repondants)} × 100 = ${pct(s.tauxDeSatisfaits)}` }];
       },
       explication: () => {
         const s = satisfactionDuBistrot();
@@ -271,7 +272,7 @@ export const L_EXPERIENCE_CLIENT: Chapitre = {
       options: () => {
         const r = rapidite();
         return [
-          { texte: "Non : au midi, on attend la rapidité", juste: true, retour: `Oui : tout repas laisse une expérience, mais le client d'affaires veut d'abord être servi vite et bien. C'est justement là que le bistrot déçoit (${note(r.ecart)} sur la rapidité) : son expérience du midi passe par un service plus rapide, pas par un musicien.` },
+          { texte: "Non : au midi, on attend la rapidité", juste: true, retour: `Oui : tout repas laisse une expérience, mais le client d'affaires veut d'abord être servi vite et bien. C'est justement là que le bistrot déçoit (${nombreAuCentieme(r.ecart)} sur la rapidité) : son expérience du midi passe par un service plus rapide, pas par un musicien.` },
           { texte: "Oui : chaque client veut vivre un moment à part", juste: false, retour: "Non : un spectacle au déjeuner retarderait un client qui a peu de temps. L'expérience dépend de ce que chaque clientèle attend." },
           { texte: "Non : l'expérience ne compte que pour les banquets", juste: false, retour: "Non : tout client vit une expérience, même pressé. Elle n'est simplement pas la même pour tous." },
         ];

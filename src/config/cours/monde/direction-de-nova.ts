@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime, JOURS_DE_L_ANNEE } from "./amortissement";
 import { anneeDeProduction, coutsDeLaQualite, machineDe, margeUnitaire, partDuMarche } from "./capacite";
 import { bilanDuLycee, compteDuLycee, exerciceDe } from "./comptes-du-lycee";
@@ -21,6 +22,11 @@ import { CHARGES_FIXES_DU_MOIS } from "./nova-gestion";
  *   · nova-capacite.ts et capacite.ts : la demande de N + 1, la ligne, l'équipe, l'entretien, la
  *     qualité, le salaire du marché et le seuil de démission ;
  *   · mercatique-de-nova.ts et marche-a-trois.ts : la demande qui répond au prix, SoundBox et son prix.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les constats en pourcentage du diagnostic se donnaient au
+ * dixième, ils sont à deux décimales ; les charges d'une journée sont au centime, et les jours que
+ * paie la trésorerie se comptent sur elles, comme sur la copie de l'élève.
  */
 
 /** La fiche de capacité de NOVA. */
@@ -73,7 +79,8 @@ export function projetDeNova(v: Partial<{ placement: number; apport: number; emp
   const compteCourant = auCentime(tresorerie - placement);
   const chargesDuMois = CHARGES_FIXES_DU_MOIS.loyer + CHARGES_FIXES_DU_MOIS.personnel;
   const joursParMois = JOURS_DE_L_ANNEE / 12;
-  const chargesParJour = chargesDuMois / joursParMois;
+  /** Les charges d'une journée, au centime : celles que l'élève écrit, et dont il repart pour compter les jours. */
+  const chargesParJour = arrondi2(chargesDuMois / joursParMois);
   return {
     apport,
     emprunt: auCentime(emprunt + empruntEnPlus),
@@ -303,7 +310,7 @@ export function constatsDuDiagnostic(salaire?: number): Constat[] {
     {
       code: "salaire",
       libelle: "Salaire des opérateurs face au marché de N + 1",
-      montant: Math.round(x.part * 1000) / 10,
+      montant: arrondi2(x.part * 100),
       unite: "%",
       categorie: x.sousLeSeuil ? "faiblesse" : "force",
       pourquoi: x.sousLeSeuil
@@ -313,7 +320,7 @@ export function constatsDuDiagnostic(salaire?: number): Constat[] {
     {
       code: "demande",
       libelle: "Hausse de la demande prévue, de N à N + 1",
-      montant: Math.round(x.hausseDeLaDemande * 1000) / 10,
+      montant: arrondi2(x.hausseDeLaDemande * 100),
       unite: "%",
       categorie: x.hausseDeLaDemande > 0 ? "opportunite" : "menace",
       pourquoi: "la demande vient des clients, hors de l'entreprise ; qu'elle grandisse est une opportunité.",
@@ -337,7 +344,7 @@ export function constatsDuDiagnostic(salaire?: number): Constat[] {
     {
       code: "client",
       libelle: `Perte probable sur la créance de ${x.client}, en redressement judiciaire`,
-      montant: Math.round(x.perteProbable * 1000) / 10,
+      montant: arrondi2(x.perteProbable * 100),
       unite: "%",
       categorie: "menace",
       pourquoi: "la défaillance d'un client vient de l'environnement de l'entreprise : une menace.",

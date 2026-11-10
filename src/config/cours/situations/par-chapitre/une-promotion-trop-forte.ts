@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2, eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
 import { PRIX_PSYCHOLOGIQUE, prixPsychologique } from "../../chapitres/prix-psychologique";
@@ -8,7 +7,6 @@ import { mercatiqueDe } from "../../monde/mercatique-de-nova";
 import type { Situation } from "../types";
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE PRIX PSYCHOLOGIQUE » : UNE PROMOTION TROP FORTE ?
@@ -25,6 +23,11 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  * franchir en montant, le cas regarde le prix sous lequel il ne doit pas descendre. La
  * clientèle et ses repères sont ceux que le chapitre étudie (`prixPsychologique`) ; le coût
  * variable d'une unité est celui de la fiche (monde/economie-et-marketing.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'écart au prix jugé normal, la baisse la plus forte acceptée
+ * et la baisse de la marge se donnaient au dixième, ils sont à deux décimales ; le prix
+ * psychologique vient du chapitre (lot 3), déjà au centime.
  */
 
 /**
@@ -34,8 +37,6 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
  */
 export const REMISE_PROMOTIONNELLE = 0.3;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function promotionTropForte(c: Cas) {
@@ -43,9 +44,9 @@ export function promotionTropForte(c: Cas) {
   const k = p.etudie;
   const prix = p.prix;
   const coutVariable = coutVariableDe(mercatiqueDe(c));
-  const prixPromo = auCentime(prix * (1 - REMISE_PROMOTIONNELLE));
-  const margeAvant = auCentime(prix - coutVariable);
-  const margeApres = auCentime(prixPromo - coutVariable);
+  const prixPromo = arrondi2(prix * (1 - REMISE_PROMOTIONNELLE));
+  const margeAvant = arrondi2(prix - coutVariable);
+  const margeApres = arrondi2(prixPromo - coutVariable);
   return {
     clientele: k.nom,
     normal: k.normal,
@@ -53,13 +54,13 @@ export function promotionTropForte(c: Cas) {
     prix,
     coutVariable,
     prixPromo,
-    ecartAuNormal: auDixieme((prixPromo / k.normal - 1) * 100),
-    baisseMaximale: auDixieme((1 - k.tropBas / prix) * 100),
-    ecartALaMefiance: auCentime(prixPromo - k.tropBas),
+    ecartAuNormal: arrondi2((prixPromo / k.normal - 1) * 100),
+    baisseMaximale: arrondi2((1 - k.tropBas / prix) * 100),
+    ecartALaMefiance: arrondi2(prixPromo - k.tropBas),
     credible: prixPromo >= k.tropBas,
     margeAvant,
     margeApres,
-    baisseDeLaMarge: auDixieme((1 - margeApres / margeAvant) * 100),
+    baisseDeLaMarge: arrondi2((1 - margeApres / margeAvant) * 100),
   };
 }
 
@@ -116,12 +117,12 @@ export const UNE_PROMOTION_TROP_FORTE: Situation = {
       titre: "Le prix promotionnel",
       notions: ["psych_price"],
       question: () =>
-        "Calculez le prix promotionnel, puis son écart au prix que la clientèle juge normal, en pourcentage au dixième (négatif s'il est en dessous).",
+        "Calculez le prix promotionnel, puis son écart au prix que la clientèle juge normal, en pourcentage à deux décimales (négatif s'il est en dessous).",
       champs: (c) => {
         const r = promotionTropForte(c);
         return [
           { libelle: "Prix promotionnel", attendu: r.prixPromo, calcul: `${eur(r.prix)} × (1 − ${pct(REMISE_PROMOTIONNELLE * 100)}) = ${eur(r.prixPromo)}` },
-          { libelle: "Écart au prix jugé normal (%)", attendu: r.ecartAuNormal, tolerance: 0.1, calcul: `(${eur(r.prixPromo)} ÷ ${eur(r.normal)} − 1) × 100 = ${pct(r.ecartAuNormal)}` },
+          { libelle: "Écart au prix jugé normal (%)", attendu: r.ecartAuNormal, calcul: `(${eur(r.prixPromo)} ÷ ${eur(r.normal)} − 1) × 100 = ${pct(r.ecartAuNormal)}` },
         ];
       },
       explication: (c) => {
@@ -139,11 +140,11 @@ export const UNE_PROMOTION_TROP_FORTE: Situation = {
       titre: "Jusqu'où baisser sans éveiller la méfiance",
       notions: ["psych_price"],
       question: () =>
-        "De combien le prix pratiqué peut-il baisser, au plus, avant d'atteindre le prix sous lequel la clientèle doute de la qualité ? Donnez cette baisse en pourcentage, au dixième. Calculez ensuite ce qui sépare le prix promotionnel de ce prix de méfiance, en euros (négatif s'il est en dessous).",
+        "De combien le prix pratiqué peut-il baisser, au plus, avant d'atteindre le prix sous lequel la clientèle doute de la qualité ? Donnez cette baisse en pourcentage, à deux décimales. Calculez ensuite ce qui sépare le prix promotionnel de ce prix de méfiance, en euros (négatif s'il est en dessous).",
       champs: (c) => {
         const r = promotionTropForte(c);
         return [
-          { libelle: "Baisse la plus forte acceptée (%)", attendu: r.baisseMaximale, tolerance: 0.1, calcul: `(1 − ${eur(r.tropBas)} ÷ ${eur(r.prix)}) × 100 = ${pct(r.baisseMaximale)}` },
+          { libelle: "Baisse la plus forte acceptée (%)", attendu: r.baisseMaximale, calcul: `(1 − ${eur(r.tropBas)} ÷ ${eur(r.prix)}) × 100 = ${pct(r.baisseMaximale)}` },
           { libelle: "Prix promotionnel moins prix de méfiance (€)", attendu: r.ecartALaMefiance, calcul: `${eur(r.prixPromo)} − ${eur(r.tropBas)} = ${eur(r.ecartALaMefiance)}` },
         ];
       },
@@ -162,13 +163,13 @@ export const UNE_PROMOTION_TROP_FORTE: Situation = {
       titre: "Ce que la promotion coûte sur chaque vente",
       notions: ["psych_price", "contribution_margin"],
       question: () =>
-        "Calculez la marge d'une unité (prix moins coût variable) au prix pratiqué, puis au prix promotionnel, et la baisse de la marge d'une unité, en pourcentage au dixième.",
+        "Calculez la marge d'une unité (prix moins coût variable) au prix pratiqué, puis au prix promotionnel, et la baisse de la marge d'une unité, en pourcentage à deux décimales.",
       champs: (c) => {
         const r = promotionTropForte(c);
         return [
           { libelle: "Marge d'une unité au prix pratiqué", attendu: r.margeAvant, calcul: `${eur(r.prix)} − ${eur(r.coutVariable)} = ${eur(r.margeAvant)}` },
           { libelle: "Marge d'une unité au prix promotionnel", attendu: r.margeApres, calcul: `${eur(r.prixPromo)} − ${eur(r.coutVariable)} = ${eur(r.margeApres)}` },
-          { libelle: "Baisse de la marge d'une unité (%)", attendu: r.baisseDeLaMarge, tolerance: 0.1, calcul: `(1 − ${eur(r.margeApres)} ÷ ${eur(r.margeAvant)}) × 100 = ${pct(r.baisseDeLaMarge)}` },
+          { libelle: "Baisse de la marge d'une unité (%)", attendu: r.baisseDeLaMarge, calcul: `(1 − ${eur(r.margeApres)} ÷ ${eur(r.margeAvant)}) × 100 = ${pct(r.baisseDeLaMarge)}` },
         ];
       },
       explication: (c) => {

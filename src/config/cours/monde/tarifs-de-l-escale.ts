@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { trimestreDeLHotel, nuiteesOffertes } from "./hotel";
 import { L_ESCALE } from "./l-escale";
 import { LA_TABLE_D_AUGUSTIN } from "./la-table-d-augustin";
@@ -21,10 +22,13 @@ import { LA_TABLE_D_AUGUSTIN } from "./la-table-d-augustin";
  *     70 € de marge ; le bureau et le départ tardif ajoutent 6 € au coût variable d'une nuitée ;
  *   · LE CAS « LE CONGRÈS DE JUILLET » : un organisateur demande 1 000 nuitées au troisième trimestre, à
  *     75 € la nuitée.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge et la baisse de la demande se donnaient au
+ * dixième, ils sont à deux décimales.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 export const HIVER = 1;
 export const ETE = 3;
@@ -41,7 +45,7 @@ export const CONGRES_DE_JUILLET = { nuitees: 1_000, prix: 75 } as const;
 /** Le prix unique de l'année : ce qu'il laisse sur une nuitée, et le taux de marge sur le coût variable. */
 export function margeDUneNuitee() {
   const marge = auCentime(L_ESCALE.prixDeLAnnee - L_ESCALE.coutVariableParNuitee);
-  return { prix: L_ESCALE.prixDeLAnnee, cout: L_ESCALE.coutVariableParNuitee, marge, tauxDeMarge: auDixieme((marge / L_ESCALE.coutVariableParNuitee) * 100) };
+  return { prix: L_ESCALE.prixDeLAnnee, cout: L_ESCALE.coutVariableParNuitee, marge, tauxDeMarge: arrondi2((marge / L_ESCALE.coutVariableParNuitee) * 100) };
 }
 
 /** Un trimestre de l'hôtel au prix donné (au prix de l'année par défaut). */
@@ -54,7 +58,7 @@ export const anneeAuPrixUnique = () => [1, 2, 3, 4].map((n) => trimestreAuPrix(n
 export const nuiteesDuTrimestre = () => nuiteesOffertes(L_ESCALE);
 
 /** La baisse de la demande, en %, pour une hausse du prix de `hausse` (0,10 pour 10 %), toutes clientèles réunies. */
-export const baisseDeLaDemande = (hausse: number) => auDixieme((1 - (1 + hausse) ** L_ESCALE.elasticite) * 100);
+export const baisseDeLaDemande = (hausse: number) => arrondi2((1 - (1 + hausse) ** L_ESCALE.elasticite) * 100);
 
 /** Le prix d'été le plus haut, à l'euro, auquel la demande remplit encore l'hôtel. */
 export function prixDEteQuiRemplit() {

@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { VISITES_DU_SITE, RETRAITS_DE_JANVIER } from "./clientele-de-la-boutique";
 import { MAILLE_ET_CO } from "./maille-et-co";
 import { indicateursDuMois } from "./boutique";
@@ -22,10 +23,13 @@ import { passantsDeJanvier } from "./vente-et-caisse";
  *     Le chapitre essaie un mois de 20 réservations ;
  *   · LE CAS « LE MODULE AUGMENTE » : le prestataire passe à 400 € par mois ; la boutique attend 18
  *     réservations par mois.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part des passages venus du site et le taux de
+ * transformation se donnaient au dixième, ils sont à deux décimales.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 export const CLIENTES_ROPO_DE_JANVIER = 282;
 
@@ -53,8 +57,8 @@ export function canauxDeJanvier() {
     visites,
     retraits: RETRAITS_DE_JANVIER,
     ropo: CLIENTES_ROPO_DE_JANVIER,
-    partRopo: auDixieme((CLIENTES_ROPO_DE_JANVIER / i.tickets) * 100),
-    transformationDuSite: auDixieme((RETRAITS_DE_JANVIER / visites) * 100),
+    partRopo: arrondi2((CLIENTES_ROPO_DE_JANVIER / i.tickets) * 100),
+    transformationDuSite: arrondi2((RETRAITS_DE_JANVIER / visites) * 100),
   };
 }
 

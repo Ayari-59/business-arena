@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { LA_DIVERSITE_DES_ORGANISATIONS } from "../../src/config/cours/chapitres/la-diversite-des-organisations";
 import { organisationsComparees } from "../../src/config/cours/monde/organisations-comparees";
 import { LE_GYMNASE_DEVIENT_PAYANT, gymnasePayant } from "../../src/config/cours/situations/par-chapitre/le-gymnase-devient-payant";
@@ -26,10 +27,10 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("trois organisations, côte à côte", () => {
-  it("ce qui les finance : 7,8 % payés par les usagers, 26,5 % de subvention", () => {
+  it("ce qui les finance : 7,78 % payés par les usagers, 26,47 % de subvention", () => {
     const k = organisationsComparees();
     expect([k.communaute.recettes, k.communaute.usagers, k.communaute.impotsEtDotations]).toEqual([9_000_000, 700_000, 8_300_000]);
-    expect(attendusSgn(LA_DIVERSITE_DES_ORGANISATIONS, "qui-finance")).toEqual([7.8, 26.5]);
+    expect(attendusSgn(LA_DIVERSITE_DES_ORGANISATIONS, "qui-finance")).toEqual([7.78, 26.47]);
   });
 
   it("trois excédents : 2 000 € au club, 500 000 € virés à l'investissement, le dividende de NOVA", () => {
@@ -37,7 +38,7 @@ describe("trois organisations, côte à côte", () => {
     expect([k.club.recettes, k.club.depenses, k.club.excedent]).toEqual([68_000, 66_000, 2_000]);
     const [club, communaute, part] = attendusSgn(LA_DIVERSITE_DES_ORGANISATIONS, "trois-excedents");
     expect([club, communaute]).toEqual([2_000, 500_000]);
-    expect(part).toBe(Math.round((k.nova.dividendes / k.nova.benefice) * 1_000) / 10);
+    expect(part).toBe(arrondi2((k.nova.dividendes / k.nova.benefice) * 100));
     expect(k.nova.dividendes).toBeGreaterThan(0);
     expect(k.nova.dividendes).toBeLessThan(k.nova.benefice);
   });

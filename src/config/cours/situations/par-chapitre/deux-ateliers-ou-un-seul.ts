@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_L_ACTION_COLLECTIVE, FONDATEUR_SEUL, deuxAteliersOuUn, seulOuOrganise } from "../../monde/action-collective-de-nova";
 import type { Situation } from "../types";
 
@@ -11,10 +11,12 @@ import type { Situation } from "../types";
  * opérateur ; ici, deux personnes choisissent entre rester chacune seule ou s'organiser à deux (l'une
  * monte sur un poste de série, l'autre fait les achats, la vente et les comptes des deux).
  * Hypothèses et chiffres : monde/action-collective-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes par trimestre sont des quantités ; la marge en
+ * plus attend le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const DEUX_ATELIERS_OU_UN_SEUL: Situation = {
   code: "deux-ateliers-ou-un-seul",
@@ -67,9 +69,9 @@ export const DEUX_ATELIERS_OU_UN_SEUL: Situation = {
         const k = deuxAteliersOuUn();
         const s = seulOuOrganise();
         return [
-          { libelle: "Enceintes par trimestre, chacun seul", attendu: k.separes, calcul: `2 × ${qte(s.seulParTrimestre)} = ${qte(k.separes)}`, tolerance: 0 },
-          { libelle: "Enceintes par trimestre, associés", attendu: k.associes, calcul: `${qte(s.heuresDeMontage)} ÷ ${s.heuresParEnceinte.toLocaleString("fr-FR")} × 3 = ${qte(k.associes)}`, tolerance: 0 },
-          { libelle: "Marge en plus sur un trimestre", attendu: k.margeEnPlus, calcul: `(${qte(k.associes)} − ${qte(k.separes)}) × ${eur(k.marge)} = ${eur(k.margeEnPlus)}`, tolerance: 1 },
+          { libelle: "Enceintes par trimestre, chacun seul", nature: "quantite", attendu: k.separes, calcul: `2 × ${qte(s.seulParTrimestre)} = ${qte(k.separes)}` },
+          { libelle: "Enceintes par trimestre, associés", nature: "quantite", attendu: k.associes, calcul: `${qte(s.heuresDeMontage)} ÷ ${s.heuresParEnceinte.toLocaleString("fr-FR")} × 3 = ${qte(k.associes)}` },
+          { libelle: "Marge en plus sur un trimestre", attendu: k.margeEnPlus, calcul: `(${qte(k.associes)} − ${qte(k.separes)}) × ${eur(k.marge)} = ${eur(k.margeEnPlus)}` },
         ];
       },
       explication: () => {

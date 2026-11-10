@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_MODES_DE_VIE, parcEnLocation } from "../../monde/modes-de-vie";
 import type { Situation } from "../types";
 
@@ -8,10 +8,12 @@ import type { Situation } from "../types";
  *
  * Le chapitre comparait la vente et la location d'une Studio ; le cas juge un parc entier, sur la durée
  * d'une Studio louée. Hypothèses : monde/modes-de-vie.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les locations d'une Studio sont une quantité ; les montants
+ * au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const UN_PARC_DE_STUDIO_EN_LOCATION: Situation = {
   code: "un-parc-de-studio-en-location",
@@ -47,7 +49,7 @@ export const UN_PARC_DE_STUDIO_EN_LOCATION: Situation = {
       champs: () => {
         const p = parcEnLocation();
         return [
-          { libelle: "Locations d'une Studio", attendu: p.locations, calcul: `${qte(p.locationsParAn)} × ${qte(p.ans)} = ${qte(p.locations)}`, tolerance: 0 },
+          { libelle: "Locations d'une Studio", nature: "quantite", attendu: p.locations, calcul: `${qte(p.locationsParAn)} × ${qte(p.ans)} = ${qte(p.locations)}` },
           { libelle: "Ce que laisse une Studio louée", attendu: p.parStudio, calcul: `ce que laissent ${qte(p.locations)} locations, moins la fabrication = ${eur(p.parStudio)}` },
           { libelle: "Ce que laisse le parc", attendu: p.location, calcul: `${qte(p.studios)} × ${eur(p.parStudio)} = ${eur(p.location)}` },
           { libelle: "Ce que rapporterait la vente", attendu: p.vente, calcul: `${qte(p.studios)} × la marge d'une vente = ${eur(p.vente)}` },

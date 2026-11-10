@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { aLUnite, arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA } from "../monde/mercatique-de-nova";
 import {
   CANNIBALISATION_DU_LABORATOIRE,
@@ -24,11 +24,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/vente-en-ligne-de-nova.ts) : les ventes du premier
  * trimestre aux particuliers et la marge de la NOVA One ; la part du mobile et l'offre de la place de
  * marché sont des hypothèses nommées dans la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les commandes depuis un téléphone sont une quantité : le
+ * produit à deux décimales, puis l'unité la plus proche (monde/vente-en-ligne-de-nova.ts) ; le
+ * chiffre d'affaires du m-commerce attend le centime (à 60 € près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 function leSite(): TableauDeDonnees {
   const v = ventesEnLigne();
@@ -42,6 +44,9 @@ function leSite(): TableauDeDonnees {
     ],
   };
 }
+
+/** Une quantité calculée : la valeur à deux décimales quand le calcul ne tombe pas juste, puis l'arrondi à l'unité. */
+const aLUniteEcrite = (x: number) => (Number.isInteger(arrondi2(x)) ? qte(aLUnite(x)) : `${nombreAuCentieme(x)}, soit ${qte(aLUnite(x))} à l'unité la plus proche`);
 
 export const VENDRE_EN_LIGNE: Chapitre = {
   code: "vendre-en-ligne",
@@ -97,8 +102,8 @@ export const VENDRE_EN_LIGNE: Chapitre = {
       champs: () => {
         const v = ventesEnLigne();
         return [
-          { libelle: "Commandes depuis un téléphone", attendu: v.mobile, tolerance: 1, calcul: `${qte(v.ventes)} × ${pct(v.partDuMobile * 100)} = ${qte(v.mobile)}` },
-          { libelle: "Chiffre d'affaires du m-commerce", attendu: v.chiffreDuMobile, tolerance: 60, calcul: `${qte(v.mobile)} × ${eur(v.prix)} = ${eur(v.chiffreDuMobile)}` },
+          { libelle: "Commandes depuis un téléphone", nature: "quantite", attendu: v.mobile, calcul: `${qte(v.ventes)} × ${pct(v.partDuMobile * 100)} = ${aLUniteEcrite(v.ventes * v.partDuMobile)}` },
+          { libelle: "Chiffre d'affaires du m-commerce", attendu: v.chiffreDuMobile, calcul: `${qte(v.mobile)} × ${eur(v.prix)} = ${eur(v.chiffreDuMobile)}` },
         ];
       },
       explication: () => {

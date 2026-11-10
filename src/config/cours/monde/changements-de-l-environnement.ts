@@ -20,6 +20,10 @@ import { KG_CO2_PAR_KWH, KG_D_EMBALLAGE_PAR_ENCEINTE, KWH_PAR_ENCEINTE, PART_VAL
  * UNE SEULE HYPOTHÈSE DU COURS : Électro-Composants Lyon annonce une hausse de 10 % du prix de ses
  * composants (les métaux et l'énergie qui montent). Le prix nouveau se cherche de 50 centimes en
  * 50 centimes, sur la droite de demande du premier trimestre, à l'enceinte entière.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'emballage non valorisé et le CO2 du montage se donnaient au
+ * kilo, ils sont au centième de kilo, comme l'emballage de l'année.
  */
 
 export const ENTREPRISES_DU_CHANGEMENT = ENTREPRISES_DE_LA_DIRECTION;
@@ -88,11 +92,11 @@ export function empreinteDeLAnnee() {
     enceintes,
     kwhParEnceinte: KWH_PAR_ENCEINTE,
     kwh,
-    kgCo2: Math.round(kwh * KG_CO2_PAR_KWH),
+    kgCo2: auCentime(kwh * KG_CO2_PAR_KWH),
     kgParEnceinte: KG_D_EMBALLAGE_PAR_ENCEINTE,
     emballage,
     partValorisee: PART_VALORISEE.avant,
-    nonValorise: Math.round(emballage * (1 - PART_VALORISEE.avant)),
+    nonValorise: auCentime(emballage * (1 - PART_VALORISEE.avant)),
   };
 }
 

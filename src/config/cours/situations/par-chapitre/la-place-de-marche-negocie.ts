@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { VENDRE_EN_LIGNE } from "../../chapitres/vendre-en-ligne";
 import { OFFRE_NEGOCIEE, PLACE_DE_MARCHE, trimestreSurLaPlace, venteSurLaPlace } from "../../monde/vente-en-ligne-de-nova";
 import type { Situation } from "../types";
@@ -12,11 +12,12 @@ import type { Situation } from "../types";
  * calculs sont ceux du chapitre, faits pour les deux offres : la marge d'une enceinte, puis ce que la
  * place de marché rapporte sur le trimestre. Le piège : choisir l'offre à la commission la plus basse
  * sans compter l'abonnement, ou l'inverse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les gains du trimestre attendent le centime (à l'euro près,
+ * avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 /** Les chiffres de la réponse, calculés une fois. */
 export function laPlaceNegocie() {
@@ -30,7 +31,7 @@ export function laPlaceNegocie() {
     premiere,
     seconde,
     meilleure: seconde.gain > premiere.gain ? ("seconde" as const) : ("premiere" as const),
-    ecart: Math.round(Math.abs(seconde.gain - premiere.gain) * 100) / 100,
+    ecart: arrondi2(Math.abs(seconde.gain - premiere.gain)),
   };
 }
 
@@ -90,8 +91,8 @@ export const LA_PLACE_DE_MARCHE_NEGOCIE: Situation = {
         const r = laPlaceNegocie();
         const ligne = (t: typeof r.premiere) => `${eur(t.margeDesNouvelles)} − ${eur(t.perteSurLesPrises)} − ${eur(t.abonnement)} = ${eur(t.gain)}`;
         return [
-          { libelle: "Gain du trimestre, première offre", attendu: r.premiere.gain, tolerance: 1, calcul: ligne(r.premiere) },
-          { libelle: "Gain du trimestre, seconde offre", attendu: r.seconde.gain, tolerance: 1, calcul: ligne(r.seconde) },
+          { libelle: "Gain du trimestre, première offre", attendu: r.premiere.gain, calcul: ligne(r.premiere) },
+          { libelle: "Gain du trimestre, seconde offre", attendu: r.seconde.gain, calcul: ligne(r.seconde) },
         ];
       },
       explication: () => {

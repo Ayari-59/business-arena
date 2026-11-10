@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { PRODUIRE, production } from "../../chapitres/produire";
 import { margeUnitaire } from "../../monde/capacite";
@@ -14,13 +14,16 @@ import type { Situation } from "../types";
  * capacité de l'équipe et celle de l'entreprise avec eux, ce qu'ils coûtent, et répond. Les chiffres
  * sont ceux du chapitre (monde/production-et-logistique.ts) ; seul change le nombre d'embauches,
  * hypothèse du cas nommée ci-dessous. Le verdict se calcule : ce sont les postes qui brident.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les capacités et la production sont des quantités ; le coût
+ * des embauches et l'écart de résultat attendent le centime (à l'euro près, avant).
  */
 
 /** Les embauches que demande le responsable de la production (hypothèse du cas). */
 export const EMBAUCHES_DU_CAS = 2;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 export type VerdictDesEmbauches = "se-paient" | "trop-peu" | "rien";
 
@@ -34,7 +37,7 @@ export function deuxEmbauches(c: Pick<Cas, "code">) {
   const t4 = avec.trimestres[3]!;
   const productionGagnee = avec.production - p.annee.production;
   const cout = EMBAUCHES_DU_CAS * (f.personnel.coutDUnRecrutement + coutAnnuelDUnOperateur(f));
-  const ecartDeResultat = Math.round((productionGagnee * margeUnitaire(f) - cout) * 100) / 100;
+  const ecartDeResultat = arrondi2(productionGagnee * margeUnitaire(f) - cout);
   const verdict: VerdictDesEmbauches = productionGagnee <= 0 ? "rien" : ecartDeResultat > 0 ? "se-paient" : "trop-peu";
   return { f, p, operateurs, avec, equipe, t4, capacite: Math.min(t4.capaciteOutil, equipe), productionGagnee, cout, ecartDeResultat, verdict };
 }
@@ -96,9 +99,9 @@ export const DEUX_EMBAUCHES_POUR_PRODUIRE_PLUS: Situation = {
       champs: (c) => {
         const k = deuxEmbauches(c);
         return [
-          { libelle: "Ce que monte l'équipe par trimestre", attendu: k.equipe, calcul: `${qte(k.operateurs)} × ${qte(enceintesParOperateur(k.f))} = ${qte(k.equipe)}`, tolerance: 0 },
-          { libelle: "Capacité de l'entreprise au 4e trimestre", attendu: k.capacite, calcul: `la plus petite de ${qte(k.t4.capaciteOutil)} et ${qte(k.equipe)} : ${qte(k.capacite)}`, tolerance: 0 },
-          { libelle: "Production gagnée sur l'année", attendu: k.productionGagnee, calcul: `${qte(k.avec.production)} − ${qte(k.p.annee.production)} = ${qte(k.productionGagnee)}`, tolerance: 0 },
+          { libelle: "Ce que monte l'équipe par trimestre", nature: "quantite", attendu: k.equipe, calcul: `${qte(k.operateurs)} × ${qte(enceintesParOperateur(k.f))} = ${qte(k.equipe)}` },
+          { libelle: "Capacité de l'entreprise au 4e trimestre", nature: "quantite", attendu: k.capacite, calcul: `la plus petite de ${qte(k.t4.capaciteOutil)} et ${qte(k.equipe)} : ${qte(k.capacite)}` },
+          { libelle: "Production gagnée sur l'année", nature: "quantite", attendu: k.productionGagnee, calcul: `${qte(k.avec.production)} − ${qte(k.p.annee.production)} = ${qte(k.productionGagnee)}` },
         ];
       },
       explication: (c) => {
@@ -121,9 +124,8 @@ export const DEUX_EMBAUCHES_POUR_PRODUIRE_PLUS: Situation = {
             libelle: "Coût des deux embauches sur l'année",
             attendu: k.cout,
             calcul: `${qte(EMBAUCHES_DU_CAS)} × (${eur(k.f.personnel.coutDUnRecrutement)} + ${eur(coutAnnuelDUnOperateur(k.f))}) = ${eur(k.cout)}`,
-            tolerance: 1,
           },
-          { libelle: "Écart de résultat de l'année", attendu: k.ecartDeResultat, calcul: `${qte(k.productionGagnee)} × ${eur(margeUnitaire(k.f))} − ${eur(k.cout)} = ${eur(k.ecartDeResultat)}`, tolerance: 1 },
+          { libelle: "Écart de résultat de l'année", attendu: k.ecartDeResultat, calcul: `${qte(k.productionGagnee)} × ${eur(margeUnitaire(k.f))} − ${eur(k.cout)} = ${eur(k.ecartDeResultat)}` },
         ];
       },
       explication: (c) => {

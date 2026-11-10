@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_L_ACTION_COLLECTIVE, FONDATEUR_SEUL, ressourcesDeLaCreation, seulOuOrganise } from "../monde/action-collective-de-nova";
 import type { Chapitre } from "../types";
 
@@ -14,12 +14,14 @@ import type { Chapitre } from "../types";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : monde/action-collective-de-nova.ts, qui
  * pose le fondateur seul (hypothèses du cours) et lit tout le reste dans les fiches de NOVA.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes d'une personne seule par mois (187,50) sont une
+ * grandeur, une cadence au centième, et le rapport entre l'opérateur et elle se donne au centième
+ * (au dixième, avant) ; les enceintes de la ligne sont une quantité ; la part des associés est à
+ * deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const dixieme = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
-const pct = (t: number) => `${dixieme(t)} %`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const CATEGORIES_DES_INTERETS = [
@@ -64,8 +66,8 @@ export const ORGANISER_L_ACTION_COLLECTIVE: Chapitre = {
       texte: (c) => {
         const s = seulOuOrganise();
         return [
-          `Avant ${c.entreprise}, son fondateur montait des enceintes seul, dans un atelier de quartier. Il achetait les composants, montait, vendait, tenait ses comptes. Sur ses heures du mois, il n'en passait que ${qte(FONDATEUR_SEUL.heuresDeMontageParMois)} au montage, et sans poste de série une enceinte lui prenait ${dixieme(FONDATEUR_SEUL.heuresParEnceinte)} heure. C'est une action individuelle.`,
-          `Aujourd'hui, ${c.entreprise} réunit des associés, une banque, une ligne de ${qte(ressourcesDeLaCreation().postes)} postes et ${qte(s.operateurs)} opérateurs, qui montent chacun une enceinte en ${dixieme(s.heuresParEnceinte)} heure. Ils partagent un objectif commun (fabriquer et vendre des enceintes, durablement) et s'organisent pour l'atteindre : chacun a son rôle, des règles, un dirigeant. C'est une action collective organisée, une organisation.`,
+          `Avant ${c.entreprise}, son fondateur montait des enceintes seul, dans un atelier de quartier. Il achetait les composants, montait, vendait, tenait ses comptes. Sur ses heures du mois, il n'en passait que ${qte(FONDATEUR_SEUL.heuresDeMontageParMois)} au montage, et sans poste de série une enceinte lui prenait ${nombreAuCentieme(FONDATEUR_SEUL.heuresParEnceinte)} heure. C'est une action individuelle.`,
+          `Aujourd'hui, ${c.entreprise} réunit des associés, une banque, une ligne de ${qte(ressourcesDeLaCreation().postes)} postes et ${qte(s.operateurs)} opérateurs, qui montent chacun une enceinte en ${nombreAuCentieme(s.heuresParEnceinte)} heure. Ils partagent un objectif commun (fabriquer et vendre des enceintes, durablement) et s'organisent pour l'atteindre : chacun a son rôle, des règles, un dirigeant. C'est une action collective organisée, une organisation.`,
         ];
       },
       repere: () => "Une organisation : un groupe de personnes, un objectif commun, des rôles répartis et des règles, pour durer.",
@@ -107,24 +109,24 @@ export const ORGANISER_L_ACTION_COLLECTIVE: Chapitre = {
           colonnes: ["Seul", "Sur la ligne"],
           lignes: [
             { libelle: "Heures de montage par mois", valeurs: [qte(FONDATEUR_SEUL.heuresDeMontageParMois), qte(s.heuresDeMontage)] },
-            { libelle: "Heure par enceinte", valeurs: [dixieme(FONDATEUR_SEUL.heuresParEnceinte), s.heuresParEnceinte.toLocaleString("fr-FR")] },
+            { libelle: "Heure par enceinte", valeurs: [nombreAuCentieme(FONDATEUR_SEUL.heuresParEnceinte), s.heuresParEnceinte.toLocaleString("fr-FR")] },
           ],
         };
       },
       question: () =>
-        "Calculez les enceintes qu'une personne seule monte en un mois, celles qu'un opérateur de la ligne monte en un mois, puis combien de fois plus monte l'opérateur (au dixième).",
+        "Calculez les enceintes qu'une personne seule monte en un mois, celles qu'un opérateur de la ligne monte en un mois, puis combien de fois plus monte l'opérateur (au centième).",
       champs: () => {
         const s = seulOuOrganise();
         return [
-          { libelle: "Enceintes par mois, seul", attendu: s.seulParMois, calcul: `${qte(FONDATEUR_SEUL.heuresDeMontageParMois)} ÷ ${dixieme(FONDATEUR_SEUL.heuresParEnceinte)} = ${dixieme(s.seulParMois)}`, tolerance: 0.5 },
-          { libelle: "Enceintes par mois, sur la ligne", attendu: s.operateurParMois, calcul: `${qte(s.heuresDeMontage)} ÷ ${s.heuresParEnceinte.toLocaleString("fr-FR")} = ${qte(s.operateurParMois)}`, tolerance: 0 },
-          { libelle: "Combien de fois plus", attendu: s.rapport, calcul: `${qte(s.operateurParMois)} ÷ ${dixieme(s.seulParMois)} = ${dixieme(s.rapport)}`, tolerance: 0.1 },
+          { libelle: "Enceintes par mois, seul", nature: "grandeur", attendu: s.seulParMois, calcul: `${qte(FONDATEUR_SEUL.heuresDeMontageParMois)} ÷ ${nombreAuCentieme(FONDATEUR_SEUL.heuresParEnceinte)} = ${nombreAuCentieme(s.seulParMois)}` },
+          { libelle: "Enceintes par mois, sur la ligne", nature: "quantite", attendu: s.operateurParMois, calcul: `${qte(s.heuresDeMontage)} ÷ ${s.heuresParEnceinte.toLocaleString("fr-FR")} = ${qte(s.operateurParMois)}` },
+          { libelle: "Combien de fois plus", nature: "grandeur", attendu: s.rapport, calcul: `${qte(s.operateurParMois)} ÷ ${nombreAuCentieme(s.seulParMois)} = ${nombreAuCentieme(s.rapport)}` },
         ];
       },
       explication: (c) => {
         const s = seulOuOrganise();
         return [
-          `Sur la ligne, un opérateur monte ${dixieme(s.rapport)} fois plus qu'une personne seule : il ne fait que monter, sur un poste conçu pour cela, pendant que d'autres achètent, vendent et tiennent les comptes de ${c.entreprise}. La répartition des tâches rend l'action collective plus efficace que la somme des actions individuelles.`,
+          `Sur la ligne, un opérateur monte ${nombreAuCentieme(s.rapport)} fois plus qu'une personne seule : il ne fait que monter, sur un poste conçu pour cela, pendant que d'autres achètent, vendent et tiennent les comptes de ${c.entreprise}. La répartition des tâches rend l'action collective plus efficace que la somme des actions individuelles.`,
         ];
       },
     },
@@ -239,13 +241,13 @@ export const ORGANISER_L_ACTION_COLLECTIVE: Chapitre = {
       titre: "L'argent de départ",
       question: (c) => {
         const r = ressourcesDeLaCreation();
-        return `Pour démarrer, ${c.entreprise} réunit l'apport des associés (${eur(r.apport)}) et l'emprunt à la banque (${eur(r.emprunt)}). Calculez l'argent réuni, puis la part apportée par les associés, en pourcentage au dixième.`;
+        return `Pour démarrer, ${c.entreprise} réunit l'apport des associés (${eur(r.apport)}) et l'emprunt à la banque (${eur(r.emprunt)}). Calculez l'argent réuni, puis la part apportée par les associés, en pourcentage à deux décimales.`;
       },
       champs: () => {
         const r = ressourcesDeLaCreation();
         return [
-          { libelle: "Argent réuni au départ", attendu: r.apport + r.emprunt, calcul: `${eur(r.apport)} + ${eur(r.emprunt)} = ${eur(r.apport + r.emprunt)}`, tolerance: 0 },
-          { libelle: "Part des associés (%)", attendu: r.partDesAssocies, calcul: `${eur(r.apport)} ÷ ${eur(r.apport + r.emprunt)} × 100 = ${pct(r.partDesAssocies)}`, tolerance: 0.1 },
+          { libelle: "Argent réuni au départ", attendu: r.apport + r.emprunt, calcul: `${eur(r.apport)} + ${eur(r.emprunt)} = ${eur(r.apport + r.emprunt)}` },
+          { libelle: "Part des associés (%)", attendu: r.partDesAssocies, calcul: `${eur(r.apport)} ÷ ${eur(r.apport + r.emprunt)} × 100 = ${pct(r.partDesAssocies)}` },
         ];
       },
       explication: (c) => {

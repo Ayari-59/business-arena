@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { aLUnite, arrondi2, eur, nombreAuCentieme, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_L_ORGANISATION_DE_LA_PRODUCTION, REPRISE, repriseDesEnceintes } from "../../monde/organisation-de-la-production";
 import type { Situation } from "../types";
 
@@ -8,10 +8,16 @@ import type { Situation } from "../types";
  *
  * Le chapitre pensait le produit jusqu'à sa fin de vie ; le cas chiffre une reprise des enceintes
  * usagées. Hypothèses : monde/organisation-de-la-production.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les reprises qui paient la campagne sont une quantité : le
+ * quotient à deux décimales, puis l'unité supérieure, que le corrigé nomme.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+
+/** Une quantité calculée : la valeur à deux décimales quand la division ne tombe pas juste, puis l'arrondi et sa raison. */
+const aLUniteEcrite = (x: number, raison: string, arrondir: (x: number) => number = aLUnite) =>
+  Number.isInteger(arrondi2(x)) ? qte(arrondir(x)) : `${nombreAuCentieme(x)}, soit ${qte(arrondir(x))} ${raison}`;
 
 export const REPRENDRE_LES_ENCEINTES_USAGEES: Situation = {
   code: "reprendre-les-enceintes-usagees",
@@ -45,7 +51,7 @@ export const REPRENDRE_LES_ENCEINTES_USAGEES: Situation = {
         const r = repriseDesEnceintes();
         return [
           { libelle: "Ce que rapporte une reprise", attendu: r.parEnceinte, calcul: `${eur(REPRISE.composantsRevendus)} − ${eur(REPRISE.recyclageParEnceinte)} = ${eur(r.parEnceinte)}` },
-          { libelle: "Reprises qui paient la campagne", attendu: r.pourPayerLaCampagne, calcul: `${eur(REPRISE.campagne)} ÷ ${eur(r.parEnceinte)} = ${qte(r.pourPayerLaCampagne)}`, tolerance: 0 },
+          { libelle: "Reprises qui paient la campagne", nature: "quantite", attendu: r.pourPayerLaCampagne, calcul: `${eur(REPRISE.campagne)} ÷ ${eur(r.parEnceinte)} = ${aLUniteEcrite(REPRISE.campagne / r.parEnceinte, "à l'unité supérieure : une de moins ne paierait pas la campagne", (y) => Math.ceil(y - 1e-9))}` },
           { libelle: "Gain de l'année", attendu: r.gain, calcul: `${qte(r.reprises)} × ${eur(r.parEnceinte)} − ${eur(REPRISE.campagne)} = ${eur(r.gain)}` },
         ];
       },

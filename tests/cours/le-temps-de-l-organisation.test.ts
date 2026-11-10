@@ -26,9 +26,9 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("les saisons, le planning, la valeur du temps", () => {
-  it("l'hiver à 63 %, l'été plein, 1 000 nuitées refusées, 151 800 € de résultat d'été", () => {
+  it("l'hiver à 62,96 %, l'été plein, 1 000 nuitées refusées, 151 800 € de résultat d'été", () => {
     expect(saisonsDeLEscale()[2]!.resultat).toBe(151_800);
-    expect(attendusSgn(CH, "les-saisons")).toEqual([63, 100, 1_000]);
+    expect(attendusSgn(CH, "les-saisons")).toEqual([62.96, 100, 1_000]);
   });
 
   it("le calendrier : 7 semaines avant le 1er juillet", () => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   DELAI_DU_FOURNISSEUR,
@@ -33,6 +33,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * le délai, le stock de sécurité, le stock du soir et le retard redouté sont ses hypothèses ; la
  * production du trimestre et le coût d'un kit viennent des fiches de NOVA). CE QUI A CHANGÉ : il se
  * jouait chez PIXEL & CO, sur une année de l'arène ; il se joue chez NOVA, sur ses composants.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la consommation par jour, le stock de sécurité et le point de
+ * commande sont des quantités de kits, entières ; la consommation par jour s'arrondit au kit
+ * supérieur, que le corrigé nomme quand la division ne tombe pas juste.
  */
 
 /** Les entreprises du chapitre : NOVA seule, qui garde un stock de kits de composants. */
@@ -44,8 +49,7 @@ export { JOURS_DE_SECURITE };
 const RETARD_DU_CURSEUR = { min: 0, max: 8 } as const;
 const SECURITE_DU_LABORATOIRE = { min: 0, max: 6, pas: 1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const jours = (n: number) => `${qte(n)} ${n >= 2 ? "jours" : "jour"}`;
 
 const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
@@ -115,10 +119,10 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
       champs: (c) => {
         const k = stockEtPointDeCommande(c);
         return [
-          { libelle: "Consommation par jour", attendu: k.parJour, calcul: `${qte(k.montees)} ÷ ${qte(JOURS_DE_MONTAGE_PAR_TRIMESTRE)} = ${qte(k.parJour)}`, tolerance: 0 },
-          { libelle: "Consommation pendant le délai", attendu: k.pendantLeDelai, calcul: `${qte(k.parJour)} × ${qte(DELAI_DU_FOURNISSEUR)} = ${qte(k.pendantLeDelai)}`, tolerance: 0 },
-          { libelle: "Stock de sécurité", attendu: k.securite, calcul: `${qte(k.parJour)} × ${qte(JOURS_DE_SECURITE)} = ${qte(k.securite)}`, tolerance: 0 },
-          { libelle: "Point de commande", attendu: k.pointDeCommande, calcul: `${qte(k.pendantLeDelai)} + ${qte(k.securite)} = ${qte(k.pointDeCommande)}`, tolerance: 0 },
+          { libelle: "Consommation par jour", nature: "quantite", attendu: k.parJour, calcul: `${qte(k.montees)} ÷ ${qte(JOURS_DE_MONTAGE_PAR_TRIMESTRE)} = ${qte(k.parJour)}` },
+          { libelle: "Consommation pendant le délai", nature: "quantite", attendu: k.pendantLeDelai, calcul: `${qte(k.parJour)} × ${qte(DELAI_DU_FOURNISSEUR)} = ${qte(k.pendantLeDelai)}` },
+          { libelle: "Stock de sécurité", nature: "quantite", attendu: k.securite, calcul: `${qte(k.parJour)} × ${qte(JOURS_DE_SECURITE)} = ${qte(k.securite)}` },
+          { libelle: "Point de commande", nature: "quantite", attendu: k.pointDeCommande, calcul: `${qte(k.pendantLeDelai)} + ${qte(k.securite)} = ${qte(k.pointDeCommande)}` },
         ];
       },
       explication: (c) => {

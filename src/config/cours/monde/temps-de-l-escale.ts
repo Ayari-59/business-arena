@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { PLACEMENTS } from "./financer-et-placer";
 import { trimestreDeLHotel } from "./hotel";
 import { L_ESCALE } from "./l-escale";
@@ -17,16 +18,19 @@ import { L_ESCALE } from "./l-escale";
  *   · le recrutement des saisonniers de l'été suit un calendrier à rebours depuis leur arrivée : l'annonce
  *     reste en ligne 3 semaines, les entretiens prennent 2 semaines, les contrats et les papiers 1 semaine,
  *     la formation 1 semaine avant l'ouverture de la saison.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation se donnait au dixième, il est à deux
+ * décimales.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** Les quatre trimestres de l'hôtel, au prix de l'année. */
 export const saisonsDeLEscale = () =>
   [1, 2, 3, 4].map((n) => {
     const t = trimestreDeLHotel(L_ESCALE, n, L_ESCALE.prixDeLAnnee);
-    return { ...t, occupationPct: auDixieme((t.vendues / t.offertes) * 100) };
+    return { ...t, occupationPct: arrondi2((t.vendues / t.offertes) * 100) };
   });
 
 /** Le taux du placement : celui du fonds monétaire du cours. */

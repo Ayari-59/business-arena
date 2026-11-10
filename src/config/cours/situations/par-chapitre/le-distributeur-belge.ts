@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_CHAINE, offreDuDistributeurBelge } from "../../monde/chaine-de-valeur-de-nova";
 import type { Situation } from "../types";
 
@@ -10,10 +10,12 @@ import type { Situation } from "../types";
  * clients français. Le cas est neuf par sa question : le chapitre comparait le montage intégré et le
  * sous-traitant ; ici, l'élève juge une internationalisation par un partenaire, face à la capacité de
  * la ligne trimestre par trimestre. Hypothèse et chiffres : monde/chaine-de-valeur-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes montées sont une quantité ; la marge de l'année
+ * attend le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const LE_DISTRIBUTEUR_BELGE: Situation = {
   code: "le-distributeur-belge",
@@ -66,9 +68,9 @@ export const LE_DISTRIBUTEUR_BELGE: Situation = {
       champs: () => {
         const k = offreDuDistributeurBelge();
         return [
-          { libelle: "Enceintes belges montées sur l'année", attendu: k.servies, calcul: `${k.trimestres.map((x) => qte(x.servies)).join(" + ")} = ${qte(k.servies)}`, tolerance: 0 },
-          { libelle: "Marge d'une enceinte belge", attendu: k.margeUnitaire, calcul: `${eur(k.prix)} − ${eur(k.prix - k.margeUnitaire)} = ${eur(k.margeUnitaire)}`, tolerance: 0.01 },
-          { libelle: "Marge de l'année", attendu: k.marge, calcul: `${qte(k.servies)} × ${eur(k.margeUnitaire)} = ${eur(k.marge)}`, tolerance: 1 },
+          { libelle: "Enceintes belges montées sur l'année", nature: "quantite", attendu: k.servies, calcul: `${k.trimestres.map((x) => qte(x.servies)).join(" + ")} = ${qte(k.servies)}` },
+          { libelle: "Marge d'une enceinte belge", attendu: k.margeUnitaire, calcul: `${eur(k.prix)} − ${eur(k.prix - k.margeUnitaire)} = ${eur(k.margeUnitaire)}` },
+          { libelle: "Marge de l'année", attendu: k.marge, calcul: `${qte(k.servies)} × ${eur(k.margeUnitaire)} = ${eur(k.marge)}` },
         ];
       },
       explication: () => {

@@ -1,3 +1,4 @@
+import { nombreAuCentieme, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { LE_STOCK_DE_SECURITE, stockEtPointDeCommande } from "../../chapitres/le-stock-de-securite";
 import { DELAI_DU_FOURNISSEUR, JOURS_DE_MONTAGE_PAR_TRIMESTRE, JOURS_DE_SECURITE, ficheDeNova, kitsDuTrimestre, retardCouvert } from "../../monde/production-et-logistique";
@@ -12,9 +13,13 @@ import type { Situation } from "../types";
  * point de commande du 1er trimestre. L'élève recalcule le point de commande du pic, ce que l'ancien
  * laisserait à la livraison et le retard qu'il couvrirait encore, et répond. Les chiffres sont ceux
  * du chapitre (monde/production-et-logistique.ts) : seul change le trimestre.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les kits sont des quantités ; la consommation par jour
+ * s'écrit à deux décimales, puis au kit supérieur, et le retard couvert à deux décimales, puis en
+ * jours entiers, chaque arrondi nommé par le corrigé.
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const jours = (n: number) => `${qte(n)} ${n >= 2 ? "jours" : "jour"}`;
 
 /** Le trimestre du pic : le 2e de N + 1, où la ligne est pleine. */
@@ -77,8 +82,8 @@ export const LE_POINT_DE_COMMANDE_AVANT_LE_PIC: Situation = {
       champs: (c) => {
         const k = pointDeCommandeDuPic(c);
         return [
-          { libelle: "Consommation par jour au 2e trimestre", attendu: k.pic.parJour, calcul: `${qte(k.pic.montees)} ÷ ${qte(JOURS_DE_MONTAGE_PAR_TRIMESTRE)}, au kit supérieur : ${qte(k.pic.parJour)}`, tolerance: 0 },
-          { libelle: "Point de commande du printemps", attendu: k.pic.pointDeCommande, calcul: `${qte(k.pic.parJour)} × (${qte(DELAI_DU_FOURNISSEUR)} + ${qte(JOURS_DE_SECURITE)}) = ${qte(k.pic.pointDeCommande)}`, tolerance: 0 },
+          { libelle: "Consommation par jour au 2e trimestre", nature: "quantite", attendu: k.pic.parJour, calcul: `${qte(k.pic.montees)} ÷ ${qte(JOURS_DE_MONTAGE_PAR_TRIMESTRE)} = ${nombreAuCentieme(quotient2(k.pic.montees, JOURS_DE_MONTAGE_PAR_TRIMESTRE))}, soit ${qte(k.pic.parJour)} au kit supérieur : un kit de moins par jour ne suffirait pas à monter le trimestre` },
+          { libelle: "Point de commande du printemps", nature: "quantite", attendu: k.pic.pointDeCommande, calcul: `${qte(k.pic.parJour)} × (${qte(DELAI_DU_FOURNISSEUR)} + ${qte(JOURS_DE_SECURITE)}) = ${qte(k.pic.pointDeCommande)}` },
         ];
       },
       explication: (c) => {
@@ -95,8 +100,8 @@ export const LE_POINT_DE_COMMANDE_AVANT_LE_PIC: Situation = {
       champs: (c) => {
         const k = pointDeCommandeDuPic(c);
         return [
-          { libelle: "Stock à la livraison, sans retard", attendu: k.aLaLivraison, calcul: `${qte(k.base.pointDeCommande)} − ${qte(k.pic.parJour)} × ${qte(DELAI_DU_FOURNISSEUR)} = ${qte(k.aLaLivraison)}`, tolerance: 0 },
-          { libelle: "Retard couvert (jours)", attendu: k.retardCouvert, calcul: `${qte(k.aLaLivraison)} ÷ ${qte(k.pic.parJour)}, en jours entiers : ${qte(k.retardCouvert)}`, tolerance: 0 },
+          { libelle: "Stock à la livraison, sans retard", nature: "quantite", attendu: k.aLaLivraison, calcul: `${qte(k.base.pointDeCommande)} − ${qte(k.pic.parJour)} × ${qte(DELAI_DU_FOURNISSEUR)} = ${qte(k.aLaLivraison)}` },
+          { libelle: "Retard couvert (jours)", nature: "quantite", attendu: k.retardCouvert, calcul: `${qte(k.aLaLivraison)} ÷ ${qte(k.pic.parJour)} = ${nombreAuCentieme(quotient2(k.aLaLivraison, k.pic.parJour))}, soit ${qte(k.retardCouvert)} en jours entiers : un jour entamé n'est pas couvert` },
         ];
       },
       explication: (c) => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { aLUnite, arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   APPLICATION,
@@ -28,11 +28,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * conversion qui fait payer son application gratuite.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/offre-et-modele-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de réponse, d'intérêt et de valeur ajoutée se
+ * donnaient au dixième, ils sont à deux décimales (monde/offre-et-modele-de-nova.ts) ; les clubs
+ * acheteurs sont une quantité, comptée sur le taux à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 
 function lEtude(c: Cas): TableauDeDonnees {
   const m = marchePotentiel();
@@ -47,6 +49,10 @@ function lEtude(c: Cas): TableauDeDonnees {
     ],
   };
 }
+
+/** Une quantité calculée : la valeur à deux décimales quand la division ne tombe pas juste, puis l'arrondi et sa raison. */
+const aLUniteEcrite = (x: number, raison: string, arrondir: (x: number) => number = aLUnite) =>
+  Number.isInteger(arrondi2(x)) ? qte(arrondir(x)) : `${nombreAuCentieme(x)}, soit ${qte(arrondir(x))} ${raison}`;
 
 export const UNE_OFFRE_POUR_UN_BESOIN: Chapitre = {
   code: "une-offre-pour-un-besoin",
@@ -151,13 +157,13 @@ export const UNE_OFFRE_POUR_UN_BESOIN: Chapitre = {
       type: "montants",
       titre: "Ce que dit l'étude",
       tableau: lEtude,
-      question: () => `Calculez le taux de réponse (au dixième), la part des répondants prêts à acheter (au dixième), le nombre de clubs de la zone qui achèteraient si cette part valait pour tous, et le chiffre d'affaires à ${eur(PACK_SALLE.prix)} le pack.`,
+      question: () => `Calculez le taux de réponse et la part des répondants prêts à acheter (à deux décimales), le nombre de clubs de la zone qui achèteraient si cette part valait pour tous, et le chiffre d'affaires à ${eur(PACK_SALLE.prix)} le pack.`,
       champs: () => {
         const m = marchePotentiel();
         return [
-          { libelle: "Taux de réponse (%)", attendu: m.tauxDeReponsePct, calcul: `${qte(m.reponses)} ÷ ${qte(m.interroges)} × 100 = ${pct(m.tauxDeReponsePct)}`, tolerance: 0.1 },
-          { libelle: "Répondants prêts à acheter (%)", attendu: m.tauxPct, calcul: `${qte(m.interesses)} ÷ ${qte(m.reponses)} × 100 = ${pct(m.tauxPct)}`, tolerance: 0.1 },
-          { libelle: "Clubs acheteurs dans la zone", attendu: m.clubs, calcul: `${qte(m.clubsDeLaZone)} × ${pct(m.tauxPct)} = ${qte(m.clubs)}`, tolerance: 0 },
+          { libelle: "Taux de réponse (%)", attendu: m.tauxDeReponsePct, calcul: `${qte(m.reponses)} ÷ ${qte(m.interroges)} × 100 = ${pct(m.tauxDeReponsePct)}` },
+          { libelle: "Répondants prêts à acheter (%)", attendu: m.tauxPct, calcul: `${qte(m.interesses)} ÷ ${qte(m.reponses)} × 100 = ${pct(m.tauxPct)}` },
+          { libelle: "Clubs acheteurs dans la zone", nature: "quantite", attendu: m.clubs, calcul: `${qte(m.clubsDeLaZone)} × ${pct(m.tauxPct)} = ${aLUniteEcrite((m.clubsDeLaZone * m.tauxPct) / 100, "à l'unité la plus proche")}` },
           { libelle: "Chiffre d'affaires potentiel", attendu: m.chiffreDAffaires, calcul: `${qte(m.clubs)} × ${eur(PACK_SALLE.prix)} = ${eur(m.chiffreDAffaires)}` },
         ];
       },
@@ -192,12 +198,12 @@ export const UNE_OFFRE_POUR_UN_BESOIN: Chapitre = {
           ],
         };
       },
-      question: () => "Calculez la valeur ajoutée de l'année N, puis son taux (au dixième).",
+      question: () => "Calculez la valeur ajoutée de l'année N, puis son taux (à deux décimales).",
       champs: () => {
         const v = valeurAjouteeDeN();
         return [
           { libelle: "Valeur ajoutée", attendu: v.valeurAjoutee, calcul: `${eur(v.ventes)} − ${eur(v.consommations)} = ${eur(v.valeurAjoutee)}` },
-          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxPct, calcul: `${eur(v.valeurAjoutee)} ÷ ${eur(v.ventes)} × 100 = ${pct(v.tauxPct)}`, tolerance: 0.1 },
+          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxPct, calcul: `${eur(v.valeurAjoutee)} ÷ ${eur(v.ventes)} × 100 = ${pct(v.tauxPct)}` },
         ];
       },
       explication: () => {

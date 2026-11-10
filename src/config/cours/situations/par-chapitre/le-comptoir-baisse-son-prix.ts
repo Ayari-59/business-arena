@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_VALEUR } from "../../chapitres/les-formes-de-la-valeur";
 import { L_ESCALE } from "../../monde/l-escale";
 import { NOTES_DES_CONCURRENTS, PRIX_D_HIVER_DU_COMPTOIR, coutCompletDUneNuitee, resultatADemandeEgale, valeurDeLEscale } from "../../monde/valeur-de-l-escale";
@@ -11,16 +11,18 @@ import type { Situation } from "../types";
  * Le Comptoir annonce 72 € la nuitée pour l'hiver prochain (PRIX_D_HIVER_DU_COMPTOIR). Un associé de
  * L'ESCALE veut s'aligner. Les calculs sont ceux du chapitre : le coût complet d'une nuitée d'hiver et
  * le résultat de l'hiver à demande égale ; la réponse s'appuie sur la valeur perçue.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le résultat de l'hiver attend le centime (à l'euro près,
+ * avant) ; les notes s'écrivent au centième.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const note = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} sur 5`;
+const note = (x: number) => `${nombreAuCentieme(x)} sur 5`;
 
 export function leComptoirBaisse() {
   const k = coutCompletDUneNuitee(1);
   const r = resultatADemandeEgale(1, PRIX_D_HIVER_DU_COMPTOIR);
-  return { ...k, prix: PRIX_D_HIVER_DU_COMPTOIR, ecartParNuitee: Math.round((PRIX_D_HIVER_DU_COMPTOIR - k.coutComplet) * 100) / 100, resultat: r.resultat };
+  return { ...k, prix: PRIX_D_HIVER_DU_COMPTOIR, ecartParNuitee: arrondi2(PRIX_D_HIVER_DU_COMPTOIR - k.coutComplet), resultat: r.resultat };
 }
 
 export const LE_COMPTOIR_BAISSE_SON_PRIX: Situation = {
@@ -64,7 +66,7 @@ export const LE_COMPTOIR_BAISSE_SON_PRIX: Situation = {
         return [
           { libelle: "Coût complet d'une nuitée d'hiver", attendu: k.coutComplet, calcul: `${eur(L_ESCALE.coutVariableParNuitee)} + ${eur(L_ESCALE.chargesFixesParTrimestre)} ÷ ${qte(k.vendues)} = ${eur(k.coutComplet)}` },
           { libelle: "Écart par nuitée", attendu: k.ecartParNuitee, calcul: `${eur(k.prix)} − ${eur(k.coutComplet)} = ${eur(k.ecartParNuitee)}` },
-          { libelle: "Résultat de l'hiver", attendu: k.resultat, calcul: `${qte(k.vendues)} × (${eur(k.prix)} − ${eur(L_ESCALE.coutVariableParNuitee)}) − ${eur(L_ESCALE.chargesFixesParTrimestre)} = ${eur(k.resultat)}`, tolerance: 1 },
+          { libelle: "Résultat de l'hiver", attendu: k.resultat, calcul: `${qte(k.vendues)} × (${eur(k.prix)} − ${eur(L_ESCALE.coutVariableParNuitee)}) − ${eur(L_ESCALE.chargesFixesParTrimestre)} = ${eur(k.resultat)}` },
         ];
       },
       explication: () => {

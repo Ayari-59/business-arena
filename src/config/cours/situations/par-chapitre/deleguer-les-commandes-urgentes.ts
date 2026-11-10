@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_L_ORGANISATION_DU_TRAVAIL, delegation } from "../../monde/organisation-du-travail-de-nova";
 import type { Situation } from "../types";
 
@@ -8,10 +8,12 @@ import type { Situation } from "../types";
  *
  * Le chapitre rangeait la centralisation et la délégation ; le cas chiffre une délégation au chef
  * d'équipe, avec son compte rendu. Hypothèses : monde/organisation-du-travail-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les commandes perdues sont une quantité ; les montants au
+ * centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const DELEGUER_LES_COMMANDES_URGENTES: Situation = {
   code: "deleguer-les-commandes-urgentes",
@@ -50,7 +52,7 @@ export const DELEGUER_LES_COMMANDES_URGENTES: Situation = {
       champs: () => {
         const d = delegation();
         return [
-          { libelle: "Commandes perdues dans l'année", attendu: d.perdues, calcul: `${qte(d.parAn)} ÷ ${qte(d.absenceDuPresident)} ÷ ${qte(d.departDuClient)} = ${qte(d.perdues)}`, tolerance: 0 },
+          { libelle: "Commandes perdues dans l'année", nature: "quantite", attendu: d.perdues, calcul: `${qte(d.parAn)} ÷ ${qte(d.absenceDuPresident)} ÷ ${qte(d.departDuClient)} = ${qte(d.perdues)}` },
           { libelle: "Marge perdue", attendu: d.margePerdue, calcul: `${qte(d.perdues)} × ${eur(d.margeParCommande)} = ${eur(d.margePerdue)}` },
           { libelle: "Prime de l'année", attendu: d.primeDeLAnnee, calcul: `${eur(d.prime)} × 12 = ${eur(d.primeDeLAnnee)}` },
           { libelle: "Gain de la délégation", attendu: d.gain, calcul: `${eur(d.margePerdue)} − ${eur(d.primeDeLAnnee)} = ${eur(d.gain)}` },

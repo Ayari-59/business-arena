@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_STRATEGIE_DU_CLUB, LE_CLUB, parrainageDuGarage } from "../../monde/strategie-du-club";
 import type { Situation } from "../types";
 
@@ -10,10 +10,12 @@ import type { Situation } from "../types";
  * senior. Le cas est neuf par sa question : le chapitre chiffrait une subvention qui baisse ; ici,
  * l'élève chiffre une ressource privée nouvelle et la juge face à l'indépendance de l'association et à
  * ses organes de décision. Hypothèse : monde/strategie-du-club.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des sponsors se donnaient au dixième, elles sont à
+ * deux décimales ; l'excédent attend le centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR: Situation = {
   code: "le-parrain-qui-veut-choisir-l-entraineur",
@@ -59,14 +61,14 @@ export const LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR: Situation = {
       id: "le-poids-du-parrain",
       type: "montants",
       titre: "Ce que pèserait le parrain",
-      question: () => "Calculez la part des sponsors dans les recettes aujourd'hui, puis avec le garage (en pourcentage au dixième), et l'excédent de la saison avec lui.",
+      question: () => "Calculez la part des sponsors dans les recettes aujourd'hui, puis avec le garage (en pourcentage à deux décimales), et l'excédent de la saison avec lui.",
       champs: () => {
         const k = parrainageDuGarage();
         const avant = k.recettesApres - k.parrainage;
         return [
-          { libelle: "Part des sponsors aujourd'hui (%)", attendu: k.partDesSponsorsAvant, calcul: `${eur(k.sponsorsAvant)} ÷ ${eur(avant)} × 100 = ${pct(k.partDesSponsorsAvant)}`, tolerance: 0.1 },
-          { libelle: "Part des sponsors avec le garage (%)", attendu: k.partDesSponsorsApres, calcul: `${eur(k.sponsorsApres)} ÷ ${eur(k.recettesApres)} × 100 = ${pct(k.partDesSponsorsApres)}`, tolerance: 0.1 },
-          { libelle: "Excédent de la saison avec le garage", attendu: k.excedentApres, calcul: `${eur(k.recettesApres)} − ${eur(k.recettesApres - k.excedentApres)} = ${eur(k.excedentApres)}`, tolerance: 0 },
+          { libelle: "Part des sponsors aujourd'hui (%)", attendu: k.partDesSponsorsAvant, calcul: `${eur(k.sponsorsAvant)} ÷ ${eur(avant)} × 100 = ${pct(k.partDesSponsorsAvant)}` },
+          { libelle: "Part des sponsors avec le garage (%)", attendu: k.partDesSponsorsApres, calcul: `${eur(k.sponsorsApres)} ÷ ${eur(k.recettesApres)} × 100 = ${pct(k.partDesSponsorsApres)}` },
+          { libelle: "Excédent de la saison avec le garage", attendu: k.excedentApres, calcul: `${eur(k.recettesApres)} − ${eur(k.recettesApres - k.excedentApres)} = ${eur(k.excedentApres)}` },
         ];
       },
       explication: () => {

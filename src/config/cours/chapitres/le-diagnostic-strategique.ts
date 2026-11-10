@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENTREPRISES_DE_LA_DIRECTION,
@@ -33,6 +33,11 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait l'année de l'arène dans huit entreprises (le résultat, la part
  * de marché, l'événement de l'année rejoué sans lui) ; il lit NOVA : 79 225,96 € de bénéfice,
  * 1 200 enceintes que la ligne refusera, une demande qui monte de 15,2 %, un salaire à 93,8 % du marché.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'évolution de la demande, la demande servie et la part du
+ * marché payée se donnaient au dixième, elles sont à deux décimales, comme les constats en
+ * pourcentage de monde/direction-de-nova.ts ; les marges attendent le centime.
  */
 
 export const ENTREPRISES_DU_DIAGNOSTIC = ENTREPRISES_DE_LA_DIRECTION;
@@ -45,23 +50,19 @@ export const CATEGORIES_DU_DIAGNOSTIC: readonly { code: Categorie; libelle: stri
   { code: "menace", libelle: "Menace" },
 ];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 /** « de » devant un nom propre : « d'Auris », « de NOVA ». */
 export const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-/** Les chiffres du diagnostic, au dixième (le cas des clients repartis les reprend). */
+/** Les chiffres du diagnostic, à deux décimales (le cas des clients repartis les reprend). */
 export function diagnostic(_c?: Cas, salaire?: number) {
   const x = faitsDuDiagnostic(salaire);
   return {
     ...x,
     constats: constatsDuDiagnostic(salaire),
-    hausseDeLaDemandePct: auDixieme(x.hausseDeLaDemande * 100),
-    tauxDeServicePct: auDixieme(((x.demandeN1 - x.refusees) / x.demandeN1) * 100),
-    partPct: auDixieme(x.part * 100),
-    seuilPct: Math.round(x.seuil * 100),
+    hausseDeLaDemandePct: arrondi2(x.hausseDeLaDemande * 100),
+    tauxDeServicePct: arrondi2(((x.demandeN1 - x.refusees) / x.demandeN1) * 100),
+    partPct: arrondi2(x.part * 100),
+    seuilPct: arrondi2(x.seuil * 100),
     verdict: verdictDuDiagnostic(),
   };
 }
@@ -219,13 +220,13 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
         };
       },
       question: () =>
-        "Calculez l'évolution de la demande de N à N + 1, la part de la demande de N + 1 que la ligne servira, et la part du salaire du marché que NOVA paiera en N + 1, chacune en pourcentage au dixième.",
+        "Calculez l'évolution de la demande de N à N + 1, la part de la demande de N + 1 que la ligne servira, et la part du salaire du marché que NOVA paiera en N + 1. Donnez chacune en pourcentage, à deux décimales.",
       champs: (c) => {
         const d = diagnostic(c);
         return [
-          { libelle: "Évolution de la demande (%)", attendu: d.hausseDeLaDemandePct, calcul: `(${qte(d.demandeN1)} − ${qte(d.demandeN)}) ÷ ${qte(d.demandeN)} × 100 = ${pct(d.hausseDeLaDemandePct)}`, tolerance: 0.1 },
-          { libelle: "Demande servie en N + 1 (%)", attendu: d.tauxDeServicePct, calcul: `(${qte(d.demandeN1)} − ${qte(d.refusees)}) ÷ ${qte(d.demandeN1)} × 100 = ${pct(d.tauxDeServicePct)}`, tolerance: 0.1 },
-          { libelle: "Part du marché payée en N + 1 (%)", attendu: d.partPct, calcul: `${eur(d.salaire)} ÷ ${eur(d.marcheN1)} × 100 = ${pct(d.partPct)}`, tolerance: 0.1 },
+          { libelle: "Évolution de la demande (%)", attendu: d.hausseDeLaDemandePct, calcul: `(${qte(d.demandeN1)} − ${qte(d.demandeN)}) ÷ ${qte(d.demandeN)} × 100 = ${pct(d.hausseDeLaDemandePct)}` },
+          { libelle: "Demande servie en N + 1 (%)", attendu: d.tauxDeServicePct, calcul: `(${qte(d.demandeN1)} − ${qte(d.refusees)}) ÷ ${qte(d.demandeN1)} × 100 = ${pct(d.tauxDeServicePct)}` },
+          { libelle: "Part du marché payée en N + 1 (%)", attendu: d.partPct, calcul: `${eur(d.salaire)} ÷ ${eur(d.marcheN1)} × 100 = ${pct(d.partPct)}` },
         ];
       },
       explication: (c) => {
@@ -295,7 +296,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
           lignes: [
             { libelle: "Prix", valeurs: [eur(k.nova.prix), eur(k.soundbox.prix), eur(k.auris.prix)] },
             { libelle: "Coût variable", valeurs: [eur(k.nova.coutVariable), eur(k.soundbox.coutVariable), eur(k.auris.coutVariable)] },
-            { libelle: "Qualité de conception", valeurs: [qte(k.nova.qualite), qte(k.soundbox.qualite), qte(k.auris.qualite)] },
+            { libelle: "Qualité de conception", valeurs: [nombreAuCentieme(k.nova.qualite), nombreAuCentieme(k.soundbox.qualite), nombreAuCentieme(k.auris.qualite)] },
           ],
         };
       },
@@ -303,9 +304,9 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
       champs: () => {
         const k = faceAuxConcurrents();
         return [
-          { libelle: "Marge d'une enceinte NOVA", attendu: k.nova.marge, calcul: `${eur(k.nova.prix)} − ${eur(k.nova.coutVariable)} = ${eur(k.nova.marge)}`, tolerance: 0 },
-          { libelle: "Marge d'une enceinte SoundBox", attendu: k.soundbox.marge, calcul: `${eur(k.soundbox.prix)} − ${eur(k.soundbox.coutVariable)} = ${eur(k.soundbox.marge)}`, tolerance: 0 },
-          { libelle: "Écart de coût variable", attendu: k.ecartDeCout, calcul: `${eur(k.nova.coutVariable)} − ${eur(k.soundbox.coutVariable)} = ${eur(k.ecartDeCout)}`, tolerance: 0 },
+          { libelle: "Marge d'une enceinte NOVA", attendu: k.nova.marge, calcul: `${eur(k.nova.prix)} − ${eur(k.nova.coutVariable)} = ${eur(k.nova.marge)}` },
+          { libelle: "Marge d'une enceinte SoundBox", attendu: k.soundbox.marge, calcul: `${eur(k.soundbox.prix)} − ${eur(k.soundbox.coutVariable)} = ${eur(k.soundbox.marge)}` },
+          { libelle: "Écart de coût variable", attendu: k.ecartDeCout, calcul: `${eur(k.nova.coutVariable)} − ${eur(k.soundbox.coutVariable)} = ${eur(k.ecartDeCout)}` },
         ];
       },
       explication: () => {
@@ -327,7 +328,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
           {
             texte: "Pas encore : elle n'est la meilleure ni en coût ni en qualité",
             juste: true,
-            retour: `Oui : SoundBox produit moins cher (${eur(k.soundbox.coutVariable)} contre ${eur(k.nova.coutVariable)}), Auris conçoit mieux (une qualité de ${qte(k.auris.qualite)} contre ${qte(k.nova.qualite)}). Pour réussir, NOVA doit construire une compétence distinctive qui réponde à un facteur clé de succès : c'est l'articulation des deux diagnostics.`,
+            retour: `Oui : SoundBox produit moins cher (${eur(k.soundbox.coutVariable)} contre ${eur(k.nova.coutVariable)}), Auris conçoit mieux (une qualité de ${nombreAuCentieme(k.auris.qualite)} contre ${nombreAuCentieme(k.nova.qualite)}). Pour réussir, NOVA doit construire une compétence distinctive qui réponde à un facteur clé de succès : c'est l'articulation des deux diagnostics.`,
           },
           {
             texte: "Oui, le prix : elle vend moins cher que ses deux concurrents",
@@ -337,7 +338,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
           {
             texte: "Oui, la qualité : elle a la meilleure qualité de conception des trois",
             juste: false,
-            retour: `Non : Auris la dépasse nettement, à ${qte(k.auris.qualite)}.`,
+            retour: `Non : Auris la dépasse nettement, à ${nombreAuCentieme(k.auris.qualite)}.`,
           },
         ];
       },
@@ -391,7 +392,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
         const d = diagnostic();
         return [
           { libelle: "Salaire d'un opérateur", montant: d.salaire },
-          { libelle: "Seuil de démission", montant: Math.round(m * d.seuil * 100) / 100, fort: true },
+          { libelle: "Seuil de démission", montant: arrondi2(m * d.seuil), fort: true },
         ];
       },
       droites: () => {

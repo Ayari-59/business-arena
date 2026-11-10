@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CONSULTANTS } from "../monde/atlas-conseil";
 import {
@@ -28,13 +28,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez ATLAS CONSEIL seule : ses consultants, leurs journées et
  * leur coût sont ceux de la fiche (atlas-conseil.ts) ; le prix d'une journée d'indépendant est une
  * hypothèse du cours, dite dans monde/liens-de-travail-d-atlas.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux d'occupation se donnaient au dixième, ils sont à
+ * deux décimales (monde/liens-de-travail-d-atlas.ts) ; le coût d'une journée au centime.
  */
 
 export const ENTREPRISES_DES_LIENS_DE_TRAVAIL = ["conseil"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 function tableauDeBord(c: Cas): TableauDeDonnees {
@@ -142,8 +143,8 @@ export const QUALIFICATION_COMPETENCES_ET_LIENS_DE_TRAVAIL: Chapitre = {
         const t3 = k.trimestres[2]!;
         const t4 = k.trimestres[3]!;
         return [
-          { libelle: "Taux d'occupation au trimestre 3 (%)", attendu: t3.occupationPct, calcul: `${qte(t3.vendues)} ÷ ${qte(k.capacite)} × 100 = ${pct(t3.occupationPct)}`, tolerance: 0.1 },
-          { libelle: "Taux d'occupation au trimestre 4 (%)", attendu: t4.occupationPct, calcul: `${qte(t4.vendues)} ÷ ${qte(k.capacite)} × 100 = ${pct(t4.occupationPct)}`, tolerance: 0.1 },
+          { libelle: "Taux d'occupation au trimestre 3 (%)", attendu: t3.occupationPct, calcul: `${qte(t3.vendues)} ÷ ${qte(k.capacite)} × 100 = ${pct(t3.occupationPct)}` },
+          { libelle: "Taux d'occupation au trimestre 4 (%)", attendu: t4.occupationPct, calcul: `${qte(t4.vendues)} ÷ ${qte(k.capacite)} × 100 = ${pct(t4.occupationPct)}` },
           { libelle: "Coût d'une journée de consultant salarié", attendu: k.coutJournalier, calcul: `${eur(CONSULTANTS.coutAnnuel)} ÷ ${qte(JOURS_D_UN_CONSULTANT)} = ${eur(k.coutJournalier)}` },
         ];
       },

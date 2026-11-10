@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_L_OFFRE, ETUDE_DES_CLUBS, PACK_SALLE, PRIX_REDUIT, packAuPrix } from "../../monde/offre-et-modele-de-nova";
 import type { Situation } from "../types";
 
@@ -8,10 +8,12 @@ import type { Situation } from "../types";
  *
  * Le chapitre chiffrait le pack à 450 € ; le cas demande s'il crée plus de valeur à 390 €, quand l'étude
  * dit que plus de clubs l'achèteraient. Hypothèses : monde/offre-et-modele-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les clubs acheteurs sont des quantités ; les valeurs ajoutées
+ * au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const lePackA390 = () => ({ cher: packAuPrix(PACK_SALLE.prix, ETUDE_DES_CLUBS.interesses), reduit: packAuPrix(PRIX_REDUIT.prix, PRIX_REDUIT.interesses) });
 
@@ -46,7 +48,7 @@ export const LE_PACK_A_390_EUROS: Situation = {
       champs: () => {
         const { cher } = lePackA390();
         return [
-          { libelle: "Clubs acheteurs", attendu: cher.clubs, calcul: `${qte(ETUDE_DES_CLUBS.clubsDeLaZone)} × ${qte(ETUDE_DES_CLUBS.interesses)} ÷ ${qte(ETUDE_DES_CLUBS.reponses)} = ${qte(cher.clubs)}`, tolerance: 0 },
+          { libelle: "Clubs acheteurs", nature: "quantite", attendu: cher.clubs, calcul: `${qte(ETUDE_DES_CLUBS.clubsDeLaZone)} × ${qte(ETUDE_DES_CLUBS.interesses)} ÷ ${qte(ETUDE_DES_CLUBS.reponses)} = ${qte(cher.clubs)}` },
           { libelle: "Valeur ajoutée", attendu: cher.valeurAjoutee, calcul: `${qte(cher.clubs)} × (${eur(PACK_SALLE.prix)} − ${eur(PACK_SALLE.consommations)}) = ${eur(cher.valeurAjoutee)}` },
         ];
       },
@@ -60,7 +62,7 @@ export const LE_PACK_A_390_EUROS: Situation = {
       champs: () => {
         const { reduit } = lePackA390();
         return [
-          { libelle: "Clubs acheteurs", attendu: reduit.clubs, calcul: `${qte(ETUDE_DES_CLUBS.clubsDeLaZone)} × ${qte(PRIX_REDUIT.interesses)} ÷ ${qte(ETUDE_DES_CLUBS.reponses)} = ${qte(reduit.clubs)}`, tolerance: 0 },
+          { libelle: "Clubs acheteurs", nature: "quantite", attendu: reduit.clubs, calcul: `${qte(ETUDE_DES_CLUBS.clubsDeLaZone)} × ${qte(PRIX_REDUIT.interesses)} ÷ ${qte(ETUDE_DES_CLUBS.reponses)} = ${qte(reduit.clubs)}` },
           { libelle: "Valeur ajoutée", attendu: reduit.valeurAjoutee, calcul: `${qte(reduit.clubs)} × (${eur(PRIX_REDUIT.prix)} − ${eur(PACK_SALLE.consommations)}) = ${eur(reduit.valeurAjoutee)}` },
         ];
       },

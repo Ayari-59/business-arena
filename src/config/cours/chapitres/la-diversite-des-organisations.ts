@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { HAUT_VERDASSE, SOUTIEN_AU_HANDBALL } from "../monde/haut-verdasse";
 import { HAUT_VERDASSE_HANDBALL } from "../monde/haut-verdasse-handball";
@@ -25,13 +25,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : ses chiffres sont ceux de son exercice N
  * (comptes-du-lycee.ts) ; ceux de la communauté et du club viennent de leurs fiches, rangés côte à
  * côte par monde/organisations-comparees.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des usagers, de la subvention et du bénéfice
+ * distribué se donnaient au dixième de point, elles sont à deux décimales
+ * (monde/organisations-comparees.ts).
  */
 
 export const ENTREPRISES_DES_ORGANISATIONS = ["nova"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 
 function lesTrois(c: Cas): TableauDeDonnees {
   return {
@@ -135,12 +137,12 @@ export const LA_DIVERSITE_DES_ORGANISATIONS: Chapitre = {
       titre: "Qui paie ?",
       tableau: lesBudgets,
       question: () =>
-        "Calculez, au dixième de point : la part des recettes de la communauté que paient les usagers, et la part de la subvention dans les recettes du club.",
+        "Calculez, à deux décimales : la part des recettes de la communauté que paient les usagers, et la part de la subvention dans les recettes du club.",
       champs: () => {
         const k = organisationsComparees();
         return [
-          { libelle: "Part des usagers dans les recettes de la communauté (%)", attendu: k.communaute.partDesUsagersPct, calcul: `${eur(k.communaute.usagers)} ÷ ${eur(k.communaute.recettes)} × 100 = ${pct(k.communaute.partDesUsagersPct)}`, tolerance: 0.1 },
-          { libelle: "Part de la subvention dans les recettes du club (%)", attendu: k.club.partDeLaSubventionPct, calcul: `${eur(k.club.subvention)} ÷ ${eur(k.club.recettes)} × 100 = ${pct(k.club.partDeLaSubventionPct)}`, tolerance: 0.1 },
+          { libelle: "Part des usagers dans les recettes de la communauté (%)", attendu: k.communaute.partDesUsagersPct, calcul: `${eur(k.communaute.usagers)} ÷ ${eur(k.communaute.recettes)} × 100 = ${pct(k.communaute.partDesUsagersPct)}` },
+          { libelle: "Part de la subvention dans les recettes du club (%)", attendu: k.club.partDeLaSubventionPct, calcul: `${eur(k.club.subvention)} ÷ ${eur(k.club.recettes)} × 100 = ${pct(k.club.partDeLaSubventionPct)}` },
         ];
       },
       explication: (c) => {
@@ -215,13 +217,13 @@ export const LA_DIVERSITE_DES_ORGANISATIONS: Chapitre = {
       type: "montants",
       titre: "Trois excédents, trois destinations",
       question: (c) =>
-        `Chacune garde un reste à la fin de l'année. Calculez l'excédent du club (recettes moins dépenses), relevez le virement de la communauté à sa section d'investissement, et la part du bénéfice de ${c.entreprise} versée en dividendes, au dixième de point.`,
+        `Chacune garde un reste à la fin de l'année. Calculez l'excédent du club (recettes moins dépenses), relevez le virement de la communauté à sa section d'investissement, et la part du bénéfice de ${c.entreprise} versée en dividendes, à deux décimales.`,
       champs: (c) => {
         const k = organisationsComparees();
         return [
           { libelle: "Excédent du club", attendu: k.club.excedent, calcul: `${eur(k.club.recettes)} − ${eur(k.club.depenses)} = ${eur(k.club.excedent)}` },
           { libelle: "Virement de la communauté à l'investissement", attendu: k.communaute.autofinancement, calcul: `Ligne du budget de fonctionnement : ${eur(k.communaute.autofinancement)}` },
-          { libelle: `Part du bénéfice de ${c.entreprise} distribuée (%)`, attendu: k.nova.partDistribueePct, calcul: `${eur(k.nova.dividendes)} ÷ ${eur(k.nova.benefice)} × 100 = ${pct(k.nova.partDistribueePct)}`, tolerance: 0.1 },
+          { libelle: `Part du bénéfice de ${c.entreprise} distribuée (%)`, attendu: k.nova.partDistribueePct, calcul: `${eur(k.nova.dividendes)} ÷ ${eur(k.nova.benefice)} × 100 = ${pct(k.nova.partDistribueePct)}` },
         ];
       },
       explication: (c) => {

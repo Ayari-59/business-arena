@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   ABSENCES_DE_L_ANNEE,
   ENTREPRISES_DE_L_ORGANISATION_DU_TRAVAIL,
@@ -23,10 +23,12 @@ import type { Chapitre } from "../types";
  * délégation avec son compte rendu (reporting), le lean management et la performance sociale.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/organisation-du-travail-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes perdues sont une quantité ; la marge perdue au
+ * centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const ORGANISER_LE_TRAVAIL_ET_COORDONNER: Chapitre = {
   code: "organiser-le-travail-et-coordonner",
@@ -118,7 +120,7 @@ export const ORGANISER_LE_TRAVAIL_ET_COORDONNER: Chapitre = {
       champs: () => {
         const j = jourSansOperateur();
         return [
-          { libelle: "Enceintes perdues dans la journée", attendu: j.enceintesPerdues, calcul: `${qte(j.parJour)} × ${qte(j.postes)} = ${qte(j.enceintesPerdues)}`, tolerance: 0 },
+          { libelle: "Enceintes perdues dans la journée", nature: "quantite", attendu: j.enceintesPerdues, calcul: `${qte(j.parJour)} × ${qte(j.postes)} = ${qte(j.enceintesPerdues)}` },
           { libelle: "Marge perdue dans la journée", attendu: j.margePerdue, calcul: `${qte(j.enceintesPerdues)} × ${eur(j.marge)} = ${eur(j.margePerdue)}` },
         ];
       },

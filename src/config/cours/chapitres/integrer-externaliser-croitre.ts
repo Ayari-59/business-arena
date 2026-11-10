@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import {
   ENTREPRISES_DE_LA_CHAINE,
   FILIALE,
@@ -22,11 +22,14 @@ import type { Chapitre } from "../types";
  * partenariat (NOVA DIFFUSION, AUDIO COMPTOIR, CampusTech) et pèse l'internationalisation.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : monde/chaine-de-valeur-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les coûts du montage intégré et l'économie attendent le
+ * centime (à l'euro près, avant) ; les taux s'écrivent à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const MAILLONS: readonly { code: Maillon; libelle: string }[] = [
@@ -115,9 +118,9 @@ export const INTEGRER_EXTERNALISER_CROITRE: Chapitre = {
       champs: () => {
         const k = faireOuFaireFaire();
         return [
-          { libelle: "Coût du montage intégré du trimestre", attendu: k.integre, calcul: `${eur(k.coutVariable)} × ${qte(k.enceintes)} + ${eur(k.fixes)} = ${eur(k.integre)}`, tolerance: 1 },
-          { libelle: "Coût par enceinte, intégré", attendu: k.integreParEnceinte, calcul: `${eur(k.integre)} ÷ ${qte(k.enceintes)} = ${eur(k.integreParEnceinte)}`, tolerance: 0.01 },
-          { libelle: "Économie du montage intégré", attendu: k.economie, calcul: `${eur(k.sousTraitant)} × ${qte(k.enceintes)} − ${eur(k.integre)} = ${eur(k.economie)}`, tolerance: 1 },
+          { libelle: "Coût du montage intégré du trimestre", attendu: k.integre, calcul: `${eur(k.coutVariable)} × ${qte(k.enceintes)} + ${eur(k.fixes)} = ${eur(k.integre)}` },
+          { libelle: "Coût par enceinte, intégré", attendu: k.integreParEnceinte, calcul: `${eur(k.integre)} ÷ ${qte(k.enceintes)} = ${eur(k.integreParEnceinte)}` },
+          { libelle: "Économie du montage intégré", attendu: k.economie, calcul: `${eur(k.sousTraitant)} × ${qte(k.enceintes)} − ${eur(k.integre)} = ${eur(k.economie)}` },
         ];
       },
       explication: (c) => {

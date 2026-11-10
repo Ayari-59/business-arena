@@ -27,9 +27,9 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("du prix unique au prix différencié", () => {
-  it("67 € de marge, 319 % de taux de marge ; 13,3 % de demande en moins pour 10 % de hausse", () => {
-    expect(attendusMk(CH, "la-marge")).toEqual([67, 319]);
-    expect(justeMk(CH, "la-sensibilite")[0]).toBe("Elle baisse d'environ 13,3 %");
+  it("67 € de marge, 319,05 % de taux de marge ; 13,32 % de demande en moins pour 10 % de hausse", () => {
+    expect(attendusMk(CH, "la-marge")).toEqual([67, 319.05]);
+    expect(justeMk(CH, "la-sensibilite")[0]).toBe("Elle baisse d'environ 13,32 %");
   });
 
   it("1 000 nuitées refusées l'été, 2 000 vides l'hiver", () => {

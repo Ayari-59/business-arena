@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { LA_STRATEGIE_D_UNE_ORGANISATION_PUBLIQUE } from "../../src/config/cours/chapitres/la-strategie-d-une-organisation-publique";
 import { HAUT_VERDASSE } from "../../src/config/cours/monde/haut-verdasse";
 import { ENTREES_DE_LA_PISCINE } from "../../src/config/cours/monde/strategie-du-haut-verdasse";
@@ -35,9 +36,9 @@ describe("le chapitre et son cas, dans leur parcours", () => {
 });
 
 describe("la piscine et sa délégation", () => {
-  it("la régie : 560 000 + 520 000 − 410 000 = 670 000 € net, 12,88 € par entrée, 38 % payés par les usagers", () => {
+  it("la régie : 560 000 + 520 000 − 410 000 = 670 000 € net, 12,88 € par entrée, 37,96 % payés par les usagers", () => {
     const net = 14 * 40_000 + 520_000 - 410_000;
-    expect(attendus(LA_STRATEGIE_D_UNE_ORGANISATION_PUBLIQUE, "ce-que-coute-la-piscine")).toEqual([net, Math.round((net / 52_000) * 100) / 100, Math.round((410_000 / 1_080_000) * 1000) / 10]);
+    expect(attendus(LA_STRATEGIE_D_UNE_ORGANISATION_PUBLIQUE, "ce-que-coute-la-piscine")).toEqual([net, Math.round((net / 52_000) * 100) / 100, arrondi2((410_000 / 1_080_000) * 100)]);
     expect([net, Math.round((net / 52_000) * 100) / 100]).toEqual([670_000, 12.88]);
   });
 

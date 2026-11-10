@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { LA_STRATEGIE_D_UNE_ASSOCIATION } from "../../src/config/cours/chapitres/la-strategie-d-une-association";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR } from "../../src/config/cours/situations/par-chapitre/le-parrain-qui-veut-choisir-l-entraineur";
@@ -29,14 +30,14 @@ describe("le chapitre et son cas, dans leur parcours", () => {
 });
 
 describe("le budget et les ressources du club", () => {
-  it("68 000 € de recettes, 66 000 € de dépenses, 2 000 € d'excédent, 26,5 % de subvention", () => {
-    expect(attendus(LA_STRATEGIE_D_UNE_ASSOCIATION, "le-budget")).toEqual([68_000, 66_000, 2_000, Math.round((18_000 / 68_000) * 1000) / 10]);
+  it("68 000 € de recettes, 66 000 € de dépenses, 2 000 € d'excédent, 26,47 % de subvention", () => {
+    expect(attendus(LA_STRATEGIE_D_UNE_ASSOCIATION, "le-budget")).toEqual([68_000, 66_000, 2_000, arrondi2((18_000 / 68_000) * 100)]);
   });
 
-  it("le bénévolat : 3 500 × 12,31 = 43 085 €, sur 115 885 € de ressources, 37,2 %", () => {
+  it("le bénévolat : 3 500 × 12,31 = 43 085 €, sur 115 885 € de ressources, 37,18 %", () => {
     const benevolat = 3_500 * 12.31;
     const total = 68_000 + 6 * 32 * 25 + benevolat;
-    expect(attendus(LA_STRATEGIE_D_UNE_ASSOCIATION, "ce-qui-ne-passe-pas-par-la-caisse")).toEqual([benevolat, total, Math.round((benevolat / total) * 1000) / 10]);
+    expect(attendus(LA_STRATEGIE_D_UNE_ASSOCIATION, "ce-qui-ne-passe-pas-par-la-caisse")).toEqual([benevolat, total, arrondi2((benevolat / total) * 100)]);
     expect([benevolat, total]).toEqual([43_085, 115_885]);
   });
 
@@ -54,8 +55,8 @@ describe("le budget et les ressources du club", () => {
 });
 
 describe("le cas du chapitre", () => {
-  it("le parrain : les sponsors passent de 17,6 % à 24,3 % des recettes, 8 000 € d'excédent", () => {
-    expect(attendus(LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR, "le-poids-du-parrain")).toEqual([Math.round((12_000 / 68_000) * 1000) / 10, Math.round((18_000 / 74_000) * 1000) / 10, 74_000 - 66_000]);
+  it("le parrain : les sponsors passent de 17,65 % à 24,32 % des recettes, 8 000 € d'excédent", () => {
+    expect(attendus(LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR, "le-poids-du-parrain")).toEqual([arrondi2((12_000 / 68_000) * 100), arrondi2((18_000 / 74_000) * 100), 74_000 - 66_000]);
     expect(juste(LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR, "reponse")).toEqual(["Accepter le parrainage et le nom sur les maillots, refuser le choix de l'entraîneur"]);
   });
 });
