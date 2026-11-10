@@ -44,7 +44,8 @@ describe("le cours par diplôme", () => {
       const autres = parcours.blocs.findIndex((b) => b.bloc === null);
       if (autres >= 0) expect(autres, `${f.code} : les autres chapitres ferment la liste`).toBe(parcours.blocs.length - 1);
       for (const b of parcours.blocs) {
-        expect(b.chapitres.length, `${f.code} : bloc vide`).toBeGreaterThan(0);
+        // Un bloc vide n'est permis que pour une entrée du texte, et il est alors « en cours ».
+        if (b.chapitres.length === 0) expect(b.bloc !== null && b.enCours, `${f.code} : bloc vide`).toBe(true);
         for (const c of b.chapitres) {
           if (b.bloc) expect(blocsDuChapitre(c.chapitre, f.code), `${f.code} / ${c.chapitre.code}`).toContain(b.bloc);
         }

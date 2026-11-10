@@ -105,6 +105,55 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     partie: "Terminale, gestion et finance",
     preuve: "Audit de la finance (BO spécial n° 8 du 25 juillet 2019), puis la PR #349.",
   },
+  // lot A STMG : sciences de gestion et numérique de première, les quatre thèmes (début)
+  {
+    formation: "stmg",
+    bloc: "Thème 1 · De l'individu à l'acteur",
+    partie: "Première, sciences de gestion et numérique",
+    preuve: "Audit du chantier STMG, section 1 (annexe 3 du BO spécial n° 1 du 22 janvier 2019), puis le lot A. T1.1 : « De l'individu à l'acteur ». T1.2 : « Qui possède, qui dirige, qui contrôle ? », partagé avec le management 1.2. T1.3 : « Qualification, compétences et nouveaux liens de travail », avec les chapitres de ressources humaines qui citent ce thème.",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 2 · Numérique et intelligence collective",
+    partie: "Première, sciences de gestion et numérique",
+    preuve: "Audit du chantier STMG, section 1 (annexe 3 du BO spécial n° 1 du 22 janvier 2019), puis le lot A. T2.1 : « Données personnelles et données ouvertes », avec « Des données à l'information ». T2.2 : le complément de « Décider ensemble » (rôles et droits, communauté, IA). T2.3 : « Le processus et le PGI ».",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 3 · Création de valeur et performance",
+    partie: "Première, sciences de gestion et numérique",
+    preuve: "Audit du chantier STMG, section 1 (annexe 3 du BO spécial n° 1 du 22 janvier 2019), puis le lot A. T3.1 : « Les formes de la valeur », avec la valeur ajoutée et les comptes. T3.2 : « La performance globale au tableau de bord », avec le marché et la rentabilité.",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 4 · Temps et risque",
+    partie: "Première, sciences de gestion et numérique",
+    preuve: "Audit du chantier STMG, section 1 (annexe 3 du BO spécial n° 1 du 22 janvier 2019), puis le lot A. T4.1 : le seuil, le budget de trésorerie, « Le temps de l'organisation » et « Une information qui circule à temps ». T4.2 : « Les risques de la performance ».",
+  },
+  // lot A STMG (fin)
+  // lot B STMG : le management de première, ses trois thèmes et ses onze questions.
+  {
+    formation: "stmg",
+    bloc: "Thème 1 · À la rencontre du management des organisations",
+    partie: "Première, management",
+    preuve:
+      "Audit du management de première (annexe 2 du BO spécial n° 1 du 22 janvier 2019, section 2). 1.1 : « Organiser l'action collective » et « Produire ». 1.3 : « Manager : fonctions et décisions ». 1.4 : « Le management face au changement ». 1.2 : « Qui possède, qui dirige, qui contrôle ? La diversité des organisations », le chapitre A2 du lot A, qui cite ce thème en second (finalités, marchand et non marchand, privé, public et partenariat public-privé, financement privé et public, entreprise publique, associations, ONG, syndicats et fondations).",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 2 · Le management stratégique, du diagnostic à la fixation des objectifs",
+    partie: "Première, management",
+    preuve:
+      "Audit du management de première (section 2). 2.1 et 2.2 : le complément du « Diagnostic stratégique » (définition et démarche, veille, facteurs clés de succès, compétences distinctives). 2.3 et 2.4 : le complément de « Se fixer des objectifs et les suivre » (finalité et RSE, conflit et consensus, variété et appropriation des indicateurs), et « Construire un indicateur juste ».",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 3 · Les choix stratégiques des organisations",
+    partie: "Première, management",
+    preuve:
+      "Audit du management de première (section 2) : 3.1 par « Domaines d'activité : se spécialiser ou se diversifier » et « Intégrer, externaliser, croître », 3.2 par « La stratégie d'une organisation publique », 3.3 par « La stratégie d'une association ».",
+  },
+  // fin du lot B STMG.
 ];
 
 /** Vrai si le bloc du diplôme est une matière couverte en entier. */

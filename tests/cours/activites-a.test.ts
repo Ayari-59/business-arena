@@ -24,6 +24,7 @@ import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
 import { corrigerAuScenario, servirLeScenario } from "../../src/pedagogy/cours/scenario-servi";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { LEXIQUE_INTERDIT, espacesOrdinairesFautives, phrasesLongues, tiretsAuMilieu, tutoiements } from "../helpers/textes-du-depot";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * LES ACTIVITÉS DU LOT A (décision du propriétaire, novembre 2026) : une activité par chapitre, pour
@@ -70,8 +71,8 @@ describe("le registre : une activité par chapitre, hors des cas dédiés", () =
     expect(lienDuBureau(LE_MOIS_DE_MARS_DE_NOVA)).toBe("/cours/bureau/le-mois-de-mars-de-nova");
   });
 
-  it("aucune activité n'entre dans les cas dédiés : le compte reste 197", () => {
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+  it("aucune activité n'entre dans les cas dédiés : le compte reste celui des cas dédiés", () => {
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     const codes = new Set(CAS_PAR_CHAPITRE.map((x) => x.code));
     for (const code of Object.values(CHAPITRES_DU_LOT)) expect(codes.has(code), code).toBe(false);
   });

@@ -15,6 +15,7 @@ import { equilibree } from "../../src/pedagogy/cours/etats";
 import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { LEXIQUE_INTERDIT, espacesOrdinairesFautives, phrasesLongues, tiretsAuMilieu, tutoiements } from "../helpers/textes-du-depot";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * L'ENQUÊTE : LA CLÔTURE DU STAGIAIRE (monde/cloture-du-stagiaire.ts, enquetes/la-cloture-du-stagiaire.ts).
@@ -166,7 +167,7 @@ describe("l'enquête de la clôture du stagiaire", () => {
     expect(e.parcours).toBe(CHAPITRES.find((x) => x.code === "la-cloture")!.parcours);
     // Le palier des travaux de prudence et des régularisations, que l'enquête demande aussi.
     expect(e.palier).toBe(CHAPITRES.find((x) => x.code === "depreciations-et-provisions")!.palier);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     expect(CAS_PAR_CHAPITRE.some((x) => (x as { code?: string }).code === e.code)).toBe(false);
     expect([e.entreprise.code, e.entreprise.nom]).toEqual([f.code, f.entreprise]);
   });

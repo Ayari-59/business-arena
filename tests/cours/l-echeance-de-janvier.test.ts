@@ -6,6 +6,7 @@ import { CHAPITRES } from "../../src/config/cours/registre";
 import { CAS_PAR_CHAPITRE } from "../../src/config/cours/situations";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { textesDuBureau, verifierLaLangue, verifierLesQuestions } from "../helpers/activites-du-lot-e";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * LE BUREAU : L'ÉCHÉANCE DE JANVIER (bureaux/l-echeance-de-janvier.ts, monde/valeur-et-temps.ts). Chaque
@@ -52,7 +53,7 @@ describe("le bureau de l'échéance", () => {
     expect(b.libre).toBe(false);
     const ch = CHAPITRES.find((y) => y.code === "la-valeur-et-le-temps")!;
     expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
   });
 
   it("une pile de 5 à 9 pièces, 3 à 6 étapes, et chaque pièce que montre une étape existe", () => {

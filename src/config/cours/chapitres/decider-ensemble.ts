@@ -114,6 +114,7 @@ export const DECIDER_ENSEMBLE: Chapitre = {
     "Chiffrer ce que donne une décision prise d'un seul point de vue",
     "Comparer plusieurs façons de décider sur plusieurs critères",
     "Expliquer ce que l'équipe gagne à croiser ses informations",
+    "Organiser le partage de l'information : rôles et droits, communauté, intelligence artificielle",
   ],
   libre: false,
   entreprises: {
@@ -299,6 +300,58 @@ export const DECIDER_ENSEMBLE: Chapitre = {
         ];
       },
     },
+    // lot A STMG : le complément de la SGN de première T2.2 (rôles et droits, communauté, IA).
+    {
+      id: "roles-et-droits",
+      objectifs: [4],
+      type: "tri",
+      titre: "Qui lit, qui modifie, qui valide",
+      question: (c) =>
+        `Pour croiser les écrans, ${c.entreprise} réunit ses chiffres dans un espace de travail partagé, en ligne. Chacun y a un rôle, et des droits qui en découlent. Rangez chaque accès : lire seulement, modifier, ou valider et gérer les droits ?`,
+      categories: [
+        { code: "lire", libelle: "Lire" },
+        { code: "modifier", libelle: "Modifier" },
+        { code: "valider", libelle: "Valider et gérer les droits" },
+      ],
+      elements: () => [
+        { libelle: "Le commercial, sur les prévisions de ventes", montant: 0, categorie: "modifier", pourquoi: "C'est lui qui voit le marché : il tient les prévisions à jour." },
+        { libelle: "Le financier, sur les budgets d'entretien et de prévention", montant: 0, categorie: "modifier", pourquoi: "Les budgets sont son domaine : il les modifie." },
+        { libelle: "L'atelier, sur les prévisions de ventes", montant: 0, categorie: "lire", pourquoi: "Il en a besoin pour planifier, mais ce n'est pas à lui de les changer." },
+        { libelle: "Le stagiaire de l'été, sur tout l'espace", montant: 0, categorie: "lire", pourquoi: "Il apprend en lisant ; il ne modifie rien qui engage l'entreprise." },
+        { libelle: "Le président, sur la décision finale et les accès de chacun", montant: 0, categorie: "valider", pourquoi: "Il arrête la décision et donne ou retire les droits : il administre l'espace." },
+      ],
+      relance: "Demandez-vous : cette personne a-t-elle besoin de voir, de changer, ou d'arrêter la décision ?",
+      explication: () => [
+        "Un outil collaboratif ne vaut que si chacun sait ce qu'il peut y faire. Des droits trop larges font des erreurs (un chiffre écrasé), trop étroits des blocages (l'atelier qui attend). On donne à chacun les droits de son rôle, et pas plus.",
+      ],
+    },
+    {
+      id: "la-communaute",
+      objectifs: [4],
+      type: "choix",
+      titre: "Une communauté plutôt que des courriels",
+      question: () =>
+        "Les questions de l'atelier au commercial partent par courriel ; les réponses arrivent à un seul, et se perdent. Le président propose un réseau social d'entreprise, avec un fil par sujet, ouvert à toute l'équipe. Qu'apporte-t-il ?",
+      options: () => [
+        { texte: "Une information partagée par tous, qui se retrouve", juste: true, retour: "Oui : sur un fil commun, une question et sa réponse servent à tous, et restent. L'équipe devient une communauté qui apprend ensemble : c'est l'intelligence collective. Il faut des règles d'usage, pour que le fil ne devienne pas du bruit." },
+        { texte: "Rien de plus : un courriel envoyé à tous fait exactement la même chose", juste: false, retour: "Non : un courriel à tous noie chacun sous les messages, et la réponse ne se retrouve plus. Le fil range l'échange par sujet." },
+        { texte: "Une façon de surveiller ce que chaque salarié écrit", juste: false, retour: "Non : le réseau social d'entreprise sert à partager. Ce qu'on y écrit est visible, d'où l'intérêt de règles claires, mais son but n'est pas la surveillance." },
+      ],
+    },
+    {
+      id: "l-intelligence-artificielle",
+      objectifs: [4],
+      type: "choix",
+      titre: "Une intelligence artificielle autour de la table",
+      question: () =>
+        "Un assistant d'intelligence artificielle, branché sur les ventes passées, propose de baisser le prix pour vendre plus. Que doit en faire l'équipe ?",
+      options: () => [
+        { texte: "S'en servir comme d'un avis, à croiser avec l'atelier", juste: true, retour: "Oui : l'assistant lit vite des données nombreuses, mais seulement celles qu'on lui donne. Il ne voit ni la ligne pleine à Noël ni l'usure d'une ligne mal entretenue : il refait l'erreur du commercial seul. L'IA aide à décider ; l'équipe décide." },
+        { texte: "Le suivre : une IA calcule mieux que chacun des membres de l'équipe", juste: false, retour: "Non : elle calcule vite sur ses données, mais ignore ce qu'elles ne contiennent pas. Ici, la capacité de l'atelier." },
+        { texte: "L'ignorer : une IA ne peut rien apporter à une décision d'équipe", juste: false, retour: "Non : elle peut repérer ce qu'un humain ne voit pas dans des milliers de ventes. Son avis compte, à côté des autres." },
+      ],
+    },
+    // lot A STMG (fin du complément)
     {
       id: "synthese",
       type: "lecture",
@@ -308,7 +361,7 @@ export const DECIDER_ENSEMBLE: Chapitre = {
         const k = troisFacons(c);
         return [
           `Chez ${c.entreprise}, l'année N + 1 décidée par l'équipe fait ${eur(k.b.equipe.resultat)} de résultat des choix ; le commercial seul en ferait ${eur(k.b.commercial.resultat)}, le financier seul ${eur(k.b.financier.resultat)}.`,
-          "Décider ensemble, ce n'est pas faire une moyenne des avis : c'est croiser ce que chacun voit, le marché, les dépenses, l'atelier, avant de prendre une seule décision. Dans l'arène, l'équipe qui dirige une entreprise a ces écrans sous les yeux à chaque tour.",
+          "Décider ensemble, ce n'est pas faire une moyenne des avis : c'est croiser ce que chacun voit, le marché, les dépenses, l'atelier, avant de prendre une seule décision. Un espace partagé, où chacun a les droits de son rôle, une communauté qui échange sur des fils communs, une intelligence artificielle traitée comme un avis de plus : ce sont les outils de cette intelligence collective. Dans l'arène, l'équipe qui dirige une entreprise a ces écrans sous les yeux à chaque tour.",
         ];
       },
       repere: () => "Résultat des choix = marge sur coût variable − entretien − coûts de la qualité − marge des ventes perdues par les défauts.",

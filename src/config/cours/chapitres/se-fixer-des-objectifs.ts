@@ -76,6 +76,12 @@ const CONCLUSIONS: Record<Verdict, string> = {
   "mal-pose": "l'objectif était mal posé, hors de portée de la demande",
 };
 
+export const FINALITES_DES_OBJECTIFS = [
+  { code: "economique", libelle: "Économique : vendre et gagner" },
+  { code: "sociale", libelle: "Sociale : les salariés" },
+  { code: "environnementale", libelle: "Environnementale : la RSE" },
+] as const;
+
 export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
   code: "se-fixer-des-objectifs",
   parcours: "strategie",
@@ -93,6 +99,8 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     "Calculer l'écart entre l'objectif et le réalisé, trimestre après trimestre",
     "Expliquer un écart : la demande, ou les moyens",
     "Conclure : objectif tenu, à revoir, ou mal posé",
+    "Relier les objectifs à la finalité de l'entreprise et à sa responsabilité sociétale",
+    "Rechercher le consensus et questionner les indicateurs : pertinence, variété, appropriation",
   ],
   libre: false,
   entreprises: { codes: ENTREPRISES_DES_OBJECTIFS, pourquoi: POURQUOI_LES_OBJECTIFS },
@@ -136,7 +144,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
           retour: `Oui. « Vendre le plus possible » ne se mesure pas : on ne sait jamais si c'est atteint. Un objectif chiffré (un nombre de ventes) et daté (chaque trimestre de l'année) se compare au réalisé, et l'écart dit s'il faut réagir.`,
         },
         {
-          texte: "Il est plus facile à atteindre, donc il motive davantage",
+          texte: "Il est plus facile à atteindre, donc il motive davantage toute l'équipe",
           juste: false,
           retour: "Non : un objectif n'est pas fait pour être facile. Il est bien posé parce qu'il se mesure et qu'il a une date ; trop facile, il ne servirait à rien.",
         },
@@ -146,6 +154,26 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
           retour: `Non : l'objectif vise ${pct(TAUX_DE_CAPACITE_VISE * 100)} de la capacité, pas toute. Il est bien posé parce qu'il est chiffré et daté.`,
         },
       ],
+    },
+    {
+      id: "finalite-et-objectifs",
+      objectifs: [5],
+      type: "tri",
+      titre: "De la finalité aux objectifs",
+      question: (c) => `La finalité ${dE(c.entreprise)} est de fabriquer et vendre des enceintes avec profit, durablement. Ses objectifs stratégiques en découlent, et sa responsabilité sociétale y entre. Rangez chaque objectif de l'année selon ce qu'il sert.`,
+      categories: FINALITES_DES_OBJECTIFS,
+      elements: (c) => {
+        const o = suiviDesObjectifs(c);
+        return [
+          { libelle: `Vendre au moins ${qte(o.objectif)} ${c.unites} chaque trimestre`, montant: 0, categorie: "economique", pourquoi: "Des ventes et une marge : la finalité économique." },
+          { libelle: "Dégager assez de résultat pour rembourser l'emprunt et investir", montant: 0, categorie: "economique", pourquoi: "La rentabilité : économique." },
+          { libelle: "Garder toute l'équipe, sans aucun départ dans l'année", montant: 0, categorie: "sociale", pourquoi: "Les salariés et leurs emplois : social." },
+          { libelle: "Former chaque opérateur au contrôle de la qualité", montant: 0, categorie: "sociale", pourquoi: "Les compétences des salariés : social." },
+          { libelle: "Valoriser tout l'emballage, sans déchet mis en décharge", montant: 0, categorie: "environnementale", pourquoi: "Moins de déchets : la responsabilité sociétale, côté environnement." },
+        ];
+      },
+      relance: "L'objectif sert-il les ventes et le résultat, les personnes qui travaillent dans l'entreprise, ou l'environnement ?",
+      explication: () => ["Les objectifs stratégiques traduisent la finalité de l'organisation et l'interprétation de son diagnostic. La responsabilité sociétale y prend place : un objectif environnemental ou social se chiffre et se suit comme un objectif de ventes."],
     },
     {
       id: "objectif",
@@ -319,6 +347,54 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
       },
     },
     {
+      id: "conflit-et-consensus",
+      objectifs: [6],
+      type: "choix",
+      titre: "Des objectifs que chacun s'approprie",
+      question: (c) => `Les associés ${dE(c.entreprise)} veulent relever l'objectif ; les opérateurs craignent des cadences plus dures, pour le même salaire. Comment le président rend-il l'objectif accepté ?`,
+      options: () => [
+        {
+          texte: "Il l'explique, écoute l'équipe, partage le gain si l'objectif est tenu",
+          juste: true,
+          retour: "Oui : la divergence entre intérêts individuels et intérêt collectif est le nœud du conflit. Expliquer, écouter, ajuster l'objectif et partager le gain (une prime) cherchent le consensus : un objectif approprié par ceux qui le réalisent a bien plus de chances d'être atteint.",
+        },
+        {
+          texte: "Il l'impose : un objectif se décide au sommet, l'équipe n'a qu'à suivre",
+          juste: false,
+          retour: "Non : un objectif imposé sans explication se subit, et l'équipe ne s'y engage pas. Il se décide au sommet, mais il doit être approprié.",
+        },
+        {
+          texte: "Il renonce à relever l'objectif, pour éviter tout conflit avec l'équipe",
+          juste: false,
+          retour: "Non : éviter le conflit à tout prix laisse les associés sans réponse. Il faut chercher un point de consensus, pas renoncer.",
+        },
+      ],
+    },
+    {
+      id: "variete-des-indicateurs",
+      objectifs: [6],
+      type: "choix",
+      titre: "Un seul indicateur ?",
+      question: (c) => `Le président ${dE(c.entreprise)} ne suit que les ventes face à l'objectif. Que lui manque-t-il pour évaluer vraiment ses objectifs et ses pratiques ?`,
+      options: () => [
+        {
+          texte: "D'autres indicateurs : clients refusés, défauts, départs, comparés dans le temps",
+          juste: true,
+          retour: "Oui : un indicateur doit être pertinent face à l'objectif, mais un seul ne suffit pas. Il en faut de variés (les clients, la qualité, l'équipe, l'environnement), comparés d'une période à l'autre et à d'autres entreprises, et compris par ceux qui les font bouger. Le nombre de conflits et leur origine en disent aussi quelque chose.",
+        },
+        {
+          texte: "Rien : les ventes disent tout, puisque l'objectif est un objectif de ventes",
+          juste: false,
+          retour: "Non : les ventes peuvent tenir l'objectif pendant que des clients repartent, que les défauts montent ou que l'équipe s'épuise.",
+        },
+        {
+          texte: "Un indicateur plus précis des ventes, calculé chaque jour au lieu de chaque trimestre",
+          juste: false,
+          retour: "Non : plus souvent, ce serait la même mesure. Ce qui manque, c'est la variété des indicateurs.",
+        },
+      ],
+    },
+    {
       id: "le-plus-haut-objectif",
       objectifs: [1],
       type: "curseur",
@@ -410,7 +486,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
           "Un écart ne se lit pas seul : il faut savoir d'où il vient. Si la demande manquait, c'est l'objectif qui était mal posé ; si les clients étaient là, ce sont les moyens de l'atteindre qu'il faut revoir.",
         ];
       },
-      repere: () => "Écart = réalisé − objectif. Taux de réalisation = réalisé ÷ objectif × 100.",
+      repere: () => "Les objectifs découlent de la finalité et du diagnostic. Écart = réalisé − objectif. Taux de réalisation = réalisé ÷ objectif × 100. Des indicateurs pertinents, variés, comparés et appropriés.",
     },
   ],
 };

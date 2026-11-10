@@ -117,7 +117,8 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
   code: "une-information-a-temps",
   parcours: "stmg-management",
   palier: 1,
-  blocs: ["STMG Thème 2 · Numérique et intelligence collective"],
+  // lot A STMG : l'actualité de l'information relève aussi du thème 4 de la SGN (« Temps et risque », T4.1).
+  blocs: ["STMG Thème 2 · Numérique et intelligence collective", "STMG Thème 4 · Temps et risque"],
   titre: "Une information qui circule à temps",
   accroche:
     "Ceux qui vendent voient les premiers ce que les clients commandent ; ceux qui fixent la production décident sur leurs chiffres. L'année rejouée avec une équipe où ces chiffres arrivent en retard : ce que coûte un trimestre de retard, puis deux.",

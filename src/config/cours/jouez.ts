@@ -1254,6 +1254,58 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Vos ventes ont-elles monté dès le premier tour, ou seulement ensuite, quand les clients ont vu la qualité ? Au compte de résultat, la marge des ventes gagnées paie-t-elle le budget qualité ? Si la feuille proposait déjà ce budget, rejouez trois tours à 0 € et comparez le résultat.",
   }),
+  // lot B STMG : le management de première. Ces missions se jouent au niveau 1 : la gamme de NOVA ne
+  // s'ouvre qu'au-delà de ce qu'un élève joue sans licence, et l'arène ne joue que des entreprises.
+  "organiser-l-action-collective": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant le premier tour, lisez toute la feuille de décision ; puis jouez un tour.`,
+    lieux: ["feuille", "synthese"],
+    chercher:
+      "Quelles ressources de votre entreprise la feuille de décision vous fait-elle régler : humaines, financières, matérielles, immatérielles ou technologiques ? Si vous jouez à plusieurs, qui décide de quoi, et que se passe-t-il quand vous n'êtes pas d'accord ?",
+  }),
+  "manager-fonctions-et-decisions": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant le premier tour, écrivez un objectif de ventes pour chaque tour ; puis jouez deux tours.`,
+    lieux: ["feuille", "plan-face-au-realise"],
+    chercher:
+      "Lesquelles de vos décisions engagent les tours suivants, lesquelles ne valent que pour ce tour ? Après chaque tour, votre objectif est-il atteint, et qu'avez-vous changé pour le tour suivant : fixer, organiser, contrôler, évaluer ?",
+  }),
+  "le-management-face-au-changement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours, en relisant avant chaque tour le marché du tour écoulé.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Qu'est-ce qui a changé autour de votre entreprise d'un tour à l'autre : la demande, les prix des concurrents ? Quelle décision avez-vous ajustée en réponse, et laquelle de vos parties prenantes en a profité ou en a payé le prix ?",
+  }),
+  "domaines-d-activite": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Vos concurrents vendent-ils moins cher ou plus cher que vous ? Lequel tient l'avantage par les coûts, lequel par la différenciation, et où se place votre entreprise ? Quelle stratégie de domaine vous donnerait un avantage ?",
+  }),
+  "integrer-externaliser-croitre": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le marché du tour écoulé et le compte de résultat.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Avez-vous manqué des ventes faute de pouvoir produire ? Si oui, combien de marge auriez-vous gagnée en faisant produire ce surplus par un autre ? Dans le compte de résultat, quelles charges payent ce que vous faites vous-même, et lesquelles ce que vous achetez à d'autres ?",
+  }),
+  "la-strategie-d-une-organisation-publique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez l'impôt que paie votre entreprise. À quoi sert-il, et quels services publics votre entreprise utilise-t-elle sans les payer directement ? En quoi la décision d'un élu diffère-t-elle de celle que vous venez de prendre ?",
+  }),
+  "la-strategie-d-une-association": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Votre résultat irait-il aux associés si votre entreprise était une association ? Que deviendrait-il ? Quelles ressources de votre entreprise une association obtiendrait-elle autrement : des bénévoles, des cotisations, une subvention ?",
+  }),
+  // fin du lot B STMG.
   "les-acteurs-et-la-valeur": (c) => ({
     niveau: 3,
     faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round(INDICE_DE_LA_HAUSSE * 100)} dans « Salaires (marché = 100) », sans rien changer d'autre, puis jouez le tour.`,
@@ -1735,6 +1787,88 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Imaginez une filiale qui revendrait le quart de vos ventes, achetées à votre prix : quel serait le chiffre d'affaires du groupe ? Et si vous lui aviez prêté de quoi démarrer, que deviendraient ce prêt et son emprunt dans les comptes du groupe ?",
   }),
+  // lot A STMG : sciences de gestion et numérique de première (début)
+  "de-l-individu-a-l-acteur": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Au compte de résultat, relevez ce que le personnel a coûté sur le tour et divisez-le par l'effectif : retrouvez-vous l'ordre de grandeur du coût d'un salarié que donne le chapitre ? Un départ en période d'essai coûte combien de jours de ce salaire ?",
+  }),
+  "la-diversite-des-organisations": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Au compte de résultat, retrouvez le résultat du tour : dans une société, à qui revient-il ? Si l'entreprise était une association, que pourrait-elle faire de cet excédent, et que lui serait-il interdit d'en faire ?",
+  }),
+  "qualification-competences-et-liens-de-travail": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "À chaque tour, relevez la demande adressée, les journées vendues et le taux d'occupation de vos consultants. À quel tour l'équipe a-t-elle été pleine ? Combien de journées auriez-vous confiées à des indépendants ce tour-là, et combien dans l'année : assez pour qu'une embauche coûte moins ?",
+  }),
+  "donnees-personnelles-et-donnees-ouvertes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, relevez ce que chaque clientèle a acheté. Ce sont des informations agrégées : quelle donnée la boutique devrait-elle enregistrer, et avec quel accord de la cliente, pour savoir laquelle prévenir de la prochaine collection ?",
+  }),
+  "le-processus-et-le-pgi": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le budget de trésorerie.`,
+    lieux: ["feuille", "budget-de-tresorerie"],
+    chercher:
+      "Sur la feuille de décision, chaque choix est vu de toute l'équipe, comme dans un PGI. Au budget de trésorerie, retrouvez quand les ventes du tour sont encaissées : si la facture partait quelques jours plus tôt, l'argent arriverait-il dans le même tour ?",
+  }),
+  "les-formes-de-la-valeur": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis un second en baissant « ${prix} » de 10 %.`,
+      lieux: ["marche-du-tour", "compte-de-resultat"],
+      chercher:
+        "Au marché du tour écoulé, votre part de marché a-t-elle monté ? Au compte de résultat, le résultat a-t-il suivi ? Un prix plus bas crée de la valeur pour le client : en crée-t-il encore pour les associés ?",
+    };
+  },
+  "la-performance-globale": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["indicateurs", "compte-de-resultat"],
+    chercher:
+      "Relevez, pour chaque tour, un indicateur commercial, un financier et, s'il y en a un, un social. Ont-ils évolué dans le même sens ? Rapportez le résultat au chiffre d'affaires : votre profitabilité a-t-elle monté ou baissé ?",
+  }),
+  "assez-vendre-pour-ne-rien-perdre": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis ouvrez l'analyse des coûts.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Retrouvez les charges fixes et la marge sur coût variable du tour. Divisez les charges fixes par la marge d'une unité : combien d'unités fallait-il vendre pour ne rien perdre ? Les avez-vous vendues ?",
+  }),
+  "prevoir-sa-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant de jouer le premier tour, ouvrez le budget de trésorerie, puis jouez deux tours.`,
+    lieux: ["budget-de-tresorerie"],
+    chercher:
+      "Le budget prévoyait-il un mois à découvert ? Après chaque tour, comparez la trésorerie prévue à la trésorerie réalisée : d'où vient l'écart, des ventes, des achats ou des délais de paiement ?",
+  }),
+  "le-temps-de-l-organisation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer : une année, saison par saison.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "À quel tour l'hôtel a-t-il refusé des clients, à quel tour a-t-il laissé le plus de chambres vides ? Relevez le résultat du meilleur tour : placé jusqu'au même tour de l'année suivante, à 2,6 % l'an, que rapporterait-il ?",
+  }),
+  "les-risques-de-la-performance": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Au compte de résultat, relevez le coût des achats du tour et le résultat. Si le prix de vos achats montait de 10 %, que resterait-il du résultat ? Au marché du tour écoulé, combien de concurrents vendent à vos clients : qu'est-ce qui menace le plus votre performance ?",
+  }),
+  // lot A STMG (fin)
 };
 
 /**

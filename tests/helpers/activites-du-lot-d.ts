@@ -5,6 +5,7 @@ import { CAS_PAR_CHAPITRE } from "../../src/config/cours/situations";
 import { servirLeBureau } from "../../src/pedagogy/cours/bureau-servi";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { LEXIQUE_INTERDIT, espacesOrdinairesFautives, phrasesLongues, tiretsAuMilieu, tutoiements } from "./textes-du-depot";
+import { NOMBRE_DE_CAS_DEDIES } from "./nombre-de-cas-dedies";
 
 /**
  * LES GARDES COMMUNES DES ACTIVITÉS DU LOT D (novembre 2026) : trois bureaux, trois enquêtes, une par
@@ -30,7 +31,7 @@ export function verifierLEnregistrement(b: Bureau, chapitre: string, registre: r
   const ch = CHAPITRES.find((x) => x.code === chapitre)!;
   expect(ch, chapitre).toBeDefined();
   expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-  expect(CAS_PAR_CHAPITRE.length).toBe(197);
+  expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
   expect(CAS_PAR_CHAPITRE.some((c) => c.code === b.code)).toBe(false);
   expect(b.entreprise.nom).toBe("NOVA");
   expect(b.commanditaire.length).toBeGreaterThan(3);
