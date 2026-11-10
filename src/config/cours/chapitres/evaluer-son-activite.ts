@@ -141,7 +141,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
       notions: ["dashboard", "revenue"],
       tableau: (c) => tableauDuSemestre(c),
       texte: (c) => [
-        `Voici le premier semestre ${dE(c.entreprise)}, mois par mois. Pour savoir si l'activité va bien, la dirigeante ne relit pas tous les comptes : elle suit quelques indicateurs, toujours les mêmes, d'un mois à l'autre.`,
+        `Voici le premier semestre ${dE(c.entreprise)}, mois par mois. Pour savoir si l'activité va bien, le président ne relit pas tous les comptes : il suit quelques indicateurs, toujours les mêmes, d'un mois à l'autre.`,
         `Le chiffre d'affaires dit combien l'entreprise a vendu en euros ; les ventes, combien d'${c.unites} ; le résultat de l'activité du mois, ce qu'elle a gagné ou perdu en travaillant (avant les intérêts de l'emprunt) ; la trésorerie, l'argent qu'elle a en banque à la fin du mois.`,
       ],
       repere: () => "Évolution en % = (valeur d'arrivée − valeur de départ) ÷ valeur de départ × 100.",

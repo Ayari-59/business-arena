@@ -8,7 +8,7 @@
         "L'arène en solo sur les 9 entreprises, niveaux 1 à 3 (Premiers pas, Gestion et Pilotage), en partie complète de 6 tours.",
         "Les fiches notions, le manuel et le guide.",
         "Un épisode manager de démonstration par métier (5 sur 113), au niveau Démonstration, avec son bilan.",
-        "Le premier chapitre du cours et son cas pratique, en libre accès."
+        "Un chapitre du cours et son cas pratique, en libre accès."
       ],
       "precisions": [
         "Les parties de classe et les concours commencent avec les offres Classe, Programme et Campus."
@@ -29,7 +29,7 @@
         "Une classe de 35 élèves au plus, dans une partie comme dans le cours.",
         "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.",
         "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.",
-        "Le cours : les chapitres du parcours de la classe et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
+        "Le cours : les chapitres d'un parcours, le même pour toutes vos classes, et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
         "Les ateliers clés en main écrits pour cette entreprise et ce niveau, ou à un niveau près, avec déroulé, corrigés et dossier enseignant. Certaines combinaisons n'en ont aucun : le formulaire de devis dit lesquels votre choix comprend.",
         "Un concours à la place d'une partie, si l'entreprise choisie est NOVA : les concours se jouent avec elle."
       ],
@@ -182,7 +182,7 @@
     "Les offres Classe et Programme se paramètrent à l'achat : l'entreprise, et pour Classe le niveau, sont écrits sur le devis et ouverts pour l'année.",
     "Pas de reconduction tacite : l'échéance s'affiche dans l'espace enseignant, et le renouvellement passe par un nouveau devis.",
     "À la fin de l'offre, les parties et les résultats restent consultables 12 mois, relevé de notes compris.",
-    "Les étudiants et les élèves jouent sans nom ni adresse électronique : un code suffit."
+    "Les étudiants et les élèves jouent sans compte ni adresse électronique : un code suffit. Seules la classe du cours, qui garde le nom de l'élève, et l'examen individuel, qui garde le nom et le numéro d'étudiant du candidat, enregistrent un nom."
   ],
   "QUESTIONS_TARIFS": [
     {

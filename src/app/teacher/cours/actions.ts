@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { choisirLeParcours, cloreClasse, creerClasse, permettreLaCalculatrice } from "@/services/cours.service";
+import { choisirLeParcours, cloreClasse, creerClasse, parcoursImposeALEnseignant, permettreLaCalculatrice } from "@/services/cours.service";
 import { changerLaLiberation, libererLeChapitre } from "@/services/attributions.service";
 import { chapitreParCode } from "@/config/cours/registre";
 
@@ -27,7 +27,12 @@ export async function creerClasseAction(formData: FormData): Promise<void> {
     parcours: String(formData.get("parcours") ?? "") || null,
     liberation: formData.get("liberation") === "chapitre" ? "chapitre" : "tout",
   });
-  if (!cree) redirect("/teacher/cours?refus=nom#nouvelle-classe"); // un nom et un parcours sont requis
+  if (!cree) {
+    // Sous l'offre Classe, un autre parcours que celui de la licence est refusé ; sinon, un nom et un parcours manquent.
+    const impose = await parcoursImposeALEnseignant(enseignantId);
+    const parcours = String(formData.get("parcours") ?? "");
+    redirect(`/teacher/cours?refus=${impose !== null && parcours !== "" && parcours !== impose ? "parcours" : "nom"}#nouvelle-classe`);
+  }
   revalidatePath("/teacher/cours");
   redirect(`/teacher/cours/${cree.id}?creee=1`);
 }

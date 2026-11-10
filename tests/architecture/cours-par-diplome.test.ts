@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CHAPITRES } from "@/config/cours/registre";
 import { diplomesParNiveau } from "@/config/cours/programme";
+import * as parDiplome from "@/config/cours/par-diplome";
 import { coursDuDiplome, rechercherChapitres } from "@/config/cours/par-diplome";
 import { blocsDuChapitre, coursDeLaFormation, formationsAvecUnePage, tableauDeCouverture } from "@/config/couverture";
 
@@ -113,5 +114,36 @@ describe("le cours par diplôme", () => {
     expect(PAGE).toContain('id="catalogue"');
     // « Votre formation ? » vient avant le catalogue par thème.
     expect(PAGE.indexOf("Votre formation ?")).toBeLessThan(PAGE.indexOf('id="catalogue"'));
+  });
+
+  /**
+   * L'EN-TÊTE DIT CE QUE LE COURS COUVRE (audit du 10 novembre 2026, produit P1-5). Il disait
+   * « 7 entrées sur 7 du référentiel travaillées par l'arène » au-dessus de trois matières
+   * « en cours », dont une sans chapitre : la couverture de l'arène, sur la page du cours.
+   */
+  it("l'en-tête compte les matières couvertes en entier par le cours, et celles en cours", () => {
+    expect(PAGE).not.toMatch(/travaillées par l'arène/);
+    const enTete = (parDiplome as Record<string, unknown>).couvertureDuCoursEnClair as
+      | ((c: NonNullable<ReturnType<typeof coursDuDiplome>>) => string)
+      | undefined;
+    expect(typeof enTete).toBe("function");
+    expect(PAGE).toMatch(/data-couverture-du-programme[\s\S]{0,200}couvertureDuCoursEnClair\(parcours\)/);
+    for (const f of formationsAvecUnePage()) {
+      const parcours = coursDuDiplome(f.code)!;
+      const matieres = parcours.blocs.filter((b) => b.bloc !== null);
+      const entier = matieres.filter((b) => !b.enCours).length;
+      const enCours = matieres.length - entier;
+      const vides = matieres.filter((b) => b.enCours && b.chapitres.length === 0).length;
+      const t = enTete!(parcours);
+      // Le nombre de matières en entier, le total, et celles en cours : tels que la page les marque.
+      if (entier === matieres.length) expect(t, f.code).toContain(`les ${matieres.length} matières`);
+      else if (entier === 0) expect(t, f.code).toContain(`Aucune des ${matieres.length} matières`);
+      else {
+        expect(t, f.code).toContain(`${entier} matière${entier > 1 ? "s" : ""} sur ${matieres.length}`);
+        expect(t, f.code).toContain(`${enCours} en cours`);
+      }
+      if (vides > 0) expect(t, f.code).toContain(`${vides} sans chapitre encore`);
+      expect(t, f.code).not.toMatch(/arène/);
+    }
   });
 });

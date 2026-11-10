@@ -67,18 +67,25 @@ export function composantsDeLaSecondeLigne(dureeDuComposant: number = SECONDE_LI
   return { structure, composant, total, sansComposants, ecart: auCentime(total - sansComposants), jours: 359 };
 }
 
-/** Le plan comptable (linéaire) et le plan fiscal (dégressif) de la structure, année par année, et l'écart. */
+/**
+ * Le plan comptable (linéaire) et le plan fiscal (dégressif) de la structure, année par année, et l'écart.
+ * LE TAUX DÉGRESSIF À DEUX DÉCIMALES (audit du 10 novembre 2026, contenu P1-1) : 1,75 ÷ 6 s'affiche
+ * 29,17 %, et l'élève calcule 45 000 € × 29,17 % = 13 126,50 € ; le plan se calculait sur 29,1666… %
+ * (13 125 €) et refusait sa réponse. Il part désormais du taux affiché, comme la copie.
+ */
 export function derogatoireDeLaStructure() {
+  const coefficient = coefficientDegressif(SECONDE_LIGNE.structure.dureeAns);
+  const tauxDegressif = arrondi(coefficient / SECONDE_LIGNE.structure.dureeAns, 4);
   const lineaire = planDAmortissement(structureDe(), "lineaire");
-  const degressif = planDAmortissement(structureDe(), "degressif");
+  const degressif = planDAmortissement(structureDe(), "degressif", { tauxDegressif });
   const annees = degressif.map((d, k) => {
     const l = lineaire[k]?.dotation ?? 0;
     return { annee: k + 1, lineaire: l, degressif: d.dotation, ecart: auCentime(d.dotation - l) };
   });
   const premiereReprise = annees.find((a) => a.ecart < 0)!.annee;
   return {
-    coefficient: coefficientDegressif(SECONDE_LIGNE.structure.dureeAns),
-    tauxDegressif: coefficientDegressif(SECONDE_LIGNE.structure.dureeAns) / SECONDE_LIGNE.structure.dureeAns,
+    coefficient,
+    tauxDegressif,
     annees,
     dotationN1: annees[0]!.ecart,
     premiereReprise,

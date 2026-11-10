@@ -9,7 +9,7 @@ import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, casDuChapitre, motsDuContenu } from "../../src/config/cours/situations";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
-import { coursDuDiplome } from "../../src/config/cours/par-diplome";
+import { coursDuDiplome, couvertureDuCoursEnClair } from "../../src/config/cours/par-diplome";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitresDeLaNotion, suitesDuChapitre } from "../../src/pedagogy/cours/suites";
@@ -127,8 +127,9 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     const programme = page.locator('[data-programme="bts-mco"]');
     expect(await programme.count()).toBe(1);
     const attendu = programmeDuDiplome("bts-mco")!;
+    // L'en-tête dit ce que le cours couvre, pas l'arène (audit du 10 novembre 2026).
     expect(await programme.locator("[data-couverture-du-programme]").innerText().then(espacesOrdinaires)).toContain(
-      `${attendu.couverture.travaillees} entrées sur ${attendu.couverture.total}`,
+      couvertureDuCoursEnClair(coursDuDiplome("bts-mco")!),
     );
     expect(await programme.locator("[data-chapitre]").count()).toBe(
       attendu.themes.reduce((n, t) => n + t.chapitres.length, 0),

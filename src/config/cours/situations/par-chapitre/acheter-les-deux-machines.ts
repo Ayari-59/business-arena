@@ -13,7 +13,7 @@ import type { Situation } from "../types";
  *
  * REFONDÉ SUR LE RATIONNEMENT (l4-monde.md : les projets A et B s'excluent, le cas ne peut plus les
  * acheter ensemble). Le chapitre a retenu la ligne semi-automatique (B), puis, avec 240 000 € à
- * engager, la ligne semi-automatique et le banc de mesure (C). La directrice générale veut « les deux
+ * engager, la ligne semi-automatique et le banc de mesure (C). Le président veut « les deux
  * machines », B et C. Mais la banque a ramené sa ligne de crédit : NOVA ne peut plus engager que
  * 210 000 € à la date 0 (`BUDGET_DU_CAS`). B et C n'y tiennent plus (236 230 €) ; restent B seul
  * (68 397,29 €) ou la ligne manuelle et le banc (72 605,82 €). Sous le budget, la règle des projets
@@ -109,15 +109,15 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
   palier: 4,
   blocs: [],
   reprend: [LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS.code],
-  commanditaire: "La directrice générale",
+  commanditaire: "Le président",
   titre: "Acheter les deux machines",
   accroche:
-    "La directrice générale veut la ligne semi-automatique et le banc de mesure. Mais la banque a réduit son crédit, et les deux machines ne tiennent plus dans le budget. Quel programme retenir, et à quelle condition ?",
+    "Le président veut la ligne semi-automatique et le banc de mesure. Mais la banque a réduit son crédit, et les deux machines ne tiennent plus dans le budget. Quel programme retenir, et à quelle condition ?",
   objectifs: [
     "Recenser les programmes d'investissement qui tiennent dans un budget",
     "Comparer leurs VAN, quand la règle des projets qui s'excluent ne suffit plus",
     "Retrouver à rebours la performance minimale qui tient le choix",
-    "Répondre à la directrice générale, chiffres à l'appui",
+    "Répondre au président, chiffres à l'appui",
   ],
   libre: false,
   entreprises: {
@@ -128,7 +128,7 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la directrice générale",
+      titre: "La question du président",
       tableau: (c) => {
         const { x } = acheterLesDeux(c);
         const ligne = (l: Lettre, nom: string) => {
@@ -156,7 +156,7 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
       titre: "Ce qui tient dans le budget",
       notions: ["discounting", "irr_payback"],
       question: () =>
-        "Calculez la mise des deux machines que veut la directrice, la VAN de l'autre programme qui associe une ligne et le banc, puis ce que ce programme crée de plus que la ligne semi-automatique seule.",
+        "Calculez la mise des deux machines que veut le président, la VAN de l'autre programme qui associe une ligne et le banc, puis ce que ce programme crée de plus que la ligne semi-automatique seule.",
       champs: (c) => {
         const k = acheterLesDeux(c);
         const x = k.x;
@@ -254,9 +254,9 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice générale",
+      titre: "Votre réponse au président",
       notions: ["discounting", "irr_payback"],
-      question: () => "Quelle réponse envoyez-vous à la directrice générale ?",
+      question: () => "Quelle réponse envoyez-vous au président ?",
       options: (c) => {
         const k = acheterLesDeux(c);
         const ok = k.verdict === "la-ligne-manuelle-et-le-banc";

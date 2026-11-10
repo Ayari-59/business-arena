@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
-import { classeDeLEnseignant } from "@/services/cours.service";
+import { classeDeLEnseignant, parcoursImposeALEnseignant } from "@/services/cours.service";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
 import { chapitrePropose } from "@/config/formations-proposees";
@@ -76,11 +76,13 @@ async function ClasseDuCoursPage({
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
   const choisi = chapitreParCode(demande ?? "") ?? CHAPITRES[0]!;
-  const [lu, staff, offre, attribues] = await Promise.all([
+  const [lu, staff, offre, attribues, impose] = await Promise.all([
     /^[0-9a-f-]{36}$/.test(id) ? classeDeLEnseignant(session.userId, id, choisi.code) : null,
     getStaffContext(session.userId),
     offreDuCoursDeLEnseignant(session.userId),
     parcoursAttribues(session.userId),
+    // Sous l'offre Classe, le parcours de la licence, quand il est fixé (décision du 10 novembre 2026).
+    parcoursImposeALEnseignant(session.userId),
   ]);
   if (!lu) notFound();
   const { classe, progressions } = lu;
@@ -179,7 +181,7 @@ async function ClasseDuCoursPage({
                   </option>
                   {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
                       des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
-                  {PARCOURS_PROPOSES_A_CHOISIR.filter((p) => parcoursAttribue(attribues, p.code)).map((p) => (
+                  {PARCOURS_PROPOSES_A_CHOISIR.filter((p) => (impose ? p.code === impose : parcoursAttribue(attribues, p.code))).map((p) => (
                     <option key={p.code} value={p.code}>
                       {p.titre}
                     </option>

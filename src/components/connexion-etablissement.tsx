@@ -11,7 +11,9 @@ import { connexionEtablissementProposee } from "@/saml/configuration";
  * l'enseignant choisit son université ou son école, puis s'identifie chez elle.
  *
  * Absent tant que le fournisseur de services n'est pas configuré (clé, certificat,
- * épingle de l'agrégat) : on ne propose pas une porte qui mène à une erreur.
+ * épingle de l'agrégat) : on ne propose pas une porte qui mène à une erreur. Absent aussi
+ * tant que la fédération n'est pas celle de production (SAML_FEDERATION=production) : la
+ * fédération de test ne connaît pas les établissements réels (audit du 10 novembre 2026).
  *
  * `retour` : la page où revenir après la connexion (le code de partie ou l'invitation de
  * cohorte voyagent ainsi).

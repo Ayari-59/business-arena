@@ -22,7 +22,9 @@ import { federationSimulee, pairesDuDossier, ServeurDeFederation, type Personne 
  * Le serveur tourne avec la configuration SAML pointant sur cette fédération :
  *   SAML_SP_PRIVATE_KEY, SAML_SP_CERT, SAML_FEDERATION_CERT_SHA256 (dossier E2E_SAML_CLES,
  *   hors du dépôt), SAML_FEDERATION_METADATA_URL=http://localhost:<port>/federation.xml,
- *   SAML_WAYF_URL=http://localhost:<port>/wayf, SAML_SP_ORIGIN=<E2E_BASE_URL>, SAML_HTTP_LOCAL=1.
+ *   SAML_WAYF_URL=http://localhost:<port>/wayf, SAML_SP_ORIGIN=<E2E_BASE_URL>, SAML_HTTP_LOCAL=1,
+ *   et SAML_FEDERATION=production : le bouton ne paraît que sur la fédération de production
+ *   (audit du 10 novembre 2026), et la fédération simulée en tient lieu (ses adresses priment).
  *
  * Parcours : les boutons (configurés) ; /admin/renater (lire l'agrégat, rattacher
  * l'université à son organisation sous licence) ; l'enseignant se connecte, arrive dans

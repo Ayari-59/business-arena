@@ -627,11 +627,13 @@ const LE_SUIVI =
  * services/cours.service.ts, coursOuvert ; le catalogue en base : drizzle/0053). La
  * Découverte ouvre le seul chapitre libre ; Classe, les chapitres du parcours de la classe,
  * choisi à sa création ; Programme, ceux des parcours des classes du programme ; Campus, tout.
+ * L'OFFRE CLASSE OUVRE UN SEUL PARCOURS (décision du propriétaire, 10 novembre 2026) : toutes les
+ * classes de l'enseignant le suivent (services/chapitres-de-la-classe.ts, `parcoursDeLaLicenceClasse`).
  */
 export const LE_COURS_PAR_OFFRE = {
-  decouverte: "Le premier chapitre du cours et son cas pratique, en libre accès.",
+  decouverte: "Un chapitre du cours et son cas pratique, en libre accès.",
   classe:
-    "Le cours : les chapitres du parcours de la classe et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
+    "Le cours : les chapitres d'un parcours, le même pour toutes vos classes, et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
   programme:
     "Le cours : les chapitres des parcours de vos classes et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
   campus:
@@ -1112,7 +1114,8 @@ export const CONDITIONS_DE_VENTE: readonly string[] = [
   `Les offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom} se paramètrent à l'achat : l'entreprise, et pour ${OFFRES.classe.nom} le niveau, sont écrits sur le devis et ouverts pour l'année.`,
   "Pas de reconduction tacite : l'échéance s'affiche dans l'espace enseignant, et le renouvellement passe par un nouveau devis.",
   `À la fin de l'offre, les parties et les résultats restent consultables ${CONDITIONS.consultationApresMois} mois, relevé de notes compris.`,
-  "Les étudiants et les élèves jouent sans nom ni adresse électronique : un code suffit.",
+  // Comme les mentions légales (audit du 10 novembre 2026 : « sans nom » était faux pour le cours et l'examen).
+  "Les étudiants et les élèves jouent sans compte ni adresse électronique : un code suffit. Seules la classe du cours, qui garde le nom de l'élève, et l'examen individuel, qui garde le nom et le numéro d'étudiant du candidat, enregistrent un nom.",
 ];
 
 const QUESTION_DE_L_ESSAI = "Peut-on essayer avec un groupe ?";

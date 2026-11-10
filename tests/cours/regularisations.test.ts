@@ -284,6 +284,20 @@ describe("les régularisations de fin d'exercice, à l'exercice de NOVA du monde
     expect(regularisationsDeNova(cas)).toMatchObject({ avant: AVANT, apres: APRES });
   });
 
+  it("l'introduction dit que la clôture reprise est celle des deux chapitres d'avant sans les deux écritures repassées ici", () => {
+    // Audit du 10 novembre 2026 (contenu P1-4) : « Dépréciations et provisions » finit à 90 747,96 € ;
+    // l'introduction disait retrouver la clôture « là où » il l'a laissée, puis annonçait 121 313,38 €.
+    // L'écart est la facture non parvenue et les intérêts du compte à terme, que ce chapitre repasse.
+    const lecture = ch.etapes[0] as Extract<Etape, { type: "lecture" }>;
+    const t = (typeof lecture.texte === "function" ? lecture.texte(cas) : lecture.texte).join(" ").replace(/[\u00a0\u202f]/g, " ");
+    expect(t).not.toMatch(/là où « La clôture » et « Dépréciations et provisions » l'ont laissée/);
+    expect(t).toMatch(/sans deux écritures que ce chapitre repasse lui-même : la facture non parvenue de .+ et les intérêts du compte à terme/);
+    expect(t).toContain("121 313,38 €");
+    // 90 747,96 € (la fin de « Dépréciations et provisions ») + 34 500 € − les intérêts du placement.
+    const x = regularisationsDeNova(cas);
+    expect(Math.round((AVANT - x.fnp.ht + 3_934.58) * 100) / 100).toBe(90_747.96);
+  });
+
   it("la charge constatée d'avance, guidée : neuf mois sur douze, à la main", () => {
     expect(CCA).toBe(4_500);
     expect(attendus(ch, "part-d-avance")).toEqual({ "Mois de couverture dans N+1": 9, "Charge constatée d'avance": CCA, "Charge d'assurance de l'exercice": PRIME - CCA });
