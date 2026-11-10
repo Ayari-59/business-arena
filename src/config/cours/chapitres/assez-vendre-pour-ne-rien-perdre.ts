@@ -52,7 +52,9 @@ export const ASSEZ_VENDRE_POUR_NE_RIEN_PERDRE: Chapitre = {
   code: "assez-vendre-pour-ne-rien-perdre",
   parcours: "stmg-management",
   palier: 1,
-  blocs: ["STMG Thème 4 · Temps et risque"],
+  // lot C STMG : le seuil sert aussi la gestion et finance de terminale (3.4, « la notion de seuil de
+  // rentabilité abordée en première vient en appui de l'étude des coûts partiels »), citée en second.
+  blocs: ["STMG Thème 4 · Temps et risque", "STMG Thème 3 · Accompagner la prise de décision"],
   titre: "Assez vendre pour ne rien perdre : le seuil de rentabilité",
   accroche:
     "Combien d'enceintes faut-il vendre dans le mois pour payer le loyer, les salaires et l'usure de la ligne ? Et quel jour du mois l'entreprise commence-t-elle à gagner de l'argent ?",

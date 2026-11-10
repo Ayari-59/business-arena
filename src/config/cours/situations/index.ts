@@ -227,6 +227,32 @@ import { LE_DISTRIBUTEUR_BELGE } from "./par-chapitre/le-distributeur-belge";
 import { LA_MEDIATHEQUE_LE_DIMANCHE } from "./par-chapitre/la-mediatheque-le-dimanche";
 import { LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR } from "./par-chapitre/le-parrain-qui-veut-choisir-l-entraineur";
 // fin du lot B STMG.
+// lot C STMG : la partie commune de terminale et la gestion et finance (début des imports)
+import { LE_PACK_A_390_EUROS } from "./par-chapitre/le-pack-a-390-euros";
+import { UN_REMPLACEMENT_DE_4_MOIS } from "./par-chapitre/un-remplacement-de-4-mois";
+import { REPRENDRE_LES_ENCEINTES_USAGEES } from "./par-chapitre/reprendre-les-enceintes-usagees";
+import { LA_GO_A_31_EUROS } from "./par-chapitre/la-go-a-31-euros";
+import { DES_FACTURES_SANS_PAPIER } from "./par-chapitre/des-factures-sans-papier";
+import { DELEGUER_LES_COMMANDES_URGENTES } from "./par-chapitre/deleguer-les-commandes-urgentes";
+import { LA_SALLE_DE_REPOS } from "./par-chapitre/la-salle-de-repos";
+import { UN_CONSEILLER_EN_LIGNE } from "./par-chapitre/un-conseiller-en-ligne";
+import { UNE_ANNONCE_OU_LA_COOPTATION } from "./par-chapitre/une-annonce-ou-la-cooptation";
+import { LE_STAND_GRATUIT_DU_SALON } from "./par-chapitre/le-stand-gratuit-du-salon";
+import { UN_PARC_DE_STUDIO_EN_LOCATION } from "./par-chapitre/un-parc-de-studio-en-location";
+import { CHIFFRER_LES_ORDINATEURS } from "./par-chapitre/chiffrer-les-ordinateurs";
+import { REJOINDRE_LE_CLUSTER_DE_L_AUDIO } from "./par-chapitre/rejoindre-le-cluster-de-l-audio";
+import { AMORTIR_SUR_8_ANS } from "./par-chapitre/amortir-sur-8-ans";
+// lot C STMG (fin des imports)
+// lot D STMG : mercatique de terminale (début des imports)
+import { CAMPUSTECH_VEUT_SON_LOGO } from "./par-chapitre/campustech-veut-son-logo";
+import { UNE_SOIREE_LE_MARDI } from "./par-chapitre/une-soiree-le-mardi";
+import { LE_CONGRES_DE_JUILLET } from "./par-chapitre/le-congres-de-juillet";
+import { LE_MODULE_AUGMENTE } from "./par-chapitre/le-module-augmente";
+import { LA_PLACE_DE_MARCHE_NEGOCIE } from "./par-chapitre/la-place-de-marche-negocie";
+import { TOUTE_LA_CAMPAGNE_A_LA_RADIO } from "./par-chapitre/toute-la-campagne-a-la-radio";
+import { RELANCER_LES_DORMANTES } from "./par-chapitre/relancer-les-dormantes";
+import { L_INFLUENCEUSE_DU_HAUT_VERDASSE } from "./par-chapitre/l-influenceuse-du-haut-verdasse";
+// lot D STMG (fin des imports)
 export type { Situation } from "./types";
 
 /**
@@ -469,6 +495,32 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_MEDIATHEQUE_LE_DIMANCHE,
   LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR,
   // fin du lot B STMG.
+  // lot C STMG : la partie commune de terminale et la gestion et finance (début)
+  LE_PACK_A_390_EUROS,
+  UN_REMPLACEMENT_DE_4_MOIS,
+  REPRENDRE_LES_ENCEINTES_USAGEES,
+  LA_GO_A_31_EUROS,
+  DES_FACTURES_SANS_PAPIER,
+  DELEGUER_LES_COMMANDES_URGENTES,
+  LA_SALLE_DE_REPOS,
+  UN_CONSEILLER_EN_LIGNE,
+  UNE_ANNONCE_OU_LA_COOPTATION,
+  LE_STAND_GRATUIT_DU_SALON,
+  UN_PARC_DE_STUDIO_EN_LOCATION,
+  CHIFFRER_LES_ORDINATEURS,
+  REJOINDRE_LE_CLUSTER_DE_L_AUDIO,
+  AMORTIR_SUR_8_ANS,
+  // lot C STMG (fin)
+  // lot D STMG : mercatique de terminale (début)
+  CAMPUSTECH_VEUT_SON_LOGO,
+  UNE_SOIREE_LE_MARDI,
+  LE_CONGRES_DE_JUILLET,
+  LE_MODULE_AUGMENTE,
+  LA_PLACE_DE_MARCHE_NEGOCIE,
+  TOUTE_LA_CAMPAGNE_A_LA_RADIO,
+  RELANCER_LES_DORMANTES,
+  L_INFLUENCEUSE_DU_HAUT_VERDASSE,
+  // lot D STMG (fin)
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

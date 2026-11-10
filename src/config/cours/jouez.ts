@@ -1306,6 +1306,106 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       "Votre résultat irait-il aux associés si votre entreprise était une association ? Que deviendrait-il ? Quelles ressources de votre entreprise une association obtiendrait-elle autrement : des bénévoles, des cotisations, une subvention ?",
   }),
   // fin du lot B STMG.
+  // lot C STMG : la partie commune de terminale et les versions lycée de la gestion et finance (début)
+  "une-offre-pour-un-besoin": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Au marché du tour écoulé, qui achète vos produits, et quels concurrents servent le même besoin ? Au compte de résultat, retranchez des ventes les achats et les charges venues des fournisseurs : quelle valeur votre entreprise a-t-elle ajoutée ?",
+  }),
+  "les-ressources-pour-produire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis ouvrez le bilan.`,
+    lieux: ["bilan", "frng-bfr", "rh-du-tour"],
+    chercher:
+      "Sous le bilan, relevez le fonds de roulement, le besoin en fonds de roulement et la trésorerie nette. Votre effectif suffirait-il si la demande montait d'un quart ? Combien de personnes faudrait-il recruter ou former ?",
+  }),
+  "organiser-la-production": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer : une année.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "À quel tour la demande a-t-elle dépassé ce que vous pouviez produire, à quel tour votre outil a-t-il eu du jeu ? Auriez-vous gagné à produire d'avance au tour calme, pour servir le tour suivant ?",
+  }),
+  "cout-complet-ou-cout-specifique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis ouvrez l'analyse des coûts.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Séparez les charges variables des charges fixes du tour. Si un client vous demandait des unités de plus à un prix réduit, à partir de quel prix la commande ne vous ferait-elle rien perdre ?",
+  }),
+  "le-numerique-dans-la-production": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, en gardant le même entretien de votre outil.`,
+    lieux: ["feuille", "indicateurs"],
+    chercher:
+      "Sur la feuille de décision, chaque choix est partagé par toute l'équipe, comme dans un PGI. Votre outil a-t-il perdu de sa capacité d'un tour à l'autre ? Que vaudrait une alerte qui vous préviendrait avant ?",
+  }),
+  "organiser-le-travail-et-coordonner": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Si vous jouez à plusieurs, partagez-vous les décisions de la feuille ; puis jouez deux tours.`,
+    lieux: ["feuille", "synthese"],
+    chercher:
+      "Qui a décidé de quoi, et comment vous êtes-vous coordonnés : d'un mot, par un chef, par des règles fixées d'avance ? Qu'auriez-vous changé si l'un de vous avait manqué un tour ?",
+  }),
+  "federer-les-acteurs": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat", "rh-du-tour"],
+    chercher:
+      "Au compte de résultat, retrouvez ce qui va au personnel et ce qui reste aux associés. Une hausse des salaires profiterait-elle aux deux, ou l'un gagnerait-il ce que l'autre perd ?",
+  }),
+  "le-client-a-l-ere-numerique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, combien de clients ont acheté chez vous, et chez vos concurrents ? Quel frein (le prix, la disponibilité) a pu faire partir les autres, et comment le lèveriez-vous ?",
+  }),
+  "communiquer-avec-chaque-acteur": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez la synthèse et le bilan.`,
+    lieux: ["synthese", "bilan"],
+    chercher:
+      "Quels chiffres de la synthèse montreriez-vous à votre équipe, lesquels à votre banquier, lesquels à vos associés ? Rédigez une phrase pour chacun : le message change-t-il ?",
+  }),
+  "ethique-transparence-et-egalite": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez l'impôt du tour. Si votre entreprise donnait à une association, quelle part du don l'État prendrait-il à sa charge ? Que changerait au résultat un client qui ne paie pas, constaté ou caché ?",
+  }),
+  "les-modes-de-vie-changent": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "La demande a-t-elle changé d'une saison à l'autre ? Si vos clients louaient vos produits plutôt que d'en acheter, combien de fois faudrait-il louer un produit pour qu'il rapporte autant que sa vente ?",
+  }),
+  "donnees-et-algorithmes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["marche-du-tour", "feuille"],
+    chercher:
+      "Quelles informations de vos tours seraient précieuses pour un concurrent ? Lesquelles identifieraient un client, si votre entreprise les gardait ? Comment les protégeriez-vous ?",
+  }),
+  "s-implanter-sur-un-territoire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez le loyer et les transports du tour. Si un autre site vous faisait économiser un quart du loyer mais coûtait plus en transport, à partir de quel loyer le déménagement rapporterait-il ?",
+  }),
+  "investir-amortir-cloturer": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Au bilan, que valent vos équipements d'un tour à l'autre ? Au compte de résultat, retrouvez la dotation aux amortissements : quelle charge ne fait sortir aucun argent ?",
+  }),
+  // lot C STMG (fin)
   "les-acteurs-et-la-valeur": (c) => ({
     niveau: 3,
     faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round(INDICE_DE_LA_HAUSSE * 100)} dans « Salaires (marché = 100) », sans rien changer d'autre, puis jouez le tour.`,
@@ -1869,6 +1969,67 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       "Au compte de résultat, relevez le coût des achats du tour et le résultat. Si le prix de vos achats montait de 10 %, que resterait-il du résultat ? Au marché du tour écoulé, combien de concurrents vendent à vos clients : qu'est-ce qui menace le plus votre performance ?",
   }),
   // lot A STMG (fin)
+  // lot D STMG : mercatique de terminale (début)
+  "positionner-l-offre": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, relevez le prix et la part de marché de chaque concurrent : lequel vend le moins cher, lequel le plus cher ? Où votre prix vous place-t-il entre les deux, et la clientèle qui vous achète le plus est-elle celle que votre positionnement vise ?",
+  }),
+  "l-experience-client": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "À chaque tour, relevez les couverts demandés et servis par clientèle. Quelle clientèle laissez-vous repartir sans la servir ? Une attente trop longue, c'est une expérience ratée : laquelle de vos clientèles en souffre le plus ?",
+  }),
+  "les-politiques-tarifaires": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez quatre tours : gardez « ${prix} » aux deux premiers, puis montez-le de ${Math.round(ECART_DE_PRIX * 100)} % au troisième, l'été, et revenez au prix de départ au quatrième.`,
+      lieux: ["marche-du-tour", "indicateurs"],
+      chercher:
+        "Au tour de l'été, avez-vous encore refusé des clients ? Votre chiffre d'affaires a-t-il monté, avec moins de nuitées ou autant ? C'est le principe du prix différencié : faire payer plus quand la demande dépasse ce que l'hôtel peut servir.",
+    };
+  },
+  "le-parcours-client": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, relevez les ventes de chaque clientèle. Laquelle viendrait d'abord voir la collection en ligne avant d'entrer en boutique ? Pour laquelle un retrait en boutique d'un article réservé sur le site compterait le plus ?",
+  }),
+  "vendre-en-ligne": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Relevez les ventes de chaque clientèle, puis au compte de résultat la marge que laisse une enceinte. Si une place de marché prenait une commission sur chaque vente, combien vous resterait-il par enceinte ? Combien de ventes nouvelles faudrait-il pour que ce canal rapporte ?",
+  }),
+  "le-plan-de-communication": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Au compte de résultat, relevez ce que la publicité a coûté sur le tour. Au marché du tour, relevez les adhérents de chaque clientèle. Combien d'adhésions nouvelles faudrait-il pour que cette dépense se paie, et quelle clientèle votre communication devrait-elle viser d'abord ?",
+  }),
+  "fideliser-grace-au-numerique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Comparez les ventes des clientes fidèles d'un tour à l'autre : sont-elles plus régulières que celles des passants ? Une cliente qui revient chaque mois vaut combien de passants qui ne reviennent pas ?",
+  }),
+  "influence-communaute-et-e-reputation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Relevez les nouveaux adhérents du tour et ce que la publicité a coûté : combien vous a coûté chaque adhérent gagné ? Si une campagne sur les réseaux sociaux coûtait moins par contact, combien de contacts faudrait-il pour gagner autant d'adhérents ?",
+  }),
+  // lot D STMG (fin)
 };
 
 /**
