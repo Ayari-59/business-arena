@@ -70,6 +70,8 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
   code: "ce-que-coute-un-outil-numerique",
   parcours: "stmg-sig",
   palier: 1,
+  // Lot F STMG : le système d'information de NOVA présente d'abord les bases du thème 1.
+  prerequis: ["le-systeme-d-information-de-nova"],
   blocs: ["STMG Thème 1 · Organisation et numérisation", "STMG Thème 2 · Management du système d'information et performance"],
   titre: "Ce que coûte et rapporte un outil numérique",
   accroche:

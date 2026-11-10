@@ -50,6 +50,13 @@ describe("les systèmes d'information de gestion de terminale, sur la page du ba
     }
   });
 
+  it("sous le thème 1, le système d'information de NOVA vient avant ce que coûte un outil numérique", () => {
+    // Décision du propriétaire (10 novembre 2026) : le chapitre qui pose les bases passe en premier.
+    const t1 = blocs.find((b) => b.bloc === "Thème 1 · Organisation et numérisation")!;
+    const codes = t1.chapitres.map((c) => c.chapitre.code);
+    expect(codes.indexOf("le-systeme-d-information-de-nova")).toBeLessThan(codes.indexOf("ce-que-coute-un-outil-numerique"));
+  });
+
   it("chaque thème est déclaré complet une fois, avec sa preuve", () => {
     for (const bloc of Object.keys(ATTENDUS)) {
       const m = MATIERES_COUVERTES_EN_ENTIER.filter((x) => x.formation === "stmg" && x.partie === PARTIE && x.bloc === bloc);
