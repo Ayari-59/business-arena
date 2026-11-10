@@ -1406,6 +1406,70 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       "Au bilan, que valent vos équipements d'un tour à l'autre ? Au compte de résultat, retrouvez la dotation aux amortissements : quelle charge ne fait sortir aucun argent ?",
   }),
   // lot C STMG (fin)
+  // lot E STMG : les ressources humaines et la communication de terminale (début)
+  "recruter-et-integrer": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer : une année, saison par saison.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "À quel tour l'hôtel a-t-il eu le plus de clients ? Le personnel a-t-il coûté plus ce tour-là ? Combien de saisonniers auriez-vous recrutés pour ce tour, et dès quel tour auriez-vous lancé le recrutement ?",
+  }),
+  "evaluer-le-travail": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["indicateurs", "compte-de-resultat"],
+    chercher:
+      "Dans les indicateurs du métier, quels chiffres diraient si l'équipe a bien travaillé ce tour-ci ? Lesquels dépendent d'elle, lesquels de la saison et des clients ? Que faudrait-il observer en salle, que ces chiffres ne montrent pas ?",
+  }),
+  "developper-les-competences": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez ${(scenarioByCode(c.code).scenario.hr!.trainingScale * BUDGET_DE_FORMATION_EN_ECHELLES).toLocaleString("fr-FR")} € dans « Budget formation », puis jouez deux tours.`,
+    lieux: ["feuille", "rh-du-tour"],
+    chercher:
+      "Retrouvez la formation dans la ligne « RH · effectif » du premier tour. Cette dépense relève-t-elle du plan de développement des compétences ou du compte de chaque salarié ? Qu'a-t-elle changé à ce que l'équipe produit au tour suivant ?",
+  }),
+  "qualite-de-vie-et-conditions-de-travail": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer : une année, saison par saison.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher: `À quel tour la salle a-t-elle servi le plus de ${c.unites} avec la même équipe ? Ce tour-là, combien d'heures supplémentaires votre équipe aurait-elle faites, et à partir de quand un serveur de plus aurait-il coûté moins ?`,
+  }),
+  "sante-et-securite-au-travail": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Jouez deux tours sans rien changer, puis ouvrez la ligne de l'équipe.`,
+    lieux: ["rh-du-tour", "indicateurs"],
+    chercher:
+      "La ligne « RH · effectif » annonce-t-elle une absence ou un départ ? Si un opérateur manquait une semaine, combien d'unités la ligne perdrait-elle, et que vaudrait une prévention qui éviterait cette absence ?",
+  }),
+  "au-dela-du-salaire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez le résultat de vos deux tours. Si un accord d'intéressement versait à l'équipe une part de ce résultat, quelle part choisiriez-vous, et que recevrait chaque salarié ? Que deviendrait l'intéressement si le résultat baissait ?",
+  }),
+  "le-climat-social-et-le-conflit": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round((1 - ECART_D_INDICE) * 100)} dans « Salaires (marché = 100) », puis jouez trois tours sans y retoucher.`,
+    lieux: ["feuille", "rh-du-tour"],
+    chercher:
+      "Suivez la ligne « RH · effectif » : à quel tour l'équipe a-t-elle commencé à partir ? Quels signaux du climat social auriez-vous pu lire avant, et quelle négociation auriez-vous ouverte ?",
+  }),
+  "le-dialogue-social": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez la synthèse et le compte de résultat.`,
+    lieux: ["synthese", "compte-de-resultat"],
+    chercher:
+      "Quelles informations de la synthèse partageriez-vous avec la représentante du personnel avant de négocier une hausse des salaires ? Quelle enveloppe le résultat du tour permettrait-il, sans mettre l'entreprise en perte ?",
+  }),
+  "communication-interne-et-marque-employeur": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Si vous jouez à plusieurs, partagez-vous les décisions ; puis jouez deux tours.`,
+    lieux: ["feuille", "synthese"],
+    chercher:
+      "Comment vous êtes-vous transmis les décisions et les résultats d'un tour à l'autre ? Qu'est-ce qui s'est perdu en route ? Quel outil, ou quelle règle, aurait évité ce malentendu ?",
+  }),
+  // lot E STMG (fin)
   "les-acteurs-et-la-valeur": (c) => ({
     niveau: 3,
     faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round(INDICE_DE_LA_HAUSSE * 100)} dans « Salaires (marché = 100) », sans rien changer d'autre, puis jouez le tour.`,

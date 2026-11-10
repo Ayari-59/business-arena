@@ -114,7 +114,8 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     formation: "stmg",
     bloc: "Thème 1 · De l'individu à l'acteur",
     partie: "Première, sciences de gestion et numérique",
-    preuve: "Audit du chantier STMG, section 1 (annexe 3 du BO spécial n° 1 du 22 janvier 2019), puis le lot A. T1.1 : « De l'individu à l'acteur ». T1.2 : « Qui possède, qui dirige, qui contrôle ? », partagé avec le management 1.2. T1.3 : « Qualification, compétences et nouveaux liens de travail », avec les chapitres de ressources humaines qui citent ce thème.",
+    // lot E STMG : T1.3 nomme les chapitres de ressources humaines qui restent sous ce thème.
+    preuve: "Audit du chantier STMG, section 1 (annexe 3 du BO spécial n° 1 du 22 janvier 2019), puis le lot A. T1.1 : « De l'individu à l'acteur ». T1.2 : « Qui possède, qui dirige, qui contrôle ? », partagé avec le management 1.2. T1.3 : « Qualification, compétences et nouveaux liens de travail ». La rémunération, le coût du travail et le tableau de bord social y viennent des chapitres de ressources humaines qui citent ce thème en premier : « Du salaire brut au coût pour l'entreprise », « L'effectif et la masse salariale », « Les indicateurs sociaux ». « Recruter », « Former » et « Rémunération et motivation » s'affichent sous les thèmes de ressources humaines depuis le lot E.",
   },
   {
     formation: "stmg",
@@ -181,6 +182,29 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
       "Audit du chantier STMG, section 3, puis le lot C, au niveau du lycée. 3.1 : « Éthique, transparence et égalité » (éthique et déontologie, éthique des affaires et des organisations publiques, lobbying, greenwashing et social washing, normalisation comptable et transparence, discriminations et égalité entre les femmes et les hommes, mécénat, démocratie participative). 3.2 : « Les modes de vie changent » (temps, lieu et organisation du travail, déconnexion, modes de consommation). 3.3 : « Données et algorithmes » (données personnelles et stratégiques, transparence des algorithmes, chaîne de blocs). 3.4 : « S'implanter sur un territoire » (implantation, délocalisation, relocalisation, écosystème d'affaires, cluster, écosystème d'innovation, pouvoirs publics locaux). « La responsabilité sociétale » et « Ce que rapporte l'engagement » restent sous ce thème, pour aller plus loin.",
   },
   // lot C STMG (fin)
+  // lot E STMG : les ressources humaines et la communication de terminale, leurs trois thèmes et leurs neuf questions (début)
+  {
+    formation: "stmg",
+    bloc: "Thème 1 · Les compétences au service de l'organisation et l'organisation au service du développement des compétences",
+    partie: "Terminale, ressources humaines et communication",
+    preuve:
+      "Audit du chantier STMG, section 5 (annexe 2 de l'arrêté du 19 juillet 2019), puis le lot E. 1.1 : « Recruter et intégrer » (compétences, qualification et potentiel, processus de recrutement, recherche interne et externe, e-recrutement, sélection et non-discrimination, CDI, contrat saisonnier, intérim et apprentissage, accueil, intégration et fidélisation). S'y ajoutent « Recruter » (le coût d'une embauche) et la GPEC de « Les ressources pour produire », qui cite ce thème en second. 1.2 : « Évaluer le travail » (modes d'évaluation et leurs biais, grille pondérée, entretien annuel d'évaluation, entretien de parcours professionnel et son état des lieux, bilan de compétences). L'entretien de parcours professionnel est le nom que la loi du 24 octobre 2025 donne à l'entretien professionnel du texte. 1.3 : « Développer les compétences » (formation continue, e-learning, plan de développement des compétences, CPF, projet de transition professionnelle, mobilité, parcours, employabilité), avec « Former ».",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
+    partie: "Terminale, ressources humaines et communication",
+    preuve:
+      "Audit du chantier STMG, section 5, puis le lot E. 2.1 : « Qualité de vie et conditions de travail » (facteurs d'hygiène et de motivation, qualité de vie et des conditions de travail, responsabilité et performance sociales, ergonomie, durée du travail, heures supplémentaires, repos et durées maximales). 2.2 : « Santé et sécurité au travail » (obligation de sécurité, document unique, accident du travail et de trajet, maladie professionnelle, TMS, risques psychosociaux et harcèlement, taux de fréquence et de gravité, prévention). Il traite aussi la protection sociale et la complémentaire santé. S'y ajoute « Les indicateurs sociaux » (l'absentéisme, sous la SGN). 2.3 : « Au-delà du salaire » (fixe, primes individuelles et collectives, avantages, intéressement, participation et sa formule, plafond et répartition, épargne salariale et abondement), avec « Rémunération et motivation », et « Du salaire brut au coût pour l'entreprise » (sous la SGN).",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 3 · La recherche de cohésion, un levier d'amélioration des relations de travail et du climat social",
+    partie: "Terminale, ressources humaines et communication",
+    preuve:
+      "Audit du chantier STMG, section 5, puis le lot E. 3.1 : « Le climat social et le conflit » (relations professionnelles, climat social et ses signaux, conflits individuels et collectifs, droit de grève, coût du conflit, négociation, conciliation, médiation, arbitrage, compromis et dépassement). 3.2 : « Le dialogue social » (acteurs, comité social et économique, information, consultation, concertation et négociation, niveaux de la négociation collective, BDESE, que le texte de 2019 nomme BDES, bilan social, accord d'entreprise sans délégué syndical). 3.3 : « Communication interne et marque employeur » (finalités, intranet, réseau social d'entreprise, outils collaboratifs, droit à la déconnexion, marque employeur interne et externe, avis en ligne). S'y ajoute « Communiquer avec chaque acteur », qui cite ce thème en second (communication externe et financière, e-réputation).",
+  },
+  // lot E STMG (fin)
 ];
 
 /** Vrai si le bloc du diplôme est une matière couverte en entier. */

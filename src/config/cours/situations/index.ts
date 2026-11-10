@@ -243,6 +243,17 @@ import { CHIFFRER_LES_ORDINATEURS } from "./par-chapitre/chiffrer-les-ordinateur
 import { REJOINDRE_LE_CLUSTER_DE_L_AUDIO } from "./par-chapitre/rejoindre-le-cluster-de-l-audio";
 import { AMORTIR_SUR_8_ANS } from "./par-chapitre/amortir-sur-8-ans";
 // lot C STMG (fin des imports)
+// lot E STMG : les ressources humaines et la communication de terminale (début des imports)
+import { UN_SAISONNIER_OU_UN_INTERIMAIRE } from "./par-chapitre/un-saisonnier-ou-un-interimaire";
+import { UNE_PRIME_SUR_LES_DESSERTS } from "./par-chapitre/une-prime-sur-les-desserts";
+import { ABONDER_LE_COMPTE_DE_MEHDI } from "./par-chapitre/abonder-le-compte-de-mehdi";
+import { SUPPRIMER_LE_SERVICE_COUPE } from "./par-chapitre/supprimer-le-service-coupe";
+import { EQUIPER_LES_POSTES_DE_VISSAGE } from "./par-chapitre/equiper-les-postes-de-vissage";
+import { PLACER_SON_INTERESSEMENT } from "./par-chapitre/placer-son-interessement";
+import { SORTIR_DE_LA_GREVE } from "./par-chapitre/sortir-de-la-greve";
+import { UN_ACCORD_SANS_DELEGUE_SYNDICAL } from "./par-chapitre/un-accord-sans-delegue-syndical";
+import { UNE_REUNION_PAR_MOIS_OU_UN_OUTIL } from "./par-chapitre/une-reunion-par-mois-ou-un-outil";
+// lot E STMG (fin des imports)
 export type { Situation } from "./types";
 
 /**
@@ -501,6 +512,17 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   REJOINDRE_LE_CLUSTER_DE_L_AUDIO,
   AMORTIR_SUR_8_ANS,
   // lot C STMG (fin)
+  // lot E STMG : les ressources humaines et la communication de terminale (début)
+  UN_SAISONNIER_OU_UN_INTERIMAIRE,
+  UNE_PRIME_SUR_LES_DESSERTS,
+  ABONDER_LE_COMPTE_DE_MEHDI,
+  SUPPRIMER_LE_SERVICE_COUPE,
+  EQUIPER_LES_POSTES_DE_VISSAGE,
+  PLACER_SON_INTERESSEMENT,
+  SORTIR_DE_LA_GREVE,
+  UN_ACCORD_SANS_DELEGUE_SYNDICAL,
+  UNE_REUNION_PAR_MOIS_OU_UN_OUTIL,
+  // lot E STMG (fin)
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

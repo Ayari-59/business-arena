@@ -293,6 +293,17 @@ export const THEMES: readonly Theme[] = [
       "federer-les-acteurs",
       "communiquer-avec-chaque-acteur",
       // lot C STMG (fin)
+      // lot E STMG : terminale, ressources humaines et communication (début)
+      "recruter-et-integrer",
+      "evaluer-le-travail",
+      "developper-les-competences",
+      "qualite-de-vie-et-conditions-de-travail",
+      "sante-et-securite-au-travail",
+      "au-dela-du-salaire",
+      "le-climat-social-et-le-conflit",
+      "le-dialogue-social",
+      "communication-interne-et-marque-employeur",
+      // lot E STMG (fin)
     ],
     familles: [
       "equipe",
