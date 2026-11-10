@@ -1,9 +1,9 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as enPoints, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { aNom, deNom, nomDuClient, paiementDuClient } from "../../chapitres/creation-premier-bilan";
 import { dateDuCours as date } from "../../dates";
-import { coutDeLAvance, escompteMaximal, facture, tauxAnnuelDeLEscompte } from "../../monde/facture";
+import { coutDeLAvance, escompteMaximal, facture } from "../../monde/facture";
 import { JOURS_D_ESCOMPTE, JOURS_PAR_AN, TAUX_D_ESCOMPTE, TAUX_DE_REMISE } from "../../remises";
 import type { Situation } from "../types";
 
@@ -36,9 +36,9 @@ export const CENTIEMES_DE_POINT = 10_000;
 /** La borne haute du curseur : 4 %, au-dessus de l'escompte demandé. */
 export const ESCOMPTE_MAXIMAL_DU_CURSEUR = 400;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR");
-const pct = (t: number, d = 2) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
+/** Un taux donné en fraction (0,03), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const majuscule = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`;
 /** L'escompte demandé, rapporté au plafond que paie l'emprunt, en mots. */
 const combienDePlus = (rapport: number) => (rapport >= 3 ? "plus du triple" : rapport >= 2 ? "plus du double" : rapport > 1 ? "davantage" : "moins que ce plafond");
@@ -50,14 +50,19 @@ export function escompteDemande(c: Cas) {
   const joursAvances = v.delai - JOURS_D_ESCOMPTE;
   // Être payé plus tôt, c'est recevoir le net financier avant l'échéance, contre l'escompte : ce
   // qu'il coûte pour la période, puis rapporté à l'année.
-  const tauxPeriode = ESCOMPTE_DEMANDE / (1 - ESCOMPTE_DEMANDE);
-  const tauxAnnuel = tauxAnnuelDeLEscompte(ESCOMPTE_DEMANDE, joursAvances);
+  // Chaque taux à deux décimales, et la ligne suivante part de lui, comme sur la copie (deux-decimales.ts).
+  const tauxPeriode = taux2(f.escompte, f.netFinancier) / 100;
+  const tauxAnnuel = arrondi2((tauxPeriode * 100 * JOURS_PAR_AN) / joursAvances) / 100;
   // Le curseur : l'escompte le plus fort que paierait le taux de l'emprunt, en centièmes de point.
-  const plafond = escompteMaximal(c.pret.tauxAnnuel, joursAvances);
-  const plafondEnCentiemes = Math.floor(plafond * CENTIEMES_DE_POINT + 1e-9);
-  // Le croisement : les jours d'avance qu'il faudrait pour que 3 % ne coûte pas plus que l'emprunt,
-  // et ce que l'escompte demandé coûte de plus que les intérêts de l'emprunt sur cette facture.
-  const joursNecessaires = Math.ceil((tauxPeriode * JOURS_PAR_AN) / c.pret.tauxAnnuel - 1e-9);
+  const plafondExact = escompteMaximal(c.pret.tauxAnnuel, joursAvances);
+  const plafondEnCentiemes = Math.floor(plafondExact * CENTIEMES_DE_POINT + 1e-9);
+  const coutDeLaPeriode = arrondi2((c.pret.tauxAnnuel * joursAvances * 100) / JOURS_PAR_AN);
+  const plafond = arrondi2(coutDeLaPeriode / (1 + coutDeLaPeriode / 100)) / 100;
+  // Le croisement : les jours d'avance qu'il faudrait pour que 3 % ne coûte pas plus que l'emprunt
+  // (au-dessus : un jour de moins ne suffit pas), et ce que l'escompte demandé coûte de plus que les
+  // intérêts de l'emprunt sur cette facture.
+  const joursCalcules = arrondi2((tauxPeriode * JOURS_PAR_AN) / c.pret.tauxAnnuel);
+  const joursNecessaires = Math.ceil(joursCalcules - 1e-9);
   const interetsDeLEmprunt = coutDeLAvance(f.netFinancier, c.pret.tauxAnnuel, joursAvances);
   return {
     client: nomDuClient(v.client),
@@ -74,7 +79,9 @@ export function escompteDemande(c: Cas) {
     tauxPeriode,
     tauxAnnuel,
     plafond,
+    coutDeLaPeriode,
     plafondEnCentiemes,
+    joursCalcules,
     joursNecessaires,
     interetsDeLEmprunt,
     surcout: auCentime(f.escompte - interetsDeLEmprunt),
@@ -122,7 +129,7 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
             { libelle: "Remise", valeurs: [pct(TAUX_DE_REMISE)] },
             { libelle: `Escompte demandé, pour un paiement sous ${qte(JOURS_D_ESCOMPTE)} jours`, valeurs: [pct(ESCOMPTE_DEMANDE)] },
             { libelle: "Délai où le client paie aujourd'hui", valeurs: [`${qte(c.venteCredit.delai)} jours`] },
-            { libelle: "Taux de TVA", valeurs: [pct(k.tauxTva, 1)] },
+            { libelle: "Taux de TVA", valeurs: [pct(k.tauxTva)] },
             { libelle: "Taux annuel de l'emprunt de l'entreprise", valeurs: [pct(c.pret.tauxAnnuel)] },
             { libelle: "Année commerciale", valeurs: [`${qte(JOURS_PAR_AN)} jours`] },
           ],
@@ -144,7 +151,7 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
           { libelle: "Net commercial", attendu: k.netCommercial, calcul: `${eur(k.brut)} − ${eur(k.remise)} = ${eur(k.netCommercial)}` },
           { libelle: "Escompte", attendu: k.escompte, calcul: `${eur(k.netCommercial)} × ${pct(ESCOMPTE_DEMANDE)} = ${eur(k.escompte)}` },
           { libelle: "Net financier", attendu: k.netFinancier, calcul: `${eur(k.netCommercial)} − ${eur(k.escompte)} = ${eur(k.netFinancier)}` },
-          { libelle: "TVA", attendu: k.tva, calcul: `${eur(k.netFinancier)} × ${pct(k.tauxTva, 1)} = ${eur(k.tva)}` },
+          { libelle: "TVA", attendu: k.tva, calcul: `${eur(k.netFinancier)} × ${pct(k.tauxTva)} = ${eur(k.tva)}` },
           { libelle: "Net à payer", attendu: k.ttc, calcul: `${eur(k.netFinancier)} + ${eur(k.tva)} = ${eur(k.ttc)}` },
         ];
       },
@@ -195,21 +202,19 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
       titre: "Ce que coûte l'escompte",
       notions: ["payment_terms", "net_treasury"],
       question: (c) =>
-        `De combien de jours le paiement est-il avancé ? Que coûte l'escompte pour cette période, en % du net financier, au centième ? Et ramené à une année de ${qte(JOURS_PAR_AN)} jours, au dixième ? Comparez au taux de l'emprunt, ${pct(c.pret.tauxAnnuel)}.`,
+        `De combien de jours le paiement est-il avancé ? Que coûte l'escompte pour cette période, en % du net financier, au centième ? Et ramené à une année de ${qte(JOURS_PAR_AN)} jours, à deux décimales ? Comparez au taux de l'emprunt, ${pct(c.pret.tauxAnnuel)}.`,
       champs: (c) => {
         const k = escompteDemande(c);
         return [
-          { libelle: "Jours de paiement avancés", attendu: k.joursAvances, calcul: `${qte(c.venteCredit.delai)} − ${qte(JOURS_D_ESCOMPTE)} = ${qte(k.joursAvances)} jours, du jour où le client paie vraiment au délai de l'escompte` },
+          { libelle: "Jours de paiement avancés", nature: "quantite", attendu: k.joursAvances, calcul: `${qte(c.venteCredit.delai)} − ${qte(JOURS_D_ESCOMPTE)} = ${qte(k.joursAvances)} jours, du jour où le client paie vraiment au délai de l'escompte` },
           {
             libelle: "Coût de l'escompte pour la période (%)",
-            attendu: auCentime(k.tauxPeriode * 100),
-            tolerance: 0.01,
+            attendu: arrondi2(k.tauxPeriode * 100),
             calcul: `${eur(k.escompte)} ÷ ${eur(k.netFinancier)} × 100 = ${pct(k.tauxPeriode)}`,
           },
           {
             libelle: "Coût de l'escompte ramené à l'année (%)",
-            attendu: auCentime(k.tauxAnnuel * 100),
-            tolerance: 0.1,
+            attendu: arrondi2(k.tauxAnnuel * 100),
             calcul: `${pct(k.tauxPeriode)} × ${qte(JOURS_PAR_AN)} ÷ ${qte(k.joursAvances)} = ${pct(k.tauxAnnuel)}`,
           },
         ];
@@ -275,18 +280,17 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
         `Croisez l'escompte, les jours et le coût de l'emprunt. Donnez l'escompte le plus fort que paie l'emprunt (en %, au centième), le nombre de jours d'avance qu'il faudrait, au moins, pour que ${pct(ESCOMPTE_DEMANDE)} ne coûte pas plus que l'emprunt à ${pct(c.pret.tauxAnnuel)}, puis ce que l'escompte demandé coûte de plus que les intérêts de l'emprunt, sur cette facture.`,
       champs: (c) => {
         const k = escompteDemande(c);
-        const x = (c.pret.tauxAnnuel * k.joursAvances) / JOURS_PAR_AN;
         return [
           {
             libelle: "Escompte le plus fort que paie l'emprunt (%)",
-            attendu: auCentime(k.plafond * 100),
-            tolerance: 0.01,
-            calcul: `${pct(c.pret.tauxAnnuel)} × ${qte(k.joursAvances)} ÷ ${qte(JOURS_PAR_AN)} = ${pct(x, 4)} pour la période, puis ${pct(x, 4)} ÷ (1 + ${pct(x, 4)}) = ${pct(k.plafond, 4)}`,
+            attendu: arrondi2(k.plafond * 100),
+            calcul: `${pct(c.pret.tauxAnnuel)} × ${qte(k.joursAvances)} ÷ ${qte(JOURS_PAR_AN)} = ${enPoints(k.coutDeLaPeriode)} pour la période, puis ${enPoints(k.coutDeLaPeriode)} ÷ (1 + ${enPoints(k.coutDeLaPeriode)}) = ${pct(k.plafond)}`,
           },
           {
             libelle: "Jours d'avance qu'il faudrait",
+            nature: "quantite",
             attendu: k.joursNecessaires,
-            calcul: `${pct(k.tauxPeriode)} × ${qte(JOURS_PAR_AN)} ÷ ${pct(c.pret.tauxAnnuel)} = ${(Math.round(((k.tauxPeriode * JOURS_PAR_AN) / c.pret.tauxAnnuel) * 100) / 100).toLocaleString("fr-FR")}, soit ${qte(k.joursNecessaires)} jours au moins`,
+            calcul: `${pct(k.tauxPeriode)} × ${qte(JOURS_PAR_AN)} ÷ ${pct(c.pret.tauxAnnuel)} = ${nombreAuCentieme(k.joursCalcules)}, soit ${qte(k.joursNecessaires)} jours au moins, arrondis au jour au-dessus : un jour de moins ne suffit pas`,
           },
           {
             libelle: "Surcoût de l'escompte demandé, sur cette facture",
@@ -312,19 +316,19 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
         const k = escompteDemande(c);
         return [
           {
-            texte: `Ne le généralisons pas : ${pct(k.tauxAnnuel, 1)} par an, contre ${pct(c.pret.tauxAnnuel)} pour l'emprunt`,
+            texte: `Ne le généralisons pas : ${pct(k.tauxAnnuel)} par an, contre ${pct(c.pret.tauxAnnuel)} pour l'emprunt`,
             juste: true,
-            retour: `Oui : ${pct(ESCOMPTE_DEMANDE)} pour ${qte(k.joursAvances)} jours d'avance, c'est ${pct(k.tauxAnnuel, 1)} par an, et ${eur(k.surcout)} de plus que l'emprunt sur cette facture. L'emprunt ne paie que ${pct(k.plafond, 2)} d'escompte : se faire payer vite à ${pct(ESCOMPTE_DEMANDE)} est à garder pour un vrai besoin de trésorerie.`,
+            retour: `Oui : ${pct(ESCOMPTE_DEMANDE)} pour ${qte(k.joursAvances)} jours d'avance, c'est ${pct(k.tauxAnnuel)} par an, et ${eur(k.surcout)} de plus que l'emprunt sur cette facture. L'emprunt ne paie que ${pct(k.plafond)} d'escompte : se faire payer vite à ${pct(ESCOMPTE_DEMANDE)} est à garder pour un vrai besoin de trésorerie.`,
           },
           {
             texte: `Accordons-le : ${pct(ESCOMPTE_DEMANDE)}, c'est moins cher que les ${pct(c.pret.tauxAnnuel)} de notre emprunt à la banque`,
             juste: false,
-            retour: `Non : ${pct(ESCOMPTE_DEMANDE)} paie ${qte(k.joursAvances)} jours, ${pct(c.pret.tauxAnnuel)} paie une année entière. Ramené à l'année, l'escompte coûte ${pct(k.tauxAnnuel, 1)}.`,
+            retour: `Non : ${pct(ESCOMPTE_DEMANDE)} paie ${qte(k.joursAvances)} jours, ${pct(c.pret.tauxAnnuel)} paie une année entière. Ramené à l'année, l'escompte coûte ${pct(k.tauxAnnuel)}.`,
           },
           {
-            texte: `Ne le généralisons pas : ${pct(k.tauxSurLeDelai, 1)} par an, ce qui reste plus cher que les ${pct(c.pret.tauxAnnuel)} de l'emprunt`,
+            texte: `Ne le généralisons pas : ${pct(k.tauxSurLeDelai)} par an, ce qui reste plus cher que les ${pct(c.pret.tauxAnnuel)} de l'emprunt`,
             juste: false,
-            retour: `Non : ce taux rapporte l'escompte aux ${qte(c.venteCredit.delai)} jours du délai entier. Le client ne paie que ${qte(k.joursAvances)} jours plus tôt : l'escompte coûte ${pct(k.tauxAnnuel, 1)} par an.`,
+            retour: `Non : ce taux rapporte l'escompte aux ${qte(c.venteCredit.delai)} jours du délai entier. Le client ne paie que ${qte(k.joursAvances)} jours plus tôt : l'escompte coûte ${pct(k.tauxAnnuel)} par an.`,
           },
           {
             texte: "Accordons-le : comme la remise, l'escompte ne coûte rien, il baisse seulement la TVA du client",

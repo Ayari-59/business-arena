@@ -93,11 +93,13 @@ describe("actualiser et réunir un capital, refait à la main", () => {
     expect(attendus(ch, "actualiser")).toEqual([51_756.53, 38_995.88]);
   });
 
-  it("5 versements à 3 % : un coefficient de 5,3091, 11 301,27 € par an", () => {
+  it("5 versements à 3 % : un coefficient de 5,3091, 11 301,35 € par an (60 000 € ÷ le coefficient arrondi)", () => {
     const s = (1.03 ** 5 - 1) / 0.03;
     expect(Math.round(s * 10_000) / 10_000).toBe(5.3091);
     expect(c(60_000 / s)).toBe(11_301.27);
-    expect(attendus(ch, "le-versement-annuel")).toEqual([5.3091, 11_301.27]);
+    // Le versement part du coefficient au dix-millième, comme sur la copie : 60 000 € ÷ 5,3091 = 11 301,35 €.
+    expect(attendus(ch, "le-versement-annuel")).toEqual([5.3091, c(60_000 / 5.3091)]);
+    expect(c(60_000 / 5.3091)).toBe(11_301.35);
     expect(annuitePourConstituer(60_000, 0.03, 5)).toBe(11_301.27);
   });
 

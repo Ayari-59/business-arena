@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_BFR_NORMATIF } from "../../chapitres/le-bfr-d-exploitation-normatif";
 import { COMMANDE_DOUBLEE, SECTEUR, bfrNormatif } from "../../monde/bfr-normatif";
@@ -20,8 +20,8 @@ import type { Situation } from "../types";
  * en euros, puis le besoin si CampusTech payait à 60 jours, et rend sa réponse.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+/** Un nombre au centième (deux décimales s'il n'est pas entier), ou à `d` chiffres quand on les demande. */
+const qte = (n: number, d = 2) => (d === 2 ? nombreAuCentieme(n) : (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−"));
 const coef = (n: number) => (n + 0).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 const jours = (n: number) => `${qte(n)} jour${Math.abs(n) >= 2 ? "s" : ""}`;
 
@@ -93,8 +93,8 @@ export const CAMPUSTECH_DOUBLE_SA_COMMANDE: Situation = {
         const n = commandeDoublee(c);
         const k = n.apres.poste("campustech");
         return [
-          { libelle: "Coefficient de CampusTech", attendu: k.coefficient, calcul: `${eur(k.flux)} ÷ ${eur(n.apres.caHt)} = ${coef(k.coefficient)}`, tolerance: 0.0001 },
-          { libelle: "CampusTech, en jours de CA HT", attendu: k.jours, calcul: `${jours(k.delai)} × ${coef(k.coefficient)} = ${jours(k.jours)}`, tolerance: 0.01 },
+          { libelle: "Coefficient de CampusTech", nature: "coefficient", attendu: k.coefficient, calcul: `${eur(k.flux)} ÷ ${eur(n.apres.caHt)} = ${coef(k.coefficient)}`, tolerance: 0.0001 },
+          { libelle: "CampusTech, en jours de CA HT", nature: "grandeur", attendu: k.jours, calcul: `${jours(k.delai)} × ${coef(k.coefficient)} = ${jours(k.jours)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
@@ -114,12 +114,13 @@ export const CAMPUSTECH_DOUBLE_SA_COMMANDE: Situation = {
         return [
           {
             libelle: "Part variable, en jours de CA HT",
+            nature: "grandeur",
             attendu: x.joursVariables,
             calcul: `${qte(x.poste("stock").jours)} + ${qte(x.poste("campustech").jours)} + ${qte(x.poste("tva-deductible").jours)} − ${qte(x.poste("fournisseur").jours)} − ${qte(x.poste("tva-collectee").jours)} = ${jours(x.joursVariables)}`,
             tolerance: 0.01,
           },
-          { libelle: "BFRE normatif, en euros", attendu: x.bfre, calcul: `${qte(x.joursVariables)} × ${eur(x.caHt)} ÷ 360 − ${eur(x.partFixe)} = ${eur(x.bfre)}`, tolerance: 1 },
-          { libelle: "BFRE normatif, en jours de CA HT", attendu: x.bfreEnJours, calcul: `${eur(x.bfre)} ÷ ${eur(x.caHt)} × 360 = ${jours(x.bfreEnJours)}`, tolerance: 0.02 },
+          { libelle: "BFRE normatif, en euros", attendu: x.bfre, calcul: `${qte(x.joursVariables)} × ${eur(x.caHt)} ÷ 360 − ${eur(x.partFixe)} = ${eur(x.bfre)}` },
+          { libelle: "BFRE normatif, en jours de CA HT", nature: "grandeur", attendu: x.bfreEnJours, calcul: `${eur(x.bfre)} ÷ ${eur(x.caHt)} × 360 = ${jours(x.bfreEnJours)}` },
         ];
       },
       explication: (c) => {
@@ -137,8 +138,8 @@ export const CAMPUSTECH_DOUBLE_SA_COMMANDE: Situation = {
         const n = commandeDoublee(c);
         const y = n.aLHeure;
         return [
-          { libelle: `BFRE normatif, CampusTech à ${DELAI_CONVENU_DE_CAMPUSTECH} jours`, attendu: y.bfre, calcul: `(${qte(y.joursVariables)} jours) × ${eur(y.caHt)} ÷ 360 − ${eur(y.partFixe)} = ${eur(y.bfre)}`, tolerance: 1 },
-          { libelle: "Besoin dû au retard", attendu: n.epargne, calcul: `${eur(n.apres.bfre)} − ${eur(y.bfre)} = ${eur(n.epargne)}`, tolerance: 1 },
+          { libelle: `BFRE normatif, CampusTech à ${DELAI_CONVENU_DE_CAMPUSTECH} jours`, attendu: y.bfre, calcul: `${qte(y.joursVariables)} jours × ${eur(y.caHt)} ÷ 360 − ${eur(y.partFixe)} = ${eur(y.bfre)}` },
+          { libelle: "Besoin dû au retard", attendu: n.epargne, calcul: `${eur(n.apres.bfre)} − ${eur(y.bfre)} = ${eur(n.epargne)}` },
         ];
       },
       explication: (c) => {

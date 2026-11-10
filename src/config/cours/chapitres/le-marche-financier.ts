@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import {
@@ -58,12 +58,12 @@ import { ENTREPRISES_DE_LA_VALEUR } from "./la-valeur-et-le-temps";
 /** Les bornes du curseur du taux, en pour mille : de 4 % à 7 %. */
 export const TAUX_DU_CURSEUR_DE_L_OBLIGATION = { min: 40, max: 70 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number, chiffres = 2) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
+/** Un taux donné en fraction (0,04), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** Un nombre de points de pourcentage, déjà en pour cent. */
-const pts = (x: number, chiffres = 2) => `${(x + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
+/** Un pourcentage donné en points (9 pour 9 %), à deux décimales. */
+const pts = (x: number) => enPoints(x);
 const nb = (x: number, chiffres = 6) => (x + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 const donnee = (valeur: number | null, autres: Partial<CelluleACompleter> = {}): CelluleACompleter => ({ valeur, ...autres });
 const aSaisir = (valeur: number, calcul: string, autres: Partial<CelluleACompleter> = {}): CelluleACompleter => ({ valeur, saisir: true, calcul, ...autres });
 /** Un nombre négatif entre parenthèses, pour qu'un « − » ne suive pas un « × ». */
@@ -139,7 +139,7 @@ export function grilleDuRisque(c: Pick<Cas, "code">): TableauACompleter {
           i === 0 ? donnee(l.pondere, { unite: "%" }) : aSaisir(l.pondere, `${nb(l.probabilite)} × ${enCalcul(l.r)} = ${pts(l.pondere)}`, { unite: "%", indice: "la probabilité de l'état × sa rentabilité" }),
           i === 0
             ? donnee(l.carrePondere, { unite: "%²" })
-            : aSaisir(l.carrePondere, `${nb(l.probabilite)} × (${pts(l.r)} − ${pts(r.esperance)})² = ${nb(l.probabilite)} × ${nb(l.ecart * l.ecart)} = ${nb(l.carrePondere)}`, { unite: "%²", indice: "la probabilité × le carré de l'écart à l'espérance" }),
+            : aSaisir(l.carrePondere, `${nb(l.probabilite)} × (${pts(l.r)} − ${pts(r.esperance)})² = ${nb(l.probabilite)} × ${nombreAuCentieme(l.ecart * l.ecart)} = ${nombreAuCentieme(l.carrePondere)}`, { unite: "%²", indice: "la probabilité × le carré de l'écart à l'espérance" }),
         ],
       })),
       {
@@ -150,7 +150,7 @@ export function grilleDuRisque(c: Pick<Cas, "code">): TableauACompleter {
           donnee(1, { texte: "1" }),
           donnee(null),
           aSaisir(r.esperance, `la somme de la colonne : l'espérance, ${pts(r.esperance)}`, { unite: "%" }),
-          aSaisir(r.variance, `la somme de la colonne : la variance, ${nb(r.variance)}`, { unite: "%²" }),
+          aSaisir(r.variance, `la somme de la colonne : la variance, ${nombreAuCentieme(r.variance)}`, { unite: "%²" }),
         ],
       },
     ],
@@ -246,7 +246,7 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
         const x = marcheDuChapitre(c);
         return [
           { libelle: "Coupon annuel", attendu: x.coupon, calcul: `${eur(x.o.nominal)} × ${pct(x.o.tauxNominal)} = ${eur(x.coupon)}` },
-          { libelle: "Cours au taux de marché de l'émission", attendu: x.aLEmission, calcul: `${eur(x.coupon)} × (1 − ${nb(1 + x.o.tauxNominal)}^−${x.o.dureeRestante}) ÷ ${nb(x.o.tauxNominal)} + ${eur(x.o.nominal)} × ${nb(1 + x.o.tauxNominal)}^−${x.o.dureeRestante} = ${eur(x.aLEmission)}`, tolerance: 1 },
+          { libelle: "Cours au taux de marché de l'émission", attendu: x.aLEmission, calcul: `${eur(x.coupon)} × (1 − ${nb(1 + x.o.tauxNominal)}^−${x.o.dureeRestante}) ÷ ${nb(x.o.tauxNominal)} + ${eur(x.o.nominal)} × ${nb(1 + x.o.tauxNominal)}^−${x.o.dureeRestante} = ${eur(x.aLEmission)}` },
         ];
       },
       explication: (c) => {
@@ -288,8 +288,8 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
         const n = x.plusTard.dureeRestante;
         const calc = (t: number, v: number) => `${eur(x.coupon)} × (1 − ${nb(1 + t)}^−${n}) ÷ ${nb(t)} + ${eur(x.o.nominal)} × ${nb(1 + t)}^−${n} = ${eur(v)}`;
         return [
-          { libelle: `Cours à ${pct(UN_AN_PLUS_TARD.tauxEnHausse)}`, attendu: x.enHausse, calcul: calc(UN_AN_PLUS_TARD.tauxEnHausse, x.enHausse), tolerance: 1 },
-          { libelle: `Cours à ${pct(UN_AN_PLUS_TARD.tauxEnBaisse)}`, attendu: x.enBaisse, calcul: calc(UN_AN_PLUS_TARD.tauxEnBaisse, x.enBaisse), tolerance: 1 },
+          { libelle: `Cours à ${pct(UN_AN_PLUS_TARD.tauxEnHausse)}`, attendu: x.enHausse, calcul: calc(UN_AN_PLUS_TARD.tauxEnHausse, x.enHausse) },
+          { libelle: `Cours à ${pct(UN_AN_PLUS_TARD.tauxEnBaisse)}`, attendu: x.enBaisse, calcul: calc(UN_AN_PLUS_TARD.tauxEnBaisse, x.enBaisse) },
         ];
       },
       explication: (c) => {
@@ -322,7 +322,7 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
         return [
           { libelle: "Coupon annuel", montant: x.coupon },
           { libelle: "Cours de l'obligation", montant: cours, reference: x.o.nominal, fort: true },
-          { libelle: "Écart au pair", montant: auCentime(cours - x.o.nominal), reference: 0, effet: true },
+          { libelle: "Écart au pair", montant: arrondi2(cours - x.o.nominal), reference: 0, effet: true },
         ];
       },
       graphique: (c) => {
@@ -384,7 +384,7 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
         const x = marcheDuChapitre(c);
         return [
           { libelle: "Prix payé", montant: COURS_AFFICHE },
-          { libelle: `Valeur actuelle des flux, à ${pct(q / 1000, 1)}`, montant: x.coursA(q / 1000), fort: true },
+          { libelle: `Valeur actuelle des flux, à ${pct(q / 1000)}`, montant: x.coursA(q / 1000), fort: true },
         ];
       },
       droites: (c) => {
@@ -393,7 +393,7 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
       },
       explication: (c) => {
         const x = marcheDuChapitre(c);
-        return [`À ${pct(x.bas, 1)}, les flux valent encore ${eur(x.coursA(x.bas))} ; à ${pct(x.haut, 1)}, ${eur(x.coursA(x.haut))}. Le taux de rendement actuariel de l'acheteur est entre les deux, bien au-dessus du taux nominal.`];
+        return [`À ${pct(x.bas)}, les flux valent encore ${eur(x.coursA(x.bas))} ; à ${pct(x.haut)}, ${eur(x.coursA(x.haut))}. Le taux de rendement actuariel de l'acheteur est entre les deux, bien au-dessus du taux nominal.`];
       },
     },
     {
@@ -404,16 +404,16 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
       notions: ["irr_payback"],
       question: (c) => {
         const x = marcheDuChapitre(c);
-        return `Calculez le cours de l'obligation à ${pct(x.bas, 1)} et à ${pct(x.haut, 1)}, puis, par interpolation linéaire, le taux de rendement actuariel d'un achat à ${eur(COURS_AFFICHE)}, en pour cent au centième.`;
+        return `Calculez le cours de l'obligation à ${pct(x.bas)} et à ${pct(x.haut)}, puis, par interpolation linéaire, le taux de rendement actuariel d'un achat à ${eur(COURS_AFFICHE)}, en pour cent au centième.`;
       },
       champs: (c) => {
         const x = marcheDuChapitre(c);
         const a = x.coursA(x.bas);
         const b = x.coursA(x.haut);
         return [
-          { libelle: `Cours à ${pct(x.bas, 1)}`, attendu: a, calcul: `la valeur actuelle des ${x.plusTard.dureeRestante} coupons et du nominal à ${pct(x.bas, 1)} = ${eur(a)}`, tolerance: 1 },
-          { libelle: `Cours à ${pct(x.haut, 1)}`, attendu: b, calcul: `la valeur actuelle des ${x.plusTard.dureeRestante} coupons et du nominal à ${pct(x.haut, 1)} = ${eur(b)}`, tolerance: 1 },
-          { libelle: "Taux de rendement actuariel, en %", attendu: auCentime(x.interpole * 100), calcul: `${pct(x.bas, 1)} + 0,1 point × (${eur(a)} − ${eur(COURS_AFFICHE)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`, tolerance: 0.01 },
+          { libelle: `Cours à ${pct(x.bas)}`, attendu: a, calcul: `la valeur actuelle des ${x.plusTard.dureeRestante} coupons et du nominal à ${pct(x.bas)} = ${eur(a)}` },
+          { libelle: `Cours à ${pct(x.haut)}`, attendu: b, calcul: `la valeur actuelle des ${x.plusTard.dureeRestante} coupons et du nominal à ${pct(x.haut)} = ${eur(b)}` },
+          { libelle: "Taux de rendement actuariel, en %", attendu: arrondi2(x.interpole * 100), calcul: `${pct(x.bas)} + 0,1 point × (${eur(a)} − ${eur(COURS_AFFICHE)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
@@ -447,7 +447,7 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
         const a = marcheDuChapitre(c).action;
         return [
           `L'action vaut la valeur actuelle de ses dividendes futurs : ${eur(a.cours)}. Son exigence, ${pct(a.exigee)}, est celle du MEDAF : ${pct(TAUX_SANS_RISQUE)} sans risque, plus ${nb(a.beta)} × ${pct(PRIME_DE_RISQUE_DU_MARCHE)} de prime.`,
-          `Un point de taux de plus, et l'action perd ${pct(1 - a.apresLaHausse / a.cours, 1)} de sa valeur. Une croissance plus faible, et elle tombe à ${eur(a.apresLAnnonce)}. Les taux et les perspectives font les cours.`,
+          `Un point de taux de plus, et l'action perd ${pct(1 - a.apresLaHausse / a.cours)} de sa valeur. Une croissance plus faible, et elle tombe à ${eur(a.apresLAnnonce)}. Les taux et les perspectives font les cours.`,
         ];
       },
     },
@@ -497,17 +497,17 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
       },
       champs: (c) => {
         const r = marcheDuChapitre(c).risque;
-        const s = auCentime(r.ecartType);
+        const s = arrondi2(r.ecartType);
         return [
           { libelle: "Écart-type, en %", attendu: s, calcul: `√${nb(r.variance)} = ${pts(s)}`, tolerance: 0.01 },
-          { libelle: "Espérance moins un écart-type, en %", attendu: auCentime(r.esperance - s), calcul: `${pts(r.esperance)} − ${pts(s)} = ${pts(auCentime(r.esperance - s))}`, tolerance: 0.01 },
-          { libelle: "Espérance plus un écart-type, en %", attendu: auCentime(r.esperance + s), calcul: `${pts(r.esperance)} + ${pts(s)} = ${pts(auCentime(r.esperance + s))}`, tolerance: 0.01 },
+          { libelle: "Espérance moins un écart-type, en %", attendu: arrondi2(r.esperance - s), calcul: `${pts(r.esperance)} − ${pts(s)} = ${pts(arrondi2(r.esperance - s))}`, tolerance: 0.01 },
+          { libelle: "Espérance plus un écart-type, en %", attendu: arrondi2(r.esperance + s), calcul: `${pts(r.esperance)} + ${pts(s)} = ${pts(arrondi2(r.esperance + s))}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
         const r = marcheDuChapitre(c).risque;
         return [
-          `L'action promet ${pts(r.esperance)} en moyenne, avec un écart-type de ${pts(auCentime(r.ecartType))} : une année sur quatre, elle perd ${pts(-r.pire)}. Le compte à terme de NOVA rapporte ${pct(PLACEMENT_SANS_RISQUE)}, avec un écart-type nul.`,
+          `L'action promet ${pts(r.esperance)} en moyenne, avec un écart-type de ${pts(arrondi2(r.ecartType))} : une année sur quatre, elle perd ${pts(-r.pire)}. Le compte à terme de NOVA rapporte ${pct(PLACEMENT_SANS_RISQUE)}, avec un écart-type nul.`,
           "La prime de l'action sur le placement sûr paie ce risque : plus l'écart-type est grand, plus l'investisseur exige.",
         ];
       },
@@ -536,7 +536,7 @@ export const LE_MARCHE_FINANCIER: Chapitre = {
         return [
           "Vous avez situé le marché financier : un financement direct, primaire quand l'émetteur lève des fonds, secondaire quand les titres changent de mains ; ses obligations vertes, ses notes, ses indices.",
           `Vous avez calculé le cours d'une obligation selon le taux du marché, ${eur(x.enHausse)} à ${pct(UN_AN_PLUS_TARD.tauxEnHausse)}, et le rendement d'un achat à ${eur(COURS_AFFICHE)}, ${pct(x.rendement)}. Celui d'une action par ses dividendes, ${eur(x.action.cours)}.`,
-          `Vous avez mesuré le risque de l'action : ${pts(x.risque.esperance)} d'espérance, ${pts(auCentime(x.risque.ecartType))} d'écart-type, et distingué le risque que la diversification efface de celui qui reste. Au niveau de l'examen, vous savez lire un cours.`,
+          `Vous avez mesuré le risque de l'action : ${pts(x.risque.esperance)} d'espérance, ${pts(arrondi2(x.risque.ecartType))} d'écart-type, et distingué le risque que la diversification efface de celui qui reste. Au niveau de l'examen, vous savez lire un cours.`,
           "Dans l'arène, les chiffres de votre entreprise seront différents : la démarche, elle, est la même.",
         ];
       },

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_VALEUR } from "../../chapitres/la-valeur-et-le-temps";
 import { INFLATION_PREVUE, compteProgressif } from "../../monde/valeur-et-temps";
@@ -18,8 +18,8 @@ import type { Situation } from "../types";
  * chemin du chapitre : valeur acquise, taux actuariel, taux réel, puis une réponse.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const nb = (x: number) => (x + 0).toLocaleString("fr-FR", { maximumFractionDigits: 6 });
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
@@ -87,8 +87,8 @@ export const LE_COMPTE_A_TERME_PROGRESSIF: Situation = {
         const k = compteDuCas(c);
         return [
           { libelle: "Compte progressif, au bout d'un an", attendu: k.apresUnAn, calcul: `${eur(k.capital)} × ${nb(1 + k.taux[0]!)} = ${eur(k.apresUnAn)}` },
-          { libelle: `Compte progressif, au bout de ${k.n} ans`, attendu: k.acquisProgressif, calcul: `${eur(k.apresUnAn)} × ${nb(1 + k.taux[1]!)} = ${eur(k.acquisProgressif)}`, tolerance: 1 },
-          { libelle: `Compte ordinaire, au bout de ${k.n} ans`, attendu: k.acquisFixe, calcul: `${eur(k.capital)} × ${nb(1 + k.tauxFixe)}^${k.n} = ${eur(k.acquisFixe)}`, tolerance: 1 },
+          { libelle: `Compte progressif, au bout de ${k.n} ans`, attendu: k.acquisProgressif, calcul: `${eur(k.apresUnAn)} × ${nb(1 + k.taux[1]!)} = ${eur(k.acquisProgressif)}` },
+          { libelle: `Compte ordinaire, au bout de ${k.n} ans`, attendu: k.acquisFixe, calcul: `${eur(k.capital)} × ${nb(1 + k.tauxFixe)}^${k.n} = ${eur(k.acquisFixe)}` },
         ];
       },
       explication: (c) => {

@@ -1,8 +1,9 @@
+import { arrondi2, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import { dateDe } from "../chapitres/la-cloture";
 import { diagnosticDuChapitre } from "../chapitres/le-diagnostic-financier-et-extra-financier";
 import { eur, nombre } from "../enquetes/lignes-du-dossier";
-import { auCentime, type DateDuCours } from "../monde/amortissement";
+import type { DateDuCours } from "../monde/amortissement";
 import { TAUX_DE_TVA } from "../monde/nova-gestion";
 import type { Bureau, PieceDuBureau } from "./types";
 
@@ -29,8 +30,8 @@ const b2 = r2.bilan;
 export const JOUR_DU_DIAGNOSTIC: DateDuCours = { jour: 15, mois: 3, exercice: 3 };
 const JOUR = dateDe(JOUR_DU_DIAGNOSTIC);
 
-const enPourcent = (t: number) => auCentime(t * 100);
-const pctDe = (t: number) => `${nombre(enPourcent(t))} %`;
+const enPourcent = (t: number) => arrondi2(t * 100);
+const pctDe = (t: number) => pct(enPourcent(t));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LA PILE
@@ -104,8 +105,8 @@ const DURABILITE: PieceDuBureau = {
   date: JOUR,
   objet: "Énergie, déchets, équipe",
   paragraphes: [
-    `Électricité consommée sur l'année, atelier et bâtiment : ${nombre(e2.kwh)} kWh, pour ${nombre(n2.enceintes)} enceintes montées.`,
-    `Part des emballages valorisés : ${pctDe(e2.partValorisee)}. Absentéisme : ${pctDe(e2.absenteisme)} des heures payées. Formation : ${nombre(e2.formationParSalarie)} heures par salarié.`,
+    `Électricité consommée sur l'année, atelier et bâtiment : ${nombreAuCentieme(e2.kwh)} kWh, pour ${nombreAuCentieme(n2.enceintes)} enceintes montées.`,
+    `Part des emballages valorisés : ${pctDe(e2.partValorisee)}. Absentéisme : ${pctDe(e2.absenteisme)} des heures payées. Formation : ${nombreAuCentieme(e2.formationParSalarie)} heures par salarié.`,
   ],
 };
 
@@ -179,48 +180,48 @@ const RATIOS: readonly RatioDuDiagnostic[] = [
     libelle: "Endettement",
     valeur: r2.endettement,
     unite: "fois",
-    calcul: `${eur(n2.dettesFinancieres)} ÷ ${eur(n2.capitauxPropres)} = ${nombre(r2.endettement)}`,
+    calcul: `${eur(n2.dettesFinancieres)} ÷ ${eur(n2.capitauxPropres)} = ${nombreAuCentieme(r2.endettement)}`,
     indice: "les dettes financières sur les capitaux propres",
     nPlus1: r1.endettement,
     secteur: s.endettement,
     baisseEstUnProgres: true,
-    pourquoi: `Mieux que le secteur, et en progrès : un endettement qui baisse, ${nombre(r2.endettement)} après ${nombre(r1.endettement)}, l'emprunt se rembourse sans être remplacé.`,
+    pourquoi: `Mieux que le secteur, et en progrès : un endettement qui baisse, ${nombreAuCentieme(r2.endettement)} après ${nombreAuCentieme(r1.endettement)}, l'emprunt se rembourse sans être remplacé.`,
   },
   {
     code: "liquidite",
     libelle: "Liquidité générale",
     valeur: r2.liquiditeGenerale,
     unite: "fois",
-    calcul: `${eur(b2.actifCirculant)} ÷ ${eur(b2.dettesAMoinsDUnAn)} = ${nombre(r2.liquiditeGenerale)}`,
+    calcul: `${eur(b2.actifCirculant)} ÷ ${eur(b2.dettesAMoinsDUnAn)} = ${nombreAuCentieme(r2.liquiditeGenerale)}`,
     indice: "l'actif circulant sur les dettes à moins d'un an",
     nPlus1: r1.liquiditeGenerale,
     secteur: s.liquiditeGenerale,
     baisseEstUnProgres: false,
-    pourquoi: `Mieux que le secteur, et en progrès : ${nombre(r2.liquiditeGenerale)} euros d'actif circulant pour un euro de dettes à court terme.`,
+    pourquoi: `Mieux que le secteur, et en progrès : ${nombreAuCentieme(r2.liquiditeGenerale)} euros d'actif circulant pour un euro de dettes à court terme.`,
   },
   {
     code: "delai-clients",
     libelle: "Délai des clients",
     valeur: r2.delaiClients,
     unite: "jours",
-    calcul: `${eur(n2.clientsBruts)} × 360 ÷ (${eur(n2.production)} × ${nombre(1 + TAUX_DE_TVA)}) = ${nombre(r2.delaiClients)} jours`,
+    calcul: `${eur(n2.clientsBruts)} × 360 ÷ (${eur(n2.production)} × ${nombre(1 + TAUX_DE_TVA)}) = ${nombreAuCentieme(r2.delaiClients)} jours`,
     indice: "les clients en brut sur le chiffre d'affaires toutes taxes comprises, en jours",
     nPlus1: r1.delaiClients,
     secteur: s.delaiClients,
     baisseEstUnProgres: true,
-    pourquoi: `Mieux que le secteur, mais en recul : ${nombre(r2.delaiClients)} jours après ${nombre(r1.delaiClients)}. Le niveau rassure, la tendance non : les chaînes de hi-fi paient plus tard.`,
+    pourquoi: `Mieux que le secteur, mais en recul : ${nombreAuCentieme(r2.delaiClients)} jours après ${nombreAuCentieme(r1.delaiClients)}. Le niveau rassure, la tendance non : les chaînes de hi-fi paient plus tard.`,
   },
   {
     code: "stock",
     libelle: "Durée du stock",
     valeur: r2.rotationDesStocks,
     unite: "jours",
-    calcul: `${eur(n2.stocks)} × 360 ÷ ${eur(n2.composantsConsommes)} = ${nombre(r2.rotationDesStocks)} jours`,
+    calcul: `${eur(n2.stocks)} × 360 ÷ ${eur(n2.composantsConsommes)} = ${nombreAuCentieme(r2.rotationDesStocks)} jours`,
     indice: "le stock sur les composants consommés, en jours",
     nPlus1: r1.rotationDesStocks,
     secteur: s.rotationDesStocks,
     baisseEstUnProgres: true,
-    pourquoi: `Mieux que le secteur, mais en recul : le stock dure ${nombre(r2.rotationDesStocks)} jours, après ${nombre(r1.rotationDesStocks)}. Avec le délai des clients, il fait croître le besoin plus vite que les ventes.`,
+    pourquoi: `Mieux que le secteur, mais en recul : le stock dure ${nombreAuCentieme(r2.rotationDesStocks)} jours, après ${nombreAuCentieme(r1.rotationDesStocks)}. Avec le délai des clients, il fait croître le besoin plus vite que les ventes.`,
   },
   {
     code: "usure",
@@ -239,12 +240,12 @@ const RATIOS: readonly RatioDuDiagnostic[] = [
     libelle: "Électricité par enceinte",
     valeur: e2.kwhParEnceinte,
     unite: "kWh",
-    calcul: `${nombre(e2.kwh)} kWh ÷ ${nombre(n2.enceintes)} enceintes = ${nombre(e2.kwhParEnceinte)} kWh`,
+    calcul: `${nombreAuCentieme(e2.kwh)} kWh ÷ ${nombreAuCentieme(n2.enceintes)} enceintes = ${nombreAuCentieme(e2.kwhParEnceinte)} kWh`,
     indice: "l'électricité de l'année sur les enceintes montées",
     nPlus1: e1.kwhParEnceinte,
     secteur: s.kwhParEnceinte,
     baisseEstUnProgres: true,
-    pourquoi: `Mieux que le secteur, et en progrès : une consommation qui baisse, ${nombre(e2.kwhParEnceinte)} kWh après ${nombre(e1.kwhParEnceinte)}.`,
+    pourquoi: `Mieux que le secteur, et en progrès : une consommation qui baisse, ${nombreAuCentieme(e2.kwhParEnceinte)} kWh après ${nombreAuCentieme(e1.kwhParEnceinte)}.`,
   },
 ];
 
@@ -256,7 +257,7 @@ const BATTERIE: PieceDuBureau = {
   a: "NOVA",
   date: JOUR,
   objet: "Fabricants d'équipements audio de 10 à 49 salariés",
-  paragraphes: RATIOS.map((x) => `${x.libelle} : ${nombre(x.nPlus1)} ${x.unite} en N+1 ; médiane du secteur, ${nombre(x.secteur)} ${x.unite}.`),
+  paragraphes: RATIOS.map((x) => `${x.libelle} : ${nombreAuCentieme(x.nPlus1)} ${x.unite} en N+1 ; médiane du secteur, ${nombreAuCentieme(x.secteur)} ${x.unite}.`),
   mention: "Des médianes indicatives, pour des entreprises qui louent leurs locaux.",
 };
 
@@ -351,10 +352,10 @@ export const LE_DIAGNOSTIC_POUR_L_ASSEMBLEE: Bureau = {
           id: "la-vigilance",
           question: "Quel point de vigilance présenter aux associés ?",
           options: [
-            { texte: "Le besoin qui croît plus vite que les ventes", juste: true, retour: `Oui : le besoin d'exploitation a été multiplié par ${nombre(multiplieDuBesoin)} en un an, les ventes par ${nombre(multiplieDesVentes)}. Le délai des clients et la durée du stock en sont la cause.` },
-            { texte: "L'endettement, qui menace la structure", juste: false, retour: `Non : ${nombre(r2.endettement)}, contre ${nombre(s.endettement)} pour le secteur. La structure est très solide.` },
+            { texte: "Le besoin qui croît plus vite que les ventes", juste: true, retour: `Oui : le besoin d'exploitation a été multiplié par ${nombreAuCentieme(multiplieDuBesoin)} en un an, les ventes par ${nombreAuCentieme(multiplieDesVentes)}. Le délai des clients et la durée du stock en sont la cause.` },
+            { texte: "L'endettement, qui menace la structure", juste: false, retour: `Non : ${nombreAuCentieme(r2.endettement)}, contre ${nombreAuCentieme(s.endettement)} pour le secteur. La structure est très solide.` },
             { texte: "La rentabilité financière, trop faible pour les associés", juste: false, retour: `Non : ${pctDe(r2.rentabiliteFinanciere)}, contre ${pctDe(s.rentabiliteFinanciere)} pour le secteur.` },
-            { texte: "La consommation d'électricité par enceinte, qui reste au-dessus de celle du secteur", juste: false, retour: `Non : ${nombre(e2.kwhParEnceinte)} kWh contre ${nombre(s.kwhParEnceinte)} : NOVA est plus sobre que son secteur.` },
+            { texte: "La consommation d'électricité par enceinte, qui reste au-dessus de celle du secteur", juste: false, retour: `Non : ${nombreAuCentieme(e2.kwhParEnceinte)} kWh contre ${nombreAuCentieme(s.kwhParEnceinte)} : NOVA est plus sobre que son secteur.` },
           ],
         },
         {
@@ -376,7 +377,7 @@ export const LE_DIAGNOSTIC_POUR_L_ASSEMBLEE: Bureau = {
           ],
         },
       ],
-      explication: [`Votre conclusion aux associés : NOVA est rentable, ${pctDe(r2.rentabiliteFinanciere)} de rentabilité financière, et solide, ${nombre(r2.endettement)} d'endettement ; elle doit surveiller son besoin d'exploitation et préparer le renouvellement de son outil.`],
+      explication: [`Votre conclusion aux associés : NOVA est rentable, ${pctDe(r2.rentabiliteFinanciere)} de rentabilité financière, et solide, ${nombreAuCentieme(r2.endettement)} d'endettement ; elle doit surveiller son besoin d'exploitation et préparer le renouvellement de son outil.`],
     },
   ],
 };

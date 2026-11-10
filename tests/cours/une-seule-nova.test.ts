@@ -862,7 +862,8 @@ describe("un seul découvert de NOVA, d'une fiche à l'autre", () => {
     const r = escompteProposePar({ code: "nova" });
     expect(r.decouvertLong).toBe(Math.round(r.montant * 0.12 * r.facture.jours * 100 / 360) / 100);
     const nova = casDeLEntreprise("nova");
-    expect(escompteMaximalDuClient(nova).periode).toBeCloseTo((0.12 * 70) / 360, 12);
+    // Le taux de la période, à deux décimales comme sur la copie : 12 % × 70 ÷ 360 = 2,33 %.
+    expect(escompteMaximalDuClient(nova).periode).toBe(0.0233);
     const x = reglementDuFournisseur("escompte");
     expect(x.agios).toBe(Math.round(((Math.round(34_980 * 0.98 * 100) / 100) * 0.12 * 12 * 100) / 360) / 100);
     expect(escompteAccorde(0.02).agiosEpargnes).toBe(Math.round(((Math.round(320 * 59 * 0.95 * 0.98 * 100) / 100) * 0.12 * 70 * 100) / 360) / 100);

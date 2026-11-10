@@ -1,6 +1,7 @@
+import { nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import { dateDe } from "../chapitres/la-cloture";
-import { eur, nombre } from "../enquetes/lignes-du-dossier";
+import { eur } from "../enquetes/lignes-du-dossier";
 import { auCentime, type DateDuCours } from "../monde/amortissement";
 import { DIVIDENDE_DEMANDE_PAR_ACTION } from "../monde/comptabilite-approfondie";
 import { empruntALaCloture } from "../monde/emprunt";
@@ -40,7 +41,7 @@ const AU_31_DECEMBRE = `${dateDe(f.cloture)} N`;
 const MOIS_DU_JUGEMENT = MOIS_DE_L_EXERCICE[SUITES_EN_N_PLUS_1.litige.date.mois - 1]!;
 const capitauxPropresAvant = auCentime(p.capital + p.resultat);
 const dettesDExploitation = auCentime(p.fournisseurs + p.dettesFiscalesEtSociales + p.produitConstateDAvance);
-const fois = (n: number) => `${nombre(n)} fois`;
+const fois = (n: number) => `${nombreAuCentieme(n)} fois`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LA PILE
@@ -73,8 +74,8 @@ const LETTRE: PieceDuBureau = {
   paragraphes: [
     "Monsieur le Président,",
     "Nous lisons le bilan selon la liquidité et l'exigibilité, à plus ou à moins d'un an, après la répartition du résultat et à la valeur de réalisation de l'actif.",
-    `Nos règles, d'abord sur la dette : au plus ${nombre(regles.capaciteDeRemboursement)} années de capacité d'autofinancement, et au plus ${nombre(regles.endettement)} fois les capitaux propres.`,
-    `Puis sur la structure : des ressources propres d'au moins ${nombre(regles.independance * 100)} % des ressources stables, et au moins ${nombre(regles.liquiditeGenerale)} euro d'actif à moins d'un an pour un euro de dettes à moins d'un an.`,
+    `Nos règles, d'abord sur la dette : au plus ${nombreAuCentieme(regles.capaciteDeRemboursement)} années de capacité d'autofinancement, et au plus ${nombreAuCentieme(regles.endettement)} fois les capitaux propres.`,
+    `Puis sur la structure : des ressources propres d'au moins ${nombreAuCentieme(regles.independance * 100)} % des ressources stables, et au moins ${nombreAuCentieme(regles.liquiditeGenerale)} euro d'actif à moins d'un an pour un euro de dettes à moins d'un an.`,
     "Veuillez agréer, Monsieur le Président, nos salutations distinguées.",
   ],
 };
@@ -152,7 +153,7 @@ const ESTIMATION: PieceDuBureau = {
   a: "Le président de NOVA",
   date: AU_31_DECEMBRE,
   objet: "Votre ligne de montage",
-  paragraphes: [`Pour une ligne de cet âge, nous offririons ${nombre(PART_DU_PRIX_NEUF_A_LA_REVENTE * 100)} % de son prix neuf hors taxes, ${eur(f.equipement.ht)}.`],
+  paragraphes: [`Pour une ligne de cet âge, nous offririons ${nombreAuCentieme(PART_DU_PRIX_NEUF_A_LA_REVENTE * 100)} % de son prix neuf hors taxes, ${eur(f.equipement.ht)}.`],
   montants: [{ libelle: "Prix de rachat proposé", montant: b.valeurDeRevente, fort: true }],
 };
 
@@ -240,12 +241,12 @@ export function grilleDesRatios(): TableauACompleter {
     titre: "Les ratios du dossier, au centième",
     colonnes: ["Ratio"],
     lignes: [
-      ratio("Liquidité générale", b.liquiditeGenerale, `${eur(b.actifMoinsDUnAn)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${nombre(b.liquiditeGenerale)}`, "l'actif à moins d'un an sur les dettes à moins d'un an"),
-      ratio("Liquidité immédiate", b.liquiditeImmediate, `${eur(p.banque)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${nombre(b.liquiditeImmediate)}`, "les disponibilités sur les dettes à moins d'un an"),
-      ratio("Autonomie financière", b.autonomie, `${eur(b.capitauxPropres)} ÷ ${eur(b.totalPassif)} = ${nombre(b.autonomie)} %`, "les capitaux propres sur le total du bilan financier, en pour cent", "%"),
-      ratio("Indépendance financière", r.independance, `${eur(x.ressourcesPropres)} ÷ ${eur(x.ressourcesStables)} = ${nombre(r.independance)} %`, "les ressources propres sur les ressources stables, au bilan fonctionnel, en pour cent", "%"),
-      ratio("Endettement", r.endettement, `${eur(x.dettesFinancieres)} ÷ ${eur(x.capitauxPropres)} = ${nombre(r.endettement)}`, "les dettes financières sur les capitaux propres"),
-      ratio("Capacité de remboursement", r.capacite, `${eur(x.dettesFinancieres)} ÷ ${eur(x.caf)} = ${nombre(r.capacite)}`, "les dettes financières sur la capacité d'autofinancement"),
+      ratio("Liquidité générale", b.liquiditeGenerale, `${eur(b.actifMoinsDUnAn)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${nombreAuCentieme(b.liquiditeGenerale)}`, "l'actif à moins d'un an sur les dettes à moins d'un an"),
+      ratio("Liquidité immédiate", b.liquiditeImmediate, `${eur(p.banque)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${nombreAuCentieme(b.liquiditeImmediate)}`, "les disponibilités sur les dettes à moins d'un an"),
+      ratio("Autonomie financière", b.autonomie, `${eur(b.capitauxPropres)} ÷ ${eur(b.totalPassif)} = ${nombreAuCentieme(b.autonomie)} %`, "les capitaux propres sur le total du bilan financier, en pour cent", "%"),
+      ratio("Indépendance financière", r.independance, `${eur(x.ressourcesPropres)} ÷ ${eur(x.ressourcesStables)} = ${nombreAuCentieme(r.independance)} %`, "les ressources propres sur les ressources stables, au bilan fonctionnel, en pour cent", "%"),
+      ratio("Endettement", r.endettement, `${eur(x.dettesFinancieres)} ÷ ${eur(x.capitauxPropres)} = ${nombreAuCentieme(r.endettement)}`, "les dettes financières sur les capitaux propres"),
+      ratio("Capacité de remboursement", r.capacite, `${eur(x.dettesFinancieres)} ÷ ${eur(x.caf)} = ${nombreAuCentieme(r.capacite)}`, "les dettes financières sur la capacité d'autofinancement"),
     ],
   };
 }
@@ -305,7 +306,7 @@ export const LE_BILAN_FINANCIER_POUR_LA_BANQUE: Bureau = {
       pieces: ["lettre", "bilan"],
       grille: grilleDesRatios(),
       reussite: "Les ratios sont justes.",
-      explication: [`Toutes les règles de la banque sont tenues, et largement : un endettement de ${fois(r.endettement)}, une capacité de remboursement de ${nombre(r.capacite)} année, une liquidité générale de ${fois(b.liquiditeGenerale)}.`],
+      explication: [`Toutes les règles de la banque sont tenues, et largement : un endettement de ${fois(r.endettement)}, une capacité de remboursement de ${nombreAuCentieme(r.capacite)} année, une liquidité générale de ${fois(b.liquiditeGenerale)}.`],
     },
     {
       id: "la-reponse",
@@ -318,7 +319,7 @@ export const LE_BILAN_FINANCIER_POUR_LA_BANQUE: Bureau = {
           id: "les-regles",
           question: "NOVA tient-elle les règles de la banque ?",
           options: [
-            { texte: "Oui, toutes", juste: true, retour: `Oui : ${fois(r.capacite)} la CAF pour ${nombre(regles.capaciteDeRemboursement)} admises, ${fois(r.endettement)} les capitaux propres pour ${nombre(regles.endettement)}, ${nombre(r.independance)} % d'indépendance, une liquidité de ${fois(b.liquiditeGenerale)}.` },
+            { texte: "Oui, toutes", juste: true, retour: `Oui : ${fois(r.capacite)} la CAF pour ${nombreAuCentieme(regles.capaciteDeRemboursement)} admises, ${fois(r.endettement)} les capitaux propres pour ${nombreAuCentieme(regles.endettement)}, ${nombreAuCentieme(r.independance)} % d'indépendance, une liquidité de ${fois(b.liquiditeGenerale)}.` },
             { texte: "Non, la liquidité immédiate est sous 1", juste: false, retour: `Non : la banque n'a pas de règle de liquidité immédiate, et le compte à terme revient le ${dateDe(f.placement.echeance)}.` },
             { texte: "Non, l'autonomie financière est sous la moitié du bilan", juste: false, retour: "Non : la règle porte sur l'indépendance financière, au bilan fonctionnel, et elle est tenue." },
             { texte: "On ne peut pas le dire avant que l'assemblée ait voté le dividende de juin", juste: false, retour: "Non : le bilan financier se lit après la répartition proposée ; le dividende y est déjà une dette." },
@@ -326,9 +327,9 @@ export const LE_BILAN_FINANCIER_POUR_LA_BANQUE: Bureau = {
         },
         {
           id: "l-immediate",
-          question: `La liquidité immédiate n'est que de ${nombre(b.liquiditeImmediate)}. Faut-il s'en inquiéter ?`,
+          question: `La liquidité immédiate n'est que de ${nombreAuCentieme(b.liquiditeImmediate)}. Faut-il s'en inquiéter ?`,
           options: [
-            { texte: "Non, le compte à terme revient en janvier", juste: true, retour: `Oui : le ${dateDe(f.placement.echeance)}, il rejoint la banque, et la liquidité immédiate passe à ${nombre(b.liquiditeAuSixJanvier)}.` },
+            { texte: "Non, le compte à terme revient en janvier", juste: true, retour: `Oui : le ${dateDe(f.placement.echeance)}, il rejoint la banque, et la liquidité immédiate passe à ${nombreAuCentieme(b.liquiditeAuSixJanvier)}.` },
             { texte: "Oui, NOVA ne peut pas payer ses dettes de janvier", juste: false, retour: `Non : la banque porte ${eur(p.banque)}, et les dettes à moins d'un an s'étalent sur toute l'année.` },
             { texte: "Oui, il faut négocier un découvert avant la fin de février pour payer les fournisseurs", juste: false, retour: "Non : avec le compte à terme revenu, NOVA a plus de disponibilités que de dettes à moins d'un an." },
           ],

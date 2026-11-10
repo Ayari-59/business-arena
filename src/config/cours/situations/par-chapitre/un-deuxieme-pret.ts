@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi, eur } from "../../../../pedagogy/cours/deux-decimales";
 import type { Ecriture } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { JOURS_DU_MOIS, type DateDuCours } from "../../monde/amortissement";
@@ -49,9 +49,12 @@ const ECHEANCES_PAR_AN = 4;
 const MOIS_PAR_ECHEANCE = 12 / ECHEANCES_PAR_AN;
 const MOIS_PAR_AN = 12;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} %`;
+/** Un taux du contrat, en pourcentage : deux décimales au moins s'il n'est pas entier, trois s'il les a (1,125 %), comme dans le chapitre. */
+const pct = (t: number) => {
+  const p = arrondi(t * 100, 3);
+  return `${p.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(p) ? 0 : 2, maximumFractionDigits: 3 })} %`;
+};
 const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
 /** « de NOVA », « d'ATLAS CONSEIL » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -105,7 +108,8 @@ export function deuxiemePret(c: Pick<Cas, "immobilisation" | "gestion" | "pret">
     coutAC,
     coutACParLaFormule,
     coutEC,
-    supplement: auCentime(coutEC - coutAC),
+    /** Le supplément, par les deux calculs que l'élève fait : n × a − C, moins la suite des intérêts. */
+    supplement: auCentime(auCentime(n * a - montant) - coutACParLaFormule),
     nFoisAMoinsC: auCentime(n * a - montant),
     clotureEC,
     clotureAC,
@@ -188,7 +192,7 @@ export const UN_DEUXIEME_PRET: Situation = {
         const l = p.ac[0]!;
         return [
           { libelle: "Montant du prêt", attendu: p.montant, calcul: `${eur(c.immobilisation.ht)} × ${pct(PART_FINANCEE)} = ${eur(p.montant)}` },
-          { libelle: "Nombre d'échéances", attendu: p.n, calcul: `${qte(p.annees)} ans × ${qte(ECHEANCES_PAR_AN)} trimestres = ${qte(p.n)} échéances` },
+          { libelle: "Nombre d'échéances", nature: "quantite", attendu: p.n, calcul: `${qte(p.annees)} ans × ${qte(ECHEANCES_PAR_AN)} trimestres = ${qte(p.n)} échéances` },
           {
             libelle: "Première échéance en amortissement constant",
             attendu: p.premiereAC,
@@ -256,17 +260,15 @@ export const UN_DEUXIEME_PRET: Situation = {
         return [
           {
             libelle: "Coût du crédit en amortissement constant",
-            attendu: p.coutAC,
-            tolerance: 0.1,
+            attendu: p.coutACParLaFormule,
             calcul: `${qte(p.n)} × (${eur(p.ac[0]!.interets)} + ${eur(p.ac[p.n - 1]!.interets)}) ÷ 2 = ${eur(p.coutACParLaFormule)}${p.coutACParLaFormule === p.coutAC ? "" : ` ; le tableau, chaque intérêt arrondi au centime, donne ${eur(p.coutAC)}`}`,
           },
           {
             libelle: "Coût du crédit en échéances constantes",
-            attendu: p.coutEC,
-            tolerance: 0.2,
-            calcul: `${qte(p.n)} × ${eur(p.a)} − ${eur(p.montant)} = ${eur(p.nFoisAMoinsC)} ; le tableau, dont la dernière échéance solde les centimes, donne ${eur(p.coutEC)}`,
+            attendu: p.nFoisAMoinsC,
+            calcul: `${qte(p.n)} × ${eur(p.a)} − ${eur(p.montant)} = ${eur(p.nFoisAMoinsC)}${p.nFoisAMoinsC === p.coutEC ? "" : ` ; le tableau, dont la dernière échéance solde les centimes, donne ${eur(p.coutEC)}`}`,
           },
-          { libelle: "Supplément des échéances constantes", attendu: p.supplement, tolerance: 0.25, calcul: `${eur(p.coutEC)} − ${eur(p.coutAC)} = ${eur(p.supplement)}` },
+          { libelle: "Supplément des échéances constantes", attendu: p.supplement, calcul: `${eur(p.nFoisAMoinsC)} − ${eur(p.coutACParLaFormule)} = ${eur(p.supplement)}` },
         ];
       },
       explication: (c) => {
@@ -341,7 +343,7 @@ export const UN_DEUXIEME_PRET: Situation = {
         const s = k.echeanceSuivante!;
         return [
           { libelle: `Intérêts de l'échéance du ${dateDe(s.date)}`, attendu: s.interets, calcul: `${eur(s.capitalDebut)} restant dus × ${pct(p.i)} = ${eur(s.interets)}` },
-          { libelle: "Jours courus dans l'exercice", attendu: k.jours, calcul: `du ${dateDe(k.depuis!)} au 31 décembre, jours compris, en mois de ${qte(JOURS_DU_MOIS)} jours : ${qte(k.jours)} jours sur ${qte(k.joursDeLaPeriode)}` },
+          { libelle: "Jours courus dans l'exercice", nature: "quantite", attendu: k.jours, calcul: `du ${dateDe(k.depuis!)} au 31 décembre, jours compris, en mois de ${qte(JOURS_DU_MOIS)} jours : ${qte(k.jours)} jours sur ${qte(k.joursDeLaPeriode)}` },
           { libelle: "Intérêts courus au 31 décembre", attendu: k.montant, calcul: `${eur(s.interets)} × ${qte(k.jours)} ÷ ${qte(k.joursDeLaPeriode)} = ${eur(k.montant)}` },
           { libelle: "Charge d'intérêts de l'exercice", attendu: p.clotureEC.chargeDInterets, calcul: `${eur(p.clotureEC.interetsPayes)} payés + ${eur(k.montant)} courus = ${eur(p.clotureEC.chargeDInterets)}` },
         ];

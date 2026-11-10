@@ -1,3 +1,4 @@
+import { arrondi, arrondi2, produit2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime, coefficientDegressif, dotationDeLExercice, planDAmortissement, valeurNetteALaCloture, type DateDuCours, type Immobilisation } from "./amortissement";
 import { CLOTURE_DE_LA_FICHE, EQUIPEMENT, IMMOBILISATION, APPORT_EN_CAPITAL } from "./exercice-de-nova";
 import { PRIX_DE_L_ENCEINTE } from "./nova-gestion";
@@ -107,8 +108,9 @@ export function testDeDepreciation(fluxAnnuel: number = TEST_DE_LA_PREMIERE_LIGN
   const dotationN = dotationDeLExercice(IMMOBILISATION, "lineaire", 0);
   const dotationN1 = dotationDeLExercice(IMMOBILISATION, "lineaire", 1);
   const valeurNette = valeurNetteALaCloture(IMMOBILISATION, "lineaire", 1);
-  const facteur = facteurDActualisation(taux, t.anneesRestantes);
-  const valeurDUsage = auCentime(fluxAnnuel * facteur);
+  // Le facteur se donne au dix-millième, et la valeur d'usage part de lui, comme sur la copie (deux-decimales.ts).
+  const facteur = arrondi(facteurDActualisation(taux, t.anneesRestantes), 4);
+  const valeurDUsage = produit2(fluxAnnuel, facteur);
   const valeurActuelle = Math.max(valeurVenale, valeurDUsage);
   const depreciation = auCentime(Math.max(0, valeurNette - valeurActuelle));
   const valeurApres = auCentime(valeurNette - depreciation);
@@ -245,7 +247,7 @@ export function contratALAvancement(coutsEngages: number = CHANTIER_ARPEGE.couts
     coutsEngages,
     coutTotal,
     avancement,
-    avancementPct: Math.round(avancement * 10_000) / 100,
+    avancementPct: arrondi2(avancement * 100),
     produit,
     aFacturer: auCentime(produit - k.facture),
     resultatTotal,

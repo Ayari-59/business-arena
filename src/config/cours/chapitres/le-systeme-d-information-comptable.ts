@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, exerciceDe } from "../monde/comptes-du-lycee";
@@ -57,9 +57,9 @@ export const DEPART_DE_LA_SAUVEGARDE = { frequence: 5, lieu: 1 } as const;
 export const PERTE_ADMISE = 1;
 export const SOLUTION_DE_LA_SAUVEGARDE = { frequence: 1, lieu: 2 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const jours = (n: number) => `${qte(n)} ${n > 1 ? "jours" : "jour"}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -297,8 +297,8 @@ export const LE_SYSTEME_D_INFORMATION_COMPTABLE: Chapitre = {
       champs: (c) => {
         const k = informationComptable(c);
         return [
-          { libelle: "Total des soldes débiteurs", attendu: k.totaux.debit, calcul: `${k.balance.filter((l) => l.debit).map((l) => eur(l.debit)).join(" + ")} = ${eur(k.totaux.debit)}`, tolerance: 1 },
-          { libelle: "Total des soldes créditeurs", attendu: k.totaux.credit, calcul: `${k.balance.filter((l) => l.credit).map((l) => eur(l.credit)).join(" + ")} = ${eur(k.totaux.credit)}`, tolerance: 1 },
+          { libelle: "Total des soldes débiteurs", attendu: k.totaux.debit, calcul: `${k.balance.filter((l) => l.debit).map((l) => eur(l.debit)).join(" + ")} = ${eur(k.totaux.debit)}` },
+          { libelle: "Total des soldes créditeurs", attendu: k.totaux.credit, calcul: `${k.balance.filter((l) => l.credit).map((l) => eur(l.credit)).join(" + ")} = ${eur(k.totaux.credit)}` },
         ];
       },
       explication: (c) => {

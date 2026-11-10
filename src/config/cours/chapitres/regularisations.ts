@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { JOURS_DU_MOIS, joursCompris, type DateDuCours } from "../monde/amortissement";
 import { avecLaTva, chargeConstateeDAvance, cloture, interetsDuPlacement, type CodeDeTravail } from "../monde/cloture";
@@ -72,7 +72,6 @@ export const CHARGE_D_ASSURANCE_DE_N_PLUS_1 = 6_150;
  */
 const livraisonDuGrossiste = (f: FicheDeLExercice) => f.composantsDeDecembre.mouvements.find((m) => m.sens === "entree" && m.date.jour === f.factureNonParvenue.livraison.jour)!;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
 const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
 /** Un terme d'une somme : « + 4 500 € » ou « − 34 500 € ». */
@@ -331,7 +330,7 @@ export const REGULARISATIONS: Chapitre = {
         const x = regularisationsDeNova(c);
         const a = x.f.assurance;
         return [
-          { libelle: "Mois de couverture dans N+1", attendu: x.prime.moisApres, calcul: `de janvier à septembre N+1 : ${qte(x.prime.moisApres)} mois`, tolerance: 0 },
+          { libelle: "Mois de couverture dans N+1", nature: "quantite", attendu: x.prime.moisApres, calcul: `de janvier à septembre N+1 : ${qte(x.prime.moisApres)} mois`, tolerance: 0 },
           { libelle: "Charge constatée d'avance", attendu: x.prime.chargeConstateeDAvance, calcul: `${eur(a.prime)} × ${qte(x.prime.moisApres)} ÷ ${qte(a.moisCouverts)} = ${eur(x.prime.chargeConstateeDAvance)}` },
           { libelle: "Charge d'assurance de l'exercice", attendu: x.prime.chargeDeLExercice, calcul: `${eur(a.prime)} − ${eur(x.prime.chargeConstateeDAvance)} = ${eur(x.prime.chargeDeLExercice)}` },
         ];

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, bilanDuLycee, compteDuLycee, exerciceDe } from "../monde/comptes-du-lycee";
@@ -41,10 +41,7 @@ export const RENTABILITE_DU_DEFI = 50;
 /** La solution que montre la correction : 80 000 € repris par les associés et empruntés, les mêmes ventes. */
 export const SOLUTION_DE_LA_RENTABILITE = { emprunt: 80_000, ventes: 0 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les deux rentabilités de l'année, et le taux de l'emprunt auquel les comparer. */
@@ -63,9 +60,9 @@ export function rentabilite(c: Pick<Cas, "code">) {
     immobilisations: b.poste("equipement"),
     bfr: b.besoin,
     capitauxInvestis,
-    financiere: auDixieme((k.resultatNet / b.capitauxPropres) * 100),
-    economique: auDixieme((k.resultatDActivite / capitauxInvestis) * 100),
-    tauxDeLEmprunt: auDixieme(f.pret.tauxAnnuel * 100),
+    financiere: arrondi2((k.resultatNet / b.capitauxPropres) * 100),
+    economique: arrondi2((k.resultatDActivite / capitauxInvestis) * 100),
+    tauxDeLEmprunt: arrondi2(f.pret.tauxAnnuel * 100),
   };
 }
 
@@ -89,8 +86,8 @@ export function levierDuLaboratoire(r: Rentabilite, p: Readonly<Record<string, n
   return {
     k,
     capitauxPropres,
-    financiere: auDixieme((k.resultatNet / capitauxPropres) * 100),
-    economique: auDixieme((k.resultatDActivite / r.capitauxInvestis) * 100),
+    financiere: arrondi2((k.resultatNet / capitauxPropres) * 100),
+    economique: arrondi2((k.resultatDActivite / r.capitauxInvestis) * 100),
   };
 }
 
@@ -153,13 +150,13 @@ export const RENTABILITE: Chapitre = {
       titre: "Les deux rentabilités",
       notions: ["profitability_vs_return"],
       question: (c) =>
-        `Calculez la rentabilité financière ${dE(rentabilite(c).entreprise)} (résultat net ÷ capitaux propres × 100), les capitaux investis (équipement + besoin en fonds de roulement), puis la rentabilité économique (résultat de l'activité ÷ capitaux investis × 100). Les pourcentages au dixième.`,
+        `Calculez la rentabilité financière ${dE(rentabilite(c).entreprise)} (résultat net ÷ capitaux propres × 100), les capitaux investis (équipement + besoin en fonds de roulement), puis la rentabilité économique (résultat de l'activité ÷ capitaux investis × 100). Les pourcentages à deux décimales.`,
       champs: (c) => {
         const r = rentabilite(c);
         return [
-          { libelle: "Rentabilité financière (%)", attendu: r.financiere, calcul: `${eur(r.resultatNet)} ÷ ${eur(r.capitauxPropres)} × 100 = ${pct(r.financiere)}`, tolerance: 0.1 },
-          { libelle: "Capitaux investis", attendu: r.capitauxInvestis, calcul: `${eur(r.immobilisations)} ${r.bfr < 0 ? `− ${eur(-r.bfr)}` : `+ ${eur(r.bfr)}`} = ${eur(r.capitauxInvestis)}`, tolerance: 1 },
-          { libelle: "Rentabilité économique (%)", attendu: r.economique, calcul: `${eur(r.resultatExploitation)} ÷ ${eur(r.capitauxInvestis)} × 100 = ${pct(r.economique)}`, tolerance: 0.1 },
+          { libelle: "Rentabilité financière (%)", attendu: r.financiere, calcul: `${eur(r.resultatNet)} ÷ ${eur(r.capitauxPropres)} × 100 = ${pct(r.financiere)}` },
+          { libelle: "Capitaux investis", attendu: r.capitauxInvestis, calcul: `${eur(r.immobilisations)} ${r.bfr < 0 ? `− ${eur(-r.bfr)}` : `+ ${eur(r.bfr)}`} = ${eur(r.capitauxInvestis)}` },
+          { libelle: "Rentabilité économique (%)", attendu: r.economique, calcul: `${eur(r.resultatExploitation)} ÷ ${eur(r.capitauxInvestis)} × 100 = ${pct(r.economique)}` },
         ];
       },
       explication: (c) => {
@@ -270,7 +267,7 @@ export const RENTABILITE: Chapitre = {
         return [
           { libelle: "Résultat de l'activité", montant: a },
           { libelle: "Coût des capitaux investis au taux de l'emprunt", montant: coutDesCapitauxInvestis(r) },
-          { libelle: "Rentabilité économique (%)", montant: auDixieme((a / r.capitauxInvestis) * 100), fort: true },
+          { libelle: "Rentabilité économique (%)", montant: arrondi2((a / r.capitauxInvestis) * 100), fort: true },
         ];
       },
       droites: (c) => {

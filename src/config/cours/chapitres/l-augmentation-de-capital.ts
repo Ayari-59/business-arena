@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { AUGMENTATION_DE_CAPITAL, BESOIN_DE_FONDS, DIVIDENDE_DEMANDE_PAR_ACTION, PARITES_DU_LABORATOIRE, RESERVE_LEGALE, augmentationDeCapital, pariteJuste } from "../monde/comptabilite-approfondie";
 import type { Chapitre } from "../types";
 
@@ -17,9 +17,9 @@ import type { Chapitre } from "../types";
  * de N (exercice-de-nova.ts), et l'opération de monde/comptabilite-approfondie.ts.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR");
-const pct = (t: number) => `${(Math.round(t * 10_000) / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 export const L_AUGMENTATION_DE_CAPITAL: Chapitre = {
   code: "l-augmentation-de-capital",
@@ -93,7 +93,7 @@ export const L_AUGMENTATION_DE_CAPITAL: Chapitre = {
         const a = augmentationDeCapital();
         return [
           { libelle: "Valeur de l'action avant", attendu: a.valeurAvant, calcul: `${eur(a.capitauxPropres)} ÷ ${qte(a.actions)} = ${eur(a.valeurAvant)}` },
-          { libelle: "Actions nouvelles", attendu: a.nouvelles, calcul: `${qte(a.actions)} ÷ ${a.parite} = ${qte(a.nouvelles)}`, tolerance: 0 },
+          { libelle: "Actions nouvelles", nature: "quantite", attendu: a.nouvelles, calcul: `${qte(a.actions)} ÷ ${a.parite} = ${qte(a.nouvelles)}`, tolerance: 0 },
           { libelle: "Prime d'émission", attendu: a.prime, calcul: `${qte(a.nouvelles)} × (${eur(a.prix)} − ${eur(a.nominal)}) = ${eur(a.prime)}` },
           { libelle: "Valeur de l'action après", attendu: a.valeurApres, calcul: `(${eur(a.capitauxPropres)} + ${eur(a.fonds)}) ÷ ${qte(a.actions + a.nouvelles)} = ${eur(a.valeurApres)}` },
           { libelle: "Droit de souscription", attendu: a.droit, calcul: `${eur(a.valeurAvant)} − ${eur(a.valeurApres)} = ${eur(a.droit)}, ou (${eur(a.valeurAvant)} − ${eur(a.prix)}) × 1 ÷ ${a.parite + 1}`, tolerance: 0.01 },

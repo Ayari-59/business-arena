@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct as enPoints, somme2 } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import {
@@ -64,12 +64,11 @@ import { ENTREPRISES_DE_LA_VALEUR } from "./la-valeur-et-le-temps";
  * financements de NOVA.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number, chiffres = 2) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
+/** Un taux donné en fraction (0,054), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const nb = (x: number, chiffres = 6) => (x + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const enPct = (t: number) => auCentime(t * 100);
+const enPct = (t: number) => arrondi2(t * 100);
 const donnee = (valeur: number | null, autres: Partial<CelluleACompleter> = {}): CelluleACompleter => ({ valeur, ...autres });
 const aSaisir = (valeur: number, calcul: string, autres: Partial<CelluleACompleter> = {}): CelluleACompleter => ({ valeur, saisir: true, calcul, ...autres });
 
@@ -89,7 +88,8 @@ function calculerLeChapitre() {
   const modes = lesTroisModes();
   const parMode = (m: string) => modes.find((x) => x.mode === m)!;
   const obligataire = empruntObligataire();
-  const vaObligataire = (t: number) => valeurActuelleDesFlux(obligataire.avant.slice(1).map((f) => -f), t);
+  // Chaque valeur actuelle au centime, comme sur la copie : l'interpolation part d'elles.
+  const vaObligataire = (t: number) => arrondi2(valeurActuelleDesFlux(obligataire.avant.slice(1).map((f) => -f), t));
   const bas = Math.floor(obligataire.avantImpot * 1000) / 1000;
   const haut = bas + 0.001;
   const interpole = bas + ((haut - bas) * (vaObligataire(bas) - obligataire.fondsNets)) / (vaObligataire(bas) - vaObligataire(haut));
@@ -171,19 +171,24 @@ export function grilleDeLAnnuiteConstante(c: Pick<Cas, "code">): TableauAComplet
 /** Le CMPC de NOVA, source par source, à compléter (poids, coûts et contributions en pour cent). */
 export function grilleDuCmpc(c: Pick<Cas, "code">): TableauACompleter {
   const x = coutsDuChapitre(c);
-  const l = x.cmpc.lignes;
+  // Chaque ligne à deux décimales : le poids arrondi, puis la contribution qui part de lui, puis leur somme.
+  const l = x.cmpc.lignes.map((s) => {
+    const poids = enPct(s.poids);
+    const cout = enPct(s.cout);
+    return { ...s, poids, cout, contribution: arrondi2((poids * cout) / 100) };
+  });
+  const cmpc = somme2(...l.map((s) => s.contribution));
   return {
     titre: "Le coût moyen pondéré du capital de NOVA",
     colonnes: ["Montant", "Poids", "Coût après impôt", "Contribution"],
-    tolerance: 0.02,
     lignes: [
       ...l.map((s) => ({
         libelle: s.libelle,
         cellules: [
           donnee(s.montant),
-          aSaisir(enPct(s.poids), `${eur(s.montant)} ÷ ${eur(x.cmpc.total)} = ${pct(s.poids)}`, { unite: "%", indice: "le montant de la source ÷ le total des sources" }),
-          donnee(enPct(s.cout), { unite: "%", horsTotal: true }),
-          aSaisir(enPct(s.contribution), `${pct(s.poids)} × ${pct(s.cout)} = ${pct(s.contribution)}`, { unite: "%", indice: "le poids × le coût après impôt" }),
+          aSaisir(s.poids, `${eur(s.montant)} ÷ ${eur(x.cmpc.total)} = ${enPoints(s.poids)}`, { unite: "%", indice: "le montant de la source ÷ le total des sources" }),
+          donnee(s.cout, { unite: "%", horsTotal: true }),
+          aSaisir(s.contribution, `${enPoints(s.poids)} × ${enPoints(s.cout)} = ${enPoints(s.contribution)}`, { unite: "%", indice: "le poids × le coût après impôt" }),
         ],
       })),
       {
@@ -194,7 +199,7 @@ export function grilleDuCmpc(c: Pick<Cas, "code">): TableauACompleter {
           aSaisir(x.cmpc.total, `${l.map((s) => eur(s.montant)).join(" + ")} = ${eur(x.cmpc.total)}`),
           donnee(100, { unite: "%" }),
           donnee(null),
-          aSaisir(auCentime(l.reduce((s, y) => s + enPct(y.contribution), 0)), `la somme des contributions : le CMPC, ${pct(x.cmpc.cmpc)}`, { unite: "%" }),
+          aSaisir(cmpc, `la somme des contributions : le CMPC, ${enPoints(cmpc)}`, { unite: "%" }),
         ],
       },
     ],
@@ -268,7 +273,7 @@ export const ARBITRER_LES_COUTS_DE_FINANCEMENT: Chapitre = {
         return [
           { libelle: "Intérêts d'une année, in fine", attendu: x.inFine.tableau.annees[0]!.interets, calcul: `${eur(x.e.montant)} × ${pct(x.e.taux)} = ${eur(x.inFine.tableau.annees[0]!.interets)}` },
           { libelle: "Total des intérêts, in fine", attendu: x.inFine.interets, calcul: `${x.e.dureeAns} × ${eur(x.inFine.tableau.annees[0]!.interets)} = ${eur(x.inFine.interets)}` },
-          { libelle: "Annuité constante", attendu: x.annuiteConstante, calcul: `${eur(x.e.montant)} × ${nb(x.e.taux)} ÷ (1 − ${nb(1 + x.e.taux)}^−${x.e.dureeAns}) = ${eur(x.annuiteConstante)}`, tolerance: 1 },
+          { libelle: "Annuité constante", attendu: x.annuiteConstante, calcul: `${eur(x.e.montant)} × ${nb(x.e.taux)} ÷ (1 − ${nb(1 + x.e.taux)}^−${x.e.dureeAns}) = ${eur(x.annuiteConstante)}` },
         ];
       },
       explication: (c) => {
@@ -338,7 +343,7 @@ export const ARBITRER_LES_COUTS_DE_FINANCEMENT: Chapitre = {
         const x = coutsDuChapitre(c);
         return [
           { libelle: "Coût après impôt, en %", attendu: enPct(x.apresImpot), calcul: `${pct(x.e.taux)} × (1 − ${pct(x.t)}) = ${pct(x.apresImpot)}`, tolerance: 0.01 },
-          { libelle: "Fonds reçus, frais déduits", attendu: auCentime(x.e.montant - FRAIS_DE_DOSSIER), calcul: `${eur(x.e.montant)} − ${eur(FRAIS_DE_DOSSIER)} = ${eur(auCentime(x.e.montant - FRAIS_DE_DOSSIER))}` },
+          { libelle: "Fonds reçus, frais déduits", attendu: arrondi2(x.e.montant - FRAIS_DE_DOSSIER), calcul: `${eur(x.e.montant)} − ${eur(FRAIS_DE_DOSSIER)} = ${eur(arrondi2(x.e.montant - FRAIS_DE_DOSSIER))}` },
         ];
       },
       explication: (c) => {
@@ -358,7 +363,7 @@ export const ARBITRER_LES_COUTS_DE_FINANCEMENT: Chapitre = {
       question: (c) => {
         const x = coutsDuChapitre(c);
         const o = x.obligataire;
-        return `À vous, sans formule cette fois. NOVA émet ${qte(o.titres)} obligations de ${eur(o.nominal / o.titres)} à ${eur(o.prixDEmission)}, coupon ${pct(o.tauxNominal)}, remboursées au pair dans ${o.dureeAns} ans ; les frais d'émission sont de ${eur(o.frais)}. Calculez les fonds nets reçus, le coupon annuel total, puis le coût actuariel avant impôt : il est entre ${pct(x.bas, 1)} et ${pct(x.haut, 1)}.`;
+        return `À vous, sans formule cette fois. NOVA émet ${qte(o.titres)} obligations de ${eur(o.nominal / o.titres)} à ${eur(o.prixDEmission)}, coupon ${pct(o.tauxNominal)}, remboursées au pair dans ${o.dureeAns} ans ; les frais d'émission sont de ${eur(o.frais)}. Calculez les fonds nets reçus, le coupon annuel total, puis le coût actuariel avant impôt : il est entre ${pct(x.bas)} et ${pct(x.haut)}.`;
       },
       champs: (c) => {
         const x = coutsDuChapitre(c);
@@ -371,8 +376,7 @@ export const ARBITRER_LES_COUTS_DE_FINANCEMENT: Chapitre = {
           {
             libelle: "Coût actuariel avant impôt, en %",
             attendu: enPct(x.interpole),
-            calcul: `à ${pct(x.bas, 1)} les coupons et le remboursement valent ${eur(a)}, à ${pct(x.haut, 1)} ${eur(b)} ; ${pct(x.bas, 1)} + 0,1 point × (${eur(a)} − ${eur(o.fondsNets)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`,
-            tolerance: 0.02,
+            calcul: `à ${pct(x.bas)} les coupons et le remboursement valent ${eur(a)}, à ${pct(x.haut)} ${eur(b)} ; ${pct(x.bas)} + 0,1 point × (${eur(a)} − ${eur(o.fondsNets)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`,
           },
         ];
       },
@@ -401,7 +405,7 @@ export const ARBITRER_LES_COUTS_DE_FINANCEMENT: Chapitre = {
         return [
           { libelle: "Charge étalée par an", attendu: o.chargeEtalee, calcul: `(${eur(o.prime)} + ${eur(o.frais)}) ÷ ${o.dureeAns} = ${eur(o.chargeEtalee)}` },
           { libelle: "Économie d'impôt annuelle", attendu: o.economie, calcul: `(${eur(o.coupons)} + ${eur(o.chargeEtalee)}) × ${pct(x.t)} = ${eur(o.economie)}` },
-          { libelle: "Décaissement net annuel", attendu: auCentime(o.coupons - o.economie), calcul: `${eur(o.coupons)} − ${eur(o.economie)} = ${eur(auCentime(o.coupons - o.economie))}` },
+          { libelle: "Décaissement net annuel", attendu: arrondi2(o.coupons - o.economie), calcul: `${eur(o.coupons)} − ${eur(o.economie)} = ${eur(arrondi2(o.coupons - o.economie))}` },
         ];
       },
       explication: (c) => {
@@ -579,7 +583,7 @@ export const ARBITRER_LES_COUTS_DE_FINANCEMENT: Chapitre = {
         const r = compromis(p.dette!, p.difficultes!);
         return [
           { libelle: "Économie d'impôt, en valeur actuelle", montant: r.economie },
-          { libelle: "Probabilité de défaillance", montant: auCentime(r.probabilite * 100), unite: "%" },
+          { libelle: "Probabilité de défaillance", montant: arrondi2(r.probabilite * 100), unite: "%" },
           { libelle: "Coût attendu des difficultés", montant: r.coutAttendu },
           { libelle: "Gain net de la dette", montant: r.gain, reference: 0, effet: true, fort: true },
           { libelle: "Valeur de NOVA", montant: r.valeur, reference: COMPROMIS.valeurSansDette },

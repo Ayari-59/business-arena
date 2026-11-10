@@ -13,6 +13,7 @@ import { corriger, enEcriture, enSaisie, montantEcrit } from "../../src/pedagogy
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 import { compteDeResultat, equilibree } from "../../src/pedagogy/cours/etats";
 import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 
 /**
  * REMISES ET RÈGLEMENTS, ET SON CAS : L'ESCOMPTE DEMANDÉ PAR LE CLIENT, DANS LES NEUF ENTREPRISES DU
@@ -330,10 +331,13 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
     const j = cas.venteCredit.delai - 10;
     const x = (0.12 * j) / 360;
     const t = x / (1 + x);
+    // Chaque ligne à deux décimales, comme sur la copie : le taux de la période, puis l'escompte qui part de lui.
+    const xEnPoints = arrondi2(x * 100);
+    const tEnPoints = arrondi2(xEnPoints / (1 + xEnPoints / 100));
     expect(attendus(ch, cas, "l-escompte-maximal")).toEqual({
-      "Coût du découvert sur la période, en %": centime(x * 100),
-      "Escompte le plus fort, en %": centime(t * 100),
-      "Escompte sur la facture, à ce taux arrondi": centime(v.nc * (Math.round(t * 10_000) / 10_000)),
+      "Coût du découvert sur la période, en %": xEnPoints,
+      "Escompte le plus fort, en %": tEnPoints,
+      "Escompte sur la facture, à ce taux arrondi": centime((v.nc * tEnPoints) / 100),
     });
     // L'escompte maximal paie exactement les intérêts du découvert sur le net financier.
     expect(v.nc * t).toBeCloseTo(v.nc * (1 - t) * x, 9);
@@ -404,11 +408,23 @@ describe("le cas : l'escompte demandé par le client", () => {
     const f = factureALaMain(c, c.venteCredit.quantite, 0.03);
     const r = c.pret.tauxAnnuel;
     const jours = c.venteCredit.delai - 10;
-    const periode = 0.03 / 0.97;
+    // Chaque taux à deux décimales, et la ligne suivante part de lui (deux-decimales.ts).
+    const periode = arrondi2((f.esc / f.nf) * 100) / 100;
     const x = (r * jours) / 360;
-    const plafond = x / (1 + x);
+    const xEnPoints = arrondi2(x * 100);
+    const plafond = arrondi2(xEnPoints / (1 + xEnPoints / 100)) / 100;
     const interets = centime((f.nf * r * jours) / 360);
-    return { f, jours, periode, annuel: (periode * 360) / jours, plafond, centiemes: Math.floor(plafond * 10_000 + 1e-9), necessaires: Math.ceil((periode * 360) / r - 1e-9), interets, surcout: centime(f.esc - interets) };
+    return {
+      f,
+      jours,
+      periode,
+      annuel: arrondi2((periode * 100 * 360) / jours) / 100,
+      plafond,
+      centiemes: Math.floor((x / (1 + x)) * 10_000 + 1e-9),
+      necessaires: Math.ceil(arrondi2((periode * 360) / r) - 1e-9),
+      interets,
+      surcout: centime(f.esc - interets),
+    };
   }
 
   it("est le cas dédié du chapitre, réservé comme lui, sans cours, et passé sur le monde du cours", () => {
@@ -437,8 +453,8 @@ describe("le cas : l'escompte demandé par le client", () => {
     expect(attendus(s, cas, "facture")).toEqual({ Remise: centime(k.f.brut * 0.05), "Net commercial": k.f.nc, Escompte: k.f.esc, "Net financier": k.f.nf, TVA: k.f.tva, "Net à payer": k.f.ttc });
     expect(attendus(s, cas, "cout")).toEqual({
       "Jours de paiement avancés": k.jours,
-      "Coût de l'escompte pour la période (%)": centime(k.periode * 100),
-      "Coût de l'escompte ramené à l'année (%)": centime(k.annuel * 100),
+      "Coût de l'escompte pour la période (%)": arrondi2(k.periode * 100),
+      "Coût de l'escompte ramené à l'année (%)": arrondi2(k.annuel * 100),
     });
     const x = (cas.pret.tauxAnnuel * k.jours) / 360;
     const esc = centime((k.f.nc * k.centiemes) / 10_000);
@@ -450,7 +466,7 @@ describe("le cas : l'escompte demandé par le client", () => {
       lecture: { "Escompte abandonné au client": esc, "Intérêts de l'emprunt sur le net financier": interets, "Gain du paiement rapide, face à l'emprunt": centime(interets - esc) },
     });
     expect(attendus(s, cas, "le-croisement")).toEqual({
-      "Escompte le plus fort que paie l'emprunt (%)": centime(k.plafond * 100),
+      "Escompte le plus fort que paie l'emprunt (%)": arrondi2(k.plafond * 100),
       "Jours d'avance qu'il faudrait": k.necessaires,
       "Surcoût de l'escompte demandé, sur cette facture": k.surcout,
     });
@@ -468,8 +484,8 @@ describe("le cas : l'escompte demandé par le client", () => {
     const cas = casDeLEntreprise("nova");
     const k = escompte(cas);
     expect([k.f.esc, k.f.nf, k.f.tva, k.f.ttc]).toEqual([538.08, 17_397.92, 3_479.58, 20_877.5]);
-    expect([k.jours, centime(k.periode * 100), centime(k.annuel * 100), k.centiemes, k.necessaires, k.surcout]).toEqual([70, 3.09, 15.91, 96, 223, 368.93]);
-    expect(juste(s, cas, "reponse")).toBe("Ne le généralisons pas : 15,9 % par an, contre 5 % pour l'emprunt");
+    expect([k.jours, centime(k.periode * 100), centime(k.annuel * 100), k.centiemes, k.necessaires, k.surcout]).toEqual([70, 3.09, 15.89, 96, 223, 368.93]);
+    expect(juste(s, cas, "reponse")).toBe("Ne le généralisons pas : 15,89 % par an, contre 5 % pour l'emprunt");
     const demande = s.etapes[0]!;
     if (demande.type !== "lecture") throw new Error("la demande est une lecture");
     expect(demande.texte(cas)[0]).toContain("CampusTech paie à 80 jours, 20 jours au-delà des 60 jours convenus");

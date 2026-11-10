@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { PieceDuBureau } from "../bureaux/types";
 import { EXERCICE_DE_NOVA } from "../monde/exercice-de-nova";
@@ -25,8 +25,8 @@ import type { Enquete } from "./types";
 
 const f = EXERCICE_DE_NOVA;
 const n = noteDeLAnalyste();
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number, chiffres = 2) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`.replace(/^-/, "−");
+/** Un taux donné en fraction (0,05), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const nombre = (x: number, chiffres = 2) => (x + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−");
 const JOUR = "6 janvier N+2";
 
@@ -106,8 +106,8 @@ const POURQUOI: Readonly<Record<CodeDeLAffirmation, string>> = {
   rendement: `Faux : ${eur(n.coupon)} ÷ ${eur(COURS_AFFICHE)} est le rendement courant. Le rendement actuariel compte aussi le nominal rendu à ${eur(OBLIGATION_VERTE.nominal)} : ${pct(n.rendementActuariel)}.`,
   action: `Juste : ${eur(ACTION.dividende)} ÷ (${pct(n.exigee)} − ${pct(ACTION.croissance)}) = ${eur(n.coursDeLAction)}.`,
   hausse: `Faux : une exigence plus haute fait baisser le cours : ${eur(ACTION.dividende)} ÷ (${pct(n.exigee + HAUSSE_DES_TAUX)} − ${pct(ACTION.croissance)}) = ${eur(n.apresLaHausse)}.`,
-  esperance: `Juste : ${n.risque.lignes.map((l) => `${nombre(l.probabilite)} × ${l.r < 0 ? `(${nombre(l.r)})` : nombre(l.r)}`).join(" + ")} = ${nombre(n.risque.esperance)} %.`,
-  risque: `Faux : ${nombre(n.risque.variance)} est la variance, en points au carré. L'écart-type en est la racine : ${nombre(n.ecartType)} points.`,
+  esperance: `Juste : ${n.risque.lignes.map((l) => `${nombre(l.probabilite)} × ${l.r < 0 ? `(${nombreAuCentieme(l.r)})` : nombreAuCentieme(l.r)}`).join(" + ")} = ${nombreAuCentieme(n.risque.esperance)} %.`,
+  risque: `Faux : ${nombreAuCentieme(n.risque.variance)} est la variance, en points au carré. L'écart-type en est la racine : ${nombreAuCentieme(n.ecartType)} points.`,
   diversifier: "Faux : la diversification efface le risque propre à l'entreprise, pas le risque de marché, celui que mesure le bêta.",
 };
 
@@ -126,17 +126,17 @@ export function grilleDesChiffresJustes(): TableauACompleter {
       { libelle: "Coupon annuel de l'obligation", cellules: [saisir(n.coupon, `${eur(OBLIGATION_VERTE.nominal)} × ${pct(OBLIGATION_VERTE.tauxNominal)} = ${eur(n.coupon)}`, "le taux nominal, sur le nominal")] },
       {
         libelle: `Cours de l'obligation au taux du marché, ${pct(UN_AN_PLUS_TARD.tauxEnHausse)}`,
-        cellules: [saisir(n.coursAuTauxDuMarche, `${eur(n.coupon)} × (1 − ${nombre(1 + UN_AN_PLUS_TARD.tauxEnHausse)}^−${UN_AN_PLUS_TARD.dureeRestante}) ÷ ${nombre(UN_AN_PLUS_TARD.tauxEnHausse)} + ${eur(OBLIGATION_VERTE.nominal)} × ${nombre(1 + UN_AN_PLUS_TARD.tauxEnHausse)}^−${UN_AN_PLUS_TARD.dureeRestante} = ${eur(n.coursAuTauxDuMarche)}`, "les coupons et le nominal qui restent, actualisés au taux du marché", undefined, 1)],
+        cellules: [saisir(n.coursAuTauxDuMarche, `${eur(n.coupon)} × (1 − ${nombre(1 + UN_AN_PLUS_TARD.tauxEnHausse)}^−${UN_AN_PLUS_TARD.dureeRestante}) ÷ ${nombre(UN_AN_PLUS_TARD.tauxEnHausse)} + ${eur(OBLIGATION_VERTE.nominal)} × ${nombre(1 + UN_AN_PLUS_TARD.tauxEnHausse)}^−${UN_AN_PLUS_TARD.dureeRestante} = ${eur(n.coursAuTauxDuMarche)}`, "les coupons et le nominal qui restent, actualisés au taux du marché")],
       },
       {
         libelle: `Rendement actuariel à ${eur(COURS_AFFICHE)}, en %`,
-        cellules: [saisir(n.rendementActuarielEnPourcent, `le taux qui égale ${eur(COURS_AFFICHE)} et les flux qui restent : ${pct(n.rendementActuariel)}`, "le taux qui fait valoir aux flux le cours payé", "%", 0.05)],
+        cellules: [saisir(n.rendementActuarielEnPourcent, `le taux qui égale ${eur(COURS_AFFICHE)} et les flux qui restent : ${pct(n.rendementActuariel)}`, "le taux qui fait valoir aux flux le cours payé", "%")],
       },
       {
         libelle: "Cours de l'action après la hausse des taux",
         cellules: [saisir(n.apresLaHausse, `${eur(ACTION.dividende)} ÷ (${pct(n.exigee + HAUSSE_DES_TAUX)} − ${pct(ACTION.croissance)}) = ${eur(n.apresLaHausse)}`, "le dividende, sur l'exigence plus haute moins la croissance", undefined, 0.01)],
       },
-      { libelle: "Écart-type de la rentabilité, en points", cellules: [saisir(n.ecartTypeArrondi, `√${nombre(n.risque.variance)} = ${nombre(n.ecartType)}`, "la racine de la variance", "points", 0.01)] },
+      { libelle: "Écart-type de la rentabilité, en points", cellules: [saisir(n.ecartTypeArrondi, `√${nombreAuCentieme(n.risque.variance)} = ${nombreAuCentieme(n.ecartType)}`, "la racine de la variance", "points", 0.01)] },
     ],
   };
 }
@@ -191,7 +191,7 @@ export const LA_NOTE_DE_L_ANALYSTE: Enquete = {
       grille: grilleDesChiffresJustes(),
       explication: [
         `L'obligation vaut ${eur(n.coursAuTauxDuMarche)} au taux du marché ; à ${eur(COURS_AFFICHE)}, elle rapporte ${pct(n.rendementActuariel)} jusqu'à l'échéance, plus que ses ${pct(n.rendementCourant)} de rendement courant.`,
-        `L'action perd ${eur(n.coursDeLAction - n.apresLaHausse)} si les taux montent de ${nombre(HAUSSE_DES_TAUX * 100)} point ; sa rentabilité s'écarte de ${nombre(n.ecartType)} points en moyenne de ses ${nombre(n.risque.esperance)} % attendus.`,
+        `L'action perd ${eur(n.coursDeLAction - n.apresLaHausse)} si les taux montent de ${nombre(HAUSSE_DES_TAUX * 100)} point ; sa rentabilité s'écarte de ${nombreAuCentieme(n.ecartType)} points en moyenne de ses ${nombreAuCentieme(n.risque.esperance)} % attendus.`,
       ],
     },
     {
@@ -223,9 +223,9 @@ export const LA_NOTE_DE_L_ANALYSTE: Enquete = {
           id: "le-risque",
           question: "Le président veut placer une réserve dont il aura besoin. Que lui dites-vous du risque de l'action ?",
           options: [
-            { texte: `Sa rentabilité peut tomber à ${nombre(n.risque.pire)} %`, juste: true, retour: `Oui : une année de récession, elle perd ${nombre(-n.risque.pire)} %. Son écart-type, ${nombre(n.ecartType)} points, dit que ses ${nombre(n.risque.esperance)} % ne sont qu'une moyenne. Une réserve dont on aura besoin va plutôt au compte à terme.` },
+            { texte: `Sa rentabilité peut tomber à ${nombreAuCentieme(n.risque.pire)} %`, juste: true, retour: `Oui : une année de récession, elle perd ${nombreAuCentieme(-n.risque.pire)} %. Son écart-type, ${nombreAuCentieme(n.ecartType)} points, dit que ses ${nombreAuCentieme(n.risque.esperance)} % ne sont qu'une moyenne. Une réserve dont on aura besoin va plutôt au compte à terme.` },
             { texte: "Aucun, si NOVA achète aussi d'autres actions pour diversifier son placement", juste: false, retour: "Non : la diversification efface le risque propre à l'entreprise, pas celui du marché." },
-            { texte: `Le même que le compte à terme, puisqu'elle rapporte ${nombre(n.risque.esperance)} % en moyenne`, juste: false, retour: `Non : le compte à terme rapporte ${pct(PLACEMENT_SANS_RISQUE)} à coup sûr ; l'action, ${nombre(n.risque.esperance)} % en moyenne seulement, avec un écart-type de ${nombre(n.ecartType)} points.` },
+            { texte: `Le même que le compte à terme, puisqu'elle rapporte ${nombreAuCentieme(n.risque.esperance)} % en moyenne`, juste: false, retour: `Non : le compte à terme rapporte ${pct(PLACEMENT_SANS_RISQUE)} à coup sûr ; l'action, ${nombreAuCentieme(n.risque.esperance)} % en moyenne seulement, avec un écart-type de ${nombreAuCentieme(n.ecartType)} points.` },
           ],
         },
       ],

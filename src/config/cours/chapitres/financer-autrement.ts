@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CAPACITE_DE_REMBOURSEMENT_MAXIMALE, INDEPENDANCE_MINIMALE } from "../financement";
 import { auCentime } from "../monde/amortissement";
@@ -54,12 +54,8 @@ export const LEVIERS_DU_PLAN = {
 /** La solution que montre la correction : 40 000 € en compte courant, 30 000 € de prêt participatif, 50 000 € à la banque. */
 export const SOLUTION_DU_PLAN = { compteCourant: 40_000, participatif: 30_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const ans = (x: number) => `${qte(x)} ${x < 2 ? "an" : "ans"}`;
+const ans = (x: number) => `${nombreAuCentieme(x)} ${x < 2 ? "an" : "ans"}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les parts de capital dues chaque année d'un prêt en parts égales : « 5 + 4 + 3 + 2 + 1 ». */
@@ -381,25 +377,25 @@ export const FINANCER_AUTREMENT: Chapitre = {
       notions: ["balance_sheet", "frng"],
       question: (c) => {
         const k = financerAutrement(c);
-        return `Quel que soit le partage, ${k.entreprise} devra ${eur(k.aFinancer)} de plus : le compte courant, le prêt participatif et le prêt bancaire sont des dettes financières. La subvention, elle, rejoint les capitaux propres. Calculez les dettes financières après le plan, la capacité de remboursement au centième, puis l'indépendance financière en pourcentage, au dixième.`;
+        return `Quel que soit le partage, ${k.entreprise} devra ${eur(k.aFinancer)} de plus : le compte courant, le prêt participatif et le prêt bancaire sont des dettes financières. La subvention, elle, rejoint les capitaux propres. Calculez les dettes financières après le plan, la capacité de remboursement au centième, puis l'indépendance financière en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const k = financerAutrement(c);
-        const capacite = auCentieme(k.capaciteDeRemboursement);
-        const independance = auDixieme(k.independance * 100);
+        const capacite = arrondi2(k.capaciteDeRemboursement);
+        const independance = arrondi2(k.independance * 100);
         return [
           { libelle: "Dettes financières après le plan", attendu: k.dettesFinancieres, calcul: `${eur(k.dettesAvant)} + ${eur(k.aFinancer)} = ${eur(k.dettesFinancieres)}` },
-          { libelle: "Capacité de remboursement (années)", attendu: capacite, calcul: `${eur(k.dettesFinancieres)} ÷ ${eur(k.caf)} = ${qte(capacite)}`, tolerance: 0.01 },
-          { libelle: "Indépendance financière (%)", attendu: independance, calcul: `${eur(k.capitauxPropres)} ÷ ${eur(k.ressourcesDurables)} = ${pct(independance)}`, tolerance: 0.1 },
+          { libelle: "Capacité de remboursement (années)", nature: "grandeur", attendu: capacite, calcul: `${eur(k.dettesFinancieres)} ÷ ${eur(k.caf)} = ${nombreAuCentieme(capacite)}` },
+          { libelle: "Indépendance financière (%)", attendu: independance, calcul: `${eur(k.capitauxPropres)} ÷ ${eur(k.ressourcesDurables)} = ${pct(independance)}` },
         ];
       },
       explication: (c) => {
         const k = financerAutrement(c);
-        const capacite = auCentieme(k.capaciteDeRemboursement);
+        const capacite = arrondi2(k.capaciteDeRemboursement);
         const tenu = capacite <= CAPACITE_DE_REMBOURSEMENT_MAXIMALE && k.independance >= INDEPENDANCE_MINIMALE;
         return [
-          `${ans(capacite)} de capacité d'autofinancement et ${pct(auDixieme(k.independance * 100))} de capitaux propres : ${tenu ? "les deux règles des banques sont tenues" : "une règle des banques n'est pas tenue"}.`,
-          `La subvention y est pour beaucoup. Sans elle, tout emprunté, l'indépendance tomberait à ${pct(auDixieme(k.independanceSansSubvention * 100))}, sous la moitié. Une source qui ne se rembourse pas allège aussi le bilan.`,
+          `${ans(capacite)} de capacité d'autofinancement et ${pct(arrondi2(k.independance * 100))} de capitaux propres : ${tenu ? "les deux règles des banques sont tenues" : "une règle des banques n'est pas tenue"}.`,
+          `La subvention y est pour beaucoup. Sans elle, tout emprunté, l'indépendance tomberait à ${pct(arrondi2(k.independanceSansSubvention * 100))}, sous la moitié. Une source qui ne se rembourse pas allège aussi le bilan.`,
         ];
       },
     },

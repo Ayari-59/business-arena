@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { CHANTIER_ARPEGE, COUTS_DU_LABORATOIRE, COUT_REESTIME, RESULTAT_CHERCHE, contratALAvancement } from "../monde/comptabilite-approfondie";
 import type { Chapitre } from "../types";
 
@@ -15,8 +15,8 @@ import type { Chapitre } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule (monde/comptabilite-approfondie.ts).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10_000) / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const k = CHANTIER_ARPEGE;
 
 export const LES_CONTRATS_A_LONG_TERME: Chapitre = {
@@ -141,8 +141,8 @@ export const LES_CONTRATS_A_LONG_TERME: Chapitre = {
         const a = contratALAvancement(k.coutsEngages, COUT_REESTIME);
         return [
           { libelle: "Perte à terminaison", attendu: -a.resultatTotal, calcul: `${eur(COUT_REESTIME)} − ${eur(a.prix)} = ${eur(-a.resultatTotal)}` },
-          { libelle: "Résultat à l'avancement", attendu: a.resultatALAvancement, calcul: `${eur(a.prix)} × ${eur(a.coutsEngages)} ÷ ${eur(COUT_REESTIME)} − ${eur(a.coutsEngages)} = ${eur(a.resultatALAvancement)}`, tolerance: 1 },
-          { libelle: "Provision pour perte à terminaison", attendu: a.provisionPourPerte, calcul: `${eur(-a.resultatTotal)} − ${eur(-a.resultatALAvancement)} = ${eur(a.provisionPourPerte)}`, tolerance: 1 },
+          { libelle: "Résultat à l'avancement", attendu: a.resultatALAvancement, calcul: `${eur(a.prix)} × ${eur(a.coutsEngages)} ÷ ${eur(COUT_REESTIME)} − ${eur(a.coutsEngages)} = ${eur(a.resultatALAvancement)}` },
+          { libelle: "Provision pour perte à terminaison", attendu: a.provisionPourPerte, calcul: `${eur(-a.resultatTotal)} − ${eur(-a.resultatALAvancement)} = ${eur(a.provisionPourPerte)}` },
         ];
       },
       explication: () => {

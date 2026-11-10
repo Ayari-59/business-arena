@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_SOLDES, anneeDeNova, soldesDeNova } from "../../chapitres/soldes-intermediaires";
 import { auCentime } from "../../monde/amortissement";
@@ -35,9 +35,7 @@ export const PERTE_DE_RESULTAT_TOLEREE = 2_000;
 /** Les bornes du curseur du taux, en % entiers : du taux d'aujourd'hui à 12 %. */
 export const TAUX_DU_CURSEUR = { min: 5, max: 12 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${qte(x)} %`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type Verdict = "acceptable" | "trop-cher";
@@ -58,8 +56,9 @@ export function tauxQuiMonte(c: Pick<Cas, "code">) {
   const parPointExact = x.interetsDeLEmprunt / (taux * 100);
   const hausseDInteretsTolere = auCentime(PERTE_DE_RESULTAT_TOLEREE / (1 - tauxMarginal));
   const pointsToleresExact = PERTE_DE_RESULTAT_TOLEREE / (1 - tauxMarginal) / parPointExact;
-  const pointsToleres = auCentime(pointsToleresExact);
-  const tauxLimite = auCentime(taux * 100 + pointsToleresExact);
+  // Chaque ligne à deux décimales, comme sur la copie : les points partent de la hausse et du coût d'un point arrondis.
+  const pointsToleres = auCentime(hausseDInteretsTolere / parPoint);
+  const tauxLimite = auCentime(taux * 100 + pointsToleres);
   const verdict: Verdict = nouveauTaux * 100 <= tauxLimite && perteDeResultat <= PERTE_DE_RESULTAT_TOLEREE ? "acceptable" : "trop-cher";
   return {
     x,
@@ -181,7 +180,7 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
       notions: ["loan_schedule", "income_statement"],
       question: (c) => {
         const t = tauxQuiMonte(c);
-        return `Le capital dû ne change pas : chaque échéance paie les intérêts du trimestre sur le capital restant dû, au taux de ${pct(t.nouveauTaux * 100)} ÷ 4. Calculez les intérêts de l'emprunt de l'exercice au nouveau taux (les ${qte(t.emprunt.echeances.length)} échéances payées et les intérêts courus au 31 décembre), puis le résultat courant avant impôt, l'impôt sur les sociétés, le résultat net et la capacité d'autofinancement qui en découlent.`;
+        return `Le capital dû ne change pas : chaque échéance paie les intérêts du trimestre sur le capital restant dû, au taux de ${pct(t.nouveauTaux * 100)} ÷ 4. Calculez les intérêts de l'emprunt de l'exercice au nouveau taux (les ${qte(t.emprunt.echeances.length)} échéances payées et les intérêts courus au 31 décembre), puis le résultat courant avant impôt, l'impôt sur les sociétés (arrondi à l'euro, comme sur la déclaration), le résultat net et la capacité d'autofinancement qui en découlent.`;
       },
       champs: (c) => {
         const t = tauxQuiMonte(c);
@@ -195,22 +194,19 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
             libelle: "Intérêts de l'emprunt au nouveau taux",
             attendu: a.interets,
             calcul: `(${capitaux}) × ${pct(t.nouveauTaux * 100)} ÷ 4 = ${eur(e.interetsPayes)} payés, + ${qte(i.echeanceSuivante!.capitalDebut)} × ${pct(t.nouveauTaux * 100)} ÷ 4 × ${qte(i.jours)} ÷ ${qte(i.joursDeLaPeriode)} = ${eur(i.montant)} courus : ${eur(a.interets)}`,
-            tolerance: 1,
           },
           {
             libelle: "Résultat courant avant impôt",
             attendu: a.sig.resultatCourantAvantImpot,
             calcul: `${eur(x.sig.resultatCourantAvantImpot)} − ${eur(t.surcout)} d'intérêts en plus = ${eur(a.sig.resultatCourantAvantImpot)}`,
-            tolerance: 1,
           },
           {
             libelle: "Impôt sur les sociétés",
             attendu: a.impot,
             calcul: `${eur(x.f.impot.plafondDuTauxReduit)} × ${pct(x.f.impot.tauxReduit * 100)} + (${eur(a.sig.resultatCourantAvantImpot)} − ${eur(x.f.impot.plafondDuTauxReduit)}) × ${pct(t.tauxMarginal * 100)}, arrondi à l'euro = ${eur(a.impot)}`,
-            tolerance: 1,
           },
-          { libelle: "Résultat net", attendu: a.sig.resultatNet, calcul: `${eur(a.sig.resultatCourantAvantImpot)} − ${eur(a.impot)} = ${eur(a.sig.resultatNet)}`, tolerance: 1 },
-          { libelle: "Capacité d'autofinancement", attendu: a.caf.additive, calcul: `${eur(a.sig.resultatNet)} + ${eur(a.caf.dotations)} de dotations = ${eur(a.caf.additive)}`, tolerance: 1 },
+          { libelle: "Résultat net", attendu: a.sig.resultatNet, calcul: `${eur(a.sig.resultatCourantAvantImpot)} − ${eur(a.impot)} = ${eur(a.sig.resultatNet)}` },
+          { libelle: "Capacité d'autofinancement", attendu: a.caf.additive, calcul: `${eur(a.sig.resultatNet)} + ${eur(a.caf.dotations)} de dotations = ${eur(a.caf.additive)}` },
         ];
       },
       explication: (c) => {
@@ -307,15 +303,15 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
             libelle: "Hausse d'intérêts qui coûte le seuil de résultat net",
             attendu: t.hausseDInteretsTolere,
             calcul: `${eur(PERTE_DE_RESULTAT_TOLEREE)} ÷ (1 − ${pct(t.tauxMarginal * 100)}) = ${eur(t.hausseDInteretsTolere)}`,
-            tolerance: 0.5,
           },
           {
             libelle: "Hausse du taux supportable, en points",
+            nature: "grandeur",
             attendu: t.pointsToleres,
-            calcul: `${eur(t.hausseDInteretsTolere)} ÷ ${eur(t.parPoint)} par point (${eur(t.x.interetsDeLEmprunt)} ÷ ${qte(t.taux * 100)}) = ${qte(t.pointsToleres)} points`,
+            calcul: `${eur(t.hausseDInteretsTolere)} ÷ ${eur(t.parPoint)} par point (${eur(t.x.interetsDeLEmprunt)} ÷ ${qte(t.taux * 100)}) = ${nombreAuCentieme(t.pointsToleres)} points`,
             tolerance: 0.01,
           },
-          { libelle: "Taux le plus haut acceptable (%)", attendu: t.tauxLimite, calcul: `${pct(t.taux * 100)} + ${qte(t.pointsToleres)} points = ${pct(t.tauxLimite)}`, tolerance: 0.01 },
+          { libelle: "Taux le plus haut acceptable (%)", attendu: t.tauxLimite, calcul: `${pct(t.taux * 100)} + ${nombreAuCentieme(t.pointsToleres)} points = ${pct(t.tauxLimite)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {

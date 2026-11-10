@@ -1,8 +1,8 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi, eur } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { dateDuCours as date } from "../../dates";
 import { TAUX_DE_LA_PAIE } from "../../monde/exercice-de-nova";
-import { brutPourUnNetAPayer, bulletinDePaie, coefficientDuBrutAuNet } from "../../monde/paie";
+import { brutPourUnNetAPayer, bulletinDePaie, cheminDuNetAuBrut, coefficientDuBrutAuNet } from "../../monde/paie";
 import type { Situation } from "../types";
 
 /**
@@ -41,9 +41,12 @@ const JOUR_DE_LA_PAIE = 59;
 const JOUR_DES_ORGANISMES = 74;
 
 const T = TAUX_DE_LA_PAIE;
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} %`;
+/** Un taux de la paie, donné en fraction, en pourcentage : deux décimales au moins s'il n'est pas entier, trois s'il les a (un taux donné garde sa précision). */
+const pct = (t: number) => {
+  const p = arrondi(t * 100, 3);
+  return `${p.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(p) ? 0 : 2, maximumFractionDigits: 3 })} %`;
+};
 const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
 const tauxPropre = (t: number) => Math.round(t * 1e6) / 1e6;
 
@@ -149,7 +152,7 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
       titre: "Du net promis au coût",
       notions: ["payroll", "fixed_costs"],
       question: () =>
-        `Pour un salarié : ce qu'il touche net pour ${eur(100)} bruts, la prime brute qui lui verse les ${eur(PRIME_NETTE_PROMISE)} promis, puis ce qu'elle coûte à l'entreprise.`,
+        `Pour un salarié : ce qu'il touche net pour ${eur(100)} bruts, la plus petite prime brute, au centime, dont le bulletin lui verse les ${eur(PRIME_NETTE_PROMISE)} promis, puis ce qu'elle coûte à l'entreprise.`,
       champs: (c) => {
         const k = primeExceptionnelle(c);
         return [
@@ -161,14 +164,12 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
           {
             libelle: "Prime brute par salarié",
             attendu: k.brutParSalarie,
-            tolerance: 0.05,
-            calcul: `${eur(PRIME_NETTE_PROMISE)} ÷ ${qte(k.netPour100)} % = ${eur(auCentime(PRIME_NETTE_PROMISE / (k.netPour100 / 100)))} ; au centime près, le bulletin de ${eur(k.brutParSalarie)} verse ${eur(k.parSalarie.netAPayer)}`,
+            calcul: cheminDuNetAuBrut(PRIME_NETTE_PROMISE, T, k.netPour100).calcul,
           },
           {
             libelle: "Coût employeur par salarié",
             attendu: k.coutParSalarie,
-            tolerance: 0.1,
-            calcul: `${eur(k.brutParSalarie)} × (1 + ${pct(k.tauxPatronal)}) = ${eur(k.coutParSalarie)}`,
+            calcul: `${eur(k.brutParSalarie)} + ${eur(k.parSalarie.cotisationsPatronales.urssaf)} de cotisations patronales URSSAF (${pct(T.patronalUrssaf)}) + ${eur(k.parSalarie.cotisationsPatronales.retraite)} de retraite (${pct(T.patronalRetraite)}) = ${eur(k.coutParSalarie)}`,
           },
         ];
       },

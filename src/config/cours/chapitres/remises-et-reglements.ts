@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, partDe2, pct as enPoints, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { dateDuCours as date } from "../dates";
@@ -79,9 +79,9 @@ export const RABAIS_DE_LA_VARIANTE = 0.03;
 // LES OUTILS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
-const pct = (t: number, d = 2) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
+/** Un taux donné en fraction (0,02), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** Un pourcentage du laboratoire, en points (5 pour 5 %), arrondi au dixième pour éviter les restes de virgule. */
 const aDixieme = (x: number) => Math.round(x * 10) / 10;
 
@@ -127,6 +127,8 @@ export function factureDAchat(c: Cas) {
     ttc: auCentime(netFinancier + tva),
     joursGagnes,
     tauxAnnuel,
+    /** Le même, à deux décimales, depuis les montants arrondis de la facture : le calcul de l'élève. */
+    tauxAnnuelEnPoints: arrondi2((escompte / netFinancier) * (JOURS_PAR_AN / joursGagnes) * 100),
     vautLaPeine: tauxAnnuel > c.pret.tauxAnnuel,
     interetsDesJoursGagnes: coutDeLAvance(netFinancier, c.pret.tauxAnnuel, joursGagnes),
     joursQuePaieLEscompte,
@@ -176,11 +178,22 @@ export function laboratoireDeLEscompte(c: Cas, p: PositionDeLEscompte) {
 /** L'escompte le plus fort qu'on peut accorder face à un découvert, en formule, pour la formalisation. */
 export function escompteMaximalDuClient(c: Cas) {
   const v = factureDeVente(c);
-  const periode = (TAUX_DU_DECOUVERT * v.joursAvances) / JOURS_PAR_AN;
-  const maximal = escompteMaximal(TAUX_DU_DECOUVERT, v.joursAvances);
-  const auCentieme = Math.round(maximal * 10_000) / 10_000;
-  return { periode, maximal, auCentieme, montant: auCentime(v.netCommercial * auCentieme) };
+  // Chaque ligne à deux décimales, comme sur la copie : le taux de la période, puis l'escompte qui part de lui.
+  const periodeEnPoints = arrondi2((TAUX_DU_DECOUVERT * v.joursAvances * 100) / JOURS_PAR_AN);
+  const maximalEnPoints = arrondi2(periodeEnPoints / (1 + periodeEnPoints / 100));
+  const auCentieme = maximalEnPoints / 100;
+  return { periode: periodeEnPoints / 100, maximal: auCentieme, periodeEnPoints, maximalEnPoints, auCentieme, montant: partDe2(v.netCommercial, maximalEnPoints) };
 }
+
+/**
+ * Une ligne du calcul à rebours : « 1 792,17 € ÷ 0,98 = 1 828,75 € ». Quand la division du montant
+ * arrondi tombe un centime à côté de la facture, le corrigé le dit : l'écart d'un centime est admis.
+ */
+const aRebours = (depart: number, diviseur: number, facture: number) => {
+  const calcule = quotient2(depart, diviseur);
+  const ligne = `${eur(depart)} ÷ ${diviseur.toLocaleString("fr-FR")} = ${eur(calcule)}`;
+  return calcule === facture ? ligne : `${ligne}, à un centime de la facture, qui porte ${eur(facture)}`;
+};
 
 /** La deuxième commande, aux mêmes conditions : ce que le client a payé, et tout ce qu'on en remonte. */
 export function deuxiemeCommande(c: Cas) {
@@ -218,7 +231,7 @@ function tableauDeLaVente(c: Cas): TableauDeDonnees {
       { libelle: `${qte(c.venteCredit.quantite)} ${c.unites} à ${eur(c.venteCredit.prixUnitaire)} hors taxes`, valeurs: [eur(c.venteCredit.ht)] },
       { libelle: "Remise sur la commande", valeurs: [pct(TAUX_DE_REMISE)] },
       { libelle: `Escompte pour un paiement sous ${qte(JOURS_D_ESCOMPTE)} jours`, valeurs: [pct(TAUX_D_ESCOMPTE)] },
-      { libelle: "Taux de TVA", valeurs: [pct(c.venteCredit.tauxTva, 1)] },
+      { libelle: "Taux de TVA", valeurs: [pct(c.venteCredit.tauxTva)] },
       { libelle: "Délai de paiement convenu", valeurs: [`${qte(d.convenu)} jours`] },
       { libelle: "Délai de paiement constaté", valeurs: [d.retard > 0 ? `${qte(d.reel)} jours, en retard de ${qte(d.retard)} jours sur les ${qte(d.convenu)} convenus` : `${qte(d.reel)} jours`] },
     ],
@@ -276,7 +289,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
       notions: ["payment_terms", "vat_payable"],
       question: (c) => {
         const f = factureDeVente(c);
-        return `${qte(c.venteCredit.quantite)} ${c.unites} à ${eur(c.venteCredit.prixUnitaire)} : ${eur(f.brut)} hors taxes, avant réductions. Remise de ${pct(TAUX_DE_REMISE)}, escompte de ${pct(TAUX_D_ESCOMPTE)}, TVA à ${pct(f.tauxTva, 1)}. Établissez la facture.`;
+        return `${qte(c.venteCredit.quantite)} ${c.unites} à ${eur(c.venteCredit.prixUnitaire)} : ${eur(f.brut)} hors taxes, avant réductions. Remise de ${pct(TAUX_DE_REMISE)}, escompte de ${pct(TAUX_D_ESCOMPTE)}, TVA à ${pct(f.tauxTva)}. Établissez la facture.`;
       },
       champs: (c) => {
         const f = factureDeVente(c);
@@ -285,7 +298,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
           { libelle: "Net commercial", attendu: f.netCommercial, calcul: `${eur(f.brut)} − ${eur(f.remise)} = ${eur(f.netCommercial)}` },
           { libelle: "Escompte", attendu: f.escompte, calcul: `${eur(f.netCommercial)} × ${pct(TAUX_D_ESCOMPTE)} = ${eur(f.escompte)}` },
           { libelle: "Net financier", attendu: f.netFinancier, calcul: `${eur(f.netCommercial)} − ${eur(f.escompte)} = ${eur(f.netFinancier)}` },
-          { libelle: "TVA", attendu: f.tva, calcul: `${eur(f.netFinancier)} × ${pct(f.tauxTva, 1)} = ${eur(f.tva)}` },
+          { libelle: "TVA", attendu: f.tva, calcul: `${eur(f.netFinancier)} × ${pct(f.tauxTva)} = ${eur(f.tva)}` },
           { libelle: "Net à payer", attendu: f.ttc, calcul: `${eur(f.netFinancier)} + ${eur(f.tva)} = ${eur(f.ttc)}` },
         ];
       },
@@ -463,12 +476,11 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         return [
           { libelle: "Escompte obtenu", attendu: f.escompte, calcul: `${eur(f.netCommercial)} × ${pct(TAUX_D_ESCOMPTE)} = ${eur(f.escompte)}` },
           { libelle: "Net financier à payer, hors taxes", attendu: f.netFinancier, calcul: `${eur(f.netCommercial)} − ${eur(f.escompte)} = ${eur(f.netFinancier)}` },
-          { libelle: "Jours de paiement avancés", attendu: f.joursGagnes, calcul: `${qte(c.achat.delai)} − ${qte(JOURS_D_ESCOMPTE)} = ${qte(f.joursGagnes)} jours` },
+          { libelle: "Jours de paiement avancés", nature: "quantite", attendu: f.joursGagnes, calcul: `${qte(c.achat.delai)} − ${qte(JOURS_D_ESCOMPTE)} = ${qte(f.joursGagnes)} jours` },
           {
             libelle: "Taux annuel de l'escompte, en %",
-            attendu: auCentime(f.tauxAnnuel * 100),
-            calcul: `${eur(f.escompte)} ÷ ${eur(f.netFinancier)} × ${qte(JOURS_PAR_AN)} ÷ ${qte(f.joursGagnes)} = ${pct(f.tauxAnnuel)} : l'escompte rapporté à l'argent avancé, puis à l'année`,
-            tolerance: 0.1,
+            attendu: f.tauxAnnuelEnPoints,
+            calcul: `${eur(f.escompte)} ÷ ${eur(f.netFinancier)} × ${qte(JOURS_PAR_AN)} ÷ ${qte(f.joursGagnes)} = ${enPoints(f.tauxAnnuelEnPoints)} : l'escompte rapporté à l'argent avancé, puis à l'année`,
           },
         ];
       },
@@ -684,15 +696,13 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         return [
           {
             libelle: "Coût du découvert sur la période, en %",
-            attendu: auCentime(m.periode * 100),
-            tolerance: 0.01,
-            calcul: `${pct(TAUX_DU_DECOUVERT)} × ${qte(v.joursAvances)} ÷ ${qte(JOURS_PAR_AN)} = ${pct(m.periode, 4)}`,
+            attendu: m.periodeEnPoints,
+            calcul: `${pct(TAUX_DU_DECOUVERT)} × ${qte(v.joursAvances)} ÷ ${qte(JOURS_PAR_AN)} = ${enPoints(m.periodeEnPoints)}`,
           },
           {
             libelle: "Escompte le plus fort, en %",
-            attendu: auCentime(m.maximal * 100),
-            tolerance: 0.01,
-            calcul: `t ≤ (1 − t) × ${pct(m.periode, 4)}, soit t = ${pct(m.periode, 4)} ÷ (1 + ${pct(m.periode, 4)}) = ${pct(m.maximal, 4)}`,
+            attendu: m.maximalEnPoints,
+            calcul: `t ≤ (1 − t) × ${enPoints(m.periodeEnPoints)}, soit t = ${enPoints(m.periodeEnPoints)} ÷ (1 + ${enPoints(m.periodeEnPoints)}) = ${enPoints(m.maximalEnPoints)}`,
           },
           { libelle: "Escompte sur la facture, à ce taux arrondi", attendu: m.montant, calcul: `${eur(v.netCommercial)} × ${pct(m.auCentieme)} = ${eur(m.montant)}` },
         ];
@@ -700,7 +710,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
       explication: (c) => {
         const m = escompteMaximalDuClient(c);
         return [
-          `Le piège est dans la base : l'escompte se prend sur le net commercial, mais l'argent reçu plus tôt n'est que le net financier, déjà diminué de l'escompte. D'où t = taux de la période ÷ (1 + taux de la période) : ${pct(m.maximal, 2)}, un peu moins que les ${pct(m.periode, 2)} du découvert sur la période.`,
+          `Le piège est dans la base : l'escompte se prend sur le net commercial, mais l'argent reçu plus tôt n'est que le net financier, déjà diminué de l'escompte. D'où t = taux de la période ÷ (1 + taux de la période) : ${pct(m.maximal)}, un peu moins que les ${pct(m.periode)} du découvert sur la période.`,
           `Au-delà, ${c.entreprise} paierait sa trésorerie plus cher qu'à la banque : un escompte ne se décide pas au jugé, il se compare à ce que coûte l'argent.`,
         ];
       },
@@ -713,24 +723,24 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
       notions: ["payment_terms", "vat_payable"],
       question: (c) => {
         const k = deuxiemeCommande(c);
-        return `Une deuxième commande du client, aux mêmes conditions (remise de ${pct(TAUX_DE_REMISE)}, escompte de ${pct(TAUX_D_ESCOMPTE)}, TVA à ${pct(c.venteCredit.tauxTva, 1)}, ${eur(c.venteCredit.prixUnitaire)} l'unité hors taxes) : le relevé ne montre que son règlement, ${eur(k.netAPayer)}, escompte déduit. Retrouvez le net financier, le net commercial, le prix brut, puis le nombre ${dE(c.unites)} ${accordPluriel(c, "commandé")}.`;
+        return `Une deuxième commande du client, aux mêmes conditions (remise de ${pct(TAUX_DE_REMISE)}, escompte de ${pct(TAUX_D_ESCOMPTE)}, TVA à ${pct(c.venteCredit.tauxTva)}, ${eur(c.venteCredit.prixUnitaire)} l'unité hors taxes) : le relevé ne montre que son règlement, ${eur(k.netAPayer)}, escompte déduit. Retrouvez le net financier, le net commercial, le prix brut, puis le nombre ${dE(c.unites)} ${accordPluriel(c, "commandé")}.`;
       },
       champs: (c) => {
         const k = deuxiemeCommande(c);
         const t = c.venteCredit.tauxTva;
         return [
-          { libelle: "Net financier", attendu: k.netFinancier, tolerance: 0.05, calcul: `${eur(k.netAPayer)} ÷ ${(1 + t).toLocaleString("fr-FR")} = ${eur(k.netFinancier)}` },
-          { libelle: "Net commercial", attendu: k.netCommercial, tolerance: 0.05, calcul: `${eur(k.netFinancier)} ÷ ${(1 - TAUX_D_ESCOMPTE).toLocaleString("fr-FR")} = ${eur(k.netCommercial)}` },
-          { libelle: "Prix brut, hors taxes", attendu: k.brut, tolerance: 0.05, calcul: `${eur(k.netCommercial)} ÷ ${(1 - TAUX_DE_REMISE).toLocaleString("fr-FR")} = ${eur(k.brut)}` },
-          { libelle: `Nombre ${dE(c.unites)}`, attendu: k.quantite, calcul: `${eur(k.brut)} ÷ ${eur(c.venteCredit.prixUnitaire)} = ${qte(k.quantite)}` },
+          { libelle: "Net financier", attendu: k.netFinancier, calcul: aRebours(k.netAPayer, 1 + t, k.netFinancier) },
+          { libelle: "Net commercial", attendu: k.netCommercial, calcul: aRebours(k.netFinancier, 1 - TAUX_D_ESCOMPTE, k.netCommercial) },
+          { libelle: "Prix brut, hors taxes", attendu: k.brut, calcul: aRebours(k.netCommercial, 1 - TAUX_DE_REMISE, k.brut) },
+          { libelle: `Nombre ${dE(c.unites)}`, nature: "quantite", attendu: k.quantite, calcul: `${eur(k.brut)} ÷ ${eur(c.venteCredit.prixUnitaire)} = ${qte(k.quantite)}` },
         ];
       },
       explication: (c) => {
         const k = deuxiemeCommande(c);
         const t = c.venteCredit.tauxTva;
         return [
-          `À rebours, chaque étape de la facture se défait dans l'ordre inverse, et chaque taux se défait en divisant : par 1 + ${pct(t, 1)} pour la TVA, par 1 − ${pct(TAUX_D_ESCOMPTE)} pour l'escompte, par 1 − ${pct(TAUX_DE_REMISE)} pour la remise.`,
-          `L'erreur classique est d'ajouter les taux qu'on retire : ${eur(k.netAPayer)} × (1 − ${pct(t, 1)} + ${pct(TAUX_D_ESCOMPTE)} + ${pct(TAUX_DE_REMISE)}) ne donne pas le brut, parce que chaque taux porte sur un montant différent.`,
+          `À rebours, chaque étape de la facture se défait dans l'ordre inverse, et chaque taux se défait en divisant : par 1 + ${pct(t)} pour la TVA, par 1 − ${pct(TAUX_D_ESCOMPTE)} pour l'escompte, par 1 − ${pct(TAUX_DE_REMISE)} pour la remise.`,
+          `L'erreur classique est d'ajouter les taux qu'on retire : ${eur(k.netAPayer)} × (1 − ${pct(t)} + ${pct(TAUX_D_ESCOMPTE)} + ${pct(TAUX_DE_REMISE)}) ne donne pas le brut, parce que chaque taux porte sur un montant différent.`,
         ];
       },
     },
@@ -753,7 +763,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
           },
           { libelle: "Escompte", attendu: f.escompte, calcul: `${eur(f.netCommercial)} × ${pct(TAUX_D_ESCOMPTE)} = ${eur(f.escompte)}` },
           { libelle: "Net financier", attendu: f.netFinancier, calcul: `${eur(f.netCommercial)} − ${eur(f.escompte)} = ${eur(f.netFinancier)}` },
-          { libelle: "TVA", attendu: f.tva, calcul: `${eur(f.netFinancier)} × ${pct(t, 1)} = ${eur(f.tva)}` },
+          { libelle: "TVA", attendu: f.tva, calcul: `${eur(f.netFinancier)} × ${pct(t)} = ${eur(f.tva)}` },
           { libelle: "Net à payer", attendu: f.netAPayer, calcul: `${eur(f.netFinancier)} + ${eur(f.tva)} = ${eur(f.netAPayer)}` },
         ];
       },
@@ -807,7 +817,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         const m = escompteMaximalDuClient(c);
         return [
           `Vous avez établi une facture avec remise et escompte, passé la vente et l'achat ${dE(c.entreprise)} avec leurs escomptes, et décidé, chiffres à l'appui, de payer vite. Sur ces deux factures, ${c.entreprise} a accordé ${eur(v.escompte)} d'escompte et en a obtenu ${eur(a.escompte)}.`,
-          `Deux expériences l'ont montré avant la formule : un escompte de ${pct(TAUX_D_ESCOMPTE)} pour ${qte(a.joursGagnes)} jours vaut ${pct(a.tauxAnnuel, 1)} l'an ; et face à un découvert à ${pct(TAUX_DU_DECOUVERT)}, on ne peut accorder à ce client que ${pct(m.maximal, 2)} d'escompte sans payer l'argent plus cher.`,
+          `Deux expériences l'ont montré avant la formule : un escompte de ${pct(TAUX_D_ESCOMPTE)} pour ${qte(a.joursGagnes)} jours vaut ${pct(a.tauxAnnuel)} l'an ; et face à un découvert à ${pct(TAUX_DU_DECOUVERT)}, on ne peut accorder à ce client que ${pct(m.maximal)} d'escompte sans payer l'argent plus cher.`,
           "Au niveau de l'examen, vous savez ramener un escompte à un taux annuel sur la bonne base, chiffrer l'escompte le plus fort qu'on peut accorder, remonter une facture à rebours du net à payer au prix brut, calculer des réductions en cascade, et dire pourquoi une remise ne remplace pas un escompte.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

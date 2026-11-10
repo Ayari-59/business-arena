@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, eur, pct as enPoints, quotient2, type NatureDuNombre } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import { auCentime } from "../monde/amortissement";
 import { dateEcrite as dateDuCompte } from "../monde/compte-client-de-nova";
@@ -9,7 +9,6 @@ import {
   PAS_DU_VERSEMENT,
   RENOUVELLEMENT,
   TAUX_DE_LA_BANQUE,
-  annuitePourConstituer,
   coefficientDeValeurAcquise,
   interetsCourusDeLaReserve,
   interetsSimples,
@@ -41,8 +40,8 @@ import type { Bureau, PieceDuBureau } from "./types";
 
 /** Un jour du cours, écrit : « 6 janvier ». */
 const dateEcrite = (d: { jour: number; mois: number }) => dateDuCompte({ jour: d.jour, mois: d.mois });
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10_000) / 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const nb = (x: number, d = 4) => (x + 0).toLocaleString("fr-FR", { maximumFractionDigits: d });
 
 const JOUR_DU_BUREAU = PLACEMENT.echeance;
@@ -56,7 +55,8 @@ export function chiffresDeLEcheance() {
   const courus = interetsCourusDeLaReserve();
   const offre = offreEchelonnee();
   const prixFutur = prixFuturDeLaLigne();
-  const coefficient = Math.round(coefficientDeValeurAcquise(RENOUVELLEMENT.taux, n) * 10_000) / 10_000;
+  // Le coefficient au dix-millième, et les versements qui partent de lui, comme sur la copie (deux-decimales.ts).
+  const coefficient = arrondi(coefficientDeValeurAcquise(RENOUVELLEMENT.taux, n), 4);
   return {
     interets,
     courus,
@@ -65,8 +65,8 @@ export function chiffresDeLEcheance() {
     offre,
     prixFutur,
     coefficient,
-    versementNecessaire: annuitePourConstituer(prixFutur, RENOUVELLEMENT.taux, n),
-    versementSansInflation: annuitePourConstituer(RENOUVELLEMENT.prixDAujourdHui, RENOUVELLEMENT.taux, n),
+    versementNecessaire: quotient2(prixFutur, coefficient),
+    versementSansInflation: quotient2(RENOUVELLEMENT.prixDAujourdHui, coefficient),
     suffit: versementQuiSuffit(),
     reel: tauxReel(RENOUVELLEMENT.taux, INFLATION_PREVUE),
   };
@@ -175,7 +175,7 @@ const PILE: readonly PieceDuBureau[] = [COURRIEL, AVIS, NOTE_DE_CLOTURE, OFFRE_D
 // LES TABLEAUX
 // ─────────────────────────────────────────────────────────────────────────────
 
-const saisir = (valeur: number, calcul: string, indice: string, autres: { tolerance?: number; unite?: string; horsTotal?: boolean } = {}) => ({ valeur, saisir: true, calcul, indice, ...autres });
+const saisir = (valeur: number, calcul: string, indice: string, autres: { tolerance?: number; unite?: string; horsTotal?: boolean; nature?: NatureDuNombre } = {}) => ({ valeur, saisir: true, calcul, indice, ...autres });
 
 /** L'échéance du compte à terme : ce que la banque verse, et la part des intérêts qui revient à N+1. */
 export function grilleDeLEcheance(): TableauACompleter {
@@ -207,18 +207,18 @@ export function grilleDesDeuxPaiements(): TableauACompleter {
       { libelle: "Total des annuités", cellules: [saisir(o.total, `${o.annees} × ${eur(o.annuite)} = ${eur(o.total)}`, "les annuités additionnées, sans tenir compte des dates", { horsTotal: true })] },
       {
         libelle: `Valeur actuelle des annuités à ${pct(TAUX_DE_LA_BANQUE)}`,
-        cellules: [saisir(o.valeurActuelle, `${eur(o.annuite)} × (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${o.annees}) ÷ ${nb(TAUX_DE_LA_BANQUE)} = ${eur(o.valeurActuelle)}`, "l'annuité × (1 − (1 + i)^−n) ÷ i, au taux de la banque", { tolerance: 1 })],
+        cellules: [saisir(o.valeurActuelle, `${eur(o.annuite)} × (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${o.annees}) ÷ ${nb(TAUX_DE_LA_BANQUE)} = ${eur(o.valeurActuelle)}`, "l'annuité × (1 − (1 + i)^−n) ÷ i, au taux de la banque")],
       },
       { libelle: "Prix comptant", cellules: [{ valeur: o.comptant }] },
       {
         libelle: "Ce que les annuités coûtent de plus, en valeur d'aujourd'hui",
         fort: true,
         totalDe: { plus: [1], moins: [2] },
-        cellules: [saisir(o.surcout, `${eur(o.valeurActuelle)} − ${eur(o.comptant)} = ${eur(o.surcout)}`, "la valeur actuelle des annuités, moins le comptant", { tolerance: 1 })],
+        cellules: [saisir(o.surcout, `${eur(o.valeurActuelle)} − ${eur(o.comptant)} = ${eur(o.surcout)}`, "la valeur actuelle des annuités, moins le comptant")],
       },
       {
         libelle: "Annuité constante du prêt de la banque",
-        cellules: [saisir(o.annuiteDeLaBanque, `${eur(o.comptant)} × ${nb(TAUX_DE_LA_BANQUE)} ÷ (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${o.annees}) = ${eur(o.annuiteDeLaBanque)}`, "C × i ÷ (1 − (1 + i)^−n)", { tolerance: 1, horsTotal: true })],
+        cellules: [saisir(o.annuiteDeLaBanque, `${eur(o.comptant)} × ${nb(TAUX_DE_LA_BANQUE)} ÷ (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${o.annees}) = ${eur(o.annuiteDeLaBanque)}`, "C × i ÷ (1 − (1 + i)^−n)", { horsTotal: true })],
       },
     ],
   };
@@ -231,12 +231,12 @@ export function grilleDeLaReserve(): TableauACompleter {
     titre: `La réserve de la ligne neuve, ${FIN}`,
     colonnes: ["Valeur"],
     lignes: [
-      { libelle: `Prix d'une ligne neuve ${FIN}`, cellules: [saisir(x.prixFutur, `${eur(r.prixDAujourdHui)} × ${nb(1 + INFLATION_PREVUE)}^${n} = ${eur(x.prixFutur)}`, "le prix d'aujourd'hui, capitalisé au taux de l'inflation", { tolerance: 1 })] },
+      { libelle: `Prix d'une ligne neuve ${FIN}`, cellules: [saisir(x.prixFutur, `${eur(r.prixDAujourdHui)} × ${nb(1 + INFLATION_PREVUE)}^${n} = ${eur(x.prixFutur)}`, "le prix d'aujourd'hui, capitalisé au taux de l'inflation")] },
       {
         libelle: `Coefficient de valeur acquise de ${n} annuités`,
-        cellules: [saisir(x.coefficient, `(${nb(1 + r.taux)}^${n} − 1) ÷ ${nb(r.taux)} = ${nb(x.coefficient)}`, "((1 + i)^n − 1) ÷ i, au taux du compte à terme", { tolerance: 0.0001, unite: "" })],
+        cellules: [saisir(x.coefficient, `(${nb(1 + r.taux)}^${n} − 1) ÷ ${nb(r.taux)} = ${nb(x.coefficient)}`, "((1 + i)^n − 1) ÷ i, au taux du compte à terme", { tolerance: 0.0001, unite: "", nature: "coefficient" })],
       },
-      { libelle: "Versement annuel qui réunit ce prix", cellules: [saisir(x.versementNecessaire, `${eur(x.prixFutur)} ÷ ${nb(x.coefficient)} = ${eur(x.versementNecessaire)}`, "le prix futur ÷ le coefficient", { tolerance: 1 })] },
+      { libelle: "Versement annuel qui réunit ce prix", cellules: [saisir(x.versementNecessaire, `${eur(x.prixFutur)} ÷ ${nb(x.coefficient)} = ${eur(x.versementNecessaire)}`, "le prix futur ÷ le coefficient")] },
       { libelle: `Versement retenu, au pas de ${eur(PAS_DU_VERSEMENT)} au-dessus`, cellules: [saisir(x.suffit, `${eur(x.versementNecessaire)}, arrondis au pas de ${eur(PAS_DU_VERSEMENT)} au-dessus : ${eur(x.suffit)}`, "le versement, arrondi vers le haut")] },
       {
         libelle: "Taux réel du placement",

@@ -21,7 +21,7 @@ describe("le bilan de NOVA", () => {
 
   it("les totaux et les équilibres se refont à la main", () => {
     expect(etape(ch, "equilibre", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([432_256.34, c(432_256.34 - 229_225.96), 432_256.34]);
-    expect(b.partDesAssocies).toBe(53); // 229 225,96 ÷ 432 256,34 = 53,03 %
+    expect(b.partDesAssocies).toBe(53.03); // 229 225,96 ÷ 432 256,34 = 53,03 %
     expect(b.rapportDEndettement).toBe(0.3); // 68 000 ÷ 229 225,96 = 0,297
     expect(b.disponible).toBe(c(136_934.58 + 115_734.87));
     expect(b.aCourtTerme).toBe(c(81_000 + 41_119.27 + 7_911.11));
@@ -69,8 +69,8 @@ describe("le cas : l'investisseuse au capital", () => {
     expect(r.comble).toBe(0);
     expect(r.capitauxPropresApres).toBe(c(229_225.96 + 57_300));
     expect(r.total).toBe(c(432_256.34 + 57_300));
-    expect(r.autonomieApres).toBe(58.5); // 286 525,96 ÷ 489 556,34 = 58,53 %
-    expect(r.sansLeTotal).toBe(66.3); // 286 525,96 ÷ 432 256,34
+    expect(r.autonomieApres).toBe(58.53); // 286 525,96 ÷ 489 556,34 = 58,53 %
+    expect(r.sansLeTotal).toBe(66.29); // 286 525,96 ÷ 432 256,34
     expect(r.tresorerieApres).toBe(c(252_669.45 + 57_300));
   });
   it("les textes sont propres, une seule bonne réponse", () => {

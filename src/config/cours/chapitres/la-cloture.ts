@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime, type Ecriture, type Ligne } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { coefficientDegressif, joursCompris, JOURS_DE_L_ANNEE, JOURS_DU_MOIS, type DateDuCours } from "../monde/amortissement";
@@ -93,9 +93,9 @@ export const TAUX_MAXIMAL_DU_CURSEUR = 600;
 // LES OUTILS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** Un terme d'une somme : « + 13 500 € » ou « − 34 500 € ». */
 const terme = (x: number) => (x < 0 ? `− ${eur(-x)}` : `+ ${eur(x)}`);
 /** Une somme de termes signés, le premier sans « + ». */
@@ -691,7 +691,7 @@ const LA_CLOTURE_ENTIERE: Chapitre = {
             attendu: x.stock.coutMoyen,
             calcul: `(${entrees.map((m) => `${qte(m.quantite)} × ${eur(m.prixUnitaire!)}`).join(" + ")}) ÷ ${qte(x.stock.entrees.quantite)} = ${eur(x.stock.entrees.valeur)} ÷ ${qte(x.stock.entrees.quantite)} = ${eur(x.stock.coutMoyen)}`,
           },
-          { libelle: "Jeux en stock au 31 décembre", attendu: x.stock.final.quantite, calcul: `${qte(x.stock.entrees.quantite)} − ${sorties.map((m) => qte(m.quantite)).join(" − ")} = ${qte(x.stock.final.quantite)}` },
+          { libelle: "Jeux en stock au 31 décembre", nature: "quantite", attendu: x.stock.final.quantite, calcul: `${qte(x.stock.entrees.quantite)} − ${sorties.map((m) => qte(m.quantite)).join(" − ")} = ${qte(x.stock.final.quantite)}` },
           { libelle: "Stock final", attendu: x.stockFinal, calcul: `${qte(x.stock.final.quantite)} × ${eur(x.stock.coutMoyen)} = ${eur(x.stockFinal)}` },
         ];
       },
@@ -785,6 +785,7 @@ const LA_CLOTURE_ENTIERE: Chapitre = {
           },
           {
             libelle: "Jours courus dans l'exercice",
+            nature: "quantite",
             attendu: x.icne.jours,
             calcul: `du ${dateDe(x.icne.depuis)} au 31 décembre, jours compris, en mois de ${qte(JOURS_DU_MOIS)} jours : ${qte(x.icne.jours)} jours sur ${qte(x.icne.joursDeLaPeriode)}`,
           },

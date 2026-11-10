@@ -49,6 +49,16 @@ function tableau(C: number, tauxAnnuel: number, n: number, mode: "ac" | "ec") {
   return { a, lignes, cout: centime(lignes.reduce((s, l) => s + l.interets, 0)) };
 }
 
+/**
+ * Le coût du crédit par le calcul de l'élève, chaque ligne au centime (deux-decimales.ts) : en
+ * amortissement constant, n × (premiers intérêts + derniers) ÷ 2 ; en échéances constantes, n × a − C.
+ */
+function coutsParLesFormules(C: number, n: number, ac: ReturnType<typeof tableau>, ec: ReturnType<typeof tableau>) {
+  const enAC = centime((n * (ac.lignes[0]!.interets + ac.lignes[n - 1]!.interets)) / 2);
+  const enEC = centime(n * ec.a - C);
+  return { "Coût du crédit en amortissement constant": enAC, "Coût du crédit en échéances constantes": enEC, "Supplément des échéances constantes": centime(enEC - enAC) };
+}
+
 function textesDe(e: Etape, c: Cas, etat: EtatDuCours): string[] {
   const t = e.tableau?.(c);
   const tab = t ? [t.titre, ...t.colonnes, ...t.lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
@@ -297,8 +307,8 @@ describe("l'emprunt chez NOVA : le prêt de la fiche, et les chiffres épinglés
     expect(juste(ch, "predire-le-croisement", cas)).toBe("Plus légère que les premières, plus lourde que les dernières");
   });
 
-  it("le coût du crédit : 10 500 € et 10 912,64 €, le taux de 6 % retrouvé à rebours", () => {
-    expect(attendus(ch, "cout-du-credit", cas)).toEqual({ "Coût du crédit en amortissement constant": 10_500, "Coût du crédit en échéances constantes": 10_912.64, "Supplément des échéances constantes": 412.64 });
+  it("le coût du crédit : 10 500 € et 10 912,60 € (n × a − C ; le tableau donne 10 912,64 €), le taux de 6 % retrouvé à rebours", () => {
+    expect(attendus(ch, "cout-du-credit", cas)).toEqual({ "Coût du crédit en amortissement constant": 10_500, "Coût du crédit en échéances constantes": 10_912.6, "Supplément des échéances constantes": 412.6 });
     expect(juste(ch, "predire-le-cout", cas)).toBe("Plus d'intérêts : la dette baisse moins vite au début");
     expect(attendus(ch, "le-taux-a-rebours", cas)).toEqual({ "Baisse des intérêts d'une échéance à l'autre": 60, "Taux du trimestre, en %": 1.5, "Taux annuel, en %": 6, "Montant emprunté": 80_000 });
     expect(juste(ch, "quel-mode", cas)).toBe("Au même taux, aucun n'est plus cher : on choisit selon la trésorerie des premières années");
@@ -400,11 +410,7 @@ describe.each(ENTREPRISES_DU_COURS)("l'emprunt chez %s, refait à la main", (cod
     // En amortissement constant, une suite arithmétique : C × i × (n + 1) ÷ 2, au centime près des arrondis de chaque ligne.
     expect(Math.abs(x.ac.cout - centime((x.C * x.i * (x.n + 1)) / 2))).toBeLessThanOrEqual(0.1);
     expect(Math.abs(x.ec.cout - centime(x.n * x.ec.a - x.C))).toBeLessThanOrEqual(0.2);
-    expect(attendus(ch, "cout-du-credit", cas)).toEqual({
-      "Coût du crédit en amortissement constant": x.ac.cout,
-      "Coût du crédit en échéances constantes": x.ec.cout,
-      "Supplément des échéances constantes": centime(x.ec.cout - x.ac.cout),
-    });
+    expect(attendus(ch, "cout-du-credit", cas)).toEqual(coutsParLesFormules(x.C, x.n, x.ac, x.ec));
     expect(x.ec.cout).toBeGreaterThan(x.ac.cout);
     const avis1 = centime(x.cap + x.C * 0.015);
     const avis2 = centime(x.cap + (x.C - x.cap) * 0.015);
@@ -510,11 +516,7 @@ describe("un deuxième prêt : la limite de la trésorerie choisit la formule", 
       },
     });
     expect(d.max).toBeLessThan(d.C);
-    expect(attendus(s, "le-cout-des-deux-formules", cas)).toEqual({
-      "Coût du crédit en amortissement constant": d.ac.cout,
-      "Coût du crédit en échéances constantes": d.ec.cout,
-      "Supplément des échéances constantes": centime(d.ec.cout - d.ac.cout),
-    });
+    expect(attendus(s, "le-cout-des-deux-formules", cas)).toEqual(coutsParLesFormules(d.C, d.n, d.ac, d.ec));
     expect(juste(s, "la-formule-qui-tient", cas)).toMatch(/^Les échéances constantes : /);
     const e = s.etapes.find((y) => y.id === "echeance-1")!;
     if (e.type !== "ecriture") throw new Error("écriture attendue");

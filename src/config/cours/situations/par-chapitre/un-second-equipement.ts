@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { DEVIS_DU_FOURNISSEUR, PRIX_DE_L_OCCASION, TAUX_D_IMPOT, anneeDuPlan, planDAmortissement } from "../../chapitres/immobilisations";
 import { dateDuCours as date, moisEtJour } from "../../dates";
@@ -31,9 +31,9 @@ export const JOUR_DE_MISE_EN_SERVICE = 106;
 /** La reprise que propose le fournisseur : le 31 décembre de la 3e année, à 40 % du prix catalogue (le prix de l'occasion du chapitre). */
 export const DATE_DE_REPRISE: DateDuCours = { jour: 31, mois: 12, exercice: 2 };
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const coef = (k: number) => k.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 const DE_LA_REPRISE = `31 décembre de la ${anneeDuPlan(DATE_DE_REPRISE.exercice ?? 0)}`;
 /** « 3 exercices » : ceux de la mise en service à la reprise. */
@@ -219,10 +219,10 @@ export const UN_SECOND_EQUIPEMENT: Situation = {
       champs: (c) => {
         const r = secondEquipement(c);
         return [
-          { libelle: "Jours d'utilisation, en linéaire", attendu: r.jours, calcul: `du ${r.jourDeMiseEnService} au ${JOURS_DU_MOIS} ${MOIS[r.moisDeMiseEnService - 1]}, ${qte(JOURS_DU_MOIS - r.jourDeMiseEnService + 1)} jours, puis ${qte(12 - r.moisDeMiseEnService)} mois de ${JOURS_DU_MOIS} jours : ${qte(r.jours)} jours`,
+          { libelle: "Jours d'utilisation, en linéaire", nature: "quantite", attendu: r.jours, calcul: `du ${r.jourDeMiseEnService} au ${JOURS_DU_MOIS} ${MOIS[r.moisDeMiseEnService - 1]}, ${qte(JOURS_DU_MOIS - r.jourDeMiseEnService + 1)} jours, puis ${qte(12 - r.moisDeMiseEnService)} mois de ${JOURS_DU_MOIS} jours : ${qte(r.jours)} jours`,
           },
           { libelle: "Dotation linéaire de l'année", attendu: r.dotationLineaire, calcul: `${eur(r.cout)} ÷ ${qte(r.duree)} × ${qte(r.jours)} ÷ ${JOURS_DE_L_ANNEE} = ${eur(r.dotationLineaire)}` },
-          { libelle: "Mois comptés, en dégressif", attendu: r.moisDegressifs, calcul: `${MOIS[r.moisDeMiseEnService - 1]} à décembre, le mois de la mise en service compris : ${qte(r.moisDegressifs)} mois` },
+          { libelle: "Mois comptés, en dégressif", nature: "quantite", attendu: r.moisDegressifs, calcul: `${MOIS[r.moisDeMiseEnService - 1]} à décembre, le mois de la mise en service compris : ${qte(r.moisDegressifs)} mois` },
           {
             libelle: "Dotation dégressive de l'année",
             attendu: r.dotationDegressive,

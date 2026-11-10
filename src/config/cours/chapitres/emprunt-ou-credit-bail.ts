@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { coefficientDActualisation, van } from "../monde/finance";
@@ -63,9 +63,8 @@ export const LEVIERS_DU_CONTRAT = {
 /** La redevance la plus haute qui garde le crédit-bail au coût de l'emprunt, option à 15 000 € et banque à 5 % : le défi. */
 export const REDEVANCE_LIMITE = 31_500;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number, chiffres = 2) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** Un montant qui peut être négatif, entre parenthèses quand il l'est, pour qu'un « − » ne suive pas un « − ». */
 const enCalcul = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 
@@ -97,13 +96,13 @@ function calculerLeChapitre() {
   const n = cb.dureeAns;
   const horizon = dates.length - 1;
   // La valeur actuelle des décaissements du crédit-bail, au coût de l'emprunt : tout ce qui suit la date 0.
-  const decaissements = auCentime(cb.valeur - base.vanDuCreditBail);
+  const decaissements = arrondi2(cb.valeur - base.vanDuCreditBail);
   const vanA = (taux: number) => van(flux, taux);
   const bas = 0.045;
   const haut = 0.046;
   const interpole = bas + ((haut - bas) * -vanA(bas)) / (vanA(haut) - vanA(bas));
   const avecDepot = comparaison({ depot: DEPOT_DE_GARANTIE });
-  const coutDuDepot = auCentime(-DEPOT_DE_GARANTIE + DEPOT_DE_GARANTIE * coefficientDActualisation(r, n));
+  const coutDuDepot = arrondi2(-DEPOT_DE_GARANTIE + DEPOT_DE_GARANTIE * coefficientDActualisation(r, n));
   return {
     base,
     cb,
@@ -121,8 +120,8 @@ function calculerLeChapitre() {
     interpole,
     avecDepot,
     coutDuDepot,
-    vanAvecDepot: auCentime(base.vanDuCreditBail + coutDuDepot),
-    dotation: auCentime(LIGNE_A_FINANCER.montant / LIGNE_A_FINANCER.dureeDAmortissement),
+    vanAvecDepot: arrondi2(base.vanDuCreditBail + coutDuDepot),
+    dotation: arrondi2(LIGNE_A_FINANCER.montant / LIGNE_A_FINANCER.dureeDAmortissement),
     annuite: (k: number) => base.emprunt.annees[k - 1]!,
     depart: { redevance: cb.redevance, option: cb.option, taux: e.taux * 100 },
   };
@@ -150,7 +149,7 @@ export function tableauDesOffres(c: Pick<Cas, "code">): TableauDeDonnees {
 export function grilleDeLEmprunt(c: Pick<Cas, "code">): TableauACompleter {
   const x = financementDuChapitre(c);
   const a = x.base.emprunt.annees;
-  const total = (f: (y: (typeof a)[number]) => number) => auCentime(a.reduce((s, y) => s + f(y), 0));
+  const total = (f: (y: (typeof a)[number]) => number) => arrondi2(a.reduce((s, y) => s + f(y), 0));
   return {
     titre: "Les décaissements nets de l'emprunt",
     colonnes: ["Intérêts", "Capital", "Économie d'impôt", "Décaissement net"],
@@ -191,7 +190,7 @@ export function grilleDuCreditBail(c: Pick<Cas, "code">): TableauACompleter {
     lignes: d.map((y) => {
       const k = y.date;
       const nom = k === 0 ? "Achat, 1er janvier N+1" : `Fin de N+${k}`;
-      const optionDeLaDate = auCentime(y.economieSurLOption - y.option);
+      const optionDeLaDate = arrondi2(y.economieSurLOption - y.option);
       const premiere = k === 1;
       return {
         libelle: nom,
@@ -295,14 +294,14 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
           { libelle: "Intérêts de N+1", attendu: a.interets, calcul: `${eur(a.capitalDebut)} × ${pct(x.e.taux)} = ${eur(a.interets)}` },
           { libelle: "Économie d'impôt sur les intérêts", attendu: a.economieDImpot, calcul: `${eur(a.interets)} × ${pct(x.t)} = ${eur(a.economieDImpot)}` },
           { libelle: "Décaissement net de N+1", attendu: a.decaissementNet, calcul: `${eur(a.amortissement)} + ${eur(a.interets)} − ${eur(a.economieDImpot)} = ${eur(a.decaissementNet)}` },
-          { libelle: "Coût de l'emprunt après impôt, en %", attendu: auCentime(x.r * 100), calcul: `${pct(x.e.taux)} × (1 − ${pct(x.t)}) = ${pct(x.r)}`, tolerance: 0.01 },
+          { libelle: "Coût de l'emprunt après impôt, en %", attendu: arrondi2(x.r * 100), calcul: `${pct(x.e.taux)} × (1 − ${pct(x.t)}) = ${pct(x.r)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
         const x = financementDuChapitre(c);
         const a = x.annuite(1);
         return [
-          `Sur ${eur(a.interets)} d'intérêts, l'État en reprend ${eur(a.economieDImpot)} par l'impôt : l'emprunt ne coûte à NOVA que ${eur(auCentime(a.interets - a.economieDImpot))}. Rapporté au capital dû, c'est ${pct(x.r)} au lieu de ${pct(x.e.taux)}.`,
+          `Sur ${eur(a.interets)} d'intérêts, l'État en reprend ${eur(a.economieDImpot)} par l'impôt : l'emprunt ne coûte à NOVA que ${eur(arrondi2(a.interets - a.economieDImpot))}. Rapporté au capital dû, c'est ${pct(x.r)} au lieu de ${pct(x.e.taux)}.`,
           "Le capital remboursé, lui, n'est pas une charge : il ne fait rien économiser.",
         ];
       },
@@ -321,7 +320,7 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
       explication: (c) => {
         const x = financementDuChapitre(c);
         return [
-          `Sur ${x.e.dureeAns} ans, NOVA décaisse ${eur(auCentime(x.base.emprunt.annees.reduce((s, y) => s + y.decaissementNet, 0)))} pour ${eur(x.e.montant)} empruntés. Les intérêts baissent avec le capital dû, et l'économie d'impôt avec eux.`,
+          `Sur ${x.e.dureeAns} ans, NOVA décaisse ${eur(arrondi2(x.base.emprunt.annees.reduce((s, y) => s + y.decaissementNet, 0)))} pour ${eur(x.e.montant)} empruntés. Les intérêts baissent avec le capital dû, et l'économie d'impôt avec eux.`,
           `Actualisés à ${pct(x.r)}, ces décaissements valent exactement ${eur(x.e.montant)} : c'est ce que dit un coût de ${pct(x.r)} après impôt. Ce taux sert d'étalon au crédit-bail.`,
         ];
       },
@@ -334,7 +333,7 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
       notions: ["depreciation"],
       question: (c) => {
         const x = financementDuChapitre(c);
-        return `En crédit-bail, NOVA déduit chaque redevance de ${eur(x.cb.redevance)}. Pourquoi faut-il pourtant compter, chaque année, ${eur(auCentime(x.dotation * x.t))} contre le crédit-bail ?`;
+        return `En crédit-bail, NOVA déduit chaque redevance de ${eur(x.cb.redevance)}. Pourquoi faut-il pourtant compter, chaque année, ${eur(arrondi2(x.dotation * x.t))} contre le crédit-bail ?`;
       },
       options: (c) => {
         const x = financementDuChapitre(c);
@@ -342,7 +341,7 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
           {
             texte: "La ligne n'est pas à NOVA : elle ne l'amortit pas",
             juste: true,
-            retour: `Oui. Achetée, la ligne s'amortirait de ${eur(x.dotation)} par an pendant ${LIGNE_A_FINANCER.dureeDAmortissement} ans, et cet amortissement ferait économiser ${eur(auCentime(x.dotation * x.t))} d'impôt chaque année. Le crédit-bail la laisse au crédit-bailleur : NOVA perd cette économie.`,
+            retour: `Oui. Achetée, la ligne s'amortirait de ${eur(x.dotation)} par an pendant ${LIGNE_A_FINANCER.dureeDAmortissement} ans, et cet amortissement ferait économiser ${eur(arrondi2(x.dotation * x.t))} d'impôt chaque année. Le crédit-bail la laisse au crédit-bailleur : NOVA perd cette économie.`,
           },
           {
             texte: "Parce que les redevances ne sont déductibles qu'en partie",
@@ -389,10 +388,10 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
       },
       champs: (c) => {
         const x = financementDuChapitre(c);
-        const termes = x.flux.slice(1).map((f, i) => `${eur(-f)} × ${(1 + x.r).toLocaleString("fr-FR")}^−${i + 1}`);
+        const termes = x.flux.slice(1).map((f, i) => `${eur(-f)} × ${(1 + x.r).toLocaleString("fr-FR", { maximumFractionDigits: 4 })}^−${i + 1}`);
         return [
-          { libelle: "Valeur actuelle des décaissements du crédit-bail", attendu: x.decaissements, calcul: `${termes.join(" + ")} = ${eur(x.decaissements)}`, tolerance: 1 },
-          { libelle: "VAN du crédit-bail", attendu: x.base.vanDuCreditBail, calcul: `${eur(x.cb.valeur)} − ${eur(x.decaissements)} = ${eur(x.base.vanDuCreditBail)}`, tolerance: 1 },
+          { libelle: "Valeur actuelle des décaissements du crédit-bail", attendu: x.decaissements, calcul: `${termes.join(" + ")} = ${eur(x.decaissements)}` },
+          { libelle: "VAN du crédit-bail", attendu: x.base.vanDuCreditBail, calcul: `${eur(x.cb.valeur)} − ${eur(x.decaissements)} = ${eur(x.base.vanDuCreditBail)}` },
         ];
       },
       explication: (c) => {
@@ -430,7 +429,7 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
       titre: "Le taux, au curseur",
       notions: ["irr_payback", "discounting"],
       question: () =>
-        `Faites varier le taux d'actualisation, de ${TAUX_DU_CURSEUR.min} ‰ à ${TAUX_DU_CURSEUR.max} ‰ (${TAUX_DU_CURSEUR.min} ‰ font ${pct(TAUX_DU_CURSEUR.min / 1000, 1)}). Une droite donne ce que le crédit-bail évite de payer le 1er janvier ; l'autre, la valeur actuelle de ce qu'il coûte ensuite. Placez le curseur sur le plus petit taux où la première couvre la seconde.`,
+        `Faites varier le taux d'actualisation, de ${TAUX_DU_CURSEUR.min} ‰ à ${TAUX_DU_CURSEUR.max} ‰ (${TAUX_DU_CURSEUR.min} ‰ font ${pct(TAUX_DU_CURSEUR.min / 1000)}). Une droite donne ce que le crédit-bail évite de payer le 1er janvier ; l'autre, la valeur actuelle de ce qu'il coûte ensuite. Placez le curseur sur le plus petit taux où la première couvre la seconde.`,
       grandeur: () => ({ libelle: "Taux d'actualisation", unite: "‰" }),
       cible: (c) => {
         const x = financementDuChapitre(c);
@@ -448,18 +447,18 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
         const v = x.vanA(q / 1000);
         return [
           { libelle: "Prix de la ligne, évité le 1er janvier", montant: x.cb.valeur },
-          { libelle: `Valeur actuelle des décaissements, à ${pct(q / 1000, 1)}`, montant: auCentime(x.cb.valeur - v) },
-          { libelle: `VAN du crédit-bail, à ${pct(q / 1000, 1)}`, montant: v, fort: true },
+          { libelle: `Valeur actuelle des décaissements, à ${pct(q / 1000)}`, montant: arrondi2(x.cb.valeur - v) },
+          { libelle: `VAN du crédit-bail, à ${pct(q / 1000)}`, montant: v, fort: true },
         ];
       },
       droites: (c) => {
         const x = financementDuChapitre(c);
-        return { produit: () => x.cb.valeur, cout: (q) => auCentime(x.cb.valeur - x.vanA(q / 1000)), libelles: ["Prix évité", "Valeur actuelle des décaissements"] };
+        return { produit: () => x.cb.valeur, cout: (q) => arrondi2(x.cb.valeur - x.vanA(q / 1000)), libelles: ["Prix évité", "Valeur actuelle des décaissements"] };
       },
       explication: (c) => {
         const x = financementDuChapitre(c);
         return [
-          `À ${pct(x.bas, 1)}, la VAN vaut encore ${eur(x.vanA(x.bas))} ; à ${pct(x.haut, 1)}, ${eur(x.vanA(x.haut))}. Le taux actuariel du crédit-bail est entre les deux, au-dessus des ${pct(x.r)} de l'emprunt.`,
+          `À ${pct(x.bas)}, la VAN vaut encore ${eur(x.vanA(x.bas))} ; à ${pct(x.haut)}, ${eur(x.vanA(x.haut))}. Le taux actuariel du crédit-bail est entre les deux, au-dessus des ${pct(x.r)} de l'emprunt.`,
           "Plus le taux monte, moins pèsent les décaissements lointains : la courbe descend. Le taux qui l'amène au prix évité est le coût du crédit-bail.",
         ];
       },
@@ -472,19 +471,19 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
       notions: ["irr_payback"],
       question: (c) => {
         const x = financementDuChapitre(c);
-        return `Le taux est entre ${pct(x.bas, 1)} et ${pct(x.haut, 1)}. Calculez la VAN du crédit-bail à chacun, puis le taux qui l'annule, par interpolation linéaire, en pour cent au centième.`;
+        return `Le taux est entre ${pct(x.bas)} et ${pct(x.haut)}. Calculez la VAN du crédit-bail à chacun, puis le taux qui l'annule, par interpolation linéaire, en pour cent au centième.`;
       },
       champs: (c) => {
         const x = financementDuChapitre(c);
         const a = x.vanA(x.bas);
         const b = x.vanA(x.haut);
         return [
-          { libelle: `VAN à ${pct(x.bas, 1)}`, attendu: a, calcul: `${eur(x.cb.valeur)} − la valeur actuelle des décaissements à ${pct(x.bas, 1)} = ${eur(a)}`, tolerance: 1 },
-          { libelle: `VAN à ${pct(x.haut, 1)}`, attendu: b, calcul: `${eur(x.cb.valeur)} − la valeur actuelle des décaissements à ${pct(x.haut, 1)} = ${eur(b)}`, tolerance: 1 },
+          { libelle: `VAN à ${pct(x.bas)}`, attendu: a, calcul: `${eur(x.cb.valeur)} − la valeur actuelle des décaissements à ${pct(x.bas)} = ${eur(a)}` },
+          { libelle: `VAN à ${pct(x.haut)}`, attendu: b, calcul: `${eur(x.cb.valeur)} − la valeur actuelle des décaissements à ${pct(x.haut)} = ${eur(b)}` },
           {
             libelle: "Taux actuariel du crédit-bail après impôt, en %",
-            attendu: auCentime(x.interpole * 100),
-            calcul: `${pct(x.bas, 1)} + 0,1 point × ${eur(-a)} ÷ (${eur(-a)} + ${eur(b)}) = ${pct(x.interpole)}`,
+            attendu: arrondi2(x.interpole * 100),
+            calcul: `${pct(x.bas)} + 0,1 point × ${eur(-a)} ÷ (${eur(-a)} + ${eur(b)}) = ${pct(x.interpole)}`,
             tolerance: 0.01,
           },
         ];
@@ -518,9 +517,9 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
         const x = financementDuChapitre(c);
         const l = comparaison(leviersDe(p));
         return [
-          { libelle: "Coût de l'emprunt après impôt", montant: auCentime(l.coutDeLEmprunt * 100), unite: "%", reference: auCentime(x.r * 100) },
-          { libelle: "Taux du crédit-bail après impôt", montant: auCentime(l.tauxDuCreditBail * 100), unite: "%", reference: auCentime(x.base.tauxDuCreditBail * 100) },
-          { libelle: "Taux du crédit-bail avant impôt", montant: auCentime(l.tauxAvantImpot * 100), unite: "%", reference: auCentime(x.base.tauxAvantImpot * 100) },
+          { libelle: "Coût de l'emprunt après impôt", montant: arrondi2(l.coutDeLEmprunt * 100), unite: "%", reference: arrondi2(x.r * 100) },
+          { libelle: "Taux du crédit-bail après impôt", montant: arrondi2(l.tauxDuCreditBail * 100), unite: "%", reference: arrondi2(x.base.tauxDuCreditBail * 100) },
+          { libelle: "Taux du crédit-bail avant impôt", montant: arrondi2(l.tauxAvantImpot * 100), unite: "%", reference: arrondi2(x.base.tauxAvantImpot * 100) },
           { libelle: "VAN du crédit-bail au coût de l'emprunt", montant: l.vanDuCreditBail, reference: x.base.vanDuCreditBail, effet: true, fort: true },
         ];
       },
@@ -528,8 +527,8 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
         levier: "redevance",
         unite: "%",
         courbes: [
-          { libelle: "Taux du crédit-bail après impôt", valeur: (p) => auCentime(comparaison(leviersDe(p)).tauxDuCreditBail * 100) },
-          { libelle: "Coût de l'emprunt après impôt", valeur: (p) => auCentime(coutApresImpot(p.taux! / 100) * 100) },
+          { libelle: "Taux du crédit-bail après impôt", valeur: (p) => arrondi2(comparaison(leviersDe(p)).tauxDuCreditBail * 100) },
+          { libelle: "Coût de l'emprunt après impôt", valeur: (p) => arrondi2(coutApresImpot(p.taux! / 100) * 100) },
         ],
       }),
       defi: (c) => {
@@ -573,10 +572,9 @@ export const EMPRUNT_OU_CREDIT_BAIL: Chapitre = {
           {
             libelle: "Coût du dépôt en valeur actuelle",
             attendu: x.coutDuDepot,
-            calcul: `− ${eur(DEPOT_DE_GARANTIE)} + ${eur(DEPOT_DE_GARANTIE)} × ${(1 + x.r).toLocaleString("fr-FR")}^−${x.n} = ${eur(x.coutDuDepot)}`,
-            tolerance: 1,
+            calcul: `− ${eur(DEPOT_DE_GARANTIE)} + ${eur(DEPOT_DE_GARANTIE)} × ${(1 + x.r).toLocaleString("fr-FR", { maximumFractionDigits: 4 })}^−${x.n} = ${eur(x.coutDuDepot)}`,
           },
-          { libelle: "VAN du crédit-bail avec le dépôt", attendu: x.vanAvecDepot, calcul: `${enCalcul(x.base.vanDuCreditBail)} + ${enCalcul(x.coutDuDepot)} = ${eur(x.vanAvecDepot)}`, tolerance: 1 },
+          { libelle: "VAN du crédit-bail avec le dépôt", attendu: x.vanAvecDepot, calcul: `${enCalcul(x.base.vanDuCreditBail)} + ${enCalcul(x.coutDuDepot)} = ${eur(x.vanAvecDepot)}` },
         ];
       },
       explication: (c) => {

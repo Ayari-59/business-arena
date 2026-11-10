@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { rentabilite } from "../../chapitres/rentabilite";
 import { auCentime } from "../../monde/amortissement";
@@ -29,8 +29,6 @@ import type { Situation } from "../types";
 export const RENTABILITE_EXIGEE = 0.1;
 
 /** Un montant, le signe moins typographique : « −582,38 € ». */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -105,13 +103,13 @@ export const CE_QU_EXIGE_LE_FONDS: Situation = {
       titre: "Les rentabilités de l'année",
       notions: ["profitability_vs_return"],
       question: () =>
-        "Commencez par l'année : la rentabilité financière (résultat net ÷ capitaux propres × 100), les capitaux investis (équipement + besoin en fonds de roulement), puis la rentabilité économique (résultat de l'activité ÷ capitaux investis × 100). Les pourcentages au dixième.",
+        "Commencez par l'année : la rentabilité financière (résultat net ÷ capitaux propres × 100), les capitaux investis (équipement + besoin en fonds de roulement), puis la rentabilité économique (résultat de l'activité ÷ capitaux investis × 100). Les pourcentages à deux décimales.",
       champs: (c) => {
         const r = exigenceDuFonds(c);
         return [
-          { libelle: "Rentabilité financière (%)", attendu: r.financiere, calcul: `${eur(r.resultatNet)} ÷ ${eur(r.capitauxPropres)} × 100 = ${pct(r.financiere)}`, tolerance: 0.1 },
-          { libelle: "Capitaux investis", attendu: r.capitauxInvestis, calcul: `${eur(r.immobilisations)} ${r.bfr < 0 ? `− ${eur(-r.bfr)}` : `+ ${eur(r.bfr)}`} = ${eur(r.capitauxInvestis)}`, tolerance: 1 },
-          { libelle: "Rentabilité économique (%)", attendu: r.economique, calcul: `${eur(r.resultatExploitation)} ÷ ${eur(r.capitauxInvestis)} × 100 = ${pct(r.economique)}`, tolerance: 0.1 },
+          { libelle: "Rentabilité financière (%)", attendu: r.financiere, calcul: `${eur(r.resultatNet)} ÷ ${eur(r.capitauxPropres)} × 100 = ${pct(r.financiere)}` },
+          { libelle: "Capitaux investis", attendu: r.capitauxInvestis, calcul: `${eur(r.immobilisations)} ${r.bfr < 0 ? `− ${eur(-r.bfr)}` : `+ ${eur(r.bfr)}`} = ${eur(r.capitauxInvestis)}` },
+          { libelle: "Rentabilité économique (%)", attendu: r.economique, calcul: `${eur(r.resultatExploitation)} ÷ ${eur(r.capitauxInvestis)} × 100 = ${pct(r.economique)}` },
         ];
       },
       explication: (c) => {
@@ -133,7 +131,7 @@ export const CE_QU_EXIGE_LE_FONDS: Situation = {
         const r = exigenceDuFonds(c);
         return [
           { libelle: "Résultat net exigé", attendu: r.requis, calcul: `${eur(r.capitauxPropres)} × ${pct(RENTABILITE_EXIGEE * 100)} = ${eur(r.requis)}` },
-          { libelle: "Écart avec le résultat de l'année", attendu: r.ecart, calcul: r.resultatNet < 0 ? `${eur(r.requis)} + ${eur(-r.resultatNet)} de perte = ${eur(r.ecart)}` : `${eur(r.requis)} − ${eur(r.resultatNet)} = ${eur(r.ecart)}`, tolerance: 1 },
+          { libelle: "Écart avec le résultat de l'année", attendu: r.ecart, calcul: r.resultatNet < 0 ? `${eur(r.requis)} + ${eur(-r.resultatNet)} de perte = ${eur(r.ecart)}` : `${eur(r.requis)} − ${eur(r.resultatNet)} = ${eur(r.ecart)}` },
         ];
       },
       explication: (c) => {

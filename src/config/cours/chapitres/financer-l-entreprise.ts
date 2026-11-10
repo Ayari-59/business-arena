@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { ENDETTEMENT_MAXIMAL } from "../financement";
 import { auCentime } from "../monde/amortissement";
@@ -41,11 +41,6 @@ export const SOURCES: readonly Financement[] = ["autofinancement", "emprunt", "a
 /** La solution que montre la correction : 150 000 €, empruntés. */
 export const SOLUTION_DU_FINANCEMENT = { prix: PRIX_DU_DEFI, source: SOURCES.indexOf("emprunt") } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** L'équipement à financer, ce que l'entreprise dégage, et ce que coûterait de l'emprunter. */
@@ -56,7 +51,7 @@ export function financer(c: Pick<Cas, "code">) {
   const montant = f.equipement.ht;
   const caf = k.caf;
   const emprunts = b.poste("emprunt");
-  const endettementApres = auCentieme((emprunts + montant) / b.capitauxPropres);
+  const endettementApres = arrondi2((emprunts + montant) / b.capitauxPropres);
   const choix: Financement = caf >= montant ? "autofinancement" : endettementApres <= ENDETTEMENT_MAXIMAL ? "emprunt" : "apport";
   return {
     f,
@@ -69,9 +64,9 @@ export function financer(c: Pick<Cas, "code">) {
     capitauxPropres: b.capitauxPropres,
     emprunts,
     taux: f.pret.tauxAnnuel,
-    tauxDeLEmprunt: auDixieme(f.pret.tauxAnnuel * 100),
+    tauxDeLEmprunt: arrondi2(f.pret.tauxAnnuel * 100),
     interets: auCentime(montant * f.pret.tauxAnnuel),
-    endettementAvant: auCentieme(emprunts / b.capitauxPropres),
+    endettementAvant: arrondi2(emprunts / b.capitauxPropres),
     endettementApres,
     maximal: ENDETTEMENT_MAXIMAL,
     // La rentabilité de l'activité, celle du chapitre « La rentabilité » : un emprunt n'enrichit
@@ -102,7 +97,7 @@ export function financementDuLaboratoire(k: Financer, p: Readonly<Record<string,
     apporte,
     manque: source === "autofinancement" ? auCentime(Math.max(0, prix - k.caf)) : 0,
     interets: auCentime(emprunte * k.taux),
-    endettement: auCentieme((k.emprunts + emprunte) / capitauxPropres),
+    endettement: arrondi2((k.emprunts + emprunte) / capitauxPropres),
   };
 }
 
@@ -156,7 +151,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
       },
       champs: (c) => {
         const k = financer(c);
-        return [{ libelle: "Capacité d'autofinancement", attendu: k.caf, calcul: `${eur(k.resultatNet)} + ${eur(k.dotation)} = ${eur(k.caf)}`, tolerance: 1 }];
+        return [{ libelle: "Capacité d'autofinancement", attendu: k.caf, calcul: `${eur(k.resultatNet)} + ${eur(k.dotation)} = ${eur(k.caf)}` }];
       },
       explication: (c) => {
         const k = financer(c);
@@ -217,14 +212,14 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
         const k = financer(c);
         return [
           { libelle: "Intérêts de la première année", attendu: k.interets, calcul: `${eur(k.montant)} × ${pct(k.tauxDeLEmprunt)} = ${eur(k.interets)}` },
-          { libelle: "Endettement avant", attendu: k.endettementAvant, calcul: `${eur(k.emprunts)} ÷ ${eur(k.capitauxPropres)} = ${qte(k.endettementAvant)}`, tolerance: 0.01 },
-          { libelle: "Endettement après", attendu: k.endettementApres, calcul: `(${eur(k.emprunts)} + ${eur(k.montant)}) ÷ ${eur(k.capitauxPropres)} = ${qte(k.endettementApres)}`, tolerance: 0.01 },
+          { libelle: "Endettement avant", nature: "grandeur", attendu: k.endettementAvant, calcul: `${eur(k.emprunts)} ÷ ${eur(k.capitauxPropres)} = ${nombreAuCentieme(k.endettementAvant)}` },
+          { libelle: "Endettement après", nature: "grandeur", attendu: k.endettementApres, calcul: `(${eur(k.emprunts)} + ${eur(k.montant)}) ÷ ${eur(k.capitauxPropres)} = ${nombreAuCentieme(k.endettementApres)}` },
         ];
       },
       explication: (c) => {
         const k = financer(c);
         return [
-          `L'emprunt coûterait ${eur(k.interets)} d'intérêts la première année, un peu moins ensuite à mesure qu'il se rembourse. Il porterait l'endettement à ${qte(k.endettementApres)} : ${k.endettementApres <= k.maximal ? "les emprunts resteraient au plus égaux aux capitaux propres, ce que les banques jugent raisonnable." : "les emprunts dépasseraient les capitaux propres, et une banque demanderait d'abord un apport des associés."}`,
+          `L'emprunt coûterait ${eur(k.interets)} d'intérêts la première année, un peu moins ensuite à mesure qu'il se rembourse. Il porterait l'endettement à ${nombreAuCentieme(k.endettementApres)} : ${k.endettementApres <= k.maximal ? "les emprunts resteraient au plus égaux aux capitaux propres, ce que les banques jugent raisonnable." : "les emprunts dépasseraient les capitaux propres, et une banque demanderait d'abord un apport des associés."}`,
         ];
       },
     },
@@ -246,12 +241,12 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
           {
             code: "emprunt",
             texte: "Par un emprunt",
-            oui: `Oui : son activité ne dégage pas assez pour payer seule (${eur(k.caf)}), mais son endettement resterait raisonnable (${qte(k.endettementApres)}). L'emprunt coûte ${eur(k.interets)} d'intérêts la première année, et laisse aux associés tout le capital.${k.economique <= k.tauxDeLEmprunt ? ` Reste que son activité rapporte ${pct(k.economique)} de ce qu'elle mobilise, ${k.economique > 0 ? "moins que les" : "face aux"} ${pct(k.tauxDeLEmprunt)} de l'emprunt : l'équipement n'enrichira les associés que s'il rend l'activité plus rentable.` : ""}`,
+            oui: `Oui : son activité ne dégage pas assez pour payer seule (${eur(k.caf)}), mais son endettement resterait raisonnable (${nombreAuCentieme(k.endettementApres)}). L'emprunt coûte ${eur(k.interets)} d'intérêts la première année, et laisse aux associés tout le capital.${k.economique <= k.tauxDeLEmprunt ? ` Reste que son activité rapporte ${pct(k.economique)} de ce qu'elle mobilise, ${k.economique > 0 ? "moins que les" : "face aux"} ${pct(k.tauxDeLEmprunt)} de l'emprunt : l'équipement n'enrichira les associés que s'il rend l'activité plus rentable.` : ""}`,
           },
           {
             code: "apport",
             texte: "Par un apport des associés",
-            oui: `Oui : l'activité ne dégage pas assez (${eur(k.caf)}), et un emprunt porterait l'endettement à ${qte(k.endettementApres)}, au-delà de la règle de prudence des banques. Un apport renforce les capitaux propres, et rendra un emprunt possible plus tard.`,
+            oui: `Oui : l'activité ne dégage pas assez (${eur(k.caf)}), et un emprunt porterait l'endettement à ${nombreAuCentieme(k.endettementApres)}, au-delà de la règle de prudence des banques. Un apport renforce les capitaux propres, et rendra un emprunt possible plus tard.`,
           },
         ];
         return options.map((o) => ({
@@ -265,7 +260,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
                 : o.code === "emprunt"
                   ? k.choix === "autofinancement"
                     ? `Pas nécessaire : l'activité dégage assez pour payer sans s'endetter ni payer d'intérêts.`
-                    : `Non : l'endettement passerait à ${qte(k.endettementApres)}, au-delà de ce qu'une banque juge raisonnable.`
+                    : `Non : l'endettement passerait à ${nombreAuCentieme(k.endettementApres)}, au-delà de ce qu'une banque juge raisonnable.`
                   : `Pas nécessaire : ${k.choix === "autofinancement" ? "l'activité dégage assez pour payer seule" : "un emprunt reste raisonnable"}, sans demander d'argent nouveau aux associés.`,
         }));
       },
@@ -365,7 +360,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
             if (x.prix < PRIX_DU_DEFI) return `L'équipement coûte ${eur(x.prix)} : le défi en demande au moins ${eur(PRIX_DU_DEFI)}.`;
             if (x.source === "apport") return "Le défi interdit l'apport des associés : cherchez une autre source.";
             if (x.manque > 0) return `L'autofinancement ne couvre pas ${eur(x.manque)} du prix : il faut une autre source.`;
-            return `L'endettement passerait à ${qte(x.endettement)}, au-delà de la règle des banques : l'équipement est trop cher pour être emprunté en entier.`;
+            return `L'endettement passerait à ${nombreAuCentieme(x.endettement)}, au-delà de la règle des banques : l'équipement est trop cher pour être emprunté en entier.`;
           },
           solution: SOLUTION_DU_FINANCEMENT,
         };
@@ -375,7 +370,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
         const x = financementDuLaboratoire(k, p);
         const plafond = Math.floor(ENDETTEMENT_MAXIMAL * k.capitauxPropres - k.emprunts + 1e-9);
         return [
-          `Défi relevé : ${eur(x.prix)} empruntés, ${eur(x.interets)} d'intérêts la première année, et un endettement de ${qte(x.endettement)}, dans la règle des banques.`,
+          `Défi relevé : ${eur(x.prix)} empruntés, ${eur(x.interets)} d'intérêts la première année, et un endettement de ${nombreAuCentieme(x.endettement)}, dans la règle des banques.`,
           `L'autofinancement s'arrête à ${eur(k.caf)} ; l'emprunt va plus loin, jusqu'à ${eur(plafond)}, mais il coûte des intérêts et rend l'entreprise plus dépendante de sa banque. Au-delà, seul un apport des associés permet d'investir, et il renforce les capitaux propres au lieu de les charger.`,
         ];
       },

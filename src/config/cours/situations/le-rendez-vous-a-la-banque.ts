@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { ENDETTEMENT_MAXIMAL } from "../financement";
 import { financer } from "../chapitres/financer-l-entreprise";
@@ -25,8 +25,6 @@ import type { Situation } from "./types";
  */
 
 /** Un montant, le signe moins typographique : « −582,38 € ». */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const ratio = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -103,12 +101,12 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       titre: "Ce que l'activité crée",
       notions: ["income_statement"],
       question: () =>
-        "Calculez la valeur ajoutée de l'année (la production, ici les ventes d'enceintes, moins les consommations venues d'autres entreprises), puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), au dixième.",
+        "Calculez la valeur ajoutée de l'année (la production, ici les ventes d'enceintes, moins les consommations venues d'autres entreprises), puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), à deux décimales.",
       champs: (c) => {
         const { v } = dossierDeLaBanque(c);
         return [
-          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.ventes)} − ${eur(v.consommations)} = ${eur(v.va)}`, tolerance: 1 },
-          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}`, tolerance: 0.1 },
+          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.ventes)} − ${eur(v.consommations)} = ${eur(v.va)}` },
+          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}` },
         ];
       },
       explication: (c) => {
@@ -124,11 +122,11 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       titre: "Ce que rapportent les capitaux des associés",
       notions: ["profitability_vs_return"],
       question: () =>
-        "Calculez la rentabilité financière : le résultat net rapporté aux capitaux propres, en pourcentage, au dixième.",
+        "Calculez la rentabilité financière : le résultat net rapporté aux capitaux propres, en pourcentage, à deux décimales.",
       champs: (c) => {
         const { r } = dossierDeLaBanque(c);
         return [
-          { libelle: "Rentabilité financière (%)", attendu: r.financiere, calcul: `${eur(r.resultatNet)} ÷ ${eur(r.capitauxPropres)} × 100 = ${pct(r.financiere)}`, tolerance: 0.1 },
+          { libelle: "Rentabilité financière (%)", attendu: r.financiere, calcul: `${eur(r.resultatNet)} ÷ ${eur(r.capitauxPropres)} × 100 = ${pct(r.financiere)}` },
         ];
       },
       explication: (c) => {
@@ -150,7 +148,7 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       champs: (c) => {
         const { f } = dossierDeLaBanque(c);
         return [
-          { libelle: "Capacité d'autofinancement", attendu: f.caf, calcul: `${eur(f.resultatNet)} + ${eur(f.dotation)} = ${eur(f.caf)}`, tolerance: 1 },
+          { libelle: "Capacité d'autofinancement", attendu: f.caf, calcul: `${eur(f.resultatNet)} + ${eur(f.dotation)} = ${eur(f.caf)}` },
         ];
       },
       explication: (c) => {
@@ -174,9 +172,9 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       champs: (c) => {
         const { k } = dossierDeLaBanque(c);
         return [
-          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
-          { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}`, tolerance: 1 },
-          { libelle: "Trésorerie", attendu: k.tresorerie, calcul: `${eur(k.disponible)} − ${eur(k.decouvert)} = ${eur(k.tresorerie)}`, tolerance: 1 },
+          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}` },
+          { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}` },
+          { libelle: "Trésorerie", attendu: k.tresorerie, calcul: `${eur(k.disponible)} − ${eur(k.decouvert)} = ${eur(k.tresorerie)}` },
         ];
       },
       explication: (c) => {
@@ -203,8 +201,8 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       champs: (c) => {
         const { f } = dossierDeLaBanque(c);
         return [
-          { libelle: "Endettement aujourd'hui", attendu: f.endettementAvant, calcul: `${eur(f.emprunts)} ÷ ${eur(f.capitauxPropres)} = ${ratio(f.endettementAvant)}`, tolerance: 0.01 },
-          { libelle: "Endettement avec le prêt", attendu: f.endettementApres, calcul: `(${eur(f.emprunts)} + ${eur(f.montant)}) ÷ ${eur(f.capitauxPropres)} = ${ratio(f.endettementApres)}`, tolerance: 0.01 },
+          { libelle: "Endettement aujourd'hui", nature: "grandeur", attendu: f.endettementAvant, calcul: `${eur(f.emprunts)} ÷ ${eur(f.capitauxPropres)} = ${ratio(f.endettementAvant)}` },
+          { libelle: "Endettement avec le prêt", nature: "grandeur", attendu: f.endettementApres, calcul: `(${eur(f.emprunts)} + ${eur(f.montant)}) ÷ ${eur(f.capitauxPropres)} = ${ratio(f.endettementApres)}` },
         ];
       },
       explication: (c) => {
