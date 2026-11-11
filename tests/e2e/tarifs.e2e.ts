@@ -331,6 +331,8 @@ describe("le devis venu d'un chapitre réservé", () => {
     expect(await page.locator('select[name="parcours"]').inputValue()).toBe("stmg-gf");
     expect(await page.locator('select[name="parcours"] option:checked').innerText()).toBe(titreDuParcours("stmg-gf"));
     expect((await formulaire.textContent())!.replace(/\s+/g, " ")).toContain("Le diplôme ou le parcours");
+    // Sous Classe, venue du cours, le parcours est exigé (décision du propriétaire du 11 novembre 2026).
+    expect(await page.locator('select[name="parcours"]').getAttribute("required")).not.toBeNull();
     expect(await page.locator('select[name="entreprise"]').getAttribute("required")).toBeNull();
     expect(await page.locator('select[name="niveau"]').getAttribute("required")).toBeNull();
     // Les options, dans l'ordre que l'enseignant voit en créant sa classe.

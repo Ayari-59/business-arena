@@ -22,7 +22,7 @@ import {
   type DevisChiffre,
 } from "@/config/catalogue";
 import { parcoursProposeAChoisir } from "@/config/cours/parcours-a-choisir";
-import { SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
+import { parcoursRequisAuDevis, SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
 import { ETIQUETTE_DU_CATALOGUE, lireLEtatDuCatalogue, verifierUnCodePromo } from "@/services/catalogue.service";
 
 /**
@@ -111,10 +111,14 @@ export async function envoyerDemandeDeDevisAction(
   const source = brut.source === SOURCE_DU_COURS ? SOURCE_DU_COURS : null;
   const requis = parametrageRequisAuDevis(libelles, source);
   // LE DIPLÔME OU LE PARCOURS, pour une offre qui ouvre le cours à une école : facultatif, gardé
-  // s'il est donné ; une valeur hors des parcours qu'une classe peut choisir est refusée.
+  // s'il est donné ; une valeur hors des parcours qu'une classe peut choisir est refusée. EXIGÉ SOUS
+  // CLASSE QUAND LA DEMANDE VIENT DU COURS (décision du propriétaire, `parcoursRequisAuDevis`).
   const parcours = demandeLeParcoursAuDevis(offre) ? brut.parcours!.trim() : "";
   if (parcours && !parcoursProposeAChoisir(parcours)) {
     return { error: "Choisissez le diplôme ou le parcours dans la liste", champ: "parcours", ok: null, values };
+  }
+  if (!parcours && demandeLeParcoursAuDevis(offre) && parcoursRequisAuDevis(offre.code, source)) {
+    return { error: "Choisissez le diplôme ou le parcours", champ: "parcours", ok: null, values };
   }
   const entreprise = libelles.entreprise ? brut.entreprise!.trim() : "";
   if (libelles.entreprise && (requis || entreprise) && !ENTREPRISES.some((e) => e.code === entreprise)) {

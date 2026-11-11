@@ -6,7 +6,7 @@ import { envoyerDemandeDeDevisAction, type DevisFormState } from "@/app/devis/ac
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { euros } from "@/config/catalogue";
 import type { AteliersDeLaClasse } from "@/config/ateliers-de-la-classe";
-import { parametrageRequisAuDevis } from "@/config/parametrage-du-devis";
+import { parametrageRequisAuDevis, parcoursRequisAuDevis } from "@/config/parametrage-du-devis";
 
 /**
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
@@ -107,6 +107,8 @@ export function DevisForm({
   // Exigés pour Classe seulement ; facultatifs pour Programme et Campus (audit UX, P1-7), et pour
   // une demande qui vient du cours (audit produit du 10 novembre 2026, P1-4).
   const requis = parametrageRequisAuDevis(choisie, source);
+  // Le parcours, exigé sous Classe quand la demande vient du cours (décision du propriétaire).
+  const parcoursRequis = parcoursRequisAuDevis(choisie.code, source);
   const [entrepriseChoisie, setEntreprise] = useState(v?.entreprise ?? entrepriseInitiale);
   const [niveauChoisi, setNiveau] = useState(v?.niveau ?? niveauInitial);
   const combinaison =
@@ -264,18 +266,23 @@ export function DevisForm({
             name="parcours"
             defaultValue={v?.parcours ?? parcoursInitial}
             className={`${champ} max-w-full truncate`}
+            required={parcoursRequis}
             {...invalide("parcours")}
           >
-            <option value="">À préciser plus tard</option>
+            <option value="" disabled={parcoursRequis}>
+              {parcoursRequis ? "Choisir le diplôme ou le parcours" : "À préciser plus tard"}
+            </option>
             {parcours.map((p) => (
               <option key={p.code} value={p.code}>
                 {p.titre}
               </option>
             ))}
           </select>
-          <span className="mt-1 block text-xs text-slate-400" data-facultatif="parcours">
-            Facultatif : il dit à l&apos;équipe pour quel diplôme préparer le cours.
-          </span>
+          {parcoursRequis ? null : (
+            <span className="mt-1 block text-xs text-slate-400" data-facultatif="parcours">
+              Facultatif : il dit à l&apos;équipe pour quel diplôme préparer le cours.
+            </span>
+          )}
           {erreur("parcours")}
         </label>
       ) : null}

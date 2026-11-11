@@ -15,7 +15,7 @@ import { CHAPITRES_DES_PARCOURS_DE_FORMATION, PARCOURS_PROPOSES_A_CHOISIR } from
 import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
 import { vueDOrientation } from "@/config/orientation";
-import { lienDuDevisDuCours, parametrageRequisAuDevis, SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
+import { lienDuDevisDuCours, parametrageRequisAuDevis, parcoursRequisAuDevis, SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
 import { CATALOGUE_PAR_DEFAUT, ENTREPRISES, NIVEAUX_DE_L_ARENE } from "@/config/tarifs";
 
 /**
@@ -125,6 +125,27 @@ describe("une demande qui vient du cours", () => {
       initial: { error: "x", champ: "email", ok: null, values: { offre: "classe", parcours: "mco" } },
     });
     expect(apres).toMatch(/<option value="mco" selected/);
+  });
+
+  it("sous Classe, exige le diplôme ou le parcours (décision du propriétaire du 11 novembre 2026)", () => {
+    const html = rendu({ source: SOURCE_DU_COURS });
+    expect(html).toMatch(REQUIS("parcours"));
+    const options = [...html.matchAll(/<select[^>]*name="parcours"[\s\S]*?<\/select>/g)][0]![0];
+    expect(options).toMatch(/<option value="" disabled=""[^>]*>Choisir le diplôme ou le parcours<\/option>/);
+    expect(texte(html)).not.toContain("Facultatif : il dit à l'équipe pour quel diplôme préparer le cours.");
+    // Prérempli, il reste exigé : l'enseignant peut en changer, pas le vider.
+    expect(rendu({ parcoursInitial: "stmg-gf", source: SOURCE_DU_COURS })).toMatch(REQUIS("parcours"));
+    // Facultatif partout ailleurs : Programme venu du cours (Campus n'est pas dans ce formulaire de
+    // test ; la règle le dit plus bas), et Classe depuis /tarifs.
+    const programme = rendu({ offreInitiale: "programme", source: SOURCE_DU_COURS });
+    expect(programme).not.toMatch(REQUIS("parcours"));
+    expect(texte(programme)).toContain("Facultatif : il dit à l'équipe pour quel diplôme préparer le cours.");
+    expect(rendu()).not.toMatch(REQUIS("parcours"));
+    expect(parcoursRequisAuDevis("classe", SOURCE_DU_COURS)).toBe(true);
+    expect(parcoursRequisAuDevis("classe", null)).toBe(false);
+    expect(parcoursRequisAuDevis("classe", "tarifs")).toBe(false);
+    expect(parcoursRequisAuDevis("programme", SOURCE_DU_COURS)).toBe(false);
+    expect(parcoursRequisAuDevis("campus", SOURCE_DU_COURS)).toBe(false);
   });
 
   it("l'adresse : l'offre Classe, la source, et le parcours s'il est connu", () => {

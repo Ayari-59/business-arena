@@ -119,10 +119,29 @@ describe("une demande qui vient du cours n'exige ni l'entreprise ni le niveau", 
     expect(autre.champ).toBe("entreprise");
   });
 
+  it("venue du cours, Classe exige le parcours ; Programme, Campus et Classe depuis /tarifs non (décision du propriétaire)", async () => {
+    const sans = await envoyerDemandeDeDevisAction(ETAT, formulaire({ ...base, offre: "classe", source: "cours", email: "sans-parcours@lycee.test" }));
+    expect(sans).toMatchObject({ ok: null, champ: "parcours", error: "Choisissez le diplôme ou le parcours" });
+    expect(sans.values).toMatchObject({ offre: "classe", email: "sans-parcours@lycee.test" });
+    expect(await ligne("sans-parcours@lycee.test")).toBeUndefined();
+    for (const offre of ["programme", "campus"]) {
+      const email = `${offre}-cours-sans-parcours@ecole.test`;
+      const r = await envoyerDemandeDeDevisAction(ETAT, formulaire({ ...base, offre, source: "cours", effectif: "300", email }));
+      expect(r.error, offre).toBeNull();
+      expect(await ligne(email)).toMatchObject({ parcours: null });
+    }
+    const tarifs = await envoyerDemandeDeDevisAction(
+      ETAT,
+      formulaire({ ...base, offre: "classe", entreprise: "nova", niveau: "3", email: "classe-tarifs@lycee.test" }),
+    );
+    expect(tarifs.error).toBeNull();
+    expect(await ligne("classe-tarifs@lycee.test")).toMatchObject({ parcours: null });
+  });
+
   it("une entreprise ou un niveau hors du registre restent refusés, même venus du cours", async () => {
-    const r = await envoyerDemandeDeDevisAction(ETAT, formulaire({ ...base, offre: "classe", source: "cours", entreprise: "inconnue", email: "x1@lycee.test" }));
+    const r = await envoyerDemandeDeDevisAction(ETAT, formulaire({ ...base, offre: "classe", source: "cours", parcours: "mco", entreprise: "inconnue", email: "x1@lycee.test" }));
     expect(r.champ).toBe("entreprise");
-    const n = await envoyerDemandeDeDevisAction(ETAT, formulaire({ ...base, offre: "classe", source: "cours", niveau: "9", email: "x2@lycee.test" }));
+    const n = await envoyerDemandeDeDevisAction(ETAT, formulaire({ ...base, offre: "classe", source: "cours", parcours: "mco", niveau: "9", email: "x2@lycee.test" }));
     expect(n.champ).toBe("niveau");
   });
 });

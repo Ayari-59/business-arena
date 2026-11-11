@@ -456,7 +456,7 @@ function MentionsLegalesPage() {
         </Section>
 
         <p className="text-center text-xs text-slate-400">
-          Dernière mise à jour : octobre 2026 ·{" "}
+          Dernière mise à jour : novembre 2026 ·{" "}
           <Link href="/" className="underline-offset-4 hover:text-slate-400 hover:underline">
             business-arena.fr
           </Link>

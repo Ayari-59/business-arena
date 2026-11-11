@@ -27,3 +27,12 @@ export const lienDuDevisDuCours = (parcours?: string | null): string =>
  */
 export const parametrageRequisAuDevis = (l: { entreprise?: true; niveau?: true }, source?: string | null): boolean =>
   Boolean(l.entreprise && l.niveau) && source !== SOURCE_DU_COURS;
+
+/**
+ * LE DIPLÔME OU LE PARCOURS EST-IL EXIGÉ AU DEVIS ? (décision du propriétaire du 11 novembre 2026.)
+ * Oui pour l'offre Classe quand la demande vient du cours : Classe n'ouvre qu'un parcours, et le
+ * contenu réservé le connaît presque toujours (il arrive prérempli). Facultatif partout ailleurs,
+ * depuis /tarifs comme pour Programme et Campus : il reste demandé, jamais exigé.
+ */
+export const parcoursRequisAuDevis = (offre: string, source?: string | null): boolean =>
+  offre === "classe" && source === SOURCE_DU_COURS;
