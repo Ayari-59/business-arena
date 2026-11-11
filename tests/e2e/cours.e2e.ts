@@ -8,6 +8,8 @@ import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, casDuChapitre, motsDuContenu } from "../../src/config/cours/situations";
+import { chapitreLibreParDefaut, chapitresLibresParDiplome, essaiDuDiplome, essaiPour } from "../../src/config/cours/chapitres-libres";
+import { formationsAvecUnePage } from "../../src/config/couverture";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
 import { coursDuDiplome, couvertureDuCoursEnClair } from "../../src/config/cours/par-diplome";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
@@ -25,9 +27,15 @@ import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cour
  * jusqu'au « Chapitre terminé » qui compte toutes les étapes réussies du premier
  * coup. Puis le chemin de l'erreur (la remarque, l'indice, la correction après
  * deux essais), le mode classe, la reprise après un rechargement, et le téléphone.
+ *
+ * Le chapitre pilote reste libre (décision du propriétaire, novembre 2026), à côté du chapitre libre
+ * de chaque diplôme (config/cours/chapitres-libres.ts). L'essai par défaut, celui des pages sans
+ * diplôme, est `essai`.
  */
 
 const chapitre = CHAPITRES[0]!;
+const essai = chapitreLibreParDefaut();
+const entreprisesDeLEssai = ENTREPRISES_DU_COURS.filter((e) => !essai.entreprises || essai.entreprises.codes.includes(e));
 const chemin = (entreprise: string, classe = false) =>
   `/cours/${chapitre.code}?entreprise=${entreprise}${classe ? "&classe" : ""}`;
 const virgule = (x: number) => String(x).replace(".", ",");
@@ -69,11 +77,11 @@ async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
 }
 
 describe("/cours : le catalogue par thème et le chapitre libre", () => {
-  it("propose le chapitre pilote dans chacune des entreprises du cours, range chaque chapitre une fois sous son thème, n'annonce que ce qui vient, sans déborder sur téléphone", async () => {
+  it("propose l'essai par défaut dans chacune de ses entreprises, range chaque chapitre une fois sous son thème, n'annonce que ce qui vient, sans déborder sur téléphone", async () => {
     const page = await nouvellePage(390, 844);
     await aller(page, "/cours");
-    for (const code of ENTREPRISES_DU_COURS) {
-      expect(await page.locator(`a[href="${chemin(code)}"]`).count(), code).toBeGreaterThan(0);
+    for (const code of entreprisesDeLEssai) {
+      expect(await page.locator(`a[href="/cours/${essai.code}?entreprise=${code}"]`).count(), code).toBeGreaterThan(0);
     }
     // Les quatre briques et leur enchaînement, avant le catalogue.
     expect(await page.locator("[data-articulation] [data-brique]").count()).toBe(4);
@@ -148,6 +156,9 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     expect(await programme.locator("[data-cadenas]").count()).toBe(
       parcours.blocs.flatMap((b) => b.chapitres).filter((l) => !l.chapitre.libre).length,
     );
+    // Sous le nom du diplôme, son chapitre libre et son cas (un chapitre libre par diplôme).
+    const libre = essaiDuDiplome("bts-mco")!;
+    expect(await programme.locator(`[data-essai-du-diplome="bts-mco"] [data-chapitre-libre="${libre.chapitre.code}"]`).getAttribute("href")).toMatch(/[?&]diplome=bts-mco(&|$)/);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     // Un diplôme qui a ses ateliers les propose.
     await aller(page, "/cours?diplome=bts-mco");
@@ -449,11 +460,11 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
   }, 240_000);
 });
 
-describe("le seuil de rentabilité, chapitre réservé", () => {
-  it("sans licence, le chapitre dit qu'il est réservé ; sous licence, il se joue de bout en bout sans faute", async () => {
+describe("le seuil de rentabilité, chapitre libre du BTS MHR", () => {
+  it("sans licence, le chapitre s'ouvre (le premier du parcours du BTS MHR) ; il se joue de bout en bout sans faute", async () => {
     const libre = await nouvellePage();
     await aller(libre, "/cours/seuil-de-rentabilite?entreprise=nova");
-    expect(await libre.locator("main").innerText().then(espacesOrdinaires)).toContain("réservé aux établissements sous licence");
+    expect(await libre.locator("main").innerText().then(espacesOrdinaires)).not.toContain("réservé aux établissements sous licence");
     await libre.context().close();
 
     const code = "nova";
@@ -1319,9 +1330,10 @@ describe.each([
       expect(texte).not.toContain("aux établissements sous licence");
     } else {
       expect(texte).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
-      // Une sortie : le chapitre libre, les offres, le devis — celui de l'offre Classe (pas de cours seul) ;
-      // l'entreprise et le niveau se choisissent au devis.
-      expect(sorties).toEqual(expect.arrayContaining(["/tarifs", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
+      // Une sortie : le chapitre libre de son diplôme (config/cours/chapitres-libres.ts, `essaiPour`), les
+      // offres, le devis, celui de l'offre Classe (pas de cours seul) ; l'entreprise et le niveau se
+      // choisissent au devis.
+      expect(sorties).toEqual(expect.arrayContaining(["/tarifs", essaiPour(chapitreParCode(chapitreCode)!).href]));
       expect(sorties).toContain("/devis?offre=classe");
     }
 
@@ -1471,6 +1483,111 @@ describe("la page d'un chapitre n'annonce que les compétences du diplôme d'où
   }, 120_000);
 });
 
+/**
+ * UN CHAPITRE LIBRE PAR DIPLÔME (décision du propriétaire, novembre 2026 ; config/cours/chapitres-libres.ts).
+ * En tête de la page de chaque diplôme, sans défiler sur un téléphone de 390 px : son chapitre libre, le
+ * premier de son parcours, et son cas pratique. L'un et l'autre s'ouvrent sans compte, et la page du
+ * chapitre montre les compétences de ce diplôme. Un chapitre réservé de son parcours y ramène.
+ */
+describe("un chapitre libre par diplôme", () => {
+  const TELEPHONE = { width: 390, height: 844 };
+  const competences = (p: Page) => p.locator("[data-objectifs-du-chapitre] > div.carte").innerText().then(espacesOrdinaires);
+  /**
+   * Le haut et le bas de l'encart, dans la fenêtre, et la limite du premier écran : le bas de la fenêtre,
+   * ou le haut de la barre d'action du téléphone quand elle est à l'écran (components/barre-d-action-mobile.tsx).
+   */
+  const dansLaFenetre = (p: Page, d: string) =>
+    p.locator(`[data-essai-du-diplome="${d}"]`).evaluate((el) => {
+      const b = el.getBoundingClientRect();
+      const barre = document.querySelector("[data-barre-action]")?.getBoundingClientRect();
+      const limite = barre && barre.height > 0 && barre.top < window.innerHeight ? barre.top : window.innerHeight;
+      return { haut: Math.round(b.top), bas: Math.round(b.bottom), limite: Math.round(limite) };
+    });
+
+  it("en tête de chaque page de diplôme, visible sans défiler à 390 px : le chapitre libre et son cas, le diplôme dans l'adresse", async () => {
+    const ctx = await navigateur.newContext({ viewport: TELEPHONE, hasTouch: true, locale: "fr-FR" });
+    // L'invitation à installer, comme dans tests/e2e/mobile-public.e2e.ts : un visiteur qui l'a déjà fermée.
+    await ctx.addInitScript(() => {
+      try {
+        localStorage.setItem("install-prompt-ferme-le", String(Date.now()));
+      } catch {
+        /* rien */
+      }
+    });
+    const page = await ctx.newPage();
+    try {
+      for (const f of formationsAvecUnePage()) {
+        const e = essaiDuDiplome(f.code)!;
+        const d = e.diplome.code;
+        for (const chemin of [`/parcours/${f.code}`, `/cours?diplome=${f.code}#programme`]) {
+          await aller(page, chemin);
+          const encart = page.locator(`[data-essai-du-diplome="${d}"]`);
+          expect(await encart.count(), chemin).toBe(1);
+          // La barre d'action se montre après un temps : on la laisse paraître avant de mesurer.
+          await page.waitForTimeout(400);
+          const { haut, bas, limite } = await dansLaFenetre(page, d);
+          expect(haut, `${chemin} : l'encart commence hors de l'écran`).toBeGreaterThanOrEqual(0);
+          expect(bas, `${chemin} : l'encart sort du premier écran (limite ${limite} px)`).toBeLessThanOrEqual(limite);
+          expect(await encart.locator(`[data-chapitre-libre="${e.chapitre.code}"]`).getAttribute("href"), chemin).toMatch(
+            new RegExp(`^/cours/${e.chapitre.code}\\?(.*&)?diplome=${d}(&|$)`),
+          );
+          expect(await encart.locator(`[data-cas-libre="${e.cas!.code}"]`).getAttribute("href"), chemin).toMatch(
+            new RegExp(`^/cours/${e.cas!.code}\\?(.*&)?diplome=${d}(&|$)`),
+          );
+          expect(await debordement(page), chemin).toBeLessThanOrEqual(0);
+          if (process.env.E2E_CAPTURES && ["stmg", "bts-mhr-bc"].includes(f.code)) {
+            await page.screenshot({ path: `${process.env.E2E_CAPTURES}/${chemin.startsWith("/parcours") ? "parcours" : "cours"}-${f.code}-390.png` });
+          }
+        }
+      }
+    } finally {
+      await ctx.close();
+    }
+  }, 300_000);
+
+  it("chaque chapitre libre et son cas s'ouvrent sans compte, avec les compétences du diplôme de l'adresse", async () => {
+    const page = await nouvellePage();
+    try {
+      for (const l of chapitresLibresParDiplome()) {
+        for (const f of l.diplomes) {
+          await aller(page, `/cours/${l.chapitre.code}?diplome=${f.code}`);
+          const main = await page.locator("main").innerText().then(espacesOrdinaires);
+          expect(main, l.chapitre.code).not.toContain("aux établissements sous licence");
+          await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(l.chapitre.etapes[0]!.titre);
+          await expect.poll(() => page.locator("[data-objectifs-du-chapitre]").count(), { timeout: 15_000 }).toBe(1);
+          expect(await competences(page), `${l.chapitre.code} depuis ${f.code}`).toContain(`Compétences du référentiel · ${f.sigle}`);
+        }
+        await aller(page, `/cours/${l.cas!.code}?diplome=${l.diplomes[0]!.code}`);
+        expect(await page.locator("main").innerText().then(espacesOrdinaires), l.cas!.code).not.toContain("aux établissements sous licence");
+        await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(l.cas!.etapes[0]!.titre);
+      }
+    } finally {
+      await page.context().close();
+    }
+  }, 300_000);
+
+  it("sans compte, un chapitre réservé du parcours mène au chapitre libre de ce diplôme ; le chapitre pilote reste libre", async () => {
+    const page = await nouvellePage(390, 844);
+    try {
+      for (const code of ["stmg", "bts-cg", "dscg"]) {
+        const e = essaiDuDiplome(code)!;
+        const reserve = coursDuDiplome(code)!.blocs.flatMap((b) => b.chapitres).find((x) => !x.chapitre.libre)!.chapitre;
+        await aller(page, `/cours/${reserve.code}?diplome=${code}`);
+        expect(await page.locator("main").innerText().then(espacesOrdinaires), reserve.code).toContain("aux établissements sous licence");
+        expect(await page.getByRole("link", { name: "Essayer le chapitre libre" }).getAttribute("href"), reserve.code).toBe(`/cours/${e.chapitre.code}?diplome=${code}`);
+      }
+      // « De la création au premier bilan » et son cas s'ouvrent toujours sans compte (décision du
+      // propriétaire, novembre 2026) : les liens déjà partagés marchent.
+      for (const code of [CHAPITRES[0]!.code, casDuChapitre(CHAPITRES[0]!.code)!.code]) {
+        await aller(page, `/cours/${code}?entreprise=nova`);
+        expect(await page.locator("main").innerText().then(espacesOrdinaires), code).not.toContain("aux établissements sous licence");
+      }
+    } finally {
+      await page.context().close();
+    }
+  }, 120_000);
+});
+
 describe("l'accueil présente les quatre formats", () => {
   it("quatre formats, chacun avec sa page, et la porte gratuite de ceux qui en ont une, sans déborder sur téléphone", async () => {
     const page = await nouvellePage(390, 844);
@@ -1478,7 +1595,7 @@ describe("l'accueil présente les quatre formats", () => {
     const formats = page.locator("[data-formats-de-l-accueil] [data-format]");
     expect(await formats.evaluateAll((xs) => xs.map((x) => x.getAttribute("data-format")))).toEqual(["cours", "situations", "arene", "episodes"]);
     // Le cours, absent de l'accueil avant l'audit, y a sa porte libre.
-    expect(await page.locator(`[data-format="cours"] a[href="/cours/${CHAPITRES.find((c) => c.libre)!.code}"]`).count()).toBe(1);
+    expect(await page.locator(`[data-format="cours"] a[href="/cours/${essai.code}"]`).count()).toBe(1);
     expect(await page.locator('[data-format="arene"] a[href="/jouer"]').count()).toBe(1);
     expect(await page.locator('[data-format="episodes"] a[href="/entreprises/episode"]').count()).toBe(1);
     // Le héros mène à la bande.

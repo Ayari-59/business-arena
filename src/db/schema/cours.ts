@@ -43,7 +43,7 @@ export const coursClasses = pgTable(
     /**
      * LA LIBÉRATION DES CHAPITRES (migration 0056, décision du propriétaire, novembre 2026) :
      * « tout » ouvre aux élèves tous les chapitres que l'offre permet ; « chapitre » n'ouvre que
-     * ceux que l'enseignant a libérés (cours_liberations), avec le chapitre libre. Les classes
+     * ceux que l'enseignant a libérés (cours_liberations), avec les chapitres libres. Les classes
      * d'avant la règle restent en « tout ». La règle : services/chapitres-de-la-classe.ts.
      */
     liberation: text("liberation").$type<"tout" | "chapitre">().notNull().default("tout"),

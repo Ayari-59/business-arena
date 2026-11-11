@@ -100,7 +100,10 @@ describe("les huit suites", () => {
     const s = chapitre(code);
     const p = chapitre(premiere);
     expect(s.prerequis).toEqual([premiere]);
-    expect([s.parcours, s.palier, s.libre, s.entreprises?.codes]).toEqual([p.parcours, p.palier, p.libre, p.entreprises?.codes]);
+    expect([s.parcours, s.palier, s.entreprises?.codes]).toEqual([p.parcours, p.palier, p.entreprises?.codes]);
+    // Une suite n'est jamais le premier chapitre d'un parcours : elle reste réservée, même quand sa
+    // première partie est libre (config/cours/chapitres-libres.ts).
+    expect(s.libre, code).toBe(false);
     // Les blocs de la suite sont ceux de la première partie, sauf un bloc que la suite n'enseigne pas :
     // le budget flexible est exclu du BTS CG (5.3.2), sa première partie ne l'est pas.
     expect(p.blocs, code).toEqual(expect.arrayContaining([...s.blocs]));

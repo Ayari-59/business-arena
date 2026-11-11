@@ -26,6 +26,9 @@ import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
 import { lienDuScenario, scenariosDuChapitre } from "@/config/cours/scenarios";
 import { coursDeLaFormation } from "@/config/couverture";
+import { chapitreLibreParDefaut, essaiDuDiplome } from "@/config/cours/chapitres-libres";
+import { formationDuParcours } from "@/config/cours/competences-affichees";
+import { EssaiDuDiplome } from "@/components/cours/essai-du-diplome";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
@@ -70,21 +73,33 @@ const CHAPITRES_PAR_DIPLOME = new Map(
  * liens `/cours#theme-…` des fins de chapitre l'ouvrent toujours ; une recherche par
  * mot-clé (`?q=`) le complète. Aucune adresse ne change.
  *
- * Un chapitre est libre (`libre`, pas le premier du catalogue) ; la suite est réservée
- * aux établissements sous licence.
+ * UN CHAPITRE LIBRE PAR DIPLÔME (décision du propriétaire, novembre 2026 ;
+ * config/cours/chapitres-libres.ts) : le premier de son parcours, avec son cas pratique. La vue
+ * d'un diplôme le met en tête, sous son nom ; le bandeau « Pour essayer » le reprend, avec le choix
+ * de l'entreprise. Sans diplôme, l'essai par défaut. La suite est réservée aux établissements sous
+ * licence.
  */
 async function CoursPage({
   searchParams,
 }: {
   searchParams: Promise<{ classe?: string; diplome?: string; q?: string }>;
 }) {
-  const pilote = CHAPITRES.find((c) => c.libre)!;
   const [{ classe: annonce, diplome, q }, userId, session] = await Promise.all([searchParams, getGuestUserId(), getSession()]);
   const programme = diplome ? programmeDuDiplome(diplome) : null;
   const parcours = programme ? coursDuDiplome(programme.formation.code) : null;
   const parcoursDeFormation = programme ? PARCOURS_DE_FORMATION.find((p) => p.formation === programme.formation.code) : undefined;
   const classe = userId ? await classeDeLEleve(userId) : null;
   const imposee = classe?.entreprise ? ENTREPRISES.find((e) => e.code === classe.entreprise) : undefined;
+  // L'ESSAI : le chapitre libre du diplôme choisi, sinon de celui de la classe de l'élève, sinon l'essai
+  // par défaut (config/cours/chapitres-libres.ts). « Ma classe » commence par celui de sa classe.
+  const essaiDuProgramme = programme ? essaiDuDiplome(programme.formation.code) : null;
+  const essaiDeLaClasse = essaiDuDiplome(formationDuParcours(classe?.parcours));
+  const essai = essaiDuProgramme ?? essaiDeLaClasse;
+  const pilote = essai?.chapitre ?? chapitreLibreParDefaut();
+  const aCommencer = essaiDeLaClasse?.chapitre ?? pilote;
+  // Les entreprises où l'essai se joue (un chapitre peut n'en garder que certaines).
+  const entreprisesDuPilote = ENTREPRISES.filter((e) => !pilote.entreprises || pilote.entreprises.codes.includes(e.code));
+  const premiere = entreprisesDuPilote[0]!;
   const motCle = (q ?? "").trim().slice(0, 80);
   const lignesDuParcours = parcours?.blocs.flatMap((b) => b.chapitres) ?? [];
   const trouves = motCle ? rechercherChapitres(motCle, parcours ? lignesDuParcours.map((l) => l.chapitre) : undefined) : [];
@@ -93,8 +108,8 @@ async function CoursPage({
     [...lignesDuParcours.map((l) => l.chapitre), ...trouves],
   );
   const vueParDefaut = !programme && !motCle;
-  // Le diplôme choisi, que les liens du chapitre libre portent aussi (config/cours/competences-affichees.ts).
-  const duDiplome = programme ? `&diplome=${programme.formation.code}` : "";
+  // Le diplôme de l'essai, que les liens du chapitre libre portent aussi (config/cours/competences-affichees.ts).
+  const duDiplome = essai ? `&diplome=${essai.diplome.code}` : programme ? `&diplome=${programme.formation.code}` : "";
   return (
     <>
       <main id="main">
@@ -132,11 +147,11 @@ async function CoursPage({
               </p>
               <p>
                 <Link
-                  href={`/cours/${pilote.code}?entreprise=${imposee?.code ?? ENTREPRISES[0]!.code}`}
+                  href={lienDuChapitre(aCommencer, imposee?.code, essaiDeLaClasse?.diplome.code)}
                   className={bouton({ taille: "l" })}
                   data-commencer-en-classe=""
                 >
-                  Commencer : {pilote.titre}
+                  Commencer : {aCommencer.titre}
                 </Link>
               </p>
               <form action={quitterClasseAction}>
@@ -261,6 +276,15 @@ async function CoursPage({
                 <h2 id="programme-titre" className="text-2xl font-bold text-slate-50">
                   {programme.formation.nom}
                 </h2>
+                {/* L'ESSAI DU DIPLÔME, EN TÊTE (audit du 10 novembre 2026, produit P1-1) : il était au
+                    bandeau « Pour essayer », sous le parcours entier, au 24e écran sur téléphone. */}
+                {essaiDuProgramme ? (
+                  <EssaiDuDiplome
+                    essai={essaiDuProgramme}
+                    lien={(c) => lienDuChapitre(c, imposee?.code, essaiDuProgramme.diplome.code)}
+                    className="my-2"
+                  />
+                ) : null}
                 {/* Ce que le cours couvre, matière par matière, comme les blocs ci-dessous le marquent ;
                     la couverture de l'arène reste au tableau de /parcours (audit du 10 novembre 2026). */}
                 <p className="text-sm text-slate-300" data-couverture-du-programme="">
@@ -387,12 +411,12 @@ async function CoursPage({
             </p>
           ) : null}
 
-          {/* LE CHAPITRE LIBRE, EN BANDEAU : pour essayer (il n'est pas le premier du catalogue). Le choix de l'entreprise
-              se replie. */}
+          {/* LE CHAPITRE LIBRE, EN BANDEAU : pour essayer, celui du diplôme choisi ou l'essai par défaut. Le choix de
+              l'entreprise, parmi celles où il se joue, se replie. */}
           <section aria-labelledby="pilote" className="carte grid gap-4 p-5 sm:p-6">
             <div className="grid gap-1">
               <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-                Pour essayer · chapitre libre d&apos;accès · {dureeEnClair(dureeDuChapitre(pilote))}
+                Pour essayer · {essai ? `chapitre libre en ${essai.diplome.sigle}` : "chapitre libre d'accès"} · {dureeEnClair(dureeDuChapitre(pilote))}
               </p>
               <h2 id="pilote" className="text-2xl font-bold text-slate-50">
                 {pilote.titre}
@@ -400,41 +424,44 @@ async function CoursPage({
               <p className="max-w-3xl text-base leading-relaxed text-slate-300">{pilote.accroche}</p>
             </div>
             <p className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
-              <Link href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}${duDiplome}`} className={bouton({ taille: "m" })}>
-                Commencer avec {ENTREPRISES[0]!.nom}
+              <Link href={`/cours/${pilote.code}?entreprise=${premiere.code}${duDiplome}`} className={bouton({ taille: "m" })}>
+                Commencer avec {premiere.nom}
               </Link>
               {/* Projeter s'adresse à l'enseignant : l'élève d'une classe ne le voit pas. */}
               {classe ? null : (
                 <Link
-                  href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}&classe${duDiplome}`}
+                  href={`/cours/${pilote.code}?entreprise=${premiere.code}&classe${duDiplome}`}
                   className={bouton({ variante: "secondaire", taille: "m" })}
                 >
                   Projeter en classe
                 </Link>
               )}
             </p>
-            <details className="group">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-slate-200 [&::-webkit-details-marker]:hidden">
-                <span aria-hidden className="mr-2 inline-block text-amber-400 transition-transform group-open:rotate-90">
-                  ▸
-                </span>
-                Choisir une autre entreprise du cas ({ENTREPRISES.length})
-              </summary>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-3">
-                {ENTREPRISES.map((e) => (
-                  <li key={e.code}>
-                    <Link
-                      href={`/cours/${pilote.code}?entreprise=${e.code}${duDiplome}`}
-                      style={{ borderLeftColor: `var(--secteur-${e.teinte})` }}
-                      className="flex min-h-14 flex-col justify-center rounded-lg border border-l-4 border-white/10 px-3 py-2 transition hover:border-white/30"
-                    >
-                      <span className="font-semibold text-slate-100">{e.nom}</span>
-                      <span className="text-xs text-slate-400">{e.tagline}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </details>
+            {/* Un chapitre qui ne se joue que dans une entreprise n'a pas de choix à replier. */}
+            {entreprisesDuPilote.length > 1 ? (
+              <details className="group">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-slate-200 [&::-webkit-details-marker]:hidden">
+                  <span aria-hidden className="mr-2 inline-block text-amber-400 transition-transform group-open:rotate-90">
+                    ▸
+                  </span>
+                  Choisir une autre entreprise du cas ({entreprisesDuPilote.length})
+                </summary>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {entreprisesDuPilote.map((e) => (
+                    <li key={e.code}>
+                      <Link
+                        href={`/cours/${pilote.code}?entreprise=${e.code}${duDiplome}`}
+                        style={{ borderLeftColor: `var(--secteur-${e.teinte})` }}
+                        className="flex min-h-14 flex-col justify-center rounded-lg border border-l-4 border-white/10 px-3 py-2 transition hover:border-white/30"
+                      >
+                        <span className="font-semibold text-slate-100">{e.nom}</span>
+                        <span className="text-xs text-slate-400">{e.tagline}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
           </section>
 
           {/* L'articulation des offres s'adresse aux enseignants : pas à l'élève d'une classe. */}
@@ -452,8 +479,8 @@ async function CoursPage({
               </h2>
               <p className="max-w-3xl text-base text-slate-300">
                 {CHAPITRES_PROPOSES.length} chapitres en {THEMES.length} thèmes, du bac STMG au DSCG, et, dans l&apos;enseignement supérieur, des
-                épisodes à jouer en situation. Chaque chapitre dit son palier, sa durée indicative et son accès : un chapitre est libre, avec son
-                cas pratique, la suite est réservée aux établissements sous licence.
+                épisodes à jouer en situation. Chaque chapitre dit son palier, sa durée indicative et son accès : chaque diplôme a son chapitre
+                libre, avec son cas pratique, et la suite est réservée aux établissements sous licence.
               </p>
             </div>
 
@@ -566,7 +593,7 @@ async function chapitresOuverts(
   return ouverts;
 }
 
-/** Le cadenas d'un chapitre réservé à ce visiteur, ou la mention du chapitre libre. */
+/** Le cadenas d'un chapitre réservé à ce visiteur, ou la mention d'un chapitre libre. */
 function Acces({ chapitre, ouvert }: { chapitre: Chapitre; ouvert?: boolean }) {
   if (chapitre.libre) return <span className="font-semibold text-amber-300">libre</span>;
   if (ouvert === undefined) return <>licence</>;
@@ -657,7 +684,7 @@ function lienDuChapitre(c: Chapitre, imposee?: string, diplome?: string): string
 /**
  * LES CHAPITRES D'UNE LISTE, UNE LIGNE CHACUN : le palier et son public, le titre,
  * la durée, l'accès. « Sous licence » ne se répète plus sur chaque lien : un
- * cadenas le dit, et le chapitre libre se signale.
+ * cadenas le dit, et un chapitre libre se signale.
  */
 function ListeDeChapitres({
   chapitres,

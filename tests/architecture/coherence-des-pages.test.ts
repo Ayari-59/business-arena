@@ -27,7 +27,7 @@ describe("les promesses d'accès suivent le code", () => {
     expect(page).toContain("OFFRES.episodes.nom");
   });
 
-  it("un chapitre réservé mène au chapitre libre, aux offres et au devis", () => {
+  it("un chapitre réservé mène au chapitre libre de son diplôme, aux offres et au devis", () => {
     // La page du chapitre réservé vit dans son composant (audit UX du 29 octobre 2026 : une
     // variante pour l'élève, sans vente) ; la page du chapitre le rend.
     expect(lire("src/app/cours/[chapitre]/page.tsx")).toContain("<ChapitreReserve");
@@ -37,7 +37,9 @@ describe("les promesses d'accès suivent le code", () => {
     // Le devis de l'offre Classe : pas d'offre « cours seul » (décision du propriétaire).
     // « Le cours seul » n'est plus un choix du devis : le cours vient avec l'offre (audit de l'offre).
     expect(page).toContain('href="/devis?offre=classe"');
-    expect(page).toContain("href={`/cours/${chapitreLibre}`}");
+    // Le chapitre libre le plus proche : celui du diplôme d'où l'on vient (config/cours/chapitres-libres.ts, `essaiPour`).
+    expect(page).toContain("href={essai.href}");
+    expect(lire("src/app/cours/[chapitre]/page.tsx")).toContain("essai={essaiPour(chapitre,");
   });
 });
 

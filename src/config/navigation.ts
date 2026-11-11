@@ -194,12 +194,13 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
       },
       {
-        // Le chapitre libre du cours (config/cours/registre.ts, `libre`) : la garde du menu
-        // vérifie que l'adresse est la sienne. Le plan ne lit pas le registre des chapitres,
-        // qui est lourd et que le menu, côté navigateur, n'a pas à charger.
-        href: "/cours/creation-premier-bilan",
+        // L'essai par défaut du cours (config/cours/chapitres-libres.ts, `chapitreLibreParDefaut`) :
+        // chaque diplôme a son chapitre libre, et la garde du menu vérifie que l'adresse est celle de
+        // l'essai par défaut. Le plan ne lit pas le registre des chapitres, qui est lourd et que le
+        // menu, côté navigateur, n'a pas à charger.
+        href: "/cours/les-flux-de-l-entreprise",
         libelle: "Essayer le cours",
-        aide: "Un chapitre du cours, libre d'accès : créez une entreprise, passez ses premières écritures et construisez son bilan.",
+        aide: "Chaque diplôme a son chapitre libre, sans compte. Celui-ci ouvre le bac STMG : ce qui circule entre l'entreprise, ses clients, ses fournisseurs, sa banque et l'État.",
       },
       {
         href: "/reprendre",

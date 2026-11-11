@@ -136,8 +136,9 @@ describe("le chapitre pilote, quelle que soit l'entreprise", () => {
   });
 
   it("est libre d'accès (décision du propriétaire : le premier chapitre sert de démonstration)", () => {
+    // Gardé ouvert en novembre 2026, à côté du chapitre libre de chaque diplôme
+    // (tests/architecture/un-chapitre-libre-par-diplome.test.ts, `LIBRES_HORS_DU_PREMIER_RANG`).
     expect(pilote.libre).toBe(true);
-    expect(CHAPITRES.filter((c) => c.libre)).toHaveLength(1);
   });
 
   it("le cas est déterministe : deux calculs, les mêmes montants", async () => {

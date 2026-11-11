@@ -314,7 +314,9 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
     "Distinguer le prix d'achat qui garde le taux de marque et celui qui garde la marge du mois face à un concurrent",
     "Expliquer ce qui borne le prix : l'élasticité de la demande, le prix d'acceptabilité et le cadre légal des prix",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du BTS MCO (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DU_POINT_DE_VENTE,
     pourquoi:
@@ -1181,5 +1183,7 @@ export const S_ALIGNER_SUR_LE_CONCURRENT: Chapitre = partieDuChapitre(
     accroche: "Le concurrent affiche moins cher : le coefficient retrouvé à rebours, le prix aligné, puis le prix d'achat qui garde le taux de marque et celui qui garde la marge du mois.",
     prerequis: ["taux-de-marque-et-coefficient"],
     ouverture: undefined,
+    // La suite reste réservée : seul le premier chapitre du parcours est libre (config/cours/chapitres-libres.ts).
+    libre: false,
   },
 );

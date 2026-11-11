@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { ChapitreGuide } from "@/components/cours/chapitre-guide";
 import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
-import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
+import { chapitreParCode } from "@/config/cours/registre";
+import { essaiPour } from "@/config/cours/chapitres-libres";
 import { chapitrePropose } from "@/config/formations-proposees";
 import { motsDuContenu } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
@@ -23,8 +24,6 @@ import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
 import { lienDuScenario, scenariosDuChapitre } from "@/config/cours/scenarios";
 import { aSonDiaporama, fichierDuDiaporama, lienDuDiaporama } from "@/config/cours/diaporamas";
 
-/** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
-const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
 
 export async function generateMetadata({ params }: { params: Promise<{ chapitre: string }> }): Promise<Metadata> {
   const { chapitre } = await params;
@@ -48,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ chapitre:
  * `?classe` ouvre le mode classe : l'enseignant qui projette peut montrer la
  * correction à tout moment.
  *
- * L'ACCÈS SE DÉCIDE ICI : un chapitre libre s'ouvre à tous ; les autres demandent
+ * L'ACCÈS SE DÉCIDE ICI : un chapitre libre (un par diplôme, config/cours/chapitres-libres.ts) s'ouvre à tous ; les autres demandent
  * un compte d'enseignant rattaché à un établissement sous licence de l'arène
  * (../acces.ts). Le contenu ne part au navigateur qu'après : le guide reçoit le seul
  * chapitre ouvert, réduit à ses données (pedagogy/cours/chapitre-servi.ts), et n'en
@@ -87,7 +86,7 @@ async function ChapitrePage({
         <ChapitreReserve
           titre={chapitre.titre}
           reserve={motsDuContenu(chapitre.code).reserve}
-          chapitreLibre={CHAPITRE_LIBRE}
+          essai={essaiPour(chapitre, { classe: classeDeLEleveLue?.parcours, demande: diplomeDeLAdresse(diplome) })}
           eleve={eleve}
         />
         <PiedDePage />

@@ -154,8 +154,9 @@ const TEXTES_ENCORE_EN_BASE: Record<string, string> = {
   // L'offre Classe ouvre un seul parcours (décision du propriétaire, 10 novembre 2026).
   "Le cours : les chapitres d'un parcours, le même pour toutes vos classes, et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.":
     "Le cours : les chapitres du parcours de la classe et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
-  // Le chapitre libre n'est pas le premier du catalogue (audit du 10 novembre 2026, P0-1).
-  "Un chapitre du cours et son cas pratique, en libre accès.": "Le premier chapitre du cours et son cas pratique, en libre accès.",
+  // Un chapitre libre par diplôme, le premier de son parcours (novembre 2026) ; la base garde la
+  // phrase de la migration 0053, à reprendre dans /admin/offres.
+  "Un chapitre par diplôme, le premier de son parcours, et son cas pratique, en libre accès.": "Le premier chapitre du cours et son cas pratique, en libre accès.",
 };
 const telleQueMigree = (o: OffreDuCatalogue): OffreDuCatalogue => ({
   ...o,

@@ -74,7 +74,9 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
     "Calculer le chiffre d'affaires par salarié",
     "Expliquer pourquoi le personnel est une charge fixe",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du BTS SAM (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: { codes: ENTREPRISES_DES_RESSOURCES_HUMAINES, pourquoi: POURQUOI_LES_RESSOURCES_HUMAINES },
   etapes: [
     {

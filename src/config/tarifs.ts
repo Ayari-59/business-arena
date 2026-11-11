@@ -625,13 +625,14 @@ const LE_SUIVI =
 /**
  * LE COURS, SELON L'OFFRE (décision du propriétaire, octobre 2026 ; la règle :
  * services/cours.service.ts, coursOuvert ; le catalogue en base : drizzle/0053). La
- * Découverte ouvre le seul chapitre libre ; Classe, les chapitres du parcours de la classe,
+ * Découverte ouvre les chapitres libres, un par diplôme (novembre 2026, config/cours/chapitres-libres.ts) ;
+ * Classe, les chapitres du parcours de la classe,
  * choisi à sa création ; Programme, ceux des parcours des classes du programme ; Campus, tout.
  * L'OFFRE CLASSE OUVRE UN SEUL PARCOURS (décision du propriétaire, 10 novembre 2026) : toutes les
  * classes de l'enseignant le suivent (services/chapitres-de-la-classe.ts, `parcoursDeLaLicenceClasse`).
  */
 export const LE_COURS_PAR_OFFRE = {
-  decouverte: "Un chapitre du cours et son cas pratique, en libre accès.",
+  decouverte: "Un chapitre par diplôme, le premier de son parcours, et son cas pratique, en libre accès.",
   classe:
     "Le cours : les chapitres d'un parcours, le même pour toutes vos classes, et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
   programme:

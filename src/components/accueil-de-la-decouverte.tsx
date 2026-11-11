@@ -10,7 +10,7 @@ import type { ReglageDeLEssai } from "@/config/decouverte";
  *
  * Le nouvel enseignant tombait sur un long formulaire de partie de classe, l'envoyait, et
  * apprenait ensuite qu'il faut une offre. L'encart dit, dès l'arrivée, ce que la Découverte
- * permet TOUT DE SUITE (l'arène en solo, une classe du cours sur le chapitre libre, les
+ * permet TOUT DE SUITE (l'arène en solo, une classe du cours sur les chapitres libres, les
  * épisodes de démonstration), puis le chemin vers une offre : l'essai de l'offre Classe s'il
  * est ouvert (réglage de /admin/offres, rubrique Gratuités ; config/tarifs.ts,
  * `reponseSurLEssai`), sinon le devis. Les formulaires qui exigent une offre (partie,
@@ -44,7 +44,7 @@ export function AccueilDeLaDecouverte({
           <Link href="/teacher/cours" className={LIEN_A_L_ENCRE}>
             Ouvrir une classe du cours
           </Link>{" "}
-          : vos élèves suivent le chapitre libre et son cas pratique avec un code, sans compte, et vous voyez où
+          : vos élèves suivent les chapitres libres, un par diplôme, et leur cas pratique avec un code, sans compte, et vous voyez où
           chacun en est.
         </li>
         <li>

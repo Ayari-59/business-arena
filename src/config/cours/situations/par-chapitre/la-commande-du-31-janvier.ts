@@ -109,7 +109,8 @@ export const LA_COMMANDE_DU_31_JANVIER: Situation = {
     "Rattacher une vente au bon mois, et rédiger une réponse chiffrée au dirigeant",
   ],
   // Libre comme le chapitre qu'il reprend (décision du propriétaire, octobre 2026 :
-  // « cas pratique inclus ») : la démonstration va du chapitre à son cas pratique.
+  // « cas pratique inclus ») : la démonstration va du chapitre à son cas pratique. Gardé ouvert
+  // avec lui par décision du propriétaire, novembre 2026 (config/cours/chapitres-libres.ts).
   libre: true,
   ouverture: journalDeJanvier,
   etapes: [

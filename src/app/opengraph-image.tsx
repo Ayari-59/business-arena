@@ -77,7 +77,7 @@ export default function Image() {
           </span>
           <span style={{ fontSize: 24, color: "#c2bcb2", marginTop: 28, lineHeight: 1.4 }}>
             {/* Les nombres de l'accueil, comptés dans les registres (voir config/seo.ts). */}
-            {LIGNE_DE_PARTAGE} Un chapitre libre et la partie solo, gratuits et sans compte.
+            {LIGNE_DE_PARTAGE} Un chapitre libre par diplôme et la partie solo, gratuits et sans compte.
           </span>
           <span style={{ fontSize: 26, fontWeight: 700, marginTop: "auto", color: "#f1ede4" }}>
             business-arena.fr

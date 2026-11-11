@@ -124,7 +124,9 @@ export const LA_REMISE_AUTORISEE: Situation = {
     "Retrouver à rebours le volume de l'année sous lequel la consigne ne tient plus",
     "Rédiger une consigne chiffrée pour l'équipe commerciale",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS NDRC (décision du
+  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DE_LA_NEGOCIATION,
     pourquoi:

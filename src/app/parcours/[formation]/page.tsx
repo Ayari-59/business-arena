@@ -19,6 +19,8 @@ import { PASTILLE_D_ADEQUATION } from "@/components/adequation";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { LIBELLE_POUR_ALLER_PLUS_LOIN, approfondissementsALaFin, pourAllerPlusLoin } from "@/config/cours/pour-aller-plus-loin";
+import { essaiDuDiplome } from "@/config/cours/chapitres-libres";
+import { EssaiDuDiplome } from "@/components/cours/essai-du-diplome";
 
 /**
  * LA PAGE D'UN DIPLÔME : SON RÉFÉRENTIEL ENTIER, ET CE QUI LE TRAVAILLE.
@@ -34,6 +36,10 @@ import { LIBELLE_POUR_ALLER_PLUS_LOIN, approfondissementsALaFin, pourAllerPlusLo
  * Tout se lit dans les données (config/couverture.ts) : les séances nomment
  * leurs blocs, les chapitres les leurs, et le registre des référentiels donne
  * le texte. Ajoutez une séance ou un chapitre, le tableau suit.
+ *
+ * EN TÊTE, L'ESSAI DU DIPLÔME (décision du propriétaire, novembre 2026 ; audit du 10 novembre,
+ * produit P1-1) : son chapitre libre, celui par lequel son parcours commence, et son cas pratique,
+ * sous le nom du diplôme, pour se lire sans défiler sur un téléphone (config/cours/chapitres-libres.ts).
  */
 
 export function generateStaticParams(): { formation: string }[] {
@@ -77,6 +83,8 @@ async function PageDuDiplome({
   const ateliers = ATELIERS.filter((a) => a.formations.includes(code));
   const parcours = PARCOURS.find((p) => p.formation === code);
   const cours = coursDeLaFormation(code);
+  // Le chapitre libre du diplôme (celui de son diplôme, pour une option), et son cas pratique.
+  const essai = essaiDuDiplome(code);
   const entreprises = scenariosServant(code).map((s) => s.playerTeamName);
   const travailles = lignes.filter((l) => l.couverture).length;
   const horsDuChamp = lignes.filter((l) => !l.couverture && l.horsDuChamp).length;
@@ -140,7 +148,15 @@ async function PageDuDiplome({
               </>
             )
           }
-        />
+        >
+          {essai ? (
+            <EssaiDuDiplome
+              essai={essai}
+              lien={(c) => `/cours/${c.code}?diplome=${essai.diplome.code}`}
+              className="mt-5 max-w-2xl"
+            />
+          ) : null}
+        </EnTeteDePage>
 
         <div className={`${COLONNE_DE_PAGE} grid gap-10 pb-16`}>
           <section aria-labelledby="tableau" className="grid gap-4">
@@ -368,8 +384,9 @@ async function PageDuDiplome({
               </h2>
               <p className="text-sm leading-relaxed text-slate-400">
                 Des chapitres guidés, sur les chiffres d&apos;une entreprise de
-                l&apos;arène. Un chapitre du cours est libre d&apos;accès ; les
-                autres s&apos;ouvrent aux établissements sous licence.
+                l&apos;arène. Chaque diplôme a son chapitre libre, qui s&apos;ouvre
+                sans compte avec son cas pratique{essai ? ` : pour le ${essai.diplome.sigle}, « ${essai.chapitre.titre} »` : ""} ;
+                les autres s&apos;ouvrent aux établissements sous licence.
               </p>
               {cours.map((g) => (
                 <div key={g.parcours.code} className="carte grid gap-2 p-4">
@@ -391,6 +408,11 @@ async function PageDuDiplome({
                         >
                           {ch.titre}
                         </Link>
+                        {ch.libre ? (
+                          <span data-libre="" className="text-xs font-semibold text-amber-300">
+                            libre
+                          </span>
+                        ) : null}
                         {pourAllerPlusLoin(code, ch.code) ? (
                           <span data-pour-aller-plus-loin="" className="text-xs text-sky-300">
                             {LIBELLE_POUR_ALLER_PLUS_LOIN}

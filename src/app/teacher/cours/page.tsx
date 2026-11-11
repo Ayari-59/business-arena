@@ -12,7 +12,6 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES } from "@/app/cours/entreprises";
-import { CHAPITRES } from "@/config/cours/registre";
 import { parcoursAttribues } from "@/services/attributions.service";
 import { parcoursAttribue } from "@/services/chapitres-de-la-classe";
 import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
@@ -55,7 +54,6 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
   // Les parcours que l'admin a attribués (migration 0056) : sans liste, tous ceux qu'on propose.
   // Sous l'offre Classe, le seul parcours de la licence quand il est fixé (décision du 10 novembre 2026).
   const aChoisir = PARCOURS_PROPOSES_A_CHOISIR.filter((p) => (impose ? p.code === impose : parcoursAttribue(attribues, p.code)));
-  const libre = CHAPITRES.find((c) => c.libre);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const raison = refus && Object.hasOwn(REFUS, refus) ? REFUS[refus] : null;
   return (
@@ -94,11 +92,11 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
               Nouvelle classe
             </h2>
             {/* SANS OFFRE, LE DIRE AVANT LA CRÉATION (audit UX du 29 octobre 2026, P1-1) : la
-                classe se crée, mais n'ouvre que le chapitre libre ; les élèves ne doivent pas le
+                classe se crée, mais n'ouvre que les chapitres libres ; les élèves ne doivent pas le
                 découvrir en se heurtant à un chapitre fermé. */}
-            {!offre && libre ? (
+            {!offre ? (
               <p data-classe-du-cours-sans-offre="" className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300">
-                {classeSansOffre(libre.titre)}{" "}
+                {classeSansOffre()}{" "}
                 <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
                   {LIBELLE_DU_DEVIS}
                 </Link>
@@ -180,7 +178,7 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
                   <input type="radio" name="liberation" value="chapitre" className="mt-1" />
                   <span>Libérer chapitre par chapitre : vous ouvrez chaque chapitre quand la classe y arrive.</span>
                 </label>
-                <span className="text-sm text-slate-400">Le chapitre libre reste toujours ouvert. Vous pourrez changer d&apos;avis sur la page de la classe.</span>
+                <span className="text-sm text-slate-400">Les chapitres libres restent toujours ouverts. Vous pourrez changer d&apos;avis sur la page de la classe.</span>
               </fieldset>
               <div>
                 <SubmitButton pendingLabel="Création de la classe…" className={bouton()}>

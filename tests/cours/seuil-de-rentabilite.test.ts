@@ -151,7 +151,8 @@ function casDedie(s: Situation, ch: Chapitre) {
   expect(s.palier).toBe(ch.palier);
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
-  expect(s.libre).toBe(false);
+  // Libre avec son chapitre, le premier d'un parcours (config/cours/chapitres-libres.ts), réservé sinon.
+  expect(s.libre).toBe(ch.libre);
   expect(s.blocs).toEqual([]);
   expect(s.etapes[0]!.type).toBe("lecture");
   expect(s.etapes[0]!.tableau).toBeDefined();
@@ -207,13 +208,13 @@ const juste = (ch: Chapitre, id: string) => (ch.etapes.find((x) => x.id === id) 
 describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
   const ch = SEUIL_DE_RENTABILITE;
 
-  it("se joue chez NOVA seule, au palier 2 du contrôle de gestion, réservé, avec ses blocs", () => {
+  it("se joue chez NOVA seule, au palier 2 du contrôle de gestion, libre, avec ses blocs", () => {
     expect(CHAPITRES).toContain(ch);
     expect(ch.parcours).toBe("controle-de-gestion");
     expect(ch.palier).toBe(2);
-    // Le chapitre pilote, seul libre, est le premier du registre : ce n'est pas celui-ci.
+    // Libre : le premier chapitre du parcours du BTS MHR (config/cours/chapitres-libres.ts).
     expect(CHAPITRES[0]!.code).not.toBe(ch.code);
-    expect(ch.libre).toBe(false);
+    expect(ch.libre).toBe(true);
     expect(ch.entreprises?.codes).toEqual(["nova"]);
     expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
     for (const [b, ref] of [

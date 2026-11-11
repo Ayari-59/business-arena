@@ -37,8 +37,8 @@ function CasesDesParcours({ coches, nom }: { coches: readonly string[]; nom: str
  *
  * La licence de l'établissement ouvre le cours ; ici, l'admin le RESTREINT à des parcours, pour
  * tout l'établissement ou pour un enseignant, dont la liste l'emporte. Une liste vide efface la
- * restriction. Une attribution n'ouvre jamais plus que l'offre, et le chapitre libre reste
- * ouvert à tous (la règle : services/chapitres-de-la-classe.ts).
+ * restriction. Une attribution n'ouvre jamais plus que l'offre, et les chapitres libres restent
+ * ouverts à tous (la règle : services/chapitres-de-la-classe.ts).
  */
 async function AdminCoursPage({ searchParams }: { searchParams: Promise<{ fait?: string }> }) {
   const session = await getSession();
@@ -57,7 +57,7 @@ async function AdminCoursPage({ searchParams }: { searchParams: Promise<{ fait?:
       <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
         La licence de l&apos;établissement ouvre le cours. Cochez des parcours pour le restreindre à ceux-là, pour tout
         l&apos;établissement ou pour un enseignant : la liste de l&apos;enseignant l&apos;emporte. Sans case cochée, rien n&apos;est
-        restreint. Une attribution n&apos;ouvre jamais plus que l&apos;offre, et le chapitre libre reste ouvert à tous.
+        restreint. Une attribution n&apos;ouvre jamais plus que l&apos;offre, et les chapitres libres, un par diplôme, restent ouverts à tous.
       </p>
       {etablissements.length === 0 ? (
         <p className="text-sm text-slate-400">Aucun établissement.</p>

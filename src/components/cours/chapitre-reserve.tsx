@@ -2,6 +2,7 @@ import Link from "next/link";
 import { bouton } from "@/components/bouton";
 import { LIBELLE_DU_DEVIS, OFFRES, OFFRES_DE_L_ARENE } from "@/config/tarifs";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import type { LienDEssai } from "@/config/cours/chapitres-libres";
 
 /**
  * LA PAGE D'UN CHAPITRE RÉSERVÉ (cours.service, coursOuvert).
@@ -12,18 +13,20 @@ import { LIEN_TARIFS } from "@/config/vitrine-solo";
  *    ni « Demander un devis » ;
  *  · le visiteur ou l'enseignant lit ce que le chapitre demande, et le chemin vers les offres
  *    et le devis (SORTIR DE L'IMPASSE, audit d'octobre 2026).
+ * L'un et l'autre trouvent le chapitre libre le plus proche : celui du diplôme d'où ils viennent
+ * (novembre 2026, un chapitre libre par diplôme : config/cours/chapitres-libres.ts, `essaiPour`).
  */
 export function ChapitreReserve({
   titre,
   reserve,
-  chapitreLibre,
+  essai,
   eleve,
 }: {
   titre: string;
   /** « Ce chapitre est réservé » / « Ce cas pratique est réservé » (config/cours/situations.ts). */
   reserve: string;
-  /** Le code du chapitre libre. */
-  chapitreLibre: string;
+  /** Le chapitre libre à proposer : celui du diplôme d'où l'on vient, sinon l'essai par défaut. */
+  essai: LienDEssai;
   /** L'élève d'une classe du cours, s'il en est un : sa classe. */
   eleve: { classe: string } | null;
 }) {
@@ -34,10 +37,11 @@ export function ChapitreReserve({
         <h1 className="text-3xl font-bold text-slate-50">{titre}</h1>
         <p className="text-base text-slate-300">
           Ce chapitre n&apos;est pas encore ouvert pour votre classe, « {eleve.classe} ». Parlez-en à votre enseignant :
-          c&apos;est lui qui peut l&apos;ouvrir. En attendant, le chapitre libre et son cas pratique restent à votre portée.
+          c&apos;est lui qui peut l&apos;ouvrir. En attendant, le chapitre libre{essai.sigle ? ` en ${essai.sigle}` : ""}, « {essai.titre} », et son
+          cas pratique restent à votre portée.
         </p>
         <p className="flex flex-wrap gap-3">
-          <Link href={`/cours/${chapitreLibre}`} className={bouton({ taille: "m" })}>
+          <Link href={essai.href} className={bouton({ taille: "m" })}>
             Ouvrir le chapitre libre
           </Link>
           <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>
@@ -53,7 +57,8 @@ export function ChapitreReserve({
       <h1 className="text-3xl font-bold text-slate-50">{titre}</h1>
       <p className="text-base text-slate-300">
         {reserve} aux établissements sous licence : le contenu s&apos;ouvre aux enseignants de
-        l&apos;établissement, et à leurs élèves par leur classe. Le chapitre libre du cours et son cas pratique, eux, s&apos;ouvrent sans compte.
+        l&apos;établissement, et à leurs élèves par leur classe. Chaque diplôme a son chapitre libre, qui s&apos;ouvre sans compte avec son cas
+        pratique{essai.sigle ? ` : en ${essai.sigle}, « ${essai.titre} »` : `, comme « ${essai.titre} »`}.
         Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, une classe ouvre les chapitres de son parcours ; avec
         l&apos;offre {OFFRES.campus.nom}, tous les chapitres sont ouverts.
       </p>
@@ -65,7 +70,7 @@ export function ChapitreReserve({
         {OFFRES_DE_L_ARENE.map((o) => OFFRES[o].nom).join(", ").replace(/, ([^,]*)$/, " ou $1")}.
       </p>
       <p className="flex flex-wrap gap-3">
-        <Link href={`/cours/${chapitreLibre}`} className={bouton({ taille: "m" })}>
+        <Link href={essai.href} className={bouton({ taille: "m" })}>
           Essayer le chapitre libre
         </Link>
         <Link href={LIEN_TARIFS} className={bouton({ variante: "secondaire", taille: "m" })}>

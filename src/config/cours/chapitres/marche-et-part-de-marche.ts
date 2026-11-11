@@ -91,7 +91,9 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
     "Comparer les prix des concurrents",
     "Expliquer l'évolution d'une part de marché",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du BUT TC et du BUT GACO (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: { codes: ENTREPRISES_DE_LA_PART_DE_MARCHE, pourquoi: POURQUOI_LE_MARCHE_DE_NOVA },
   etapes: [
     {

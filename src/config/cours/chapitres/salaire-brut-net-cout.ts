@@ -71,7 +71,9 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
     "Calculer les cotisations patronales et le coût pour l'entreprise",
     "Mesurer ce que coûte une augmentation du salaire net",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du BUT GEA (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: { codes: ENTREPRISES_DES_RESSOURCES_HUMAINES, pourquoi: POURQUOI_LES_RESSOURCES_HUMAINES },
   etapes: [
     {

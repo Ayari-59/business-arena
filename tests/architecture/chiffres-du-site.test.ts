@@ -141,12 +141,13 @@ describe("4. une seule source pour chaque nombre", () => {
   });
 });
 
-describe("5. le chapitre libre n'est pas dit « premier » quand il ne l'est pas", () => {
-  const libre = CHAPITRES.find((c) => c.libre)!;
+describe("5. un chapitre libre n'est pas dit « premier » du catalogue quand il ne l'est pas", () => {
+  // Un chapitre libre par diplôme, le premier de son parcours (config/cours/chapitres-libres.ts) : un
+  // texte peut dire « le premier de son parcours », pas « le premier chapitre » tout court.
   const premierDuCatalogue = THEMES.flatMap((t) => t.chapitres).find(proposeAuRecompte);
 
   it("aucun texte publié ne dit que le premier chapitre est libre", () => {
-    if (premierDuCatalogue === libre.code) return;
+    if (CHAPITRES.some((c) => c.libre && c.code === premierDuCatalogue)) return;
     const PREMIER_LIBRE = /premier chapitre[^.;]{0,60}(libre|gratuit)|le premier est libre/i;
     const fautifs = PUBLIES.filter((f) => PREMIER_LIBRE.test(sansCommentaires(readFileSync(f, "utf8")))).map((f) =>
       relative(SRC, f),
