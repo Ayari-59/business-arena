@@ -4,6 +4,7 @@ import type { Browser, Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
 import { organisationSousLicence } from "./helpers/licence";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * UNE COHORTE, DE L'INVITATION À LA VUE DE L'ANIMATEUR.
@@ -66,7 +67,7 @@ describe("une cohorte", () => {
     const page = await appareil.newPage();
     await page.goto(invitation);
     expect(await page.getByRole("heading", { level: 1 }).textContent()).toBe(
-      "Rejoindre « Cohorte de recette »",
+      insecables("Rejoindre « Cohorte de recette »"),
     );
     expect(await page.getByText("votre nom, votre profil, vos scores").count()).toBe(1);
     await page.getByRole("button", { name: "Rejoindre la cohorte" }).click();
@@ -81,7 +82,7 @@ describe("une cohorte", () => {
     const animateur = await navigateur.newPage();
     await animateur.goto(animation);
     expect(await animateur.getByRole("heading", { level: 1 }).textContent()).toBe(
-      "Cohorte « Cohorte de recette »",
+      insecables("Cohorte « Cohorte de recette »"),
     );
     expect(await animateur.getByText(/1 membre, dont 1 avec au moins un épisode/).count()).toBe(1);
     expect(await animateur.getByText(/Moins de 5 membres/).count()).toBe(1);
