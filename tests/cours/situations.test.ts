@@ -250,7 +250,7 @@ describe("embaucher pour la saison", () => {
 describe("l'accès aux cas pratiques", () => {
   it("le cas dédié de chaque chapitre libre est libre, et eux seuls (décisions d'octobre 2026, « cas pratique inclus », et de novembre 2026, un chapitre libre par diplôme)", () => {
     const libres = CHAPITRES.filter((c) => c.libre);
-    expect(libres.length).toBe(chapitresLibresParDiplome().length);
+    expect(libres.length).toBeGreaterThanOrEqual(chapitresLibresParDiplome().length);
     expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code).sort()).toEqual(libres.map((c) => casDuChapitre(c.code)!.code).sort());
   });
 });

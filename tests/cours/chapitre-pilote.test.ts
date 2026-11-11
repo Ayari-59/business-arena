@@ -135,10 +135,10 @@ describe("le chapitre pilote, quelle que soit l'entreprise", () => {
     expect(new Set(chapitre.etapes.map((e) => e.id)).size).toBe(chapitre.etapes.length);
   });
 
-  it("est réservé depuis novembre 2026 : chaque diplôme a son chapitre libre, le premier de son parcours", () => {
-    // Il était la démonstration libre du cours ; il vient au deuxième rang du BTS CG et du BUT GEA
-    // (config/cours/chapitres-libres.ts, tests/architecture/un-chapitre-libre-par-diplome.test.ts).
-    expect(pilote.libre).toBe(false);
+  it("est libre d'accès (décision du propriétaire : le premier chapitre sert de démonstration)", () => {
+    // Gardé ouvert en novembre 2026, à côté du chapitre libre de chaque diplôme
+    // (tests/architecture/un-chapitre-libre-par-diplome.test.ts, `LIBRES_HORS_DU_PREMIER_RANG`).
+    expect(pilote.libre).toBe(true);
   });
 
   it("le cas est déterministe : deux calculs, les mêmes montants", async () => {

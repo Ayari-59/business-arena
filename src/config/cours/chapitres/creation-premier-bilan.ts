@@ -44,7 +44,7 @@ import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
  *     l'équipement et les intérêts courus du mois), critique (ce résultat est-il celui du mois ?) ;
  *     puis la synthèse.
  *
- * AUDIT PÉDAGOGIQUE (P1-4, P1-8) : le chapitre faisait trente étapes, et c'était alors la démonstration
+ * AUDIT PÉDAGOGIQUE (P1-4, P1-8) : le chapitre faisait trente étapes, et c'est la démonstration
  * libre du cours. Il s'arrête maintenant au bilan du 31 janvier et à son laboratoire (vingt étapes,
  * avec la synthèse) ; la trésorerie, les échéances et le niveau de l'examen forment la suite, DU_RESULTAT_A_LA_TRESORERIE
  * (plus bas), qui repart de la balance du 31 janvier. Les étapes, leurs textes et leurs chiffres
@@ -493,9 +493,10 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     "Enregistrer la paie : salaires bruts, cotisations, net à payer, règlement à l'URSSAF",
     "Construire le compte de résultat et le bilan à partir du journal",
   ],
-  // Réservé depuis novembre 2026 : le chapitre libre de chaque diplôme est le premier de son parcours
-  // (config/cours/chapitres-libres.ts), et celui-ci vient au deuxième rang du BTS CG et du BUT GEA.
-  libre: false,
+  // Libre depuis octobre 2026. Il n'est le premier d'aucun parcours (le chapitre libre de chaque diplôme,
+  // config/cours/chapitres-libres.ts), mais il reste ouvert par décision du propriétaire, novembre 2026,
+  // pour que les liens déjà partagés et les classes sans offre continuent de marcher.
+  libre: true,
   etapes: [
     {
       id: "intro",

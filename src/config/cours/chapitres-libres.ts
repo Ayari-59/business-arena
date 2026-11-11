@@ -29,6 +29,11 @@ import type { Chapitre } from "./types";
  *
  * Un chapitre qui deviendrait demain le premier d'un parcours ne s'ouvre donc pas seul : la garde
  * le signale, et l'ouvrir reste une décision.
+ *
+ * UNE EXCEPTION, NOMMÉE DANS LA GARDE (`LIBRES_HORS_DU_PREMIER_RANG`) : « De la création au premier
+ * bilan » et son cas, « La commande du 31 janvier », libres depuis octobre 2026, le restent par
+ * décision du propriétaire (novembre 2026), pour que les liens déjà partagés et les classes sans offre
+ * continuent de marcher. Il n'est le premier d'aucun parcours : aucune page ne le met en tête.
  */
 
 export interface EssaiDuDiplome {
@@ -85,11 +90,11 @@ export function chapitresLibresParDiplome(): { chapitre: Chapitre; cas: Situatio
 
 /**
  * L'ESSAI PAR DÉFAUT, quand la page ne connaît aucun diplôme (l'accueil, le menu, l'encart des pages
- * des publics) : le premier chapitre libre du registre parmi ceux qui sont proposés. C'est celui du
- * bac STMG, « Les flux de l'entreprise ».
+ * des publics) : celui du premier diplôme proposé, le bac STMG, « Les flux de l'entreprise ». Pas le
+ * premier chapitre libre du registre : c'est l'exception gardée ouverte, qui n'ouvre aucun parcours.
  */
 export function chapitreLibreParDefaut(): Chapitre {
-  return CHAPITRES.find((c) => c.libre && chapitrePropose(c))!;
+  return essaiDuDiplome(DIPLOMES_PROPOSES[0]?.code)?.chapitre ?? CHAPITRES.find((c) => c.libre && chapitrePropose(c))!;
 }
 
 /** Ce qui s'écrit d'un essai dans une page : son adresse, son titre, et le diplôme qu'il sert. */

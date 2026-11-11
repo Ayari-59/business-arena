@@ -19,7 +19,8 @@ import { fichierLibre, sourcesDuCours } from "../../scripts/verifier-bundles";
 /**
  * UN CHAPITRE LIBRE PAR DIPLÔME (décision du propriétaire, novembre 2026 ; audit du 10 novembre,
  * produit P1-1). Le premier chapitre du parcours de chaque diplôme, dans son ordre d'apprentissage,
- * est libre, avec son cas pratique dédié ; aucun autre chapitre ni cas ne l'est. La règle :
+ * est libre, avec son cas pratique dédié ; aucun autre chapitre ni cas ne l'est, hors de l'exception
+ * nommée ci-dessous (`LIBRES_HORS_DU_PREMIER_RANG`). La règle :
  * config/cours/chapitres-libres.ts. Les drapeaux restent dans les fichiers (`libre: true`), là où la
  * règle d'accès et la fouille des fichiers publics les lisent : cette garde vérifie qu'ils disent la
  * décision, ni plus ni moins.
@@ -37,6 +38,16 @@ const LISTE_DE_NOVEMBRE: readonly [string[], string, string][] = [
   [["but-gea"], "salaire-brut-net-cout", "la-prime-de-fin-d-annee"],
   [["but-tc", "but-gaco"], "marche-et-part-de-marche", "garder-sa-part-de-marche"],
   [["dscg"], "croitre-en-investissant", "voir-plus-grand"],
+];
+
+/**
+ * L'EXCEPTION, UNE SEULE : libres sans être le premier d'aucun parcours. « De la création au premier
+ * bilan » et son cas, libres depuis octobre 2026, restent ouverts par décision du propriétaire
+ * (novembre 2026), pour que les liens déjà partagés et les classes sans offre continuent de marcher.
+ * Un chapitre de plus ici est une décision : la garde ne l'accepte que nommé.
+ */
+const LIBRES_HORS_DU_PREMIER_RANG: readonly { chapitre: string; cas: string }[] = [
+  { chapitre: "creation-premier-bilan", cas: "la-commande-du-31-janvier" },
 ];
 
 /** Les diplômes proposés qui ont des chapitres au cours, une option comptant pour le sien. */
@@ -78,10 +89,27 @@ describe("un chapitre libre par diplôme", () => {
     }
   });
 
+  it("l'exception est unique et nommée : libre avec son cas dédié, premier d'aucun parcours", () => {
+    expect(LIBRES_HORS_DU_PREMIER_RANG).toHaveLength(1);
+    const premiers = new Set(chapitresLibresParDiplome().map((l) => l.chapitre.code));
+    for (const x of LIBRES_HORS_DU_PREMIER_RANG) {
+      const chapitre = CHAPITRES.find((c) => c.code === x.chapitre);
+      expect(chapitre?.libre, `${x.chapitre} n'est plus libre`).toBe(true);
+      expect(casDuChapitre(x.chapitre)?.code, x.chapitre).toBe(x.cas);
+      expect(casDuChapitre(x.chapitre)?.libre, `${x.cas} n'est plus libre`).toBe(true);
+      // Premier d'un parcours, il serait dans la liste : l'exception ne servirait plus.
+      expect(premiers.has(x.chapitre), x.chapitre).toBe(false);
+    }
+  });
+
   it("aucun autre chapitre, cas, enquête, bureau ni scénario n'est libre", () => {
     const liste = chapitresLibresParDiplome();
-    expect(CHAPITRES.filter((c) => c.libre).map((c) => c.code).sort()).toEqual(liste.map((l) => l.chapitre.code).sort());
-    expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code).sort()).toEqual(liste.map((l) => l.cas!.code).sort());
+    expect(CHAPITRES.filter((c) => c.libre).map((c) => c.code).sort()).toEqual(
+      [...liste.map((l) => l.chapitre.code), ...LIBRES_HORS_DU_PREMIER_RANG.map((x) => x.chapitre)].sort(),
+    );
+    expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code).sort()).toEqual(
+      [...liste.map((l) => l.cas!.code), ...LIBRES_HORS_DU_PREMIER_RANG.map((x) => x.cas)].sort(),
+    );
     for (const x of [...ENQUETES, ...BUREAUX, ...SCENARIOS]) expect(x.libre, x.code).toBe(false);
   });
 
@@ -105,12 +133,16 @@ describe("un chapitre libre par diplôme", () => {
         libresSautes.push(x.code);
       }
     }
-    // Les deux chapitres découpés se fouillent en entier : leur suite est réservée.
-    for (const f of ["src/config/cours/chapitres/seuil-de-rentabilite.ts", "src/config/cours/chapitres/taux-de-marque.ts"]) {
-      expect(fichierLibre(readFileSync(join(process.cwd(), f), "utf8")), f).toBe(false);
+    // Se fouillent en entier : les deux chapitres découpés (leur suite est réservée), et le chapitre
+    // pilote, qui exporte aussi sa suite réservée, « Du résultat à la trésorerie ».
+    const fouillesEnEntier = ["seuil-de-rentabilite", "taux-de-marque-et-coefficient", "creation-premier-bilan"];
+    for (const f of ["seuil-de-rentabilite.ts", "taux-de-marque.ts", "creation-premier-bilan.ts"]) {
+      expect(fichierLibre(readFileSync(join(process.cwd(), "src/config/cours/chapitres", f), "utf8")), f).toBe(false);
     }
     expect(libresSautes.sort()).toEqual(
-      liste.flatMap((l) => [l.chapitre.code, l.cas!.code]).filter((c) => !["seuil-de-rentabilite", "taux-de-marque-et-coefficient"].includes(c)).sort(),
+      [...liste.flatMap((l) => [l.chapitre.code, l.cas!.code]), ...LIBRES_HORS_DU_PREMIER_RANG.flatMap((x) => [x.chapitre, x.cas])]
+        .filter((c) => !fouillesEnEntier.includes(c))
+        .sort(),
     );
   });
 });

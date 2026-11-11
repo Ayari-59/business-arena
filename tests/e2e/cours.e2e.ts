@@ -28,9 +28,9 @@ import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cour
  * coup. Puis le chemin de l'erreur (la remarque, l'indice, la correction après
  * deux essais), le mode classe, la reprise après un rechargement, et le téléphone.
  *
- * Le chapitre pilote n'est plus libre depuis novembre 2026 (un chapitre libre par diplôme, le
- * premier de son parcours : config/cours/chapitres-libres.ts) : il se joue sous licence. L'essai
- * par défaut, celui des pages sans diplôme, est `essai`.
+ * Le chapitre pilote reste libre (décision du propriétaire, novembre 2026), à côté du chapitre libre
+ * de chaque diplôme (config/cours/chapitres-libres.ts). L'essai par défaut, celui des pages sans
+ * diplôme, est `essai`.
  */
 
 const chapitre = CHAPITRES[0]!;
@@ -73,13 +73,6 @@ const tableauxQuiDebordent = (p: Page) =>
 
 async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
   const ctx = await navigateur.newContext({ viewport: { width: largeur, height: hauteur }, locale: "fr-FR" });
-  return ctx.newPage();
-}
-
-/** Une page d'enseignant sous licence : le chapitre pilote est réservé. */
-async function pageSousLicence(largeur = 1280, hauteur = 900): Promise<Page> {
-  const ctx = await navigateur.newContext({ viewport: { width: largeur, height: hauteur }, locale: "fr-FR" });
-  await enseignantSousLicence(ctx);
   return ctx.newPage();
 }
 
@@ -235,7 +228,7 @@ describe("le chapitre pilote, joué sans faute", () => {
 
   it("chez LA TABLE D'AUGUSTIN : chaque étape réussie du premier coup, jusqu'au bilan", async () => {
     const code = "bistrot";
-    const page = await pageSousLicence();
+    const page = await nouvellePage();
     const cas = await jouerLePilote(page, code);
 
     // Et maintenant, jouez-le : la partie s'ouvre chez la même entreprise, au niveau de la mission.
@@ -250,7 +243,6 @@ describe("le chapitre pilote, joué sans faute", () => {
 
   it("chez NOVA, au téléphone : le crédit de TVA se tape avec le bouton de signe, et la page ne déborde pas", async () => {
     const ctx = await navigateur.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, locale: "fr-FR" });
-    await enseignantSousLicence(ctx);
     const page = await ctx.newPage();
     await jouerLePilote(page, "nova", true);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
@@ -267,7 +259,7 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
 
   it("une écriture à l'envers est corrigée point par point ; un indice, puis la correction après deux essais", async () => {
     const cas = casDeLEntreprise("nova");
-    const page = await pageSousLicence();
+    const page = await nouvellePage();
     await jusquALApport(page, chemin("nova"));
     expect(await page.getByRole("button", { name: "Voir la correction" }).count()).toBe(0);
     await page.getByLabel("Compte, ligne 1", { exact: true }).fill("101");
@@ -286,7 +278,7 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
   }, 120_000);
 
   it("en classe, la correction se montre tout de suite ; le journal est ouvert", async () => {
-    const page = await pageSousLicence();
+    const page = await nouvellePage();
     await jusquALApport(page, chemin("hotel", true));
     expect(await page.getByText("Mode classe").count()).toBe(1);
     await page.getByRole("button", { name: "Voir la correction" }).click();
@@ -306,7 +298,6 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
     const { solution } = labo.defi(cas);
     const explication = labo.explication(cas, solution).map((p) => insecables(p));
     const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
-    await enseignantSousLicence(ctx);
     await ctx.addInitScript(([cle, i]) => {
       if (!window.localStorage.getItem(cle as string)) window.localStorage.setItem(cle as string, JSON.stringify({ index: i, etapes: {} }));
     }, [`cours:${chapitre.code}:${code}`, index] as const);
@@ -333,7 +324,7 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
   }, 120_000);
 
   it("la progression survit à un rechargement, et la page tient sur un téléphone", async () => {
-    const page = await pageSousLicence(390, 844);
+    const page = await nouvellePage(390, 844);
     await jusquALApport(page, chemin("transport"));
     await page.reload();
     await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires)).toBe("Les apports des associés");
@@ -1575,7 +1566,7 @@ describe("un chapitre libre par diplôme", () => {
     }
   }, 300_000);
 
-  it("sans compte, un chapitre réservé du parcours mène au chapitre libre de ce diplôme ; l'ancien chapitre libre est réservé", async () => {
+  it("sans compte, un chapitre réservé du parcours mène au chapitre libre de ce diplôme ; le chapitre pilote reste libre", async () => {
     const page = await nouvellePage(390, 844);
     try {
       for (const code of ["stmg", "bts-cg", "dscg"]) {
@@ -1585,10 +1576,11 @@ describe("un chapitre libre par diplôme", () => {
         expect(await page.locator("main").innerText().then(espacesOrdinaires), reserve.code).toContain("aux établissements sous licence");
         expect(await page.getByRole("link", { name: "Essayer le chapitre libre" }).getAttribute("href"), reserve.code).toBe(`/cours/${e.chapitre.code}?diplome=${code}`);
       }
-      // « De la création au premier bilan » et son cas ne s'ouvrent plus sans licence.
+      // « De la création au premier bilan » et son cas s'ouvrent toujours sans compte (décision du
+      // propriétaire, novembre 2026) : les liens déjà partagés marchent.
       for (const code of [CHAPITRES[0]!.code, casDuChapitre(CHAPITRES[0]!.code)!.code]) {
         await aller(page, `/cours/${code}?entreprise=nova`);
-        expect(await page.locator("main").innerText().then(espacesOrdinaires), code).toContain("aux établissements sous licence");
+        expect(await page.locator("main").innerText().then(espacesOrdinaires), code).not.toContain("aux établissements sous licence");
       }
     } finally {
       await page.context().close();
