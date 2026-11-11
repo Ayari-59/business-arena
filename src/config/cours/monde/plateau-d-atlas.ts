@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { ATLAS_CONSEIL, CANAUX, type FicheDuCabinet } from "./atlas-conseil";
 
 /**
@@ -195,7 +196,7 @@ export const OCCUPATION_PROPOSEE_A_LA_RENTREE = 0.9;
 // LE MODÈLE
 // ─────────────────────────────────────────────────────────────────────────────
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** Arrondi à l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
@@ -242,7 +243,8 @@ export function ligneClients(leviers: Partial<LeviersDeLaLigne> = {}) {
       tauxDeDecroche: decroches / recus,
       occupation: n > 0 ? (decroches * dmt) / (n * MINUTES_D_UN_CRENEAU) : 0,
       effectifExact,
-      effectifNecessaire: plafond(effectifExact),
+      // À l'unité au-dessus, depuis le quotient écrit à deux décimales, comme sur la copie.
+      effectifNecessaire: plafond(auCentime(effectifExact)),
     };
   });
   const recus = somme(creneaux.map((k) => k.recus));

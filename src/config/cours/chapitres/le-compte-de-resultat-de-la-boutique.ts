@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { seuilDuPointDeVente } from "../monde/boutique";
 import { HYPOTHESES_DE_L_EXERCICE, IMPOT_SUR_LES_SOCIETES, PROVISION_POUR_LITIGE, articlesPourLEbeDeNMoins2, compteDeResultat, ecartDEbe } from "../monde/comptes-de-la-boutique";
@@ -31,6 +31,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : les-soldes, la-caf-et-les-taux, les-causes ;
  *   · expert : ebe-ou-resultat-net (une critique), le-prix-de-n-moins-2 (à rebours), la variante des
  *     remises ; puis la décision et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge commerciale, le taux d'EBE et la rentabilité
+ * nette se donnent à deux décimales, à un centième près (au dixième, avant).
  */
 
 export const ENTREPRISES_DU_COMPTE_DE_RESULTAT: readonly string[] = ["boutique"];
@@ -48,11 +52,7 @@ export const BAISSE_DU_LABORATOIRE = { min: 0, max: 12_000, pas: 1_000 } as cons
 export const HAUSSE_DE_PRIX_DU_DEFI = 0.5;
 export const SOLUTION_DU_LABORATOIRE = { prix: 56.5, baisse: 1_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 const signe = (x: number) => (x >= 0 ? `+ ${eur(x)}` : `− ${eur(-x)}`);
 
 export const ficheDuCompte = (c: Pick<Cas, "code">): FicheDeLaBoutique => {
@@ -82,8 +82,8 @@ export function exerciceDeLaBoutique(c: Pick<Cas, "code">) {
     janvier,
     sansLesRemises,
     resultatSansLaProvision,
-    evolutionDuChiffreDAffaires: auDixieme((n1.ventes / n2.ventes - 1) * 100),
-    evolutionDeLEbe: auDixieme((n1.ebe / n2.ebe - 1) * 100),
+    evolutionDuChiffreDAffaires: auCentime((n1.ventes / n2.ventes - 1) * 100),
+    evolutionDeLEbe: auCentime((n1.ebe / n2.ebe - 1) * 100),
   };
 }
 
@@ -293,14 +293,14 @@ export const LE_COMPTE_DE_RESULTAT_DE_LA_BOUTIQUE: Chapitre = {
       titre: "La CAF et les taux de rentabilité",
       notions: ["ebitda_margin", "profitability_vs_return"],
       question: () =>
-        "Calculez la capacité d'autofinancement de N − 1 (le résultat net plus les dotations, qui ne se décaissent pas), puis, en pourcentage du chiffre d'affaires et au dixième, le taux de marge commerciale, le taux d'EBE et la rentabilité nette.",
+        "Calculez la capacité d'autofinancement de N − 1 (le résultat net plus les dotations, qui ne se décaissent pas), puis, en pourcentage du chiffre d'affaires et à deux décimales, le taux de marge commerciale, le taux d'EBE et la rentabilité nette.",
       champs: (c) => {
         const d = exerciceDeLaBoutique(c).n1;
         return [
           { libelle: "Capacité d'autofinancement", attendu: d.caf, calcul: `${eur(d.resultatNet)} + ${eur(d.dotations)} = ${eur(d.caf)}` },
-          { libelle: "Taux de marge commerciale (%)", attendu: auDixieme(d.tauxDeMarqueMoyen * 100), tolerance: 0.1, calcul: `${eur(d.margeCommerciale)} ÷ ${eur(d.ventes)} × 100 = ${pct(d.tauxDeMarqueMoyen * 100)}` },
-          { libelle: "Taux d'EBE (%)", attendu: auDixieme(d.tauxDEbe * 100), tolerance: 0.1, calcul: `${eur(d.ebe)} ÷ ${eur(d.ventes)} × 100 = ${pct(d.tauxDEbe * 100)}` },
-          { libelle: "Rentabilité nette (%)", attendu: auDixieme(d.rentabiliteNette * 100), tolerance: 0.1, calcul: `${eur(d.resultatNet)} ÷ ${eur(d.ventes)} × 100 = ${pct(d.rentabiliteNette * 100)}` },
+          { libelle: "Taux de marge commerciale (%)", attendu: auCentime(d.tauxDeMarqueMoyen * 100), calcul: `${eur(d.margeCommerciale)} ÷ ${eur(d.ventes)} × 100 = ${pct(d.tauxDeMarqueMoyen * 100)}` },
+          { libelle: "Taux d'EBE (%)", attendu: auCentime(d.tauxDEbe * 100), calcul: `${eur(d.ebe)} ÷ ${eur(d.ventes)} × 100 = ${pct(d.tauxDEbe * 100)}` },
+          { libelle: "Rentabilité nette (%)", attendu: auCentime(d.rentabiliteNette * 100), calcul: `${eur(d.resultatNet)} ÷ ${eur(d.ventes)} × 100 = ${pct(d.rentabiliteNette * 100)}` },
         ];
       },
       explication: (c) => {
@@ -418,7 +418,7 @@ export const LE_COMPTE_DE_RESULTAT_DE_LA_BOUTIQUE: Chapitre = {
           { libelle: "Marge commerciale", montant: l.margeCommerciale, reference: x.n1.margeCommerciale },
           { libelle: "Charges de personnel", montant: l.personnel, reference: x.n1.personnel },
           { libelle: "Excédent brut d'exploitation", montant: l.ebe, reference: x.n1.ebe, fort: true },
-          { libelle: "Taux d'EBE", montant: auDixieme(l.tauxDEbe * 100), reference: auDixieme(x.n1.tauxDEbe * 100), unite: "%" },
+          { libelle: "Taux d'EBE", montant: auCentime(l.tauxDEbe * 100), reference: auCentime(x.n1.tauxDEbe * 100), unite: "%" },
           { libelle: "Écart avec l'EBE de N − 2", montant: auCentime(l.ebe - x.n2.ebe), reference: auCentime(x.n1.ebe - x.n2.ebe), effet: true },
         ];
       },
@@ -463,7 +463,7 @@ export const LE_COMPTE_DE_RESULTAT_DE_LA_BOUTIQUE: Chapitre = {
       notions: ["ebitda_margin", "markdown"],
       question: (c) => {
         const x = exerciceDeLaBoutique(c);
-        return `La gérante propose de revenir à la politique de remises de N − 2 : un prix moyen de ${eur(x.n2.prixMoyen)}, aux mêmes ventes en articles que N − 1. Calculez la marge commerciale, l'EBE, puis le taux d'EBE (en %, au dixième).`;
+        return `La gérante propose de revenir à la politique de remises de N − 2 : un prix moyen de ${eur(x.n2.prixMoyen)}, aux mêmes ventes en articles que N − 1. Calculez la marge commerciale, l'EBE, puis le taux d'EBE (en %, à deux décimales).`;
       },
       champs: (c) => {
         const x = exerciceDeLaBoutique(c);
@@ -471,7 +471,7 @@ export const LE_COMPTE_DE_RESULTAT_DE_LA_BOUTIQUE: Chapitre = {
         return [
           { libelle: "Marge commerciale", attendu: v.margeCommerciale, calcul: `${qte(v.articles)} × (${eur(v.prixMoyen)} − ${eur(v.coutDAchatMoyen)}) = ${eur(v.margeCommerciale)}` },
           { libelle: "Excédent brut d'exploitation", attendu: v.ebe, calcul: `${eur(x.n1.ebe)} + (${eur(v.prixMoyen)} − ${eur(x.n1.prixMoyen)}) × ${qte(v.articles)} = ${eur(v.ebe)}` },
-          { libelle: "Taux d'EBE (%)", attendu: auDixieme(v.tauxDEbe * 100), tolerance: 0.1, calcul: `${eur(v.ebe)} ÷ ${eur(v.ventes)} × 100 = ${pct(v.tauxDEbe * 100)}` },
+          { libelle: "Taux d'EBE (%)", attendu: auCentime(v.tauxDEbe * 100), calcul: `${eur(v.ebe)} ÷ ${eur(v.ventes)} × 100 = ${pct(v.tauxDEbe * 100)}` },
         ];
       },
       explication: (c) => {

@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "./maille-et-co";
 
 /**
@@ -109,7 +110,7 @@ export const TAUX_DE_RETRACTATION = 0.05;
 // 4. LE MODÈLE
 // ─────────────────────────────────────────────────────────────────────────────
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 
 /** La fiche de la boutique d'un cas. */
 export const ficheDuReseau = (c: { code: string }): FicheDeLaBoutique => {
@@ -167,8 +168,9 @@ export function formationDUneRecrue(f: FicheDeLaBoutique) {
 
 /** La valeur d'une conseillère sur sa vie dans le réseau : ses réunions, moins sa formation. */
 export function valeurDUneConseillere(f: FicheDeLaBoutique, margeDUneReunion: number) {
-  const dureeDeVie = 1 / ATTRITION_MENSUELLE;
-  const reunions = Math.round(dureeDeVie * REUNIONS_PAR_MOIS);
+  // La durée de vie, une grandeur au centième ; les réunions, à l'unité la plus proche.
+  const dureeDeVie = auCentime(1 / ATTRITION_MENSUELLE);
+  const reunions = aLUnite(dureeDeVie * REUNIONS_PAR_MOIS);
   const marge = auCentime(reunions * margeDUneReunion);
   const formation = formationDUneRecrue(f).cout;
   return { dureeDeVie, reunions, marge, formation, valeur: auCentime(marge - formation) };
@@ -216,7 +218,8 @@ export const meilleurePrime = (valeur: number) =>
 export function reseauDeVenteDirecte(f: FicheDeLaBoutique) {
   const reunion = reunionADomicile(f);
   const seuilDImmatriculation = auCentime(PLAFOND_ANNUEL_DE_LA_SECURITE_SOCIALE * PART_DU_PLAFOND_POUR_L_IMMATRICULATION);
-  const reunionsAuSeuil = Math.ceil(seuilDImmatriculation / reunion.commissionDeLaReunion - 1e-9);
+  // Le quotient à deux décimales, puis à l'unité au-dessus, comme sur la copie.
+  const reunionsAuSeuil = Math.ceil(auCentime(seuilDImmatriculation / reunion.commissionDeLaReunion) - 1e-9);
   const commissionDeLAnnee = auCentime(reunion.commissionDeLaReunion * REUNIONS_PAR_MOIS * 12);
   const formation = formationDUneRecrue(f);
   const conseillere = valeurDUneConseillere(f, reunion.marge);
@@ -234,7 +237,7 @@ export function reseauDeVenteDirecte(f: FicheDeLaBoutique) {
     reunion,
     seuilDImmatriculation,
     reunionsAuSeuil,
-    reunionsAuSeuilParMois: reunionsAuSeuil / 12,
+    reunionsAuSeuilParMois: auCentime(reunionsAuSeuil / 12),
     commissionDeLAnnee,
     partDuSeuil: commissionDeLAnnee / seuilDImmatriculation,
     formation,

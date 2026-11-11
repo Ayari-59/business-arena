@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentieme, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -47,6 +47,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     les-marges ;
  *   · autonome : les-principes, l-ordre-en-ligne, le-reseau (un tableau à compléter), les-marges ;
  *   · expert : le-chemin-critique, l-equipe-limitee, le-renfort, la-decision ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts du chiffre d'affaires, de la marge et du linéaire se
+ * donnent à deux décimales (au dixième, avant), et les indices de sensibilité et de rentabilité, des
+ * grandeurs au centième, se calculent sur elles ; les minutes du réseau et du planning sont des
+ * quantités, entières, déclarées comme telles.
  */
 
 export const ENTREPRISES_DE_LA_REIMPLANTATION: readonly string[] = ["boutique"];
@@ -66,13 +72,9 @@ export const DEPART_DU_LABORATOIRE: { receveuse: CodeDeReference; metres: number
 /** Les références qui peuvent recevoir les mètres du bonnet, dans l'ordre de la gamme. */
 const RECEVEUSES: readonly CodeDeReference[] = ["col-rond", "cardigan", "merinos", "echarpe"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
+const qte = nombreAuCentieme;
 const ind = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const mn = (n: number) => `${qte(n)} min`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const nomCourt = (nom: string) => nom.replace(/^Pull /, "").toLowerCase();
 const leNom = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `l'${nom}` : `le ${nom}`);
 const auNom = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `à l'${nom}` : `au ${nom}`);
@@ -159,9 +161,9 @@ export function grilleDuReseau(c: Pick<Cas, "code">): TableauACompleter {
       return {
         libelle: `${l.code} · ${l.libelle}`,
         cellules: [
-          { valeur: l.debutAuPlusTot, unite: "min", saisir: !donnee, calcul: l.apres.length ? `la plus tardive des fins au plus tôt ${l.apres.length > 1 ? "des tâches" : "de la tâche"} ${l.apres.join(", ")} = ${mn(l.debutAuPlusTot)}` : "aucune tâche avant : 0 min", indice: "la plus grande des fins au plus tôt des tâches qui la précèdent" },
-          { valeur: l.debutAuPlusTard, unite: "min", saisir: !donnee, calcul: `${succ.length ? `le plus tôt des débuts au plus tard ${succ.length > 1 ? "des tâches" : "de la tâche"} ${succ.join(", ")}` : `la fin du projet, ${mn(x.pert.fin)}`}, moins ${mn(l.duree)} = ${mn(l.debutAuPlusTard)}`, indice: "le plus petit des débuts au plus tard des tâches qui la suivent, moins sa durée" },
-          { valeur: l.margeTotale, unite: "min", saisir: !donnee, calcul: `${mn(l.debutAuPlusTard)} − ${mn(l.debutAuPlusTot)} = ${mn(l.margeTotale)}`, indice: "le début au plus tard moins le début au plus tôt" },
+          { valeur: l.debutAuPlusTot, unite: "min", nature: "quantite", saisir: !donnee, calcul: l.apres.length ? `la plus tardive des fins au plus tôt ${l.apres.length > 1 ? "des tâches" : "de la tâche"} ${l.apres.join(", ")} = ${mn(l.debutAuPlusTot)}` : "aucune tâche avant : 0 min", indice: "la plus grande des fins au plus tôt des tâches qui la précèdent" },
+          { valeur: l.debutAuPlusTard, unite: "min", nature: "quantite", saisir: !donnee, calcul: `${succ.length ? `le plus tôt des débuts au plus tard ${succ.length > 1 ? "des tâches" : "de la tâche"} ${succ.join(", ")}` : `la fin du projet, ${mn(x.pert.fin)}`}, moins ${mn(l.duree)} = ${mn(l.debutAuPlusTard)}`, indice: "le plus petit des débuts au plus tard des tâches qui la suivent, moins sa durée" },
+          { valeur: l.margeTotale, unite: "min", nature: "quantite", saisir: !donnee, calcul: `${mn(l.debutAuPlusTard)} − ${mn(l.debutAuPlusTot)} = ${mn(l.margeTotale)}`, indice: "le début au plus tard moins le début au plus tôt" },
         ],
       };
     }),
@@ -230,7 +232,7 @@ export const REIMPLANTER_AVANT_LES_SOLDES: Chapitre = {
       explication: (c) => {
         const x = reimplantationDeLaBoutique(c);
         return [
-          `Un mètre de la boutique laisse en moyenne ${eur(x.m.margeParMetre)}. Le cardigan en laisse ${eur(x.ligne("cardigan").margeParMetre)}, le col rond ${eur(x.colRond.margeParMetre)}, le bonnet ${eur(x.bonnet.margeParMetre)} : un mètre de bonnet rapporte ${qte(Math.round(x.colRond.margeParMetre / x.bonnet.margeParMetre * 10) / 10)} fois moins qu'un mètre de col rond.`,
+          `Un mètre de la boutique laisse en moyenne ${eur(x.m.margeParMetre)}. Le cardigan en laisse ${eur(x.ligne("cardigan").margeParMetre)}, le col rond ${eur(x.colRond.margeParMetre)}, le bonnet ${eur(x.bonnet.margeParMetre)} : un mètre de bonnet rapporte ${qte(auCentieme(x.colRond.margeParMetre / x.bonnet.margeParMetre))} fois moins qu'un mètre de col rond.`,
         ];
       },
     },
@@ -242,21 +244,21 @@ export const REIMPLANTER_AVANT_LES_SOLDES: Chapitre = {
       notions: ["sales_per_sqm", "assortment"],
       tableau: tableauDuLineaire,
       question: () =>
-        "Pour le bonnet puis le col rond, calculez l'indice de sensibilité (part du chiffre d'affaires ÷ part du linéaire) et l'indice de rentabilité (part de la marge ÷ part du linéaire), au centième.",
+        "Pour le bonnet puis le col rond, calculez l'indice de sensibilité (part du chiffre d'affaires ÷ part du linéaire) et l'indice de rentabilité (part de la marge ÷ part du linéaire), les parts à deux décimales, les indices au centième.",
       champs: (c) => {
         const x = reimplantationDeLaBoutique(c);
         return [x.bonnet, x.colRond].flatMap((r) => [
           {
             libelle: `Indice de sensibilité · ${r.nom}`,
-            attendu: auCentieme(r.indiceDeSensibilite),
-            tolerance: 0.01,
-            calcul: `(${eur(r.chiffreDAffaires)} ÷ ${eur(x.m.chiffreDAffaires)}) ÷ (${qte(r.lineaire)} m ÷ ${qte(x.m.lineaireTotal)} m) = ${pct(auDixieme(r.partDuChiffreDAffaires * 100))} ÷ ${pct(auDixieme(r.partDuLineaire * 100))} = ${ind(auCentieme(r.indiceDeSensibilite))}`,
+            nature: "grandeur" as const,
+            attendu: r.indiceDeSensibilite,
+            calcul: `(${eur(r.chiffreDAffaires)} ÷ ${eur(x.m.chiffreDAffaires)}) ÷ (${qte(r.lineaire)} m ÷ ${qte(x.m.lineaireTotal)} m) = ${pct(r.partDuChiffreEnPourcent)} ÷ ${pct(r.partDuLineaireEnPourcent)} = ${ind(r.indiceDeSensibilite)}`,
           },
           {
             libelle: `Indice de rentabilité · ${r.nom}`,
-            attendu: auCentieme(r.indiceDeRentabilite),
-            tolerance: 0.01,
-            calcul: `(${eur(r.marge)} ÷ ${eur(x.m.marge)}) ÷ (${qte(r.lineaire)} m ÷ ${qte(x.m.lineaireTotal)} m) = ${pct(auDixieme(r.partDeLaMarge * 100))} ÷ ${pct(auDixieme(r.partDuLineaire * 100))} = ${ind(auCentieme(r.indiceDeRentabilite))}`,
+            nature: "grandeur" as const,
+            attendu: r.indiceDeRentabilite,
+            calcul: `(${eur(r.marge)} ÷ ${eur(x.m.marge)}) ÷ (${qte(r.lineaire)} m ÷ ${qte(x.m.lineaireTotal)} m) = ${pct(r.partDeLaMargeEnPourcent)} ÷ ${pct(r.partDuLineaireEnPourcent)} = ${ind(r.indiceDeRentabilite)}`,
           },
         ]);
       },
@@ -511,7 +513,7 @@ export const REIMPLANTER_AVANT_LES_SOLDES: Chapitre = {
           const l = x.pert.lignes.find((y) => y.code === code)!;
           const succ = x.pert.lignes.filter((y) => y.apres.includes(code));
           const debutSuivant = succ.length ? Math.min(...succ.map((y) => y.debutAuPlusTot)) : x.pert.fin;
-          return { libelle: `Marge libre · ${code}`, attendu: l.margeLibre, calcul: `${mn(debutSuivant)} (début au plus tôt ${succ.length ? `${succ.length > 1 ? "des tâches" : "de la tâche"} ${succ.map((y) => y.code).join(", ")}` : "de la fin"}) − ${mn(l.finAuPlusTot)} (sa fin au plus tôt) = ${mn(l.margeLibre)}` };
+          return { libelle: `Marge libre · ${code}`, nature: "quantite" as const, attendu: l.margeLibre, calcul: `${mn(debutSuivant)} (début au plus tôt ${succ.length ? `${succ.length > 1 ? "des tâches" : "de la tâche"} ${succ.map((y) => y.code).join(", ")}` : "de la fin"}) − ${mn(l.finAuPlusTot)} (sa fin au plus tôt) = ${mn(l.margeLibre)}` };
         });
       },
       explication: (c) => {
@@ -554,9 +556,9 @@ export const REIMPLANTER_AVANT_LES_SOLDES: Chapitre = {
       champs: (c) => {
         const x = reimplantationDeLaBoutique(c);
         return [
-          { libelle: `Fin à ${qte(x.gantt3.personnes)} personnes (min)`, attendu: x.gantt3.fin, calcul: `${heureDe(x.gantt3.fin)}, soit ${mn(x.gantt3.fin)} : la signalétique (G) attend la fin de la remise en rayon, faute de quatrième personne` },
-          { libelle: `Fin à ${qte(x.gantt4.personnes)} personnes (min)`, attendu: x.gantt4.fin, calcul: `${heureDe(x.gantt4.fin)}, soit ${mn(x.gantt4.fin)} : la durée du chemin critique` },
-          { libelle: `Marge avant l'ouverture à ${qte(x.gantt3.personnes)} personnes (min)`, attendu: x.minutesAvantLOuverture - x.gantt3.fin, calcul: `${mn(x.minutesAvantLOuverture)} − ${mn(x.gantt3.fin)} = ${mn(x.minutesAvantLOuverture - x.gantt3.fin)}` },
+          { libelle: `Fin à ${qte(x.gantt3.personnes)} personnes (min)`, nature: "quantite", attendu: x.gantt3.fin, calcul: `${heureDe(x.gantt3.fin)}, soit ${mn(x.gantt3.fin)} : la signalétique (G) attend la fin de la remise en rayon, faute de quatrième personne` },
+          { libelle: `Fin à ${qte(x.gantt4.personnes)} personnes (min)`, nature: "quantite", attendu: x.gantt4.fin, calcul: `${heureDe(x.gantt4.fin)}, soit ${mn(x.gantt4.fin)} : la durée du chemin critique` },
+          { libelle: `Marge avant l'ouverture à ${qte(x.gantt3.personnes)} personnes (min)`, nature: "quantite", attendu: x.minutesAvantLOuverture - x.gantt3.fin, calcul: `${mn(x.minutesAvantLOuverture)} − ${mn(x.gantt3.fin)} = ${mn(x.minutesAvantLOuverture - x.gantt3.fin)}` },
         ];
       },
       explication: (c) => {

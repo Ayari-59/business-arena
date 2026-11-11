@@ -4,7 +4,7 @@ import { MAILLE_ET_CO as f } from "../../src/config/cours/monde/maille-et-co";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { LE_BAIL_REVISE } from "../../src/config/cours/situations/par-chapitre/le-bail-revise";
-import { attendus, casDedie, centime, curseur, dixieme, juste, laboratoire, verifierLesTextes } from "./gardes-de-la-gestion-de-la-boutique";
+import { attendus, casDedie, centime, curseur, juste, laboratoire, verifierLesTextes } from "./gardes-de-la-gestion-de-la-boutique";
 
 /**
  * LE COMPTE DE RÉSULTAT DE LA BOUTIQUE, ET SON CAS : LE BAIL RÉVISÉ.
@@ -65,11 +65,11 @@ describe("le compte de résultat de la boutique", () => {
     expect([centime(mc1 - ext1), ebe1]).toEqual([551_133.6, 371_229.6]);
     expect(attendus(ch, "la-caf-et-les-taux")).toEqual({
       "Capacité d'autofinancement": centime(rn1 + 9_000),
-      "Taux de marge commerciale (%)": dixieme((mc1 / ca1) * 100),
-      "Taux d'EBE (%)": dixieme((ebe1 / ca1) * 100),
-      "Rentabilité nette (%)": dixieme((rn1 / ca1) * 100),
+      "Taux de marge commerciale (%)": centime((mc1 / ca1) * 100),
+      "Taux d'EBE (%)": centime((ebe1 / ca1) * 100),
+      "Rentabilité nette (%)": centime((rn1 / ca1) * 100),
     });
-    expect(dixieme((ebe1 / ca1) * 100)).toBe(25.5);
+    expect(centime((ebe1 / ca1) * 100)).toBe(25.5);
   });
 
   it("l'EBE recule : le curseur des articles, les causes, le laboratoire, refaits à la main", () => {
@@ -97,7 +97,7 @@ describe("le compte de résultat de la boutique", () => {
 
   it("l'expert : sans les remises, à rebours, et les verdicts", () => {
     const ebeSans = centime(ebe1 + 1.5 * q1);
-    expect(attendus(ch, "sans-les-remises")).toEqual({ "Marge commerciale": q1 * 33, "Excédent brut d'exploitation": ebeSans, "Taux d'EBE (%)": dixieme((ebeSans / (q1 * 57.5)) * 100) });
+    expect(attendus(ch, "sans-les-remises")).toEqual({ "Marge commerciale": q1 * 33, "Excédent brut d'exploitation": ebeSans, "Taux d'EBE (%)": centime((ebeSans / (q1 * 57.5)) * 100) });
     expect(attendus(ch, "le-prix-de-n-moins-2")).toEqual({ "Marge commerciale d'un article": 33, "Prix moyen d'un article": 57.5, "Chiffre d'affaires de N − 2": q2 * 57.5 });
     expect(juste(ch, "ebe-ou-resultat-net")).toMatch(/^Le résultat net mêle la provision/);
     expect(juste(ch, "decider")).toBe("Réduire les remises : elles ont coûté 38\u202f988 € d'EBE");
@@ -118,7 +118,7 @@ describe("le cas : le bail révisé", () => {
     const loyer = centime(155_400 * 1.06);
     const ebe = centime(ebe1 - (loyer - 155_400));
     expect([loyer, ebe]).toEqual([164_724, 361_905.6]);
-    expect(attendus(s, "l-ebe-de-n")).toEqual({ "Loyer de N": loyer, "EBE de N": ebe, "Taux d'EBE (%)": dixieme((ebe / ca1) * 100) });
+    expect(attendus(s, "l-ebe-de-n")).toEqual({ "Loyer de N": loyer, "EBE de N": ebe, "Taux d'EBE (%)": centime((ebe / ca1) * 100) });
     const rcai = centime(ebe - 4_000 - 28_000 * 0.052);
     const rn = centime(rcai - is(rcai));
     expect(attendus(s, "jusqu-a-la-caf")).toEqual({ "Intérêts de N": 1_456, "Résultat courant avant impôt": rcai, "Impôt sur les sociétés": centime(is(rcai)), "Résultat net": rn, "Capacité d'autofinancement": centime(rn + 4_000) });

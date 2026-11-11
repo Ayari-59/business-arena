@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ABONNES,
@@ -51,6 +51,12 @@ import { ficheDe } from "./valeur-d-un-client";
  *     la-publication-en-plus ; predire-les-avis puis les-avis-au-curseur avant la-note-et-la-conversion ;
  *   · autonome et expert : la-publication-en-plus, la-note-moyenne, la-note-et-la-conversion,
  *     les-ecrits-digitaux, l-avis-negatif, le-rythme-a-proposer ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les notes moyennes, les comptes et les commandes attendus sont
+ * des grandeurs, au centième (les commandes, à cinq centièmes près, avant) ; la note affichée part de
+ * la moyenne écrite au centième ; les contacts et les avis sont des quantités, entières, déclarées
+ * comme telles.
  */
 
 /** Les bornes du curseur des avis à cinq étoiles. */
@@ -66,10 +72,8 @@ export const VALEUR_D_UN_CONTACT = { premiereAnnee: 0, actualisee: 1, simple: 2 
 export const POURQUOI_LES_CONTENUS =
   "ce chapitre suit les publications et les avis d'un cabinet de formation qui vend en ligne : il se joue chez ATLAS CONSEIL, dont la simulation du cours fige le premier trimestre du site.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 2) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 const enPct = (x: number) => auCentime(x * 100);
 /** « d'ATLAS CONSEIL », « de NOVA » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -193,7 +197,7 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
         const x = contenusDuCabinet(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${x.f.entreprise}, ${PERIODE_DU_SITE}, celui de la boutique en ligne du chapitre précédent. Le cabinet publie ${qte(x.p.parSemaine)} fois par semaine sur sa page du réseau professionnel, ${qte(x.p.total.publications)} publications en ${qte(TRIMESTRE_DU_SITE.semaines)} semaines, écrites par une community manager indépendante à ${eur(COMMUNITY_MANAGER.parPublication)} la publication.`,
-          `Une impression est un affichage dans un fil d'actualité ; une interaction, une réaction, un commentaire ou un partage. Les ${qte(x.p.total.clics)} clics vers le site sont les visites non payées de la source « réseaux sociaux ». La page compte ${qte(ABONNES.fin)} abonnés à la fin du trimestre, ${pct(x.p.croissanceDesAbonnes, 1)} de plus qu'au début.`,
+          `Une impression est un affichage dans un fil d'actualité ; une interaction, une réaction, un commentaire ou un partage. Les ${qte(x.p.total.clics)} clics vers le site sont les visites non payées de la source « réseaux sociaux ». La page compte ${qte(ABONNES.fin)} abonnés à la fin du trimestre, ${pct(x.p.croissanceDesAbonnes)} de plus qu'au début.`,
           `Le cabinet a aussi publié un livre blanc et animé un webinaire, et ses participants laissent des avis sur sa fiche du moteur de recherche. Les contacts qu'amènent les contenus suivent l'entonnoir de la campagne digitale de N : 1 contact sur ${qte(x.v.contactsParCompte)} devient un compte.`,
         ];
       },
@@ -211,18 +215,18 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
         const x = contenusDuCabinet(c);
         const [k, a] = [x.conseils, x.annonces];
         return [
-          { libelle: "Engagement des conseils pratiques (%)", attendu: enPct(k.engagement), calcul: `${qte(k.interactions)} ÷ ${qte(k.impressions)} = ${pct(k.engagement)}`, tolerance: 0.01 },
-          { libelle: "Engagement des annonces de sessions (%)", attendu: enPct(a.engagement), calcul: `${qte(a.interactions)} ÷ ${qte(a.impressions)} = ${pct(a.engagement)}`, tolerance: 0.01 },
-          { libelle: "Taux de clic des conseils pratiques (%)", attendu: enPct(k.tauxDeClic), calcul: `${qte(k.clics)} ÷ ${qte(k.impressions)} = ${pct(k.tauxDeClic)}`, tolerance: 0.01 },
-          { libelle: "Taux de clic des annonces de sessions (%)", attendu: enPct(a.tauxDeClic), calcul: `${qte(a.clics)} ÷ ${qte(a.impressions)} = ${pct(a.tauxDeClic)}`, tolerance: 0.01 },
-          { libelle: "Engagement de toutes les publications (%)", attendu: enPct(x.p.total.engagement), calcul: `${qte(x.p.total.interactions)} ÷ ${qte(x.p.total.impressions)} = ${pct(x.p.total.engagement)}`, tolerance: 0.01 },
+          { libelle: "Engagement des conseils pratiques (%)", attendu: enPct(k.engagement), calcul: `${qte(k.interactions)} ÷ ${qte(k.impressions)} = ${pct(k.engagement)}` },
+          { libelle: "Engagement des annonces de sessions (%)", attendu: enPct(a.engagement), calcul: `${qte(a.interactions)} ÷ ${qte(a.impressions)} = ${pct(a.engagement)}` },
+          { libelle: "Taux de clic des conseils pratiques (%)", attendu: enPct(k.tauxDeClic), calcul: `${qte(k.clics)} ÷ ${qte(k.impressions)} = ${pct(k.tauxDeClic)}` },
+          { libelle: "Taux de clic des annonces de sessions (%)", attendu: enPct(a.tauxDeClic), calcul: `${qte(a.clics)} ÷ ${qte(a.impressions)} = ${pct(a.tauxDeClic)}` },
+          { libelle: "Engagement de toutes les publications (%)", attendu: enPct(x.p.total.engagement), calcul: `${qte(x.p.total.interactions)} ÷ ${qte(x.p.total.impressions)} = ${pct(x.p.total.engagement)}` },
         ];
       },
       explication: (c) => {
         const x = contenusDuCabinet(c);
         return [
           `Les conseils pratiques font réagir ${qte(x.conseils.engagement / x.annonces.engagement)} fois plus que les annonces ; les annonces mènent ${qte(auCentime(x.annonces.tauxDeClic / x.conseils.tauxDeClic))} fois plus au site. L'un nourrit la communauté et la visibilité de la page, l'autre la vente.`,
-          `Les témoignages font les deux : ${pct(x.temoignages.engagement, 1)} d'engagement et ${pct(x.temoignages.tauxDeClic)} de clics. Ce sont aussi les plus rares.`,
+          `Les témoignages font les deux : ${pct(x.temoignages.engagement)} d'engagement et ${pct(x.temoignages.tauxDeClic)} de clics. Ce sont aussi les plus rares.`,
         ];
       },
     },
@@ -242,7 +246,7 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
           {
             texte: "Non : il faut un mélange, plus de témoignages",
             juste: true,
-            retour: `Oui : une page qui ne fait qu'annoncer ses sessions lasse ses abonnés, et le réseau montre moins ses publications. Les conseils (${pct(x.conseils.engagement, 0)} d'engagement) entretiennent la communauté ; les témoignages, qui engagent et mènent au site, méritent plus de place.`,
+            retour: `Oui : une page qui ne fait qu'annoncer ses sessions lasse ses abonnés, et le réseau montre moins ses publications. Les conseils (${pct(x.conseils.engagement)} d'engagement) entretiennent la communauté ; les témoignages, qui engagent et mènent au site, méritent plus de place.`,
           },
           {
             texte: "Oui : seuls les clics vers le site comptent",
@@ -252,7 +256,7 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
           {
             texte: "Non : il faut publier les contenus qui font le plus réagir",
             juste: false,
-            retour: `Non : les conseils font réagir à ${pct(x.conseils.engagement, 0)}, mais leur taux de clic n'est que de ${pct(x.conseils.tauxDeClic)}. Une page ne vit pas que de réactions.`,
+            retour: `Non : les conseils font réagir à ${pct(x.conseils.engagement)}, mais leur taux de clic n'est que de ${pct(x.conseils.tauxDeClic)}. Une page ne vit pas que de réactions.`,
           },
         ];
       },
@@ -270,11 +274,11 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
       champs: (c) => {
         const x = contenusDuCabinet(c);
         return [
-          { libelle: "Taux de téléchargement (%)", attendu: enPct(x.e.tauxDeTelechargement), calcul: `${qte(LIVRE_BLANC.telechargements)} ÷ ${qte(LIVRE_BLANC.visitesDeLaPage)} = ${pct(x.e.tauxDeTelechargement)}`, tolerance: 0.01 },
-          { libelle: "Taux de présence (%)", attendu: enPct(x.e.tauxDePresence), calcul: `${qte(WEBINAIRE.presents)} ÷ ${qte(WEBINAIRE.inscrits)} = ${pct(x.e.tauxDePresence)}`, tolerance: 0.01 },
-          { libelle: "Contacts amenés", attendu: x.e.contacts, calcul: `${qte(LIVRE_BLANC.telechargements)} + ${qte(WEBINAIRE.presents)} = ${qte(x.e.contacts)}` },
+          { libelle: "Taux de téléchargement (%)", attendu: enPct(x.e.tauxDeTelechargement), calcul: `${qte(LIVRE_BLANC.telechargements)} ÷ ${qte(LIVRE_BLANC.visitesDeLaPage)} = ${pct(x.e.tauxDeTelechargement)}` },
+          { libelle: "Taux de présence (%)", attendu: enPct(x.e.tauxDePresence), calcul: `${qte(WEBINAIRE.presents)} ÷ ${qte(WEBINAIRE.inscrits)} = ${pct(x.e.tauxDePresence)}` },
+          { libelle: "Contacts amenés", nature: "quantite", attendu: x.e.contacts, calcul: `${qte(LIVRE_BLANC.telechargements)} + ${qte(WEBINAIRE.presents)} = ${qte(x.e.contacts)}` },
           { libelle: "Coût d'un contact", attendu: x.e.coutParContact, calcul: `${eur(x.e.cout)} ÷ ${qte(x.e.contacts)} = ${eur(x.e.coutParContact)}` },
-          { libelle: "Comptes attendus", attendu: auCentime(x.e.comptes), calcul: `${qte(x.e.contacts)} ÷ ${qte(x.v.contactsParCompte)} = ${qte(auCentime(x.e.comptes))}`, tolerance: 0.01 },
+          { libelle: "Comptes attendus", nature: "grandeur", attendu: auCentime(x.e.comptes), calcul: `${qte(x.e.contacts)} ÷ ${qte(x.v.contactsParCompte)} = ${qte(auCentime(x.e.comptes))}` },
         ];
       },
       explication: (c) => {
@@ -427,9 +431,9 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
         const [a, b] = [x.jusquAuMeilleur, x.auDelaDuMeilleur];
         const r = (k: number) => rythmeDePublication(k, x.v.actualisee).contacts;
         return [
-          { libelle: `Contacts en plus, de ${qte(a.de)} à ${qte(a.a)}`, attendu: a.contacts, calcul: `${qte(r(a.a))} − ${qte(r(a.de))} = ${qte(a.contacts)}` },
+          { libelle: `Contacts en plus, de ${qte(a.de)} à ${qte(a.a)}`, nature: "quantite", attendu: a.contacts, calcul: `${qte(r(a.a))} − ${qte(r(a.de))} = ${qte(a.contacts)}` },
           { libelle: `Gain du pas, de ${qte(a.de)} à ${qte(a.a)}`, attendu: a.gain, calcul: `${qte(a.contacts)} × ${eur(x.v.actualisee)} − ${eur(a.cout)} = ${eur(a.gain)}` },
-          { libelle: `Contacts en plus, de ${qte(b.de)} à ${qte(b.a)}`, attendu: b.contacts, calcul: `${qte(r(b.a))} − ${qte(r(b.de))} = ${qte(b.contacts)}` },
+          { libelle: `Contacts en plus, de ${qte(b.de)} à ${qte(b.a)}`, nature: "quantite", attendu: b.contacts, calcul: `${qte(r(b.a))} − ${qte(r(b.de))} = ${qte(b.contacts)}` },
           { libelle: `Gain du pas, de ${qte(b.de)} à ${qte(b.a)}`, attendu: b.gain, calcul: `${qte(b.contacts)} × ${eur(x.v.actualisee)} − ${eur(b.cout)} = ${eur(b.gain)}` },
         ];
       },
@@ -455,22 +459,22 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
         const x = contenusDuCabinet(c);
         const detail = AVIS_PAR_NOTE.map((n, i) => `${qte(n)} × ${qte(i + 1)}`).join(" + ");
         return [
-          { libelle: "Nombre d'avis", attendu: x.n.avis, calcul: `${AVIS_PAR_NOTE.map((n) => qte(n)).join(" + ")} = ${qte(x.n.avis)}` },
-          { libelle: "Note moyenne", attendu: auCentime(x.n.moyenne), calcul: `(${detail}) ÷ ${qte(x.n.avis)} = ${qte(x.n.points)} ÷ ${qte(x.n.avis)} = ${note(auCentime(x.n.moyenne))}`, tolerance: 0.01 },
-          { libelle: "Part d'avis à 4 ou 5 étoiles (%)", attendu: enPct(x.n.partDeBonsAvis), calcul: `(${qte(AVIS_PAR_NOTE[3]!)} + ${qte(AVIS_PAR_NOTE[4]!)}) ÷ ${qte(x.n.avis)} = ${pct(x.n.partDeBonsAvis)}`, tolerance: 0.01 },
+          { libelle: "Nombre d'avis", nature: "quantite", attendu: x.n.avis, calcul: `${AVIS_PAR_NOTE.map((n) => qte(n)).join(" + ")} = ${qte(x.n.avis)}` },
+          { libelle: "Note moyenne", nature: "grandeur", attendu: auCentime(x.n.moyenne), calcul: `(${detail}) ÷ ${qte(x.n.avis)} = ${qte(x.n.points)} ÷ ${qte(x.n.avis)} = ${qte(auCentime(x.n.moyenne))}` },
+          { libelle: "Part d'avis à 4 ou 5 étoiles (%)", attendu: enPct(x.n.partDeBonsAvis), calcul: `(${qte(AVIS_PAR_NOTE[3]!)} + ${qte(AVIS_PAR_NOTE[4]!)}) ÷ ${qte(x.n.avis)} = ${pct(x.n.partDeBonsAvis)}` },
           {
             libelle: "Note moyenne après les avis à 1 étoile",
+            nature: "grandeur",
             attendu: auCentime(x.apres.moyenne),
-            calcul: `(${qte(x.n.points)} + ${qte(AVIS_NEGATIFS_DU_CHAPITRE)}) ÷ (${qte(x.n.avis)} + ${qte(AVIS_NEGATIFS_DU_CHAPITRE)}) = ${qte(x.apres.points)} ÷ ${qte(x.apres.avis)} = ${note(auCentime(x.apres.moyenne))}`,
-            tolerance: 0.01,
+            calcul: `(${qte(x.n.points)} + ${qte(AVIS_NEGATIFS_DU_CHAPITRE)}) ÷ (${qte(x.n.avis)} + ${qte(AVIS_NEGATIFS_DU_CHAPITRE)}) = ${qte(x.apres.points)} ÷ ${qte(x.apres.avis)} = ${qte(auCentime(x.apres.moyenne))}`,
           },
-          { libelle: "Note affichée après ces avis", attendu: x.apres.affichee, calcul: `${note(auCentime(x.apres.moyenne))} arrondi au dixième = ${note(x.apres.affichee)}`, tolerance: 0.01 },
+          { libelle: "Note affichée après ces avis", nature: "grandeur", attendu: x.apres.affichee, calcul: `${qte(auCentime(x.apres.moyenne))} arrondi au dixième = ${qte(x.apres.affichee)} : la note que le site affiche` },
         ];
       },
       explication: (c) => {
         const x = contenusDuCabinet(c);
         return [
-          `${pct(x.n.partDeBonsAvis, 0)} des participants sont contents ; la note est de ${note(x.n.moyenne)}. Il suffit de ${qte(AVIS_NEGATIFS_DU_CHAPITRE)} avis à 1 étoile pour l'amener à ${note(x.apres.affichee)} : sur ${qte(x.n.avis)} avis, chaque avis pèse lourd, et un avis à 1 étoile s'éloigne de la moyenne bien plus qu'un avis à 5 ne s'en approche.`,
+          `${pct(x.n.partDeBonsAvis)} des participants sont contents ; la note est de ${note(x.n.moyenne)}. Il suffit de ${qte(AVIS_NEGATIFS_DU_CHAPITRE)} avis à 1 étoile pour l'amener à ${note(x.apres.affichee)} : sur ${qte(x.n.avis)} avis, chaque avis pèse lourd, et un avis à 1 étoile s'éloigne de la moyenne bien plus qu'un avis à 5 ne s'en approche.`,
         ];
       },
     },
@@ -545,14 +549,14 @@ export const CONTENUS_COMMUNAUTE_ET_E_REPUTATION: Chapitre = {
       notions: ["conversion_rate", "brand_capital", "contribution_margin"],
       question: (c) => {
         const x = contenusDuCabinet(c);
-        return `Le site convertit ${pct(x.t.conversion, 1)} à une note affichée de ${note(CONVERSION_ET_NOTE.noteDeReference)} ; chaque dixième de point perdu ôte ${qte(CONVERSION_ET_NOTE.parDixieme * 100)} point de conversion. À ${note(x.apres.affichee)}, calculez la conversion du site (en %), les commandes d'un trimestre de ${qte(x.t.visites)} visites, puis la marge perdue face au premier trimestre, à ${eur(x.t.m.marge)} la commande (négative si elle fait perdre).`;
+        return `Le site convertit ${pct(x.t.conversion)} à une note affichée de ${note(CONVERSION_ET_NOTE.noteDeReference)} ; chaque dixième de point perdu ôte ${qte(CONVERSION_ET_NOTE.parDixieme * 100)} point de conversion. À ${note(x.apres.affichee)}, calculez la conversion du site (en %), les commandes d'un trimestre de ${qte(x.t.visites)} visites, puis la marge perdue face au premier trimestre, à ${eur(x.t.m.marge)} la commande (négative si elle fait perdre).`;
       },
       champs: (c) => {
         const x = contenusDuCabinet(c);
         const k = x.conversionApres;
         return [
-          { libelle: "Conversion à la note affichée (%)", attendu: enPct(k.conversion), calcul: `${pct(x.t.conversion)} − ${qte(-k.dixiemes)} × ${pct(CONVERSION_ET_NOTE.parDixieme)} = ${pct(k.conversion)}`, tolerance: 0.01 },
-          { libelle: "Commandes du trimestre", attendu: auCentime(k.commandes), calcul: `${qte(x.t.visites)} × ${pct(k.conversion)} = ${qte(auCentime(k.commandes))}`, tolerance: 0.05 },
+          { libelle: "Conversion à la note affichée (%)", attendu: enPct(k.conversion), calcul: `${pct(x.t.conversion)} − ${qte(-k.dixiemes)} × ${pct(CONVERSION_ET_NOTE.parDixieme)} = ${pct(k.conversion)}` },
+          { libelle: "Commandes du trimestre", nature: "grandeur", attendu: auCentime(k.commandes), calcul: `${qte(x.t.visites)} × ${pct(k.conversion)} = ${qte(auCentime(k.commandes))}` },
           { libelle: "Marge en plus ou en moins", attendu: k.margeEnPlus, calcul: `(${qte(auCentime(k.commandes))} − ${qte(x.t.commandes)}) × ${eur(x.t.m.marge)} = ${eur(k.margeEnPlus)}` },
         ];
       },

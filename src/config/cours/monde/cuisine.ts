@@ -1,3 +1,4 @@
+import { arrondi2 as auCentime, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { FicheDuBistrot } from "./la-table-d-augustin";
 
 /**
@@ -19,6 +20,10 @@ import type { FicheDuBistrot } from "./la-table-d-augustin";
  * coûts variables se comptent par couvert servi ; les charges fixes ne dépendent pas des couverts.
  *
  * Rien ici ne lit l'arène : le cours calcule tout, et le test le refait à la main.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les montants au centime, le ratio coût matière à deux décimales
+ * (au dixième, avant) ; les couverts sont entiers.
  */
 
 /**
@@ -49,12 +54,10 @@ export interface TrimestreDeCuisine {
   autresCouts: number;
   /** Le chiffre d'affaires moins les denrées et les autres coûts variables. */
   margeSurCoutsVariables: number;
-  /** Le ratio coût matière, en pourcentage, au dixième. */
+  /** Le ratio coût matière, en pourcentage, à deux décimales. */
   ratio: number;
 }
 
-const auCentime = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** Les couverts que la salle et la cuisine peuvent servir en un trimestre. */
 export const couvertsServables = (f: FicheDuBistrot) => f.couvertsParJour * f.joursParTrimestre;
@@ -94,7 +97,7 @@ export function trimestreDeCuisine(f: FicheDuBistrot, numero: number, prix = f.p
     chiffreDAffaires,
     autresCouts,
     margeSurCoutsVariables: auCentime(chiffreDAffaires - denrees - autresCouts),
-    ratio: auDixieme((denrees / chiffreDAffaires) * 100),
+    ratio: taux2(denrees, chiffreDAffaires),
   };
 }
 
@@ -103,7 +106,7 @@ export function anneeDeCuisine(f: FicheDuBistrot) {
   const trimestres = [1, 2, 3, 4].map((n) => trimestreDeCuisine(f, n));
   const denrees = auCentime(trimestres.reduce((s, t) => s + t.denrees, 0));
   const chiffreDAffaires = auCentime(trimestres.reduce((s, t) => s + t.chiffreDAffaires, 0));
-  return { trimestres, denrees, chiffreDAffaires, ratio: auDixieme((denrees / chiffreDAffaires) * 100) };
+  return { trimestres, denrees, chiffreDAffaires, ratio: taux2(denrees, chiffreDAffaires) };
 }
 
 export type AnneeDeCuisine = ReturnType<typeof anneeDeCuisine>;

@@ -240,15 +240,15 @@ describe("la promotion qui paie, à la boutique du monde du cours", () => {
       "Prix payé en promotion, hors taxes": 49.5,
       "Marge d'un pull au prix de l'étiquette": 26.5,
       "Marge d'un pull en promotion": 21,
-      "Baisse de la marge d'un pull (%)": Math.round((5.5 / 26.5) * 1000) / 10,
+      "Baisse de la marge d'un pull (%)": Math.round((5.5 / 26.5) * 10_000) / 100,
     });
-    expect(Math.round((5.5 / 26.5) * 1000) / 10).toBe(20.8);
+    expect(Math.round((5.5 / 26.5) * 10_000) / 100).toBe(20.75);
     expect(attendus(ch, "volume-necessaire")).toEqual({
       "Marge d'un mois sans remise": margeSans,
       "Volume nécessaire en promotion": Math.ceil(15_900 / 21),
-      "Hausse des ventes nécessaire (%)": Math.round((758 / 600 - 1) * 1000) / 10,
+      "Hausse des ventes nécessaire (%)": Math.round((758 / 600 - 1) * 10_000) / 100,
     });
-    expect(Math.round((758 / 600 - 1) * 1000) / 10).toBe(26.3);
+    expect(Math.round((758 / 600 - 1) * 10_000) / 100).toBe(26.33);
   });
 
   it("le curseur du volume, refait à la main : la marge en promotion rattrape celle d'un mois sans remise à 758", () => {
@@ -352,7 +352,7 @@ describe("la promotion qui paie, à la boutique du monde du cours", () => {
     expect(attendus(ch, "la-meilleure-remise")).toEqual({
       "Gain à 10 % de remise, rayon plein": gainA(10, 900),
       "Gain à 15 % de remise, rayon plein": gainA(15, 900),
-      "Gain à 7,5 % de remise, rayon plein": gainA(7.5, 900),
+      "Gain à 7,50 % de remise, rayon plein": gainA(7.5, 900),
     });
     expect([gainA(10, 900), gainA(15, 900), gainA(7.5, 900)]).toEqual([480, -22.5, 549.3]);
   });

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_INVENTAIRE, ficheDe } from "../../chapitres/l-inventaire-et-la-demarque";
 import { DEGAT_DES_EAUX, degatDesEaux } from "../../monde/inventaire-de-la-boutique";
@@ -18,10 +18,14 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses chiffres sont ceux de
  * `degatDesEaux` (monde/inventaire-de-la-boutique.ts), sur la fiche de la boutique.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la marge perdue se calcule sur le taux de marge de janvier
+ * arrondi à deux décimales, comme sur la copie, et se donne au centime, à un centime près (à un euro,
+ * avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 const sinistreDe = (c: Pick<Cas, "code">) => degatDesEaux(ficheDe(c));
 
@@ -129,7 +133,7 @@ export const LE_DEGAT_DES_EAUX_DANS_LA_RESERVE: Situation = {
       notions: ["contribution_margin", "revenue"],
       question: (c) => {
         const s = sinistreDe(c);
-        return `Un mois comme janvier fait ses ventes sur ${qte(ficheDe(c).joursDuMois)} jours réguliers. Calculez le chiffre d'affaires perdu pendant les ${qte(DEGAT_DES_EAUX.joursDeFermeture)} jours de fermeture, la marge sur coût variable perdue (au taux de janvier), puis la perte moyenne de l'année : une fermeture arrive ${qte(s.fermeturesParAn)} fois par an en moyenne.`;
+        return `Un mois comme janvier fait ses ventes sur ${qte(ficheDe(c).joursDuMois)} jours réguliers. Calculez le chiffre d'affaires perdu pendant les ${qte(DEGAT_DES_EAUX.joursDeFermeture)} jours de fermeture, puis la marge sur coût variable perdue, au taux de janvier arrondi à deux décimales. Calculez enfin la perte moyenne de l'année : une fermeture arrive ${qte(s.fermeturesParAn)} fois par an en moyenne.`;
       },
       champs: (c) => {
         const s = sinistreDe(c);
@@ -137,8 +141,8 @@ export const LE_DEGAT_DES_EAUX_DANS_LA_RESERVE: Situation = {
         const ca = f.gamme.reduce((t, r) => t + r.ventesDuMois * r.prixHt, 0);
         return [
           { libelle: "Chiffre d'affaires perdu", attendu: s.caPerdu, calcul: `${eur(ca)} ÷ ${qte(f.joursDuMois)} × ${qte(DEGAT_DES_EAUX.joursDeFermeture)} = ${eur(s.caPerdu)}` },
-          { libelle: "Marge perdue", attendu: s.margePerdue, tolerance: 1, calcul: `${eur(s.caPerdu)} × ${qte(Math.round(s.tauxDeMarge * 1000) / 10)} % = ${eur(s.margePerdue)}` },
-          { libelle: "Perte moyenne de l'année", attendu: s.perteMoyenneParAn, tolerance: 1, calcul: `${qte(s.fermeturesParAn)} × ${eur(s.margePerdue)} = ${eur(s.perteMoyenneParAn)}` },
+          { libelle: "Marge perdue", attendu: s.margePerdue, calcul: `${eur(s.caPerdu)} × ${pct(s.tauxDeMarge * 100)} = ${eur(s.margePerdue)}` },
+          { libelle: "Perte moyenne de l'année", attendu: s.perteMoyenneParAn, calcul: `${qte(s.fermeturesParAn)} × ${eur(s.margePerdue)} = ${eur(s.perteMoyenneParAn)}` },
         ];
       },
       explication: (c) => {

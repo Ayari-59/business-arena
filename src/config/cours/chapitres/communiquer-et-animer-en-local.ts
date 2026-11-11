@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte as entier, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   AUDIENCE_DES_POSTS,
@@ -44,6 +44,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · expert : le-plus-petit-cout, le-laboratoire-du-plan (la vitrine, un levier à choix, et le budget
  *     des publications ; ce qu'il laisse en courbe), la-soiree-tricot, le-sms, la-publicite-comparative,
  *     l-influenceuse, le-plan-retenu ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le retour sur investissement se donne à deux décimales, à un
+ * centième près (au dixième, avant) ; les entrées et les ventes sont des quantités : le corrigé écrit
+ * les ventes au centième, sur le taux de transformation à deux décimales, puis les arrondit à l'unité
+ * la plus proche.
  */
 
 export const ENTREPRISES_DE_LA_COMMUNICATION: readonly string[] = ["boutique"];
@@ -60,11 +66,7 @@ export const POSTS_AVEC_LE_SMS = 300;
 /** Le départ du laboratoire : sans la vitrine, 1 000 € de publications. */
 export const DEPART_DU_LABORATOIRE: { vitrine: number; posts: number } = { vitrine: 0, posts: 1_000 };
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => {
   const f = BOUTIQUES_DU_COURS[c.code];
@@ -111,7 +113,7 @@ function tableauDuRetour(c: Pick<Cas, "code">): TableauDeDonnees {
   return {
     titre: "Ce que chaque support laisse, une fois payé",
     colonnes: ["Coût par contact", "Ventes", "Laisse", "Retour"],
-    lignes: x.supports.map((s) => ({ libelle: s.nom, valeurs: [eur(auCentime(s.coutParContact)), qte(s.ventes), eur(s.laisse), pct(auDixieme(s.retourSurInvestissement * 100))] })),
+    lignes: x.supports.map((s) => ({ libelle: s.nom, valeurs: [eur(auCentime(s.coutParContact)), qte(s.ventes), eur(s.laisse), pct(auCentime(s.retourSurInvestissement * 100))] })),
   };
 }
 
@@ -158,7 +160,7 @@ export const COMMUNIQUER_ET_ANIMER_EN_LOCAL: Chapitre = {
         const x = communicationDeLaBoutique(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, à la boutique ${x.f.entreprise}. Elle dépense ${eur(x.budget)} de publicité par mois, et la manager doit choisir où les mettre. Le tableau donne les cinq supports envisagés : ce qu'ils coûtent, combien de personnes ils touchent, et la part de ces contacts qui entre en boutique (le taux de retour).`,
-          `Ce que la simulation suppose. Une personne qu'un support fait entrer achète comme un passant de janvier : ${pct(auDixieme(x.p.tauxDeTransformation * 100))} des passants passent en caisse, et une vente laisse ${eur(x.margeDUneVente)} de marge sur coût variable. Les ventes se comptent à l'unité la plus proche.`,
+          `Ce que la simulation suppose. Une personne qu'un support fait entrer achète comme un passant de janvier : ${pct(auCentime(x.p.tauxDeTransformation * 100))} des passants passent en caisse, et une vente laisse ${eur(x.margeDUneVente)} de marge sur coût variable. Les ventes se comptent à l'unité la plus proche.`,
           "La communication se juge comme un achat : ce qu'elle coûte, face à ce qu'elle fait gagner.",
         ];
       },
@@ -233,7 +235,7 @@ export const COMMUNIQUER_ET_ANIMER_EN_LOCAL: Chapitre = {
       notions: ["customer_acquisition_cost", "conversion_rate"],
       question: (c) => {
         const x = communicationDeLaBoutique(c);
-        return `Faites varier les entrées que les tracts font venir, de 0 à 300. Une droite donne la marge des ventes qu'elles font (à ${pct(auDixieme(x.p.tauxDeTransformation * 100))} de transformation et ${eur(x.margeDUneVente)} par vente), l'autre le coût des tracts (${eur(x.de("tracts").cout)}). Placez le curseur sur le plus petit nombre d'entrées où les tracts se paient, puis validez.`;
+        return `Faites varier les entrées que les tracts font venir, de 0 à 300. Une droite donne la marge des ventes qu'elles font (à ${pct(auCentime(x.p.tauxDeTransformation * 100))} de transformation et ${eur(x.margeDUneVente)} par vente), l'autre le coût des tracts (${eur(x.de("tracts").cout)}). Placez le curseur sur le plus petit nombre d'entrées où les tracts se paient, puis validez.`;
       },
       grandeur: () => ({ libelle: "Entrées dues aux tracts", unite: "entrées" }),
       cible: (c) => ({ attendu: communicationDeLaBoutique(c).entreesQuiPaientLesTracts, min: 0, max: 300 }),
@@ -262,7 +264,7 @@ export const COMMUNIQUER_ET_ANIMER_EN_LOCAL: Chapitre = {
         const e = x.entreesQuiPaientLesTracts;
         const t = x.de("tracts");
         return [
-          `Il faut ${qte(e)} entrées, soit un taux de retour de ${pct(auDixieme((e / t.contacts) * 1000) / 10, 2)} sur ${qte(t.contacts)} tracts. Une entrée n'est pas une vente : il faut ${qte(rendementDesEntrees(x.f, e).ventes)} ventes à ${eur(x.margeDUneVente)} pour payer ${eur(t.cout)}, et il faut ${qte(auDixieme(1 / x.p.tauxDeTransformation))} entrées pour une vente. Le taux annoncé, ${pct(t.tauxDeRetour * 100, 0)}, ne laisse presque rien.`,
+          `Il faut ${qte(e)} entrées, soit un taux de retour de ${pct(taux2(e, t.contacts))} sur ${qte(t.contacts)} tracts. Une entrée n'est pas une vente : il faut ${qte(rendementDesEntrees(x.f, e).ventes)} ventes à ${eur(x.margeDUneVente)} pour payer ${eur(t.cout)}, et il faut ${qte(auCentime(1 / x.p.tauxDeTransformation))} entrées pour une vente. Le taux annoncé, ${pct(t.tauxDeRetour * 100)}, ne laisse presque rien.`,
         ];
       },
     },
@@ -291,13 +293,13 @@ export const COMMUNIQUER_ET_ANIMER_EN_LOCAL: Chapitre = {
       titre: "Le retour sur investissement",
       notions: ["customer_acquisition_cost"],
       question: () =>
-        "Sans formule cette fois. Calculez le retour sur investissement de la vitrine, du SMS et des publications sponsorisées, en pourcentage au dixième : ce que l'action laisse une fois payée, rapporté à ce qu'elle coûte.",
+        "Sans formule cette fois. Calculez le retour sur investissement de la vitrine, du SMS et des publications sponsorisées, en pourcentage à deux décimales : ce que l'action laisse une fois payée, rapporté à ce qu'elle coûte.",
       champs: (c) => {
         const x = communicationDeLaBoutique(c);
         return (["vitrine", "sms", "posts"] as CodeDeSupport[]).map((code) => {
           const s = x.de(code);
-          const r = auDixieme(s.retourSurInvestissement * 100);
-          return { libelle: `Retour sur investissement · ${s.nom} (%)`, attendu: r, tolerance: 0.1, calcul: `${eur(s.laisse)} ÷ ${eur(s.cout)} × 100 = ${pct(r)}` };
+          const r = auCentime(s.retourSurInvestissement * 100);
+          return { libelle: `Retour sur investissement · ${s.nom} (%)`, attendu: r, calcul: `${eur(s.laisse)} ÷ ${eur(s.cout)} × 100 = ${pct(r)}` };
         });
       },
       explication: (c) => {
@@ -584,8 +586,8 @@ export function tableauACompleterDesSupports(c: Pick<Cas, "code">): TableauAComp
       return {
         libelle: s.nom,
         cellules: [
-          { valeur: s.entrees, unite: "entrées", saisir: !donnee, tolerance: 0, calcul: `${qte(s.contacts)} × ${pct(s.tauxDeRetour * 100)} = ${qte(s.entrees)}`, indice: "les contacts × le taux de retour" },
-          { valeur: s.ventes, unite: "ventes", saisir: !donnee, tolerance: 0, calcul: `${qte(s.entrees)} × ${pct(auDixieme(x.p.tauxDeTransformation * 100))} = ${qte(s.ventes)}, à l'unité la plus proche`, indice: "les entrées × le taux de transformation des passants, à l'unité la plus proche" },
+          { valeur: s.entrees, unite: "entrées", nature: "quantite", saisir: !donnee, tolerance: 0, calcul: `${qte(s.contacts)} × ${pct(s.tauxDeRetour * 100)} = ${qte(s.entrees)}`, indice: "les contacts × le taux de retour" },
+          { valeur: s.ventes, unite: "ventes", nature: "quantite", saisir: !donnee, tolerance: 0, calcul: `${qte(s.entrees)} × ${pct(s.tauxEnPourcent)} = ${qte(s.ventesCalculees)}, soit ${entier(s.ventes)} ventes à l'unité la plus proche`, indice: "les entrées × le taux de transformation des passants, à l'unité la plus proche" },
           { valeur: s.marge, saisir: !donnee, calcul: `${qte(s.ventes)} × ${eur(x.margeDUneVente)} = ${eur(s.marge)}`, indice: "les ventes × la marge d'une vente" },
           { valeur: s.laisse, saisir: !donnee, calcul: `${eur(s.marge)} − ${eur(s.cout)} = ${eur(s.laisse)}`, indice: "la marge en plus moins le coût du support" },
         ],

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { chargesFixesDuMois } from "../monde/boutique";
 import { BANQUE_DE_LA_BOUTIQUE, IMMOBILISATIONS, MOIS_DE_CHARGES_A_GARDER, PROVISION_POUR_LITIGE, bilanDeLaBoutique, delaiDu, tresorerieAGarder } from "../monde/comptes-de-la-boutique";
@@ -31,6 +31,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : les-ratios, le-bfr-au-comptant, apres-le-dividende ;
  *   · expert : la-provision-justifiee (une critique du classement), le-decouvert (le banquier) ; puis
  *     la décision et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'autonomie financière se donne à deux décimales, à un centième
+ * près (au dixième, avant) ; la couverture des emplois stables, la liquidité générale et la durée de
+ * stockage sont des grandeurs, au centième, à un centième près (à cinq centièmes, avant, pour la durée
+ * de stockage).
  */
 
 export const ENTREPRISES_DU_BILAN: readonly string[] = ["boutique"];
@@ -52,12 +58,7 @@ export const SOLUTION_DU_LABORATOIRE = { dividende: 320_000, delai: 45 } as cons
 /** LE DIVIDENDE DEMANDÉ (hypothèse du cours) : les associés veulent se verser 320 000 € sur le résultat de N − 1. */
 export const DIVIDENDE_DEMANDE = 320_000;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 export const ficheDuBilan = (c: Pick<Cas, "code">): FicheDeLaBoutique => {
   const f = BOUTIQUES_DU_COURS[c.code];
@@ -75,7 +76,7 @@ export function bilanDuChapitre(c: Pick<Cas, "code">) {
   // Le classement que le cours du propriétaire retient : une provision justifiée, d'exploitation, en passif circulant.
   const frngSansLaProvision = auCentime(b.frng - PROVISION_POUR_LITIGE);
   const bfrAvecLaProvision = auCentime(b.bfr - PROVISION_POUR_LITIGE);
-  return { f, b, comptant, apres, apresAuComptant, aGarder: tresorerieAGarder(f), chargesDuMois: chargesFixesDuMois(f).total, frngSansLaProvision, bfrAvecLaProvision, delaiDuFaconnier: delaiDu(f, "faconnier"), baisseDesFinsDeSerie: auDixieme((1 - f.fournisseurs.find((k) => k.code === "fins-de-serie")!.multiplicateur) * 100) };
+  return { f, b, comptant, apres, apresAuComptant, aGarder: tresorerieAGarder(f), chargesDuMois: chargesFixesDuMois(f).total, frngSansLaProvision, bfrAvecLaProvision, delaiDuFaconnier: delaiDu(f, "faconnier"), baisseDesFinsDeSerie: auCentime((1 - f.fournisseurs.find((k) => k.code === "fins-de-serie")!.multiplicateur) * 100) };
 }
 
 export type BilanDuChapitre = ReturnType<typeof bilanDuChapitre>;
@@ -258,7 +259,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
       notions: ["bfr", "payment_terms"],
       question: (c) => {
         const x = bilanDuChapitre(c);
-        return `Avant de calculer, pariez. Les fins de série d'un tricoteur portugais sont ${pct(x.baisseDesFinsDeSerie, 0)} moins chères, mais se paient comptant, à l'enlèvement. Si la boutique y achetait son réassort de fin d'année, à achats égaux, son BFR…`;
+        return `Avant de calculer, pariez. Les fins de série d'un tricoteur portugais sont ${pct(x.baisseDesFinsDeSerie)} moins chères, mais se paient comptant, à l'enlèvement. Si la boutique y achetait son réassort de fin d'année, à achats égaux, son BFR…`;
       },
       options: (c) => {
         const x = bilanDuChapitre(c);
@@ -332,7 +333,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
       explication: (c) => {
         const x = bilanDuChapitre(c);
         return [
-          `Payer comptant fait passer le BFR de ${eur(x.b.bfr)} à ${eur(x.comptant.bfr)} : la trésorerie perd ${eur(auCentime(x.b.tresorerieNette - x.comptant.tresorerieNette))}, sans que le fonds de roulement bouge. Les ${pct(x.baisseDesFinsDeSerie, 0)} de prix en moins doivent payer cette trésorerie immobilisée.`,
+          `Payer comptant fait passer le BFR de ${eur(x.b.bfr)} à ${eur(x.comptant.bfr)} : la trésorerie perd ${eur(auCentime(x.b.tresorerieNette - x.comptant.tresorerieNette))}, sans que le fonds de roulement bouge. Les ${pct(x.baisseDesFinsDeSerie)} de prix en moins doivent payer cette trésorerie immobilisée.`,
         ];
       },
     },
@@ -343,18 +344,18 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
       titre: "Les ratios du bilan",
       notions: ["balance_sheet", "stock_rotation"],
       question: () =>
-        "Calculez, au 31 décembre N − 1, l'autonomie financière (capitaux propres ÷ total du passif, en %) et la couverture des emplois stables (ressources stables ÷ emplois stables). Puis la liquidité générale (actif circulant et disponibilités ÷ dettes à court terme) et la durée de stockage (stock moyen ÷ coût d'achat des marchandises vendues × 360 jours). Les trois derniers au centième.",
+        "Calculez, au 31 décembre N − 1, l'autonomie financière (capitaux propres ÷ total du passif, en %, à deux décimales) et la couverture des emplois stables (ressources stables ÷ emplois stables). Puis la liquidité générale (actif circulant et disponibilités ÷ dettes à court terme) et la durée de stockage (stock moyen ÷ coût d'achat des marchandises vendues × 360 jours). Les trois derniers au centième.",
       champs: (c) => {
         const b = bilanDuChapitre(c).b;
         return [
-          { libelle: "Autonomie financière (%)", attendu: auDixieme(b.autonomieFinanciere * 100), tolerance: 0.1, calcul: `${eur(b.capitauxPropres)} ÷ ${eur(b.totalDuPassif)} × 100 = ${pct(b.autonomieFinanciere * 100)}` },
-          { libelle: "Couverture des emplois stables", attendu: auCentieme(b.couvertureDesEmploisStables), calcul: `${eur(b.ressourcesStables)} ÷ ${eur(b.emploisStables)} = ${qte(auCentieme(b.couvertureDesEmploisStables))}` },
-          { libelle: "Liquidité générale", attendu: auCentieme(b.liquiditeGenerale), calcul: `(${eur(b.actifCirculant)} + ${eur(b.tresorerieActive)}) ÷ ${eur(b.passifCirculant)} = ${qte(auCentieme(b.liquiditeGenerale))}` },
+          { libelle: "Autonomie financière (%)", attendu: auCentime(b.autonomieFinanciere * 100), calcul: `${eur(b.capitauxPropres)} ÷ ${eur(b.totalDuPassif)} × 100 = ${pct(b.autonomieFinanciere * 100)}` },
+          { libelle: "Couverture des emplois stables", nature: "grandeur", attendu: auCentime(b.couvertureDesEmploisStables), calcul: `${eur(b.ressourcesStables)} ÷ ${eur(b.emploisStables)} = ${qte(auCentime(b.couvertureDesEmploisStables))}` },
+          { libelle: "Liquidité générale", nature: "grandeur", attendu: auCentime(b.liquiditeGenerale), calcul: `(${eur(b.actifCirculant)} + ${eur(b.tresorerieActive)}) ÷ ${eur(b.passifCirculant)} = ${qte(auCentime(b.liquiditeGenerale))}` },
           {
             libelle: "Durée de stockage (jours)",
-            attendu: auCentieme(b.dureeDeStockage),
-            tolerance: 0.05,
-            calcul: `(${eur(b.cr.stockInitial)} + ${eur(b.cr.stockFinal)}) ÷ 2 = ${eur(b.stockMoyen)} ; ${eur(b.stockMoyen)} ÷ ${eur(b.cr.coutDAchatDesVendues)} × 360 = ${qte(auCentieme(b.dureeDeStockage))} jours`,
+            nature: "grandeur",
+            attendu: auCentime(b.dureeDeStockage),
+            calcul: `(${eur(b.cr.stockInitial)} + ${eur(b.cr.stockFinal)}) ÷ 2 = ${eur(b.stockMoyen)} ; ${eur(b.stockMoyen)} ÷ ${eur(b.cr.coutDAchatDesVendues)} × 360 = ${qte(auCentime(b.dureeDeStockage))} jours`,
           },
         ];
       },
@@ -362,7 +363,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
         const x = bilanDuChapitre(c);
         const b = x.b;
         return [
-          `Les capitaux propres financent ${pct(b.autonomieFinanciere * 100)} du bilan (on attend au moins un tiers) ; les ressources stables couvrent ${qte(auDixieme(b.couvertureDesEmploisStables))} fois les immobilisations (au moins une fois) ; l'actif à court terme paie ${qte(auDixieme(b.liquiditeGenerale))} fois les dettes à court terme. Un article reste ${qte(auDixieme(b.dureeDeStockage))} jours en stock en moyenne sur l'année, quand le façonnier attend ${qte(x.delaiDuFaconnier)} jours.`,
+          `Les capitaux propres financent ${pct(b.autonomieFinanciere * 100)} du bilan (on attend au moins un tiers) ; les ressources stables couvrent ${qte(auCentime(b.couvertureDesEmploisStables))} fois les immobilisations (au moins une fois) ; l'actif à court terme paie ${qte(auCentime(b.liquiditeGenerale))} fois les dettes à court terme. Un article reste ${qte(auCentime(b.dureeDeStockage))} jours en stock en moyenne sur l'année, quand le façonnier attend ${qte(x.delaiDuFaconnier)} jours.`,
         ];
       },
     },
@@ -402,7 +403,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
           { libelle: "Besoin en fonds de roulement", montant: l.bfr, reference: d.bfr },
           { libelle: "Trésorerie nette", montant: l.tresorerieNette, reference: d.tresorerieNette, fort: true },
           { libelle: "Trésorerie nette, moins celle à garder", montant: auCentime(l.tresorerieNette - x.aGarder), reference: auCentime(d.tresorerieNette - x.aGarder), effet: true },
-          { libelle: "Autonomie financière", montant: auDixieme(l.autonomieFinanciere * 100), reference: auDixieme(d.autonomieFinanciere * 100), unite: "%" },
+          { libelle: "Autonomie financière", montant: auCentime(l.autonomieFinanciere * 100), reference: auCentime(d.autonomieFinanciere * 100), unite: "%" },
         ];
       },
       graphique: (c) => {
@@ -445,7 +446,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
       titre: "Le bilan après le dividende",
       notions: ["frng", "net_treasury", "balance_sheet"],
       question: () =>
-        `Sans formule cette fois. Les associés se versent ${eur(DIVIDENDE_DEMANDE)} et la boutique garde le façonnier. Calculez les capitaux propres, le fonds de roulement, la trésorerie nette, puis l'autonomie financière (en %, au dixième).`,
+        `Sans formule cette fois. Les associés se versent ${eur(DIVIDENDE_DEMANDE)} et la boutique garde le façonnier. Calculez les capitaux propres, le fonds de roulement, la trésorerie nette, puis l'autonomie financière (en %, à deux décimales).`,
       champs: (c) => {
         const x = bilanDuChapitre(c);
         const a = x.apres;
@@ -453,7 +454,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
           { libelle: "Capitaux propres", attendu: a.capitauxPropres, calcul: `${eur(x.b.capitauxPropres)} − ${eur(DIVIDENDE_DEMANDE)} = ${eur(a.capitauxPropres)}` },
           { libelle: "Fonds de roulement net global", attendu: a.frng, calcul: `${eur(x.b.frng)} − ${eur(DIVIDENDE_DEMANDE)} = ${eur(a.frng)}` },
           { libelle: "Trésorerie nette", attendu: a.tresorerieNette, calcul: `${eur(a.frng)} − (${eur(a.bfr)}) = ${eur(a.tresorerieNette)}` },
-          { libelle: "Autonomie financière (%)", attendu: auDixieme(a.autonomieFinanciere * 100), tolerance: 0.1, calcul: `${eur(a.capitauxPropres)} ÷ ${eur(a.totalDuPassif)} × 100 = ${pct(a.autonomieFinanciere * 100)}` },
+          { libelle: "Autonomie financière (%)", attendu: auCentime(a.autonomieFinanciere * 100), calcul: `${eur(a.capitauxPropres)} ÷ ${eur(a.totalDuPassif)} × 100 = ${pct(a.autonomieFinanciere * 100)}` },
         ];
       },
       explication: (c) => {

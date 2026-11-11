@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints, qte as entier } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { compteMoyen } from "../monde/relation-client";
 import {
@@ -58,6 +58,14 @@ import { POURQUOI_LE_CABINET, ficheDe } from "./valeur-d-un-client";
  *   · expert : le-laboratoire-du-plateau (téléacteurs, appels par heure, rappel programmé, avec le
  *     graphique du coût d'un rendez-vous), un-teleacteur-de-plus (la décision), l-espace-en-ligne (une
  *     variante chiffrée), la-cible-d-occupation (le droit et la santé au travail) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de décroché, d'occupation, de joignabilité et
+ * d'honoration se donnent à deux décimales, à un centième près (au dixième, à cinq centièmes près,
+ * avant) ; la charge, l'effectif exact, les appels émis par heure, la DMT et les rendez-vous attendus
+ * (une espérance, non arrondie) sont des grandeurs, au centième ; les appels traités ou décrochés, les
+ * effectifs et les créneaux sont des quantités : le corrigé écrit le quotient à deux décimales, puis
+ * l'arrondit à l'unité au-dessus, et dit pourquoi.
  */
 
 /** Le chapitre se joue chez le cabinet du cours, ATLAS CONSEIL, qui ouvre le plateau en N + 1. */
@@ -77,13 +85,14 @@ export const LEVIERS_DU_PLATEAU = {
   appelsParHeure: { min: 8, max: 12, pas: 1 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-/** Une part (0,725) écrite en pourcentage, au dixième (72,5 %). */
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-/** Une part en pourcentage, au dixième : ce que l'élève tape (0,725 → 72,5). */
-const enPct = (x: number) => Math.round(x * 1000) / 10 + 0;
+const qte = nombreAuCentieme;
+/** Une part (0,725) écrite en pourcentage, à deux décimales (72,50 %). */
+const pct = (x: number) => enPoints(x * 100);
+/** Une part en pourcentage, à deux décimales : ce que l'élève tape (0,725 → 72,5). */
+const enPct = (x: number) => auCentime(x * 100);
+/** Un effectif : le quotient à deux décimales, puis à l'unité au-dessus quand il tombe entre deux entiers. */
+const effectifEcrit = (exact: number, necessaire: number) =>
+  Number.isInteger(auCentime(exact)) ? `${qte(auCentime(exact))} téléacteurs` : `${qte(auCentime(exact))}, soit ${entier(necessaire)} téléacteurs à l'unité au-dessus : en dessous, des appels sont perdus`;
 /** « d'Inès », « de Léa » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêhAEIOUYÉÈH]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -231,7 +240,7 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${x.f.entreprise}. En N + 1, le cabinet ouvre un plateau de ${qte(x.tdb.teleacteurs.length)} téléacteurs. Ils tiennent la ligne clients (les participants et les services formation appellent pour une inscription, une convocation, un changement de date) et la prospection téléphonique, qu'${x.hugo} faisait seul en N : ${qte(x.canal.contacts)} contacts pour ${qte(x.canal.rendezVous)} rendez-vous. ${x.hugo}, libéré du téléphone, ne fait plus que les rendez-vous.`,
           `Le plateau ouvre de 9 h à 13 h et de 14 h à 18 h, en ${qte(x.ligne.creneaux.length)} créneaux de ${qte(MINUTES_D_UN_CRENEAU)} minutes. Un téléacteur tient ${qte(CRENEAUX_D_UN_TELEACTEUR)} créneaux par jour, ${qte(CRENEAUX_D_UN_TELEACTEUR * 2)} heures au téléphone : le reste de sa journée de 7 heures va aux pauses et au suivi des dossiers. Il coûte ${eur(x.cout.parMois)} par mois, poste et logiciel de gestion des appels compris.`,
-          `La simulation suppose qu'un appel de la ligne demande ${qte(x.ligne.dmt)} minutes en moyenne, conversation et saisie comprises : c'est la durée moyenne de traitement (DMT). Elle suppose aussi qu'un téléacteur ne traite jamais plus de ${pct(OCCUPATION_CIBLE, 0)} de son créneau : au-delà, les appels attendent et les clients raccrochent. Un appel qui ne trouve personne est perdu. Le mois compte ${qte(JOURS_DU_MOIS)} jours ouvrés.`,
+          `La simulation suppose qu'un appel de la ligne demande ${qte(x.ligne.dmt)} minutes en moyenne, conversation et saisie comprises : c'est la durée moyenne de traitement (DMT). Elle suppose aussi qu'un téléacteur ne traite jamais plus de ${pct(OCCUPATION_CIBLE)} de son créneau : au-delà, les appels attendent et les clients raccrochent. Un appel qui ne trouve personne est perdu. Le mois compte ${qte(JOURS_DU_MOIS)} jours ouvrés.`,
         ];
       },
       repere: () =>
@@ -245,16 +254,16 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
       notions: ["capacity"],
       question: (c) => {
         const x = plateauDuCabinet(c);
-        return `De ${x.pic.libelle}, la ligne reçoit ${qte(x.pic.recus)} appels, traités en ${qte(x.ligne.dmt)} minutes chacun, et ${qte(x.pic.presents)} téléacteurs sont en ligne. Calculez la charge du créneau en minutes, les appels qu'un téléacteur peut traiter dans le créneau à ${pct(OCCUPATION_CIBLE, 0)} d'occupation, les appels décrochés dans ce créneau, puis le taux de décroché de la journée (${qte(x.ligne.decroches)} appels décrochés sur ${qte(x.ligne.recus)}), en pourcentage.`;
+        return `De ${x.pic.libelle}, la ligne reçoit ${qte(x.pic.recus)} appels, traités en ${qte(x.ligne.dmt)} minutes chacun, et ${qte(x.pic.presents)} téléacteurs sont en ligne. Calculez la charge du créneau en minutes, les appels qu'un téléacteur peut traiter dans le créneau à ${pct(OCCUPATION_CIBLE)} d'occupation, les appels décrochés dans ce créneau, puis le taux de décroché de la journée (${qte(x.ligne.decroches)} appels décrochés sur ${qte(x.ligne.recus)}), en pourcentage.`;
       },
       champs: (c) => {
         const x = plateauDuCabinet(c);
         const l = x.ligne;
         return [
-          { libelle: `Charge du créneau de ${x.pic.libelle} (minutes)`, attendu: x.pic.charge, calcul: `${qte(x.pic.recus)} × ${qte(l.dmt)} = ${qte(x.pic.charge)} minutes` },
-          { libelle: "Appels qu'un téléacteur traite dans un créneau", attendu: l.parTeleacteur, calcul: `${qte(MINUTES_D_UN_CRENEAU)} × ${pct(OCCUPATION_CIBLE, 0)} ÷ ${qte(l.dmt)} = ${qte(l.minutesUtiles)} ÷ ${qte(l.dmt)} = ${qte(l.parTeleacteur)} appels` },
-          { libelle: `Appels décrochés de ${x.pic.libelle}`, attendu: x.pic.decroches, calcul: `${qte(x.pic.presents)} × ${qte(l.parTeleacteur)} = ${qte(x.pic.capacite)}, pour ${qte(x.pic.recus)} appels reçus` },
-          { libelle: "Taux de décroché de la journée (%)", attendu: enPct(l.tauxDeDecroche), calcul: `${qte(l.decroches)} ÷ ${qte(l.recus)} = ${pct(l.tauxDeDecroche)}`, tolerance: 0.05 },
+          { libelle: `Charge du créneau de ${x.pic.libelle} (minutes)`, nature: "grandeur", attendu: x.pic.charge, calcul: `${qte(x.pic.recus)} × ${qte(l.dmt)} = ${qte(x.pic.charge)} minutes` },
+          { libelle: "Appels qu'un téléacteur traite dans un créneau", nature: "quantite", attendu: l.parTeleacteur, calcul: `${qte(MINUTES_D_UN_CRENEAU)} × ${pct(OCCUPATION_CIBLE)} ÷ ${qte(l.dmt)} = ${qte(l.minutesUtiles)} ÷ ${qte(l.dmt)} = ${qte(l.parTeleacteur)} appels` },
+          { libelle: `Appels décrochés de ${x.pic.libelle}`, nature: "quantite", attendu: x.pic.decroches, calcul: `${qte(x.pic.presents)} × ${qte(l.parTeleacteur)} = ${qte(x.pic.capacite)} appels au plus ; pour ${qte(x.pic.recus)} appels reçus, ${qte(x.pic.decroches)} décrochés` },
+          { libelle: "Taux de décroché de la journée (%)", attendu: enPct(l.tauxDeDecroche), calcul: `${qte(l.decroches)} ÷ ${qte(l.recus)} = ${pct(l.tauxDeDecroche)}` },
         ];
       },
       explication: (c) => {
@@ -282,7 +291,6 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
           libelle: `Taux d'occupation de ${k.libelle} (%)`,
           attendu: enPct(k.occupation),
           calcul: `${qte(k.decroches)} × ${qte(l.dmt)} ÷ (${qte(k.presents)} × ${qte(MINUTES_D_UN_CRENEAU)}) = ${qte(k.decroches * l.dmt)} ÷ ${qte(k.presents * MINUTES_D_UN_CRENEAU)} = ${pct(k.occupation)}`,
-          tolerance: 0.05,
         });
         return [
           ligne(x.pic),
@@ -291,7 +299,6 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
             libelle: "Taux d'occupation de la journée (%)",
             attendu: enPct(l.occupation),
             calcul: `${qte(l.decroches)} × ${qte(l.dmt)} ÷ (${qte(l.creneauxTenus)} × ${qte(MINUTES_D_UN_CRENEAU)}) = ${qte(l.decroches * l.dmt)} ÷ ${qte(l.creneauxTenus * MINUTES_D_UN_CRENEAU)} = ${pct(l.occupation)}`,
-            tolerance: 0.05,
           },
         ];
       },
@@ -311,7 +318,7 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
       notions: ["capacity"],
       question: (c) => {
         const x = plateauDuCabinet(c);
-        return `Avant de calculer, pariez. Le plateau met ${qte(x.ligne.creneauxTenus)} créneaux de téléacteur sur la ligne chaque jour, et en perd ${qte(x.ligne.perdus)} appels. Avec ces mêmes ${qte(x.ligne.creneauxTenus)} créneaux, sans dépasser ${pct(OCCUPATION_CIBLE, 0)} d'occupation, peut-on décrocher tous les appels ?`;
+        return `Avant de calculer, pariez. Le plateau met ${qte(x.ligne.creneauxTenus)} créneaux de téléacteur sur la ligne chaque jour, et en perd ${qte(x.ligne.perdus)} appels. Avec ces mêmes ${qte(x.ligne.creneauxTenus)} créneaux, sans dépasser ${pct(OCCUPATION_CIBLE)} d'occupation, peut-on décrocher tous les appels ?`;
       },
       options: () => {
         const voir = "Le laboratoire suivant vous laisse placer les téléacteurs créneau par créneau : essayez.";
@@ -369,7 +376,7 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
         const x = plateauDuCabinet(c);
         const r = x.replanifiee;
         return [
-          `Avec ${x.effectif.map(qte).join(", ")} téléacteurs aux ${qte(r.creneaux.length)} créneaux, la ligne décroche tous ses appels sur les mêmes ${qte(r.creneauxTenus)} créneaux : l'occupation de la journée monte à ${pct(r.occupation)}, sans dépasser ${pct(OCCUPATION_CIBLE, 0)} à aucun créneau. Rien n'a été embauché : le téléacteur du creux est passé au pic.`,
+          `Avec ${x.effectif.map(qte).join(", ")} téléacteurs aux ${qte(r.creneaux.length)} créneaux, la ligne décroche tous ses appels sur les mêmes ${qte(r.creneauxTenus)} créneaux : l'occupation de la journée monte à ${pct(r.occupation)}, sans dépasser ${pct(OCCUPATION_CIBLE)} à aucun créneau. Rien n'a été embauché : le téléacteur du creux est passé au pic.`,
           "Un planning se construit sur la courbe des appels, créneau par créneau, pas sur leur moyenne. L'étape suivante le refait par le calcul.",
         ];
       },
@@ -388,13 +395,14 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
         const l = x.ligne;
         const u = l.minutesUtiles;
         return [
-          { libelle: `Effectif exact de ${x.pic.libelle}`, attendu: auCentime(x.pic.effectifExact), calcul: `${qte(x.pic.charge)} ÷ (${qte(MINUTES_D_UN_CRENEAU)} × ${pct(OCCUPATION_CIBLE, 0)}) = ${qte(x.pic.charge)} ÷ ${qte(u)} = ${qte(auCentime(x.pic.effectifExact))}`, tolerance: 0.01 },
+          { libelle: `Effectif exact de ${x.pic.libelle}`, nature: "grandeur", attendu: auCentime(x.pic.effectifExact), calcul: `${qte(x.pic.charge)} ÷ (${qte(MINUTES_D_UN_CRENEAU)} × ${pct(OCCUPATION_CIBLE)}) = ${qte(x.pic.charge)} ÷ ${qte(u)} = ${qte(auCentime(x.pic.effectifExact))}` },
           ...l.creneaux.map((k) => ({
             libelle: `Effectif nécessaire de ${k.libelle}`,
+            nature: "quantite" as const,
             attendu: k.effectifNecessaire,
-            calcul: `${qte(k.recus)} × ${qte(l.dmt)} ÷ ${qte(u)} = ${qte(auCentime(k.effectifExact))}, soit ${qte(k.effectifNecessaire)}`,
+            calcul: `${qte(k.recus)} × ${qte(l.dmt)} ÷ ${qte(u)} = ${effectifEcrit(k.effectifExact, k.effectifNecessaire)}`,
           })),
-          { libelle: "Créneaux de ligne par jour", attendu: l.creneauxNecessaires, calcul: `${x.effectif.map(qte).join(" + ")} = ${qte(l.creneauxNecessaires)}` },
+          { libelle: "Créneaux de ligne par jour", nature: "quantite", attendu: l.creneauxNecessaires, calcul: `${x.effectif.map(qte).join(" + ")} = ${qte(l.creneauxNecessaires)}` },
         ];
       },
       explication: (c) => {
@@ -421,8 +429,8 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
         const t = x.tdb;
         const p = x.prospection;
         return [
-          { libelle: "Appels émis par heure", attendu: p.appelsParHeure, calcul: `${qte(t.appelsEmis)} ÷ ${qte(p.heures)} = ${qte(p.appelsParHeure)}` },
-          { libelle: "Joignabilité (%)", attendu: enPct(p.joignabilite), calcul: `${qte(t.contactsArgumentes)} ÷ ${qte(t.appelsEmis)} = ${pct(p.joignabilite)}`, tolerance: 0.05 },
+          { libelle: "Appels émis par heure", nature: "grandeur", attendu: auCentime(p.appelsParHeure), calcul: `${qte(t.appelsEmis)} ÷ ${qte(p.heures)} = ${qte(auCentime(p.appelsParHeure))}` },
+          { libelle: "Joignabilité (%)", attendu: enPct(p.joignabilite), calcul: `${qte(t.contactsArgumentes)} ÷ ${qte(t.appelsEmis)} = ${pct(p.joignabilite)}` },
           { libelle: "Coût d'une heure de téléacteur", attendu: x.cout.coutHoraire, calcul: `${eur(x.cout.parMois)} ÷ ${qte(x.cout.heures)} = ${eur(x.cout.coutHoraire)}` },
           { libelle: "Coût d'un rendez-vous pris", attendu: p.coutParRendezVous!, calcul: `${qte(p.heures)} × ${eur(x.cout.coutHoraire)} ÷ ${qte(t.rendezVousPris)} = ${eur(p.cout)} ÷ ${qte(t.rendezVousPris)} = ${eur(p.coutParRendezVous!)}` },
           { libelle: "Coût d'un rendez-vous honoré", attendu: x.coutDUnRendezVousHonore, calcul: `${eur(p.cout)} ÷ ${qte(t.rendezVousHonores)} = ${eur(x.coutDUnRendezVousHonore)}` },
@@ -552,10 +560,10 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
         const t = x.tdb;
         const [lea, , , bruno] = t.teleacteurs;
         return [
-          { libelle: `DMT ${dE(lea!.prenom)} (minutes)`, attendu: auCentime(lea!.dmt), calcul: `${qte(lea!.minutesDeTraitement)} ÷ ${qte(lea!.appelsDecroches)} = ${qte(auCentime(lea!.dmt))} minutes` },
-          { libelle: `Taux d'occupation ${dE(bruno!.prenom)} (%)`, attendu: enPct(bruno!.occupation), calcul: `${qte(bruno!.minutesDeTraitement)} ÷ (${qte(t.heuresDeLigne)} × 60) = ${pct(bruno!.occupation)}`, tolerance: 0.05 },
-          { libelle: `Taux d'honoration ${dE(lea!.prenom)} (%)`, attendu: enPct(lea!.tauxDHonoration), calcul: `${qte(lea!.rendezVousHonores)} ÷ ${qte(lea!.rendezVousPris)} = ${pct(lea!.tauxDHonoration)}`, tolerance: 0.05 },
-          { libelle: "Taux d'honoration du plateau (%)", attendu: enPct(t.tauxDHonoration), calcul: `${qte(t.rendezVousHonores)} ÷ ${qte(t.rendezVousPris)} = ${pct(t.tauxDHonoration)}`, tolerance: 0.05 },
+          { libelle: `DMT ${dE(lea!.prenom)} (minutes)`, nature: "grandeur", attendu: auCentime(lea!.dmt), calcul: `${qte(lea!.minutesDeTraitement)} ÷ ${qte(lea!.appelsDecroches)} = ${qte(auCentime(lea!.dmt))} minutes` },
+          { libelle: `Taux d'occupation ${dE(bruno!.prenom)} (%)`, attendu: enPct(bruno!.occupation), calcul: `${qte(bruno!.minutesDeTraitement)} ÷ (${qte(t.heuresDeLigne)} × 60) = ${pct(bruno!.occupation)}` },
+          { libelle: `Taux d'honoration ${dE(lea!.prenom)} (%)`, attendu: enPct(lea!.tauxDHonoration), calcul: `${qte(lea!.rendezVousHonores)} ÷ ${qte(lea!.rendezVousPris)} = ${pct(lea!.tauxDHonoration)}` },
+          { libelle: "Taux d'honoration du plateau (%)", attendu: enPct(t.tauxDHonoration), calcul: `${qte(t.rendezVousHonores)} ÷ ${qte(t.rendezVousPris)} = ${pct(t.tauxDHonoration)}` },
         ];
       },
       explication: (c) => {
@@ -587,7 +595,7 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
           {
             texte: "Les honorés, avec la note de qualité",
             juste: true,
-            retour: `Oui : ${qte(t.primesSurLesHonores)} primes ce mois-ci (${surHonores.join(" et ")}), ${eur(t.coutDesPrimesSurLesHonores)}. Un rendez-vous honoré vaut ${eur(x.valeurDUnRendezVousHonore)} de marge la première année (${pct(x.contratsParRendezVous, 0)} des rendez-vous tenus deviennent un compte à ${eur(x.m.marge)}) ; un rendez-vous pris qui ne tient pas ne vaut rien. La prime paie le résultat qui compte, et la note garde la qualité de l'accueil.`,
+            retour: `Oui : ${qte(t.primesSurLesHonores)} primes ce mois-ci (${surHonores.join(" et ")}), ${eur(t.coutDesPrimesSurLesHonores)}. Un rendez-vous honoré vaut ${eur(x.valeurDUnRendezVousHonore)} de marge la première année (${pct(x.contratsParRendezVous)} des rendez-vous tenus deviennent un compte à ${eur(x.m.marge)}) ; un rendez-vous pris qui ne tient pas ne vaut rien. La prime paie le résultat qui compte, et la note garde la qualité de l'accueil.`,
           },
           {
             texte: "Les rendez-vous pris : c'est simple à compter",
@@ -610,7 +618,7 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
       notions: ["capacity", "productivity", "customer_acquisition_cost"],
       question: (c) => {
         const x = plateauDuCabinet(c);
-        return `La ligne garde ses ${qte(x.ligne.creneauxNecessaires)} créneaux par jour ; le reste du plateau prospecte. Faites varier les téléacteurs du plateau et les appels émis par heure, et choisissez de prendre ou non le rappel programmé (${eur(RAPPEL_PROGRAMME.coutMensuel)} par mois : les contacts argumentés passent à ${pct(RAPPEL_PROGRAMME.joignabilite, 0)} des appels). Le tableau suit les rendez-vous du mois et leur coût. Relevez le défi.`;
+        return `La ligne garde ses ${qte(x.ligne.creneauxNecessaires)} créneaux par jour ; le reste du plateau prospecte. Faites varier les téléacteurs du plateau et les appels émis par heure, et choisissez de prendre ou non le rappel programmé (${eur(RAPPEL_PROGRAMME.coutMensuel)} par mois : les contacts argumentés passent à ${pct(RAPPEL_PROGRAMME.joignabilite)} des appels). Le tableau suit les rendez-vous du mois et leur coût. Relevez le défi.`;
       },
       leviers: (c) => {
         const x = plateauDuCabinet(c);
@@ -726,13 +734,13 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
         const k = e.creneaux[CRENEAU_DU_PIC]!;
         const heures = x.creneauxLiberes * heuresDuMoisDUnCreneau();
         return [
-          { libelle: `Effectif nécessaire de ${k.libelle}, à ${qte(DMT_AVEC_L_ESPACE_EN_LIGNE)} minutes`, attendu: k.effectifNecessaire, calcul: `${qte(k.recus)} × ${qte(DMT_AVEC_L_ESPACE_EN_LIGNE)} ÷ ${qte(e.minutesUtiles)} = ${qte(auCentime(k.effectifExact))}, soit ${qte(k.effectifNecessaire)}` },
-          { libelle: "Créneaux de ligne par jour, à 4 minutes", attendu: e.creneauxNecessaires, calcul: `${e.effectifNecessaire.map(qte).join(" + ")} = ${qte(e.creneauxNecessaires)}` },
+          { libelle: `Effectif nécessaire de ${k.libelle}, à ${qte(DMT_AVEC_L_ESPACE_EN_LIGNE)} minutes`, nature: "quantite", attendu: k.effectifNecessaire, calcul: `${qte(k.recus)} × ${qte(DMT_AVEC_L_ESPACE_EN_LIGNE)} ÷ ${qte(e.minutesUtiles)} = ${effectifEcrit(k.effectifExact, k.effectifNecessaire)}` },
+          { libelle: "Créneaux de ligne par jour, à 4 minutes", nature: "quantite", attendu: e.creneauxNecessaires, calcul: `${e.effectifNecessaire.map(qte).join(" + ")} = ${qte(e.creneauxNecessaires)}` },
           {
             libelle: "Rendez-vous de plus dans le mois",
+            nature: "grandeur",
             attendu: x.rendezVousEnPlusAvecLEspace,
             calcul: `${qte(x.creneauxLiberes)} créneau × ${qte(heuresDuMoisDUnCreneau())} heures = ${qte(heures)} heures ; ${qte(heures)} × ${qte(x.prospection.appelsParHeure)} × ${pct(x.prospection.joignabilite)} × ${pct(tauxDeRendezVousDeN())} = ${qte(x.rendezVousEnPlusAvecLEspace)}`,
-            tolerance: 0.05,
           },
         ];
       },
@@ -752,7 +760,7 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
       titre: "Pousser l'occupation ?",
       notions: ["capacity", "staff_turnover"],
       question: () => {
-        return `Pour gagner des créneaux de prospection, le directeur propose de dimensionner la ligne à 95 % d'occupation au lieu de ${pct(OCCUPATION_CIBLE, 0)}, et de supprimer la pause : « ${qte(CRENEAUX_D_UN_TELEACTEUR * 2)} heures de téléphone, c'est peu ». Que lui répondez-vous ?`;
+        return `Pour gagner des créneaux de prospection, le directeur propose de dimensionner la ligne à 95 % d'occupation au lieu de ${pct(OCCUPATION_CIBLE)}, et de supprimer la pause : « ${qte(CRENEAUX_D_UN_TELEACTEUR * 2)} heures de téléphone, c'est peu ». Que lui répondez-vous ?`;
       },
       options: () => [
         {
@@ -796,7 +804,7 @@ export const LE_PLATEAU_DE_TELEACTEURS: Chapitre = {
       texte: (c) => {
         const x = plateauDuCabinet(c);
         return [
-          `Une ligne se dimensionne créneau par créneau : la charge (appels × DMT) divisée par le temps utile d'un téléacteur (${qte(MINUTES_D_UN_CRENEAU)} minutes à ${pct(OCCUPATION_CIBLE, 0)}), arrondie vers le haut. Chez ${x.f.entreprise}, le même effectif à chaque heure perdait ${qte(x.ligne.perdus)} appels par jour au pic et laissait le creux à ${pct(x.creux.occupation)} ; le planning ${x.effectif.map(qte).join(", ")} décroche tout, sur les mêmes ${qte(x.ligne.creneauxNecessaires)} créneaux.`,
+          `Une ligne se dimensionne créneau par créneau : la charge (appels × DMT) divisée par le temps utile d'un téléacteur (${qte(MINUTES_D_UN_CRENEAU)} minutes à ${pct(OCCUPATION_CIBLE)}), arrondie vers le haut. Chez ${x.f.entreprise}, le même effectif à chaque heure perdait ${qte(x.ligne.perdus)} appels par jour au pic et laissait le creux à ${pct(x.creux.occupation)} ; le planning ${x.effectif.map(qte).join(", ")} décroche tout, sur les mêmes ${qte(x.ligne.creneauxNecessaires)} créneaux.`,
           `La prospection se lit comme un entonnoir : appels par heure, joignabilité, taux de rendez-vous, puis honoration. Un rendez-vous pris y coûte ${eur(x.prospection.coutParRendezVous!)}, un honoré ${eur(x.coutDUnRendezVousHonore)}. Le rappel programmé fait monter la joignabilité et baisse le coût d'un rendez-vous à ${eur(x.avecLeRappel.coutParRendezVous!)} ; un téléacteur de plus ajoute des rendez-vous au même coût, et plus qu'${x.hugo} n'en peut tenir. La prime se fonde sur le résultat qui compte, le rendez-vous honoré, et sur la qualité.`,
           "Au niveau de l'examen, vous savez calculer la charge, le taux de décroché et le taux d'occupation d'une ligne, et dimensionner un effectif créneau par créneau. Vous savez aussi mesurer le coût d'un rendez-vous, lire le tableau de bord des téléacteurs, choisir une prime, et trancher entre un poste de plus et un outil.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

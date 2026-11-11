@@ -23,7 +23,6 @@ import { BOUTIQUE, VIDE, attendus, etape, gardeDuCas, gardeDuCurseur, gardesDeTe
  */
 
 const centime = (x: number) => Math.round(x * 100) / 100 + 0;
-const dixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const ch = LE_RESEAU_DE_VENTE_DIRECTE;
 const prix = (code: string) => f.gamme.find((r) => r.code === code)!;
 
@@ -79,7 +78,7 @@ describe("le réseau de vente directe : le chapitre", () => {
     expect([seuil, n]).toEqual([24_030, 159]);
     expect(juste(ch, "predire-le-seuil")).toEqual(["Plus de 100 : bien plus que 2 par mois"]);
     gardeDuCurseur(ch, "le-seuil-au-curseur", n);
-    expect(attendus(ch, "le-seuil-d-activite")).toEqual([seuil, COMMISSION * 24, dixieme(((COMMISSION * 24) / seuil) * 100), n / 12]);
+    expect(attendus(ch, "le-seuil-d-activite")).toEqual([seuil, COMMISSION * 24, centime(((COMMISSION * 24) / seuil) * 100), centime(n / 12)]);
   });
 
   it("la formation et la valeur d'une conseillère : 239,14 € et 2 705,86 €", () => {

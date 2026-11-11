@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   FINANCEMENT_DE_LA_RENOVATION,
@@ -40,6 +40,11 @@ import { DIVIDENDE_DEMANDE } from "./le-bilan-et-le-bfr-de-la-boutique";
  *   · autonome : la-van, l-emprunt, le-credit-bail ;
  *   · expert : le-delai-ne-suffit-pas (une critique), la-borne-qui-vend-moins (une variante) ; puis la
  *     décision et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la VAN se donne au centime, à un centime près (à cinq centimes,
+ * avant), chaque flux actualisé arrondi au centime avant la somme ; le délai de récupération et
+ * l'indice de profitabilité sont des grandeurs, au centième.
  */
 
 export const ENTREPRISES_DE_LA_RENOVATION: readonly string[] = ["boutique"];
@@ -59,11 +64,7 @@ export const SOLUTION_DU_LABORATOIRE = { articles: 405, jours: 3 } as const;
 /** LA VARIANTE (hypothèse du cours) : la borne déçoit, la rénovation ne fait vendre que 300 articles de plus par an. */
 export const ARTICLES_DE_LA_VARIANTE = 300;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 export const ficheDeLaRenovation = (c: Pick<Cas, "code">): FicheDeLaBoutique => {
   const f = BOUTIQUES_DU_COURS[c.code];
@@ -98,7 +99,7 @@ export function renovationDeLaBoutique(c: Pick<Cas, "code">) {
     tresorerieApres: auCentime(tresorerie - p.investissement),
     annee1,
     annee2,
-    delai: auCentieme(p.delaiDeRecuperation ?? 0),
+    delai: auCentime(p.delaiDeRecuperation ?? 0),
     delaiEnAnsEtMois: { ans: Math.floor(p.delaiDeRecuperation ?? 0), mois },
     /** Le plus petit nombre d'articles en plus qui garde la VAN positive, avec 5 jours de travaux. */
     articlesAuSeuil: (() => {
@@ -185,7 +186,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
         return [
           `Ce chapitre se joue dans la simulation du cours, à la boutique ${x.f.entreprise}. Le rayonnage acheté à l'ouverture sera amorti à la fin de N. Le gérant veut le remplacer au début de N + 1 par un rayonnage modulable, et ajouter une borne qui commande en ligne les tailles et les coloris manquants : les ventes manquées du mois de janvier.`,
           `Les travaux ferment la boutique ${qte(PROJET_DE_RENOVATION.fermeture.jours)} jours, comme dans le cas « Fermé pour travaux » : la marge perdue est celle de ces jours, ${eur(x.p.margePerdue)}. Ou ${qte(PROJET_DE_RENOVATION.fermeture.joursAcceleres)} jours, si la boutique paie ${eur(PROJET_DE_RENOVATION.fermeture.supplement)} de supplément pour travailler le dimanche.`,
-          `Ce que la simulation suppose. Les ventes en plus laissent la marge d'un article de N − 1 ; le projet dure ${qte(PROJET_DE_RENOVATION.duree)} ans, sans valeur résiduelle ; chaque euro de résultat en plus paie ${pct(PROJET_DE_RENOVATION.tauxDImpot * 100, 0)} d'impôt ; les associés attendent ${pct(PROJET_DE_RENOVATION.tauxDActualisation * 100, 0)} d'un euro placé dans la boutique.`,
+          `Ce que la simulation suppose. Les ventes en plus laissent la marge d'un article de N − 1 ; le projet dure ${qte(PROJET_DE_RENOVATION.duree)} ans, sans valeur résiduelle ; chaque euro de résultat en plus paie ${pct(PROJET_DE_RENOVATION.tauxDImpot * 100)} d'impôt ; les associés attendent ${pct(PROJET_DE_RENOVATION.tauxDActualisation * 100)} d'un euro placé dans la boutique.`,
         ];
       },
       repere: () => "Flux net de trésorerie = résultat en plus après impôt + amortissement. L'amortissement est une charge qui ne se décaisse pas : il baisse l'impôt, pas la trésorerie.",
@@ -255,7 +256,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
         return [
           { libelle: "Cumul des flux, fin de l'année 3", attendu: cumul3, calcul: `${x.p.annees.slice(0, 3).map((a) => eur(a.flux)).join(" + ")} = ${eur(cumul3)}` },
           { libelle: "Reste à récupérer", attendu: reste, calcul: `${eur(x.p.investissement)} − ${eur(cumul3)} = ${eur(reste)}` },
-          { libelle: "Délai de récupération (années)", attendu: x.delai, tolerance: 0.01, calcul: `3 + ${eur(reste)} ÷ ${eur(x.p.annees[3]!.flux)} = ${qte(x.delai)} ans` },
+          { libelle: "Délai de récupération (années)", nature: "grandeur", attendu: x.delai, calcul: `3 + ${eur(reste)} ÷ ${eur(x.p.annees[3]!.flux)} = ${qte(x.delai)} ans` },
         ];
       },
       explication: (c) => {
@@ -323,7 +324,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
       explication: (c) => {
         const x = renovationDeLaBoutique(c);
         return [
-          `La VAN reste positive jusqu'à ${pct(x.tri, 0)} : c'est, à l'entier près, le taux de rentabilité interne du projet. Les associés en attendent ${pct(PROJET_DE_RENOVATION.tauxDActualisation * 100, 0)} : le projet rapporte plus que ce qu'ils exigent, avec de la marge.`,
+          `La VAN reste positive jusqu'à ${pct(x.tri)} : c'est, à l'entier près, le taux de rentabilité interne du projet. Les associés en attendent ${pct(PROJET_DE_RENOVATION.tauxDActualisation * 100)} : le projet rapporte plus que ce qu'ils exigent, avec de la marge.`,
         ];
       },
     },
@@ -343,13 +344,13 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
         return [
           { libelle: "Flux de l'année 1, actualisé", attendu: a1.actualise, calcul: `${eur(a1.flux)} × 1,08^−1 = ${eur(a1.actualise)}` },
           { libelle: "Flux de l'année 5, actualisé", attendu: a5.actualise, calcul: `${eur(a5.flux)} × 1,08^−5 = ${eur(a5.actualise)}` },
-          { libelle: "Valeur actuelle nette", attendu: x.p.van, tolerance: 0.05, calcul: `${x.p.annees.map((a) => eur(a.actualise)).join(" + ")} − ${eur(x.p.investissement)} = ${eur(x.p.van)}` },
-          { libelle: "Indice de profitabilité", attendu: auCentieme(x.p.indiceDeProfitabilite), calcul: `${eur(somme)} ÷ ${eur(x.p.investissement)} = ${qte(auCentieme(x.p.indiceDeProfitabilite))}` },
+          { libelle: "Valeur actuelle nette", attendu: x.p.van, calcul: `${x.p.annees.map((a) => eur(a.actualise)).join(" + ")} − ${eur(x.p.investissement)} = ${eur(x.p.van)}` },
+          { libelle: "Indice de profitabilité", nature: "grandeur", attendu: auCentime(x.p.indiceDeProfitabilite), calcul: `${eur(somme)} ÷ ${eur(x.p.investissement)} = ${qte(auCentime(x.p.indiceDeProfitabilite))}` },
         ];
       },
       explication: (c) => {
         const x = renovationDeLaBoutique(c);
-        return [`Au taux qu'exigent les associés, le projet crée ${eur(x.p.van)} de valeur : chaque euro investi en rend ${qte(auCentieme(x.p.indiceDeProfitabilite))}, actualisé. Une VAN positive dit qu'il faut investir ; reste à savoir comment payer.`];
+        return [`Au taux qu'exigent les associés, le projet crée ${eur(x.p.van)} de valeur : chaque euro investi en rend ${qte(auCentime(x.p.indiceDeProfitabilite))}, actualisé. Une VAN positive dit qu'il faut investir ; reste à savoir comment payer.`];
       },
     },
     {
@@ -383,7 +384,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
         return [
           { libelle: "Flux de l'année 1", montant: l.annees[0]!.flux, reference: d.annees[0]!.flux },
           { libelle: "Flux des années 2 à 5", montant: l.annees[1]!.flux, reference: d.annees[1]!.flux },
-          { libelle: "Délai de récupération", montant: auCentieme(l.delaiDeRecuperation ?? 99), reference: auCentieme(d.delaiDeRecuperation ?? 99), unite: "ans" },
+          { libelle: "Délai de récupération", montant: auCentime(l.delaiDeRecuperation ?? 99), reference: auCentime(d.delaiDeRecuperation ?? 99), unite: "ans" },
           { libelle: "Valeur actuelle nette", montant: l.van, reference: d.van, effet: true, fort: true },
         ];
       },
@@ -435,7 +436,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
             attendu: v.annees[1]!.flux,
             calcul: `(${qte(ARTICLES_DE_LA_VARIANTE)} × ${eur(v.margeParArticle)} − ${eur(PROJET_DE_RENOVATION.chargesEnPlus)} − ${eur(v.amortissement)}) × 0,75 + ${eur(v.amortissement)} = ${eur(v.annees[1]!.flux)}`,
           },
-          { libelle: "Valeur actuelle nette", attendu: v.van, tolerance: 0.05, calcul: `${v.annees.map((a) => eur(a.actualise)).join(" + ")} − ${eur(v.investissement)} = ${eur(v.van)}` },
+          { libelle: "Valeur actuelle nette", attendu: v.van, calcul: `${v.annees.map((a) => eur(a.actualise)).join(" + ")} − ${eur(v.investissement)} = ${eur(v.van)}` },
         ];
       },
       explication: (c) => {
@@ -519,7 +520,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
       notions: ["discounting", "loan_schedule"],
       question: (c) => {
         const x = renovationDeLaBoutique(c);
-        return `Après le dividende de ${eur(DIVIDENDE_DEMANDE)}, la trésorerie de la boutique est de ${eur(x.tresorerie)} ; elle veut en garder ${eur(x.aGarder)}, et la placerait sinon à ${pct(FINANCEMENT_DE_LA_RENOVATION.tauxDePlacement * 100, 0)}. Que répondez-vous au gérant ?`;
+        return `Après le dividende de ${eur(DIVIDENDE_DEMANDE)}, la trésorerie de la boutique est de ${eur(x.tresorerie)} ; elle veut en garder ${eur(x.aGarder)}, et la placerait sinon à ${pct(FINANCEMENT_DE_LA_RENOVATION.tauxDePlacement * 100)}. Que répondez-vous au gérant ?`;
       },
       options: (c) => {
         const x = renovationDeLaBoutique(c);
@@ -527,7 +528,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
           {
             texte: `Investir, et payer sur la trésorerie : il en resterait ${eur(x.tresorerieApres)}`,
             juste: true,
-            retour: `Oui. La VAN est positive (${eur(x.p.van)}) ; la trésorerie paie les ${eur(x.p.investissement)} et garde plus que les ${eur(x.aGarder)} voulus. Emprunter à ${pct(x.emprunt.taux * 100)} pour garder un argent placé à ${pct(FINANCEMENT_DE_LA_RENOVATION.tauxDePlacement * 100, 0)} coûterait la différence ; l'emprunt reste la solution si les associés veulent garder leur trésorerie.`,
+            retour: `Oui. La VAN est positive (${eur(x.p.van)}) ; la trésorerie paie les ${eur(x.p.investissement)} et garde plus que les ${eur(x.aGarder)} voulus. Emprunter à ${pct(x.emprunt.taux * 100)} pour garder un argent placé à ${pct(FINANCEMENT_DE_LA_RENOVATION.tauxDePlacement * 100)} coûterait la différence ; l'emprunt reste la solution si les associés veulent garder leur trésorerie.`,
           },
           { texte: `Investir, en crédit-bail, pour ne rien sortir`, juste: false, retour: `Le crédit-bail coûte ${eur(x.creditBail.surcout)}, le plus cher des trois ; il se justifie quand la boutique n'a ni trésorerie ni capacité d'emprunt, ce qui n'est pas le cas.` },
           { texte: `Ne pas investir : le délai de ${qte(x.delai)} ans est trop long`, juste: false, retour: `Non : le projet se rembourse avant la fin de sa durée et crée ${eur(x.p.van)} de valeur au taux qu'exigent les associés.` },
@@ -545,7 +546,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
         const x = renovationDeLaBoutique(c);
         return [
           "Un investissement se juge sur ses flux nets de trésorerie : le résultat qu'il ajoute, après impôt, plus l'amortissement qui ne se décaisse pas. Le délai de récupération dit quand la mise revient ; la VAN, si le projet rapporte plus que le taux exigé ; le taux qui l'annule, jusqu'où.",
-          `La rénovation de ${x.f.entreprise} coûte ${eur(x.p.investissement)}, se récupère en ${qte(x.delai)} ans, et crée ${eur(x.p.van)} de valeur à 8 % ; sa VAN reste positive jusqu'à ${pct(x.tri, 0)}. Elle repose sur les ventes de la borne : à ${qte(ARTICLES_DE_LA_VARIANTE)} articles par an, la VAN devient négative.`,
+          `La rénovation de ${x.f.entreprise} coûte ${eur(x.p.investissement)}, se récupère en ${qte(x.delai)} ans, et crée ${eur(x.p.van)} de valeur à 8 % ; sa VAN reste positive jusqu'à ${pct(x.tri)}. Elle repose sur les ventes de la borne : à ${qte(ARTICLES_DE_LA_VARIANTE)} articles par an, la VAN devient négative.`,
           `Pour la payer : la trésorerie, si elle garde de quoi vivre ; l'emprunt, à annuités constantes, ${eur(x.emprunt.coutDuCredit)} d'intérêts ; le crédit-bail, ${eur(x.creditBail.surcout)} de surcoût, sans apport.`,
           "Au niveau de l'examen, vous savez calculer les flux d'un projet, son délai de récupération, sa VAN et le taux qui l'annule, construire le tableau d'un emprunt, comparer trois financements et décider.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

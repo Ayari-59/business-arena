@@ -43,7 +43,10 @@ describe("communiquer et animer en local : le chapitre et son cas", () => {
     expect(incoherencesDuTableau(g)).toEqual([]);
     expect(g.lignes.map((l) => l.cellules[3]!.valeur)).toEqual(SUPPORTS.map((s) => attendu[s.code]));
     expect(g.lignes[0]!.cellules.every((x) => !x.saisir)).toBe(true);
-    expect(attendus(COMMUNIQUER_ET_ANIMER_EN_LOCAL, "le-retour-sur-investissement")).toEqual([103.8, 93.1, 85]);
+    // Le retour, à deux décimales : ce que l'action laisse ÷ ce qu'elle coûte × 100.
+    const retour = (l: number, cout: number) => Math.round((l / cout) * 10_000) / 100;
+    expect(attendus(COMMUNIQUER_ET_ANIMER_EN_LOCAL, "le-retour-sur-investissement")).toEqual([retour(934.26, 900), retour(232.7, 250), retour(340.14, 400)]);
+    expect([retour(934.26, 900), retour(232.7, 250), retour(340.14, 400)]).toEqual([103.81, 93.08, 85.04]);
   });
 
   it("le curseur : 98 entrées paient les tracts, 97 non", () => {

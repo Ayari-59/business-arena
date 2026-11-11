@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentieme, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_FOURNISSEUR, POIDS_DE_LA_DIRIGEANTE, fournisseursDeLaBoutique } from "../../chapitres/choisir-et-negocier-le-fournisseur";
 import { CRITERES, POIDS_DU_PRIX_ET_DE_LA_QUALITE, QUATRIEME_FACONNIER, notePondereeDe, seuilChezLeQuatrieme } from "../../monde/fournisseurs-de-la-boutique";
@@ -14,14 +14,14 @@ import type { Situation } from "../types";
  * poids de la dirigeante ; son seuil de revente à perte borne une fin de série ; et il conditionne une
  * remise à un prix de revente imposé, ce que la loi interdit. L'élève refait la grille, teste les
  * poids, calcule le seuil, et répond.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les notes pondérées sont des grandeurs, au centième ; la remise
+ * la plus forte se donne à deux décimales, à un centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const note = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 /** Les chiffres de la réponse. */
 export function quatriemeFaconnier(c: Pick<Cas, "code">) {
@@ -50,7 +50,7 @@ const tableauDeLOffre = (c: Pick<Cas, "code">) => {
       { libelle: "Délai de livraison", valeurs: [`${qte(x.q.delaiDeLivraison)} jours`, qte(x.q.notes.livraison), qte(livraison!.poids)] },
       { libelle: "Minimum de commande", valeurs: [`${qte(x.q.minimumDeCommande)} articles`, qte(x.q.notes.minimum), qte(minimum!.poids)] },
       { libelle: "Réassort en saison", valeurs: ["oui", qte(x.q.notes.reassort), qte(reassort!.poids)] },
-      { libelle: "Qualité", valeurs: [`${pct(x.q.tauxDeRetour * 100, 0)} de retours`, qte(x.q.notes.qualite), qte(qualite!.poids)] },
+      { libelle: "Qualité", valeurs: [`${pct(x.q.tauxDeRetour * 100)} de retours`, qte(x.q.notes.qualite), qte(qualite!.poids)] },
     ],
   };
 };
@@ -80,7 +80,7 @@ export const UN_QUATRIEME_FACONNIER: Situation = {
       texte: (c) => {
         const x = quatriemeFaconnier(c);
         return [
-          `« Un tricoteur italien nous démarche. L'acheteuse l'a noté avec son barème. Il nous ferait même ${pct(x.q.remiseContrePrixImpose * 100, 0)} de remise si nous promettions de ne jamais vendre le col rond sous ${eur(x.q.prixPlancherImpose)}. Faut-il le référencer à la place du façonnier de référence ? »`,
+          `« Un tricoteur italien nous démarche. L'acheteuse l'a noté avec son barème. Il nous ferait même ${pct(x.q.remiseContrePrixImpose * 100)} de remise si nous promettions de ne jamais vendre le col rond sous ${eur(x.q.prixPlancherImpose)}. Faut-il le référencer à la place du façonnier de référence ? »`,
           "Pas de cours cette fois : vous avez sa fiche notée, et la méthode est celle du chapitre.",
         ];
       },
@@ -99,11 +99,11 @@ export const UN_QUATRIEME_FACONNIER: Situation = {
         const x = quatriemeFaconnier(c);
         const n = x.q.notes;
         return [
-          { libelle: "Note avec les poids de l'acheteuse", attendu: x.note, tolerance: 0.01, calcul: `(${CRITERES.map((k) => `${qte(k.poids)} × ${qte(n[k.code])}`).join(" + ")}) ÷ 100 = ${note(x.note)}` },
+          { libelle: "Note avec les poids de l'acheteuse", nature: "grandeur", attendu: x.note, calcul: `(${CRITERES.map((k) => `${qte(k.poids)} × ${qte(n[k.code])}`).join(" + ")}) ÷ 100 = ${note(x.note)}` },
           {
             libelle: "Note avec les poids de la dirigeante",
+            nature: "grandeur",
             attendu: x.noteALaDirigeante,
-            tolerance: 0.01,
             calcul: `(${qte(POIDS_DE_LA_DIRIGEANTE)} × ${qte(n.prix)} + ${CRITERES.slice(1, 5).map((k) => `${qte(k.poids)} × ${qte(n[k.code])}`).join(" + ")} + ${qte(POIDS_DU_PRIX_ET_DE_LA_QUALITE - POIDS_DE_LA_DIRIGEANTE)} × ${qte(n.qualite)}) ÷ 100 = ${note(x.noteALaDirigeante)}`,
           },
         ];
@@ -123,14 +123,14 @@ export const UN_QUATRIEME_FACONNIER: Situation = {
       notions: ["price_floor"],
       question: (c) => {
         const s = quatriemeFaconnier(c).seuil;
-        return `Il facturerait le pull col rond ${eur(s.prixNet)} hors taxes, net de remise, plus ${eur(s.transport)} de transport, avec ${pct(QUATRIEME_FACONNIER.ristourne * 100, 0)} de ristourne de fin d'année et sans coopération commerciale. Calculez le seuil de revente à perte hors taxes, puis toutes taxes comprises, et la remise la plus forte sur l'étiquette de ${eur(s.r.prixTtc)}, en pourcentage au dixième.`;
+        return `Il facturerait le pull col rond ${eur(s.prixNet)} hors taxes, net de remise, plus ${eur(s.transport)} de transport, avec ${pct(QUATRIEME_FACONNIER.ristourne * 100)} de ristourne de fin d'année et sans coopération commerciale. Calculez le seuil de revente à perte hors taxes, puis toutes taxes comprises, et la remise la plus forte sur l'étiquette de ${eur(s.r.prixTtc)}, en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const s = quatriemeFaconnier(c).seuil;
         return [
           { libelle: "Seuil hors taxes", attendu: s.seuilHt, calcul: `${eur(s.prixNet)} + ${eur(s.transport)} − ${eur(s.ristourne)} = ${eur(s.seuilHt)}` },
           { libelle: "Seuil toutes taxes comprises", attendu: s.seuilTtc, calcul: `${eur(s.seuilHt)} × 1,2 = ${eur(s.seuilTtc)}` },
-          { libelle: "Remise la plus forte (%)", attendu: auDixieme(s.remiseMaximale * 100), tolerance: 0.1, calcul: `(${eur(s.r.prixTtc)} − ${eur(s.seuilTtc)}) ÷ ${eur(s.r.prixTtc)} × 100 = ${pct(auDixieme(s.remiseMaximale * 100))}` },
+          { libelle: "Remise la plus forte (%)", attendu: auCentieme(s.remiseMaximale * 100), calcul: `(${eur(s.r.prixTtc)} − ${eur(s.seuilTtc)}) ÷ ${eur(s.r.prixTtc)} × 100 = ${pct(auCentieme(s.remiseMaximale * 100))}` },
         ];
       },
       explication: (c) => {
@@ -146,7 +146,7 @@ export const UN_QUATRIEME_FACONNIER: Situation = {
       notions: ["price_floor"],
       question: (c) => {
         const x = quatriemeFaconnier(c);
-        return `Il offre ${pct(x.q.remiseContrePrixImpose * 100, 0)} de remise si la boutique ne vend jamais le col rond sous ${eur(x.q.prixPlancherImpose)}. Que vaut cette clause ?`;
+        return `Il offre ${pct(x.q.remiseContrePrixImpose * 100)} de remise si la boutique ne vend jamais le col rond sous ${eur(x.q.prixPlancherImpose)}. Que vaut cette clause ?`;
       },
       options: () => [
         {
@@ -186,7 +186,7 @@ export const UN_QUATRIEME_FACONNIER: Situation = {
             retour: `D'un dixième, et seulement avec les poids de l'acheteuse : avec ceux de la dirigeante, il finit derrière l'atelier local (${note(x.noteALaDirigeante)} contre ${note(x.atelierALaDirigeante)}).`,
           },
           {
-            texte: `Le référencer et signer la clause : ${pct(x.q.remiseContrePrixImpose * 100, 0)} de remise de plus`,
+            texte: `Le référencer et signer la clause : ${pct(x.q.remiseContrePrixImpose * 100)} de remise de plus`,
             juste: false,
             retour: "Non : la clause de prix de revente imposé est interdite ; la signer engagerait aussi la boutique.",
           },

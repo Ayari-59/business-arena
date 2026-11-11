@@ -51,6 +51,10 @@ import { ENTREPRISES_DE_LA_TVA, FINS_DES_TRIMESTRES, POURQUOI_LA_TVA, entre, eur
  * lignes sont maintenant celles du modèle), et le texte « l'arène fait comme si l'entreprise avait
  * opté pour les débits », qui s'inverse : le régime réel est celui des encaissements, l'option est la
  * variante. Le transport sort du chapitre.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le jour où la TVA devient due est une quantité, entière,
+ * déclarée comme telle.
  */
 
 /** Le trimestre dont le chapitre lit la clôture : le deuxième, au 30 juin, celui du crédit de TVA. */
@@ -822,7 +826,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
         const { v } = mauvaisPayeursDeMartel(c);
         return [
           { libelle: "TVA de la facture", attendu: v.tva, calcul: `${eur(v.ht)} × ${pct(v.tauxDeTva)} = ${eur(v.tva)}` },
-          { libelle: "Jour où la TVA devient due (après la facture)", attendu: v.paiement, calcul: `des travaux : la TVA est due à l'encaissement, ${v.delaiConvenu} + ${v.retard} = ${v.paiement}` },
+          { libelle: "Jour où la TVA devient due (après la facture)", nature: "quantite", attendu: v.paiement, calcul: `des travaux : la TVA est due à l'encaissement, ${v.delaiConvenu} + ${v.retard} = ${v.paiement}` },
           { libelle: "Coût du retard", attendu: v.coutDuRetard, calcul: `le hors taxes seul : ${eur(v.finance)} × ${pct(v.tauxDeFinancement)} × ${v.retard} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE} = ${eur(v.coutDuRetard)}` },
           { libelle: "Pénalités de retard", attendu: v.penalites, calcul: `${eur(v.ttc)} × ${pct(TAUX_DES_PENALITES)} × ${v.retard} ÷ ${JOURS_DE_L_ANNEE_CIVILE} = ${eur(v.penalites)}` },
         ];

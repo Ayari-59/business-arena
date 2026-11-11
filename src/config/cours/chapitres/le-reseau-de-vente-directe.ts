@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ATTRITION_MENSUELLE,
@@ -38,6 +38,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     le-seuil-d-activite ; predire-la-prime puis le-laboratoire-du-reseau, avant la-prime-de-parrainage ;
  *   · autonome et expert : former-une-recrue, la-valeur-d-une-conseillere, la-prime-de-parrainage,
  *     les-retractations (une variante chiffrée), le-code-ethique, animer-le-reseau ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part du seuil se donne à deux décimales, à un centième près
+ * (au dixième, avant) ; les réunions par mois au seuil et la durée moyenne dans le réseau sont des
+ * grandeurs, au centième ; les réunions et les recrues sont des quantités, entières, déclarées comme
+ * telles.
  */
 
 export const ENTREPRISES_DU_RESEAU: readonly string[] = ["boutique"];
@@ -48,10 +54,7 @@ export const TITRE_DU_RESEAU = "Le réseau de vente directe : recruter, animer, 
 /** Le pas du levier de la prime au laboratoire : celui des offres de parrainage. */
 const PAS_DE_LA_PRIME = OFFRES_DE_PARRAINAGE[1]!.prime - OFFRES_DE_PARRAINAGE[0]!.prime;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 /** Tout ce que le chapitre et son cas lisent. */
 export function reseauDeLaBoutique(c: Pick<Cas, "code">) {
@@ -264,21 +267,21 @@ export const LE_RESEAU_DE_VENTE_DIRECTE: Chapitre = {
       titre: "Ce que gagne une conseillère",
       notions: ["distribution_commission", "pay_and_motivation"],
       question: () => {
-        return `Sans formule. Le plafond de la sécurité sociale est de ${eur(PLAFOND_ANNUEL_DE_LA_SECURITE_SOCIALE)}. Calculez le seuil de dispense d'immatriculation, la commission de l'année d'une conseillère à ${qte(REUNIONS_PAR_MOIS)} réunions par mois, sa part du seuil (%, au dixième), puis les réunions par mois qui l'atteindraient.`;
+        return `Sans formule. Le plafond de la sécurité sociale est de ${eur(PLAFOND_ANNUEL_DE_LA_SECURITE_SOCIALE)}. Calculez le seuil de dispense d'immatriculation, la commission de l'année d'une conseillère à ${qte(REUNIONS_PAR_MOIS)} réunions par mois, sa part du seuil (%, à deux décimales), puis les réunions par mois qui l'atteindraient.`;
       },
       champs: (c) => {
         const x = reseauDeLaBoutique(c);
         return [
           { libelle: "Seuil de dispense", attendu: x.seuilDImmatriculation, calcul: `${eur(PLAFOND_ANNUEL_DE_LA_SECURITE_SOCIALE)} × ${pct(PART_DU_PLAFOND_POUR_L_IMMATRICULATION * 100)} = ${eur(x.seuilDImmatriculation)}` },
           { libelle: "Commission de l'année", attendu: x.commissionDeLAnnee, calcul: `${eur(x.reunion.commissionDeLaReunion)} × ${qte(REUNIONS_PAR_MOIS)} × 12 mois = ${eur(x.commissionDeLAnnee)}` },
-          { libelle: "Part du seuil (%)", attendu: auDixieme(x.partDuSeuil * 100), tolerance: 0.1, calcul: `${eur(x.commissionDeLAnnee)} ÷ ${eur(x.seuilDImmatriculation)} × 100 = ${pct(auDixieme(x.partDuSeuil * 100))}` },
-          { libelle: "Réunions par mois au seuil", attendu: x.reunionsAuSeuilParMois, calcul: `${qte(x.reunionsAuSeuil)} réunions ÷ 12 mois = ${qte(x.reunionsAuSeuilParMois)}` },
+          { libelle: "Part du seuil (%)", attendu: auCentime(x.partDuSeuil * 100), calcul: `${eur(x.commissionDeLAnnee)} ÷ ${eur(x.seuilDImmatriculation)} × 100 = ${pct(auCentime(x.partDuSeuil * 100))}` },
+          { libelle: "Réunions par mois au seuil", nature: "grandeur", attendu: x.reunionsAuSeuilParMois, calcul: `${qte(x.reunionsAuSeuil)} réunions ÷ 12 mois = ${qte(x.reunionsAuSeuilParMois)}` },
         ];
       },
       explication: (c) => {
         const x = reseauDeLaBoutique(c);
         return [
-          `Une conseillère gagne ${eur(x.commissionDeLAnnee)} dans l'année, ${pct(auDixieme(x.partDuSeuil * 100))} du seuil. C'est un complément de revenu : il faut le dire au recrutement, sans promettre un salaire.`,
+          `Une conseillère gagne ${eur(x.commissionDeLAnnee)} dans l'année, ${pct(auCentime(x.partDuSeuil * 100))} du seuil. C'est un complément de revenu : il faut le dire au recrutement, sans promettre un salaire.`,
           "Le seuil d'activité borne le statut, pas l'effort : une conseillère motivée peut tenir plus de réunions, et la boutique doit alors vérifier sa situation.",
         ];
       },
@@ -325,8 +328,8 @@ export const LE_RESEAU_DE_VENTE_DIRECTE: Chapitre = {
         const x = reseauDeLaBoutique(c);
         const v = x.conseillere;
         return [
-          { libelle: "Durée moyenne dans le réseau (mois)", attendu: v.dureeDeVie, calcul: `1 ÷ ${pct(ATTRITION_MENSUELLE * 100)} = ${qte(v.dureeDeVie)} mois` },
-          { libelle: "Réunions sur sa durée", attendu: v.reunions, calcul: `${qte(v.dureeDeVie)} × ${qte(REUNIONS_PAR_MOIS)} = ${qte(v.reunions)}` },
+          { libelle: "Durée moyenne dans le réseau (mois)", nature: "grandeur", attendu: v.dureeDeVie, calcul: `1 ÷ ${pct(ATTRITION_MENSUELLE * 100)} = ${qte(v.dureeDeVie)} mois` },
+          { libelle: "Réunions sur sa durée", nature: "quantite", attendu: v.reunions, calcul: `${qte(v.dureeDeVie)} × ${qte(REUNIONS_PAR_MOIS)} = ${qte(v.reunions)}` },
           { libelle: "Marge de ses réunions", attendu: v.marge, calcul: `${qte(v.reunions)} × ${eur(x.reunion.marge)} = ${eur(v.marge)}` },
           { libelle: "Valeur d'une conseillère", attendu: v.valeur, calcul: `${eur(v.marge)} − ${eur(v.formation)} = ${eur(v.valeur)}` },
         ];
@@ -433,7 +436,7 @@ export const LE_RESEAU_DE_VENTE_DIRECTE: Chapitre = {
         const p = x.parrainageRetenu;
         const sans = OFFRES_DE_PARRAINAGE[0]!.recrues;
         return [
-          { libelle: "Recrues en plus", attendu: p.enPlus, calcul: `${qte(p.recrues)} − ${qte(sans)} = ${qte(p.enPlus)}` },
+          { libelle: "Recrues en plus", nature: "quantite", attendu: p.enPlus, calcul: `${qte(p.recrues)} − ${qte(sans)} = ${qte(p.enPlus)}` },
           { libelle: "Valeur des recrues en plus", attendu: p.valeurDesRecruesEnPlus, calcul: `${qte(p.enPlus)} × ${eur(x.conseillere.valeur)} = ${eur(p.valeurDesRecruesEnPlus)}` },
           { libelle: "Primes versées", attendu: p.primes, calcul: `${qte(p.recrues)} filleules × ${eur(p.prime)} = ${eur(p.primes)}` },
           { libelle: "Gain du parrainage", attendu: p.gain, calcul: `${eur(p.valeurDesRecruesEnPlus)} − ${eur(p.primes)} = ${eur(p.gain)}` },

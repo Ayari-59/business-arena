@@ -208,7 +208,6 @@ function lesTroisTemps(ch: Chapitre, paris: string[], curseurs: string[], labo: 
 const juste = (ch: Chapitre, id: string, cas: Cas) => (ch.etapes.find((x) => x.id === id) as EtapeChoix).options(cas, etatVide).find((o) => o.juste)!.texte;
 
 const centime = (x: number) => Math.round(x * 100) / 100;
-const dixieme = (x: number) => Math.round(x * 10) / 10;
 
 const BLOC_3 = "BTS MHR Bloc 3 · Management de la production de services en hôtellerie restauration";
 const BLOC_2 = "BTS MHR Bloc 2 · Mercatique des services en hôtellerie restauration";
@@ -553,7 +552,7 @@ describe("le prix selon la saison, à l'hôtel du monde du cours", () => {
     const v = ts.reduce((s, t) => s + t.vendues, 0);
     const o = offertes * ts.length;
     const ca = centime(ts.reduce((s, t) => s + t.ca, 0));
-    return { ts, v, o, ca, occupation: dixieme((v / o) * 100), prixMoyen: centime(ca / v), revpar: centime(ca / o), resultat: centime(ts.reduce((s, t) => s + t.resultat, 0)) };
+    return { ts, v, o, ca, occupation: centime((v / o) * 100), prixMoyen: centime(ca / v), revpar: centime(ca / o), resultat: centime(ts.reduce((s, t) => s + t.resultat, 0)) };
   };
   const haut = 1 + HAUSSE_EN_HAUTE_SAISON;
   const bas = 1 - BAISSE_EN_BASSE_SAISON;
@@ -650,8 +649,8 @@ describe("le prix selon la saison, à l'hôtel du monde du cours", () => {
     const avant = u.ts[2]!;
     const apres = releve.ts[2]!;
     expect(attendus(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "le-trimestre", cas)).toEqual({
-      "Taux d'occupation au prix unique (%)": dixieme((avant.vendues / offertes) * 100),
-      "Taux d'occupation au prix relevé (%)": dixieme((apres.vendues / offertes) * 100),
+      "Taux d'occupation au prix unique (%)": centime((avant.vendues / offertes) * 100),
+      "Taux d'occupation au prix relevé (%)": centime((apres.vendues / offertes) * 100),
       "Revenu par chambre disponible au prix unique": centime(avant.ca / offertes),
       "Revenu par chambre disponible au prix relevé": centime(apres.ca / offertes),
     });
@@ -745,7 +744,7 @@ describe("le prix selon la saison, à l'hôtel du monde du cours", () => {
         "Nuitées vendues au 2e trimestre": a.ts[1]!.vendues,
         "Nuitées vendues au 3e trimestre": a.ts[2]!.vendues,
         "Nuitées vendues au 4e trimestre": a.ts[3]!.vendues,
-        "Taux d'occupation de l'année": dixieme((a.v / (4 * offertes)) * 100),
+        "Taux d'occupation de l'année": centime((a.v / (4 * offertes)) * 100),
         "Revenu par chambre disponible de l'année": centime(a.ca / (4 * offertes)),
         "Résultat de l'année": a.resultat,
         "Écart avec le prix du remplissage": centime(a.resultat - d.resultat),

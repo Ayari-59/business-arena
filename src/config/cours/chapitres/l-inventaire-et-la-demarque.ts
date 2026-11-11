@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte as entier } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import {
@@ -48,6 +48,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * personne, qui le conduit devant un officier de police judiciaire (Code de procédure pénale, art. 73),
  * sans fouille ; la déclaration d'un vol à l'assureur sous deux jours ouvrés (Code des assurances,
  * art. L113-2).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de démarque inconnue se donne à deux décimales, à un
+ * centième près (au dixième, avant) ; les écharpes, les articles et les passages sont des quantités :
+ * le corrigé écrit le quotient à deux décimales, puis l'arrondit à l'unité au-dessus, et dit pourquoi.
  */
 
 export const ENTREPRISES_DE_L_INVENTAIRE: readonly string[] = ["boutique"];
@@ -55,11 +60,7 @@ export const ENTREPRISES_DE_L_INVENTAIRE: readonly string[] = ["boutique"];
 const POURQUOI =
   "ce chapitre se joue à la boutique du cours, MAILLE & CO : son inventaire compte les articles de ses rayons, et c'est le même point de vente d'un chapitre à l'autre du parcours.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 /** La fiche de la boutique du cours. */
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
@@ -86,7 +87,7 @@ export function inventaireEtDemarque(c: Pick<Cas, "code">) {
     ecartDeMarge: auCentime(peps.margeCommerciale - cmup.margeCommerciale),
     echarpe,
     d,
-    tauxAffiche: auDixieme(d.taux * 100),
+    tauxAffiche: auCentime(d.taux * 100),
     meilleure,
     antivolEtCameras: protegerLaBoutique(f, ["antivol", "cameras"]),
     seule: (code: CodeDeProtection) => protegerLaBoutique(f, [code]),
@@ -223,8 +224,8 @@ export const L_INVENTAIRE_ET_LA_DEMARQUE: Chapitre = {
         const x = inventaireEtDemarque(c);
         const theorique = x.cmup.disponible.quantite - ECHARPE_EN_DECEMBRE.vendues;
         return [
-          { libelle: "Stock théorique du 31 décembre", attendu: theorique, calcul: `${qte(x.cmup.disponible.quantite)} − ${qte(ECHARPE_EN_DECEMBRE.vendues)} = ${qte(theorique)} écharpes` },
-          { libelle: "Manquant à l'inventaire", attendu: x.cmup.manquant.quantite, calcul: `${qte(theorique)} − ${qte(ECHARPE_EN_DECEMBRE.comptees)} = ${qte(x.cmup.manquant.quantite)} écharpes` },
+          { libelle: "Stock théorique du 31 décembre", nature: "quantite", attendu: theorique, calcul: `${qte(x.cmup.disponible.quantite)} − ${qte(ECHARPE_EN_DECEMBRE.vendues)} = ${qte(theorique)} écharpes` },
+          { libelle: "Manquant à l'inventaire", nature: "quantite", attendu: x.cmup.manquant.quantite, calcul: `${qte(theorique)} − ${qte(ECHARPE_EN_DECEMBRE.comptees)} = ${qte(x.cmup.manquant.quantite)} écharpes` },
           { libelle: "Coût moyen pondéré", attendu: x.cmup.coutMoyen, calcul: `${eur(x.cmup.disponible.valeur)} ÷ ${qte(x.cmup.disponible.quantite)} = ${eur(x.cmup.coutMoyen)}` },
         ];
       },
@@ -338,15 +339,15 @@ export const L_INVENTAIRE_ET_LA_DEMARQUE: Chapitre = {
       tableau: tableauDuComptage,
       question: (c) => {
         const x = inventaireEtDemarque(c);
-        return `Le 31 janvier, l'équipe compte chaque rayon. Les ${qte(x.d.connue)} bonnets tachés sont déjà sortis du stock sur un bon de casse : c'est la démarque connue. Calculez la démarque inconnue de janvier en articles, sa valeur au prix de vente hors taxes, puis son taux sur les ${eur(x.d.chiffreDAffaires)} de chiffre d'affaires du mois (au dixième).`;
+        return `Le 31 janvier, l'équipe compte chaque rayon. Les ${qte(x.d.connue)} bonnets tachés sont déjà sortis du stock sur un bon de casse : c'est la démarque connue. Calculez la démarque inconnue de janvier en articles, sa valeur au prix de vente hors taxes, puis son taux sur les ${eur(x.d.chiffreDAffaires)} de chiffre d'affaires du mois (à deux décimales).`;
       },
       champs: (c) => {
         const x = inventaireEtDemarque(c);
         const lignes = x.d.references.filter((r) => r.inconnue > 0);
         return [
-          { libelle: "Démarque inconnue, en articles", attendu: x.d.articles, calcul: `Stock théorique − démarque connue − compté : ${lignes.map((r) => qte(r.inconnue)).join(" + ")} = ${qte(x.d.articles)} articles` },
+          { libelle: "Démarque inconnue, en articles", nature: "quantite", attendu: x.d.articles, calcul: `Stock théorique − démarque connue − compté : ${lignes.map((r) => qte(r.inconnue)).join(" + ")} = ${qte(x.d.articles)} articles` },
           { libelle: "Démarque inconnue au prix de vente", attendu: x.d.auPrixDeVente, calcul: `${lignes.map((r) => `${qte(r.inconnue)} × ${eur(x.f.gamme.find((g) => g.code === r.code)!.prixHt)}`).join(" + ")} = ${eur(x.d.auPrixDeVente)}` },
-          { libelle: "Taux de démarque inconnue (%)", attendu: x.tauxAffiche, tolerance: 0.1, calcul: `${eur(x.d.auPrixDeVente)} ÷ ${eur(x.d.chiffreDAffaires)} × 100 = ${pct(x.tauxAffiche)}` },
+          { libelle: "Taux de démarque inconnue (%)", attendu: x.tauxAffiche, calcul: `${eur(x.d.auPrixDeVente)} ÷ ${eur(x.d.chiffreDAffaires)} × 100 = ${pct(x.tauxAffiche)}` },
         ];
       },
       explication: (c) => {
@@ -373,7 +374,7 @@ export const L_INVENTAIRE_ET_LA_DEMARQUE: Chapitre = {
         return [
           { libelle: "Démarque du mois au coût d'achat", attendu: x.d.auCoutDAchat, calcul: `${lignes.map((r) => `${qte(r.inconnue)} × ${eur(x.f.gamme.find((g) => g.code === r.code)!.coutDAchat)}`).join(" + ")} = ${eur(x.d.auCoutDAchat)}` },
           { libelle: "Démarque de l'année", attendu: x.d.parAn, calcul: `${eur(x.d.auCoutDAchat)} × 12 = ${eur(x.d.parAn)}` },
-          { libelle: "Passages en caisse qui la paient", attendu: x.d.passagesPourLaPayer, calcul: `${eur(x.d.auCoutDAchat)} ÷ ${eur(x.d.margeDUnPassage)} = ${qte(auCentime(x.d.auCoutDAchat / x.d.margeDUnPassage))}, arrondi à ${qte(x.d.passagesPourLaPayer)}` },
+          { libelle: "Passages en caisse qui la paient", nature: "quantite", attendu: x.d.passagesPourLaPayer, calcul: `${eur(x.d.auCoutDAchat)} ÷ ${eur(x.d.margeDUnPassage)} = ${qte(x.d.passagesCalcules)}, soit ${entier(x.d.passagesPourLaPayer)} passages à l'unité au-dessus : un de moins ne paierait pas toute la démarque` },
         ];
       },
       explication: (c) => {
@@ -399,9 +400,9 @@ export const L_INVENTAIRE_ET_LA_DEMARQUE: Chapitre = {
         const x = inventaireEtDemarque(c);
         const p = x.antivolEtCameras;
         const voir = "Le laboratoire suivant combine les protections et montre la part évitée.";
-        const somme = auDixieme((PROTECTIONS.find((k) => k.code === "antivol")!.efficacite + PROTECTIONS.find((k) => k.code === "cameras")!.efficacite) * 100);
+        const somme = auCentime((PROTECTIONS.find((k) => k.code === "antivol")!.efficacite + PROTECTIONS.find((k) => k.code === "cameras")!.efficacite) * 100);
         return [
-          { texte: `${pct(auDixieme(p.part * 100))} : chacune agit sur le reste`, juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `${pct(auCentime(p.part * 100))} : chacune agit sur le reste`, juste: true, retour: `Bon pari. ${voir}` },
           { texte: `${pct(somme)} : les deux parts évitées s'ajoutent`, juste: false, retour: `Pari à vérifier : un vol déjà évité ne s'évite pas deux fois. ${voir}` },
           { texte: `${pct(PROTECTIONS.find((k) => k.code === "antivol")!.efficacite * 100)} : la meilleure des deux suffit`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -436,7 +437,7 @@ export const L_INVENTAIRE_ET_LA_DEMARQUE: Chapitre = {
         const l = protegerLaBoutique(x.f, choisiesDe(p));
         return [
           { libelle: "Démarque de l'année", montant: l.demarque },
-          { libelle: "Part évitée", montant: auDixieme(l.part * 100), reference: 0, unite: "%" },
+          { libelle: "Part évitée", montant: auCentime(l.part * 100), reference: 0, unite: "%" },
           { libelle: "Démarque évitée", montant: l.evitee, reference: 0 },
           { libelle: "Coût des protections", montant: -l.cout + 0, reference: 0, effet: true },
           { libelle: "Gain de l'année", montant: l.gain, reference: 0, effet: true, fort: true },
@@ -571,7 +572,7 @@ export const L_INVENTAIRE_ET_LA_DEMARQUE: Chapitre = {
         return [
           { texte: "Les portiques antivol seuls", juste: m.choisies.length === 1 && m.choisies[0] === "antivol", retour: `Oui : ${eur(m.gain)} de gain sur l'année. Chaque protection de plus coûterait plus que la démarque qu'elle évite encore.` },
           { texte: "Le vigile du samedi, la protection la plus visible", juste: false, retour: `Non : ${eur(v.cout)} par an pour ${eur(v.evitee)} évités. Le vigile coûte plus que toute la démarque de l'année.` },
-          { texte: "Toutes les protections, pour ne plus rien perdre", juste: false, retour: `Non : elles éviteraient ${pct(auDixieme(tout.part * 100))} de la démarque, mais coûteraient ${eur(tout.cout)}. Le gain serait de ${eur(tout.gain)}.` },
+          { texte: "Toutes les protections, pour ne plus rien perdre", juste: false, retour: `Non : elles éviteraient ${pct(auCentime(tout.part * 100))} de la démarque, mais coûteraient ${eur(tout.cout)}. Le gain serait de ${eur(tout.gain)}.` },
           { texte: "Une assurance contre le vol", juste: false, retour: "Non : la démarque inconnue ne s'assure pas. Un vol à l'étalage, fréquent et léger, se prévient." },
         ];
       },
