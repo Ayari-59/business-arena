@@ -36,7 +36,10 @@ describe("les promesses d'accès suivent le code", () => {
     expect(page).toContain("href={LIEN_TARIFS}");
     // Le devis de l'offre Classe : pas d'offre « cours seul » (décision du propriétaire).
     // « Le cours seul » n'est plus un choix du devis : le cours vient avec l'offre (audit de l'offre).
-    expect(page).toContain('href="/devis?offre=classe"');
+    // Depuis le cours : l'offre Classe, son parcours prérempli, ni entreprise ni niveau exigés (audit
+    // produit du 10 novembre 2026, P1-4 ; tests/architecture/devis-du-diplome.test.ts).
+    expect(page).toContain("href={devis}");
+    expect(page).toContain("devis = lienDuDevisDuCours()");
     // Le chapitre libre le plus proche : celui du diplôme d'où l'on vient (config/cours/chapitres-libres.ts, `essaiPour`).
     expect(page).toContain("href={essai.href}");
     expect(lire("src/app/cours/[chapitre]/page.tsx")).toContain("essai={essaiPour(chapitre,");

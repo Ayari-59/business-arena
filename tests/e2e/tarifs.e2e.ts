@@ -8,6 +8,13 @@ import {
   OFFRES_ENSEIGNEMENT,
 } from "../../src/config/tarifs";
 import { VENDEUR } from "../../src/config/editeur";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { Client } from "pg";
+import { CHAPITRES } from "../../src/config/cours/registre";
+import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "../../src/config/cours/parcours-de-formation";
+import { chapitrePropose } from "../../src/config/formations-proposees";
+import { lienDuDevisDuCours } from "../../src/config/parametrage-du-devis";
 
 /**
  * LA PAGE DES TARIFS, DANS UN VRAI NAVIGATEUR.
@@ -294,4 +301,74 @@ describe("la demande de devis, de la carte à la confirmation", () => {
       await contexte.close();
     });
   }
+});
+
+/**
+ * LE DEVIS VENU DU COURS (audit produit du 10 novembre 2026, P1-4), sur un téléphone : le chapitre
+ * réservé mène au devis de l'offre Classe, le parcours du chapitre prérempli ; l'entreprise et le
+ * niveau ne sont pas exigés, et la demande enregistrée garde le parcours.
+ */
+describe("le devis venu d'un chapitre réservé", () => {
+  const chapitre = CHAPITRES.find((c) => c.parcours === "stmg-gf" && !c.libre && chapitrePropose(c))!;
+
+  it("à 390 px : le parcours prérempli, ni entreprise ni niveau exigés, la demande garde le parcours", async () => {
+    const contexte = await navigateur.newContext({
+      ...devices["iPhone 13"],
+      viewport: { width: 390, height: 844 },
+      locale: "fr-FR",
+      extraHTTPHeaders: { "x-real-ip": "198.51.100.40" },
+    });
+    const page = await contexte.newPage();
+    await aller(page, `/cours/${chapitre.code}?diplome=stmg`);
+    const lien = page.locator('main a[href^="/devis?"]');
+    expect(await lien.getAttribute("href")).toBe(lienDuDevisDuCours("stmg-gf"));
+    await lien.click();
+    await page.waitForURL(/\/devis\?offre=classe&source=cours&parcours=stmg-gf$/);
+    await page.waitForLoadState("networkidle");
+
+    const formulaire = page.locator("[data-formulaire-devis]");
+    expect(await page.locator('select[name="offre"]').inputValue()).toBe("classe");
+    expect(await page.locator('select[name="parcours"]').inputValue()).toBe("stmg-gf");
+    expect(await page.locator('select[name="parcours"] option:checked').innerText()).toBe(titreDuParcours("stmg-gf"));
+    expect((await formulaire.textContent())!.replace(/\s+/g, " ")).toContain("Le diplôme ou le parcours");
+    expect(await page.locator('select[name="entreprise"]').getAttribute("required")).toBeNull();
+    expect(await page.locator('select[name="niveau"]').getAttribute("required")).toBeNull();
+    // Les options, dans l'ordre que l'enseignant voit en créant sa classe.
+    const options = await page.locator('select[name="parcours"] option').evaluateAll((xs) => xs.map((o) => (o as HTMLOptionElement).value));
+    expect(options).toEqual(["", ...PARCOURS_PROPOSES_A_CHOISIR.map((p) => p.code)]);
+    const debord = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(debord, "défilement de côté").toBeLessThanOrEqual(0);
+    if (process.env.E2E_CAPTURES) {
+      mkdirSync(process.env.E2E_CAPTURES, { recursive: true });
+      await page.screenshot({ path: join(process.env.E2E_CAPTURES, "devis-depuis-un-chapitre-390.png"), fullPage: true });
+    }
+
+    const email = unique("devis-cours");
+    await page.fill('input[name="nom"]', "Claire Martin");
+    await page.fill('input[name="fonction"]', "Professeure d'économie et gestion");
+    await page.fill('input[name="organisation"]', "Lycée Pasteur");
+    await page.fill('input[name="email"]', email);
+    await page.getByRole("button", { name: "Envoyer la demande de devis" }).click();
+    await page.locator("[data-devis-confirme]").waitFor({ state: "visible", timeout: 30_000 });
+
+    const base = new Client({ connectionString: process.env.DATABASE_URL });
+    await base.connect();
+    try {
+      const { rows } = await base.query("select offre, parcours, entreprise, niveau from demandes_de_devis where email = $1", [email]);
+      expect(rows).toEqual([{ offre: "classe", parcours: "stmg-gf", entreprise: null, niveau: null }]);
+    } finally {
+      await base.end();
+    }
+    await contexte.close();
+  });
+
+  it("depuis /tarifs, rien ne change : l'offre Classe exige toujours l'entreprise et le niveau", async () => {
+    const page = await ouvrir(1280);
+    await aller(page, "/devis?offre=classe");
+    expect(await page.locator('select[name="entreprise"]').getAttribute("required")).not.toBeNull();
+    expect(await page.locator('select[name="niveau"]').getAttribute("required")).not.toBeNull();
+    expect(await page.locator('select[name="parcours"]').inputValue()).toBe("");
+    expect(await page.locator('input[name="source"]').count()).toBe(0);
+    await page.context().close();
+  });
 });

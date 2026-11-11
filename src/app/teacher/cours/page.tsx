@@ -16,7 +16,8 @@ import { parcoursAttribues } from "@/services/attributions.service";
 import { parcoursAttribue } from "@/services/chapitres-de-la-classe";
 import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { classeSansOffre, offreDuCoursDeLEnseignant, unParcoursParLicenceClasse } from "@/services/chapitres-de-la-classe";
-import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { creerClasseAction } from "./actions";
 
@@ -97,7 +98,7 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
             {!offre ? (
               <p data-classe-du-cours-sans-offre="" className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300">
                 {classeSansOffre()}{" "}
-                <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
+                <Link href={lienDuDevisDuCours()} prefetch={false} className={LIEN_A_L_ENCRE}>
                   {LIBELLE_DU_DEVIS}
                 </Link>
               </p>

@@ -10,6 +10,8 @@ import { db } from "@/db";
 import { demandesDeDevis } from "@/db/schema";
 import { VENDEUR } from "@/config/editeur";
 import { MENTION_TVA, nomDeLEntreprise, nomDuNiveau, type LibellesDuDevis } from "@/config/tarifs";
+import { titreDuParcours } from "@/config/cours/parcours-de-formation";
+import { LIBELLE_DU_PARCOURS } from "@/config/parametrage-du-devis";
 
 /**
  * LES DEMANDES DE DEVIS ÉCRITES.
@@ -43,6 +45,11 @@ export interface DemandeDeDevis {
   entreprise?: string | null;
   /** Le niveau souhaité (Classe) ; null sinon. */
   niveau?: number | null;
+  /**
+   * Le diplôme ou le parcours (migration 0058) : le code d'un parcours qu'une classe peut choisir, pour
+   * une offre qui ouvre le cours à une école (`demandeLeParcoursAuDevis`) ; null sinon.
+   */
+  parcours?: string | null;
   email: string;
   message: string;
   ip: string | null;
@@ -106,6 +113,7 @@ export async function deposerDemandeDeDevis(
       effectif: d.effectif,
       entreprise: d.entreprise ?? null,
       niveau: d.niveau ?? null,
+      parcours: d.parcours ?? null,
       email,
       message: d.message.trim(),
       ip: d.ip,
@@ -153,7 +161,6 @@ export async function marquerDemandeDeDevisTraitee(id: string, adminId: string):
     .where(eq(demandesDeDevis.id, id));
 }
 
-/** Les lignes communes aux deux courriels : ce qui a été demandé. */
 /**
  * Le code promo d'une demande, en lignes. `montants` : le devis chiffré (prix catalogue,
  * remise, prix remisé, prix nets), pour la notification interne, et pour le demandeur
@@ -170,12 +177,14 @@ export function lignesDuCodePromo(p: NonNullable<DemandeDeDevis["promo"]>, monta
   ].filter((x): x is string => x !== null);
 }
 
+/** Les lignes communes aux deux courriels : ce qui a été demandé. */
 function recapitulatif(d: DemandeDeDevis, montants = true): string[] {
   const l = d.libelles;
   return [
     `Offre : ${l.offre}`,
     `${l.organisation} : ${d.organisation.trim()}`,
     d.identifiant.trim() ? `${l.identifiant.replace(/ \(facultatif\)$/, "")} : ${d.identifiant.trim()}` : null,
+    d.parcours ? `${LIBELLE_DU_PARCOURS} : ${titreDuParcours(d.parcours) ?? d.parcours}` : null,
     d.entreprise ? `Entreprise souhaitée : ${nomDeLEntreprise(d.entreprise)}` : null,
     d.niveau ? `Niveau souhaité : ${nomDuNiveau(d.niveau)}` : null,
     d.effectif !== null ? `${l.effectif ?? "Effectif"} : ${d.effectif}` : null,

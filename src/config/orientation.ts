@@ -1,5 +1,6 @@
 import { ATELIERS, type AtelierDefinition } from "./ateliers";
-import { formationsEnToutesLettres, publicDeLAtelier } from "./formations";
+import { formationsDe, formationsEnToutesLettres, publicDeLAtelier } from "./formations";
+import { parcoursDuDevis } from "./cours/devis-du-cours";
 import { DIFFICULTY_PRESETS } from "./difficulty";
 import {
   SCENARIOS,
@@ -295,6 +296,21 @@ export interface VueDOrientation {
   objectifs: { code: string; libelle: string }[];
   phrases: string[];
   recommandations: Record<string, Omit<Recommandation, "pourquoi"> & { pourquoi: number[] }>;
+  /**
+   * LE PARCOURS DU DEVIS DU COURS, par diplôme choisi (audit produit du 10 novembre 2026, P1-4) : la
+   * sortie « Le cours en classe : demander un devis » le préremplit quand l'une des formations de
+   * l'atelier n'en a qu'un parmi les parcours proposés (config/cours/devis-du-cours.ts).
+   */
+  parcoursDuCours: Record<string, string>;
+}
+
+/** Le parcours que le devis du cours préremplit pour un atelier : celui de sa première formation qui n'en a qu'un. */
+function parcoursDuCoursDe(atelier: AtelierDefinition): string | null {
+  for (const f of formationsDe(atelier.formations)) {
+    const p = parcoursDuDevis(null, f.code);
+    if (p) return p;
+  }
+  return null;
 }
 
 export function vueDOrientation(): VueDOrientation {
@@ -316,10 +332,16 @@ export function vueDOrientation(): VueDOrientation {
       }
     }
   }
+  const parcoursDuCours: Record<string, string> = {};
+  for (const a of ATELIERS) {
+    const p = parcoursDuCoursDe(a);
+    if (p) parcoursDuCours[a.code] = p;
+  }
   return {
     diplomes,
     objectifs: OBJECTIFS.map(({ code, libelle }) => ({ code, libelle })),
     phrases,
     recommandations,
+    parcoursDuCours,
   };
 }

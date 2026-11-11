@@ -6,7 +6,9 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES, libellesDuDevisDe, MENTION_TVA, NIVEAUX_DE_L_ARENE } from "@/config/tarifs";
-import { offresDuDevis } from "@/config/catalogue";
+import { demandeLeParcoursAuDevis, offresDuDevis } from "@/config/catalogue";
+import { PARCOURS_DU_DEVIS, parcoursDuDevis } from "@/config/cours/devis-du-cours";
+import { SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
 import { ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { lireLeCatalogue } from "@/services/catalogue.service";
 import { VENDEUR } from "@/config/editeur";
@@ -27,18 +29,36 @@ export const metadata: Metadata = {
  * episodes|entreprise`, ou toute offre du catalogue de /admin/offres) ; une adresse sans
  * offre, ou avec une offre inconnue, pré-remplit la première de la liste (Classe).
  * Le rendez-vous téléphonique reste proposé, en second.
+ *
+ * LE DIPLÔME OU LE PARCOURS (audit produit du 10 novembre 2026, P1-4) : une offre qui ouvre le cours
+ * à une école le demande, dans la liste que l'enseignant voit en créant sa classe. Une demande qui
+ * vient du cours (`?source=cours`) le trouve prérempli quand il est connu (`?parcours=`, ou un
+ * diplôme qui n'en a qu'un, `?diplome=`), et n'exige ni l'entreprise ni le niveau de l'arène
+ * (config/parametrage-du-devis.ts).
  */
 async function DevisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ offre?: string; entreprise?: string; niveau?: string }>;
+  searchParams: Promise<{
+    offre?: string;
+    entreprise?: string;
+    niveau?: string;
+    parcours?: string | string[];
+    diplome?: string | string[];
+    source?: string | string[];
+  }>;
 }) {
-  const { offre, entreprise, niveau } = await searchParams;
+  const { offre, entreprise, niveau, parcours, diplome, source } = await searchParams;
   // Ce qui a déjà été choisi ailleurs (orientation, chapitre réservé), lu contre les registres :
   // une valeur inconnue est ignorée, jamais recopiée (audit produit du 28 octobre 2026, P1-6).
   const entrepriseInitiale = ENTREPRISES.some((e) => e.code === entreprise) ? entreprise! : "";
   const niveauInitial = NIVEAUX_DE_L_ARENE.some((n) => String(n.niveau) === niveau) ? niveau! : "";
-  const offres = offresDuDevis(await lireLeCatalogue()).map((o) => ({ code: o.code, ...libellesDuDevisDe(o) }));
+  const parcoursInitial = parcoursDuDevis(parcours, diplome) ?? "";
+  const offres = offresDuDevis(await lireLeCatalogue()).map((o) => ({
+    code: o.code,
+    ...libellesDuDevisDe(o),
+    ...(demandeLeParcoursAuDevis(o) ? { parcours: true as const } : {}),
+  }));
   const offreInitiale = offres.some((o) => o.code === offre) ? offre! : (offres[0]?.code ?? "");
   return (
     <>
@@ -59,6 +79,9 @@ async function DevisPage({
             contact={VENDEUR.contact}
             entrepriseInitiale={entrepriseInitiale}
             niveauInitial={niveauInitial}
+            parcours={PARCOURS_DU_DEVIS}
+            parcoursInitial={parcoursInitial}
+            source={source === SOURCE_DU_COURS ? SOURCE_DU_COURS : null}
             ateliers={ateliersParCombinaison()}
           />
           <p className="mt-6 text-sm leading-relaxed text-slate-400">

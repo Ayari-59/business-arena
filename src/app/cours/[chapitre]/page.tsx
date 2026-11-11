@@ -6,6 +6,8 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { chapitreParCode } from "@/config/cours/registre";
 import { essaiPour } from "@/config/cours/chapitres-libres";
+import { parcoursDuContenu } from "@/config/cours/devis-du-cours";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { chapitrePropose } from "@/config/formations-proposees";
 import { motsDuContenu } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
@@ -88,6 +90,7 @@ async function ChapitrePage({
           reserve={motsDuContenu(chapitre.code).reserve}
           essai={essaiPour(chapitre, { classe: classeDeLEleveLue?.parcours, demande: diplomeDeLAdresse(diplome) })}
           eleve={eleve}
+          devis={lienDuDevisDuCours(parcoursDuContenu(chapitre, diplomeDeLAdresse(diplome)))}
         />
         <PiedDePage />
       </>

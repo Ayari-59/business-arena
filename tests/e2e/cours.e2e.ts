@@ -9,6 +9,8 @@ import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, casDuChapitre, motsDuContenu } from "../../src/config/cours/situations";
 import { chapitreLibreParDefaut, chapitresLibresParDiplome, essaiDuDiplome, essaiPour } from "../../src/config/cours/chapitres-libres";
+import { parcoursDuContenu } from "../../src/config/cours/devis-du-cours";
+import { lienDuDevisDuCours } from "../../src/config/parametrage-du-devis";
 import { formationsAvecUnePage } from "../../src/config/couverture";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
 import { coursDuDiplome, couvertureDuCoursEnClair } from "../../src/config/cours/par-diplome";
@@ -1334,7 +1336,8 @@ describe.each([
       // offres, le devis, celui de l'offre Classe (pas de cours seul) ; l'entreprise et le niveau se
       // choisissent au devis.
       expect(sorties).toEqual(expect.arrayContaining(["/tarifs", essaiPour(chapitreParCode(chapitreCode)!).href]));
-      expect(sorties).toContain("/devis?offre=classe");
+      // Le devis du cours (audit produit du 10 novembre 2026, P1-4) : l'offre Classe, le parcours du contenu.
+      expect(sorties).toContain(lienDuDevisDuCours(parcoursDuContenu(chapitreParCode(chapitreCode)!)));
     }
 
     const code = entreprise;

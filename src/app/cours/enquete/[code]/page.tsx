@@ -6,6 +6,8 @@ import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { PiedDePage } from "@/components/pied-de-page";
 import { enqueteParCode, lienDeLEnquete } from "@/config/cours/enquetes";
 import { essaiPour } from "@/config/cours/chapitres-libres";
+import { parcoursDuContenu } from "@/config/cours/devis-du-cours";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { servirLeBureau } from "@/pedagogy/cours/bureau-servi";
@@ -43,7 +45,7 @@ async function EnquetePage({ params }: { params: Promise<{ code: string }> }) {
     const eleve = classe && !(await getSession()) ? { classe: classe.classe } : null;
     return (
       <>
-        <ChapitreReserve titre={enquete.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(enquete, { classe: classe?.parcours })} eleve={eleve} />
+        <ChapitreReserve titre={enquete.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(enquete, { classe: classe?.parcours })} eleve={eleve} devis={lienDuDevisDuCours(parcoursDuContenu(enquete))} />
         <PiedDePage />
       </>
     );

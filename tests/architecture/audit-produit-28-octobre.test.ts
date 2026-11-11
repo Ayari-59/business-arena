@@ -21,6 +21,7 @@ import { chapitreLibreParDefaut } from "@/config/cours/chapitres-libres";
 import { ateliersDeLaClasse, ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { LeCoursEnBref } from "@/components/le-cours-en-bref";
 import { DevisForm } from "@/components/devis-form";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 
 /**
  * LES DÉFAUTS « PRODUIT » DE L'AUDIT DU 28 OCTOBRE 2026 (produit.md), TENUS.
@@ -105,10 +106,14 @@ describe("3. l'orientation mène au devis et à l'essai ; le cours vient avec l'
   it("trois sorties : le devis du réglage, l'essai solo, le devis du cours (« le cours seul » n'est plus un choix)", () => {
     expect(orientation).toMatch(/\/devis\?offre=classe&entreprise=\$\{encodeURIComponent\(reco\.scenarioCode\)\}&niveau=\$\{reco\.niveau\}/);
     expect(orientation).toMatch(/href="\/jouer"/);
-    expect(orientation).toMatch(/href="\/devis\?offre=classe"/);
+    // Le devis du cours : l'offre Classe, demandée depuis le cours (audit produit du 10 novembre 2026,
+    // P1-4 ; tests/architecture/devis-du-diplome.test.ts).
+    expect(orientation).toContain("href={lienDuDevisDuCours(vue.parcoursDuCours[diplome])}");
+    expect(lienDuDevisDuCours()).toMatch(/^\/devis\?offre=classe&/);
   });
   it("le chapitre réservé ouvre le devis de l'offre Classe", () => {
-    expect(lire("components/cours/chapitre-reserve.tsx")).toContain('href="/devis?offre=classe"');
+    expect(lire("components/cours/chapitre-reserve.tsx")).toContain("href={devis}");
+    expect(lire("components/cours/chapitre-reserve.tsx")).toContain("devis = lienDuDevisDuCours()");
   });
 
   const props = {

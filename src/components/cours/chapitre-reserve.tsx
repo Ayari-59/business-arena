@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { bouton } from "@/components/bouton";
 import { LIBELLE_DU_DEVIS, OFFRES, OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import type { LienDEssai } from "@/config/cours/chapitres-libres";
 
@@ -15,12 +16,16 @@ import type { LienDEssai } from "@/config/cours/chapitres-libres";
  *    et le devis (SORTIR DE L'IMPASSE, audit d'octobre 2026).
  * L'un et l'autre trouvent le chapitre libre le plus proche : celui du diplôme d'où ils viennent
  * (novembre 2026, un chapitre libre par diplôme : config/cours/chapitres-libres.ts, `essaiPour`).
+ * Le devis est celui d'une demande qui vient du cours (audit produit du 10 novembre 2026, P1-4) :
+ * le parcours qui ouvre ce contenu prérempli (config/cours/devis-du-cours.ts, `parcoursDuContenu`),
+ * ni entreprise ni niveau exigés.
  */
 export function ChapitreReserve({
   titre,
   reserve,
   essai,
   eleve,
+  devis = lienDuDevisDuCours(),
 }: {
   titre: string;
   /** « Ce chapitre est réservé » / « Ce cas pratique est réservé » (config/cours/situations.ts). */
@@ -29,6 +34,8 @@ export function ChapitreReserve({
   essai: LienDEssai;
   /** L'élève d'une classe du cours, s'il en est un : sa classe. */
   eleve: { classe: string } | null;
+  /** L'adresse du devis, le parcours du contenu prérempli (`lienDuDevisDuCours`). */
+  devis?: string;
 }) {
   if (eleve) {
     return (
@@ -76,8 +83,9 @@ export function ChapitreReserve({
         <Link href={LIEN_TARIFS} className={bouton({ variante: "secondaire", taille: "m" })}>
           Voir les offres
         </Link>
-        {/* Le cours vient avec une offre de l'arène (« le cours seul » n'est plus un choix du devis). */}
-        <Link href="/devis?offre=classe" className={bouton({ variante: "secondaire", taille: "m" })}>
+        {/* Le cours vient avec une offre de l'arène (« le cours seul » n'est plus un choix du devis) :
+            l'offre Classe, demandée depuis le cours, son parcours prérempli. */}
+        <Link href={devis} className={bouton({ variante: "secondaire", taille: "m" })}>
           {LIBELLE_DU_DEVIS}
         </Link>
         <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>

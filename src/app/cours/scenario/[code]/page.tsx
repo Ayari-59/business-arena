@@ -5,6 +5,8 @@ import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { ScenarioAEmbranchements } from "@/components/cours/scenario";
 import { PiedDePage } from "@/components/pied-de-page";
 import { essaiPour } from "@/config/cours/chapitres-libres";
+import { parcoursDuContenu } from "@/config/cours/devis-du-cours";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { lienDuScenario, scenarioParCode } from "@/config/cours/scenarios";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
@@ -43,7 +45,7 @@ async function ScenarioPage({ params }: { params: Promise<{ code: string }> }) {
     const eleve = classe && !(await getSession()) ? { classe: classe.classe } : null;
     return (
       <>
-        <ChapitreReserve titre={scenario.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(scenario, { classe: classe?.parcours })} eleve={eleve} />
+        <ChapitreReserve titre={scenario.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(scenario, { classe: classe?.parcours })} eleve={eleve} devis={lienDuDevisDuCours(parcoursDuContenu(scenario))} />
         <PiedDePage />
       </>
     );
