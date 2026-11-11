@@ -223,15 +223,12 @@ function CarteSource({
   source,
   vue,
   impossible,
-  bloque = false,
   pourquoi = "plus le temps",
   onConsulter,
 }: {
   source: SourceServie;
   vue: boolean;
   impossible: boolean;
-  /** Une décision part au serveur : on ne vérifie plus rien d'ici sa réponse. */
-  bloque?: boolean;
   /** Ce qu'on affiche quand la vérification n'est plus possible. */
   pourquoi?: string;
   onConsulter: () => void;
@@ -241,7 +238,7 @@ function CarteSource({
       <button
         type="button"
         onClick={onConsulter}
-        disabled={vue || impossible || bloque}
+        disabled={vue || impossible}
         aria-expanded={vue}
         className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left transition enabled:hover:bg-white/5 disabled:cursor-default"
       >
@@ -312,26 +309,31 @@ function Suite({
   children,
   onClick,
   disabled = false,
-  attente = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
-  /** La réponse du serveur est attendue : le bouton ne se reprend pas deux fois. */
-  attente?: boolean;
 }) {
   return (
     <div className="flex flex-wrap gap-3">
       <button
         type="button"
         onClick={onClick}
-        disabled={disabled || attente}
-        aria-busy={attente || undefined}
+        disabled={disabled}
         className={bouton({ taille: "l" })}
       >
         {children}
       </button>
     </div>
+  );
+}
+
+/** La réponse du serveur est en route : l'écran a changé, son contenu arrive. */
+function Attente({ texte }: { texte: string }) {
+  return (
+    <p role="status" className="text-base text-slate-400">
+      {texte}
+    </p>
   );
 }
 
@@ -568,7 +570,9 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
       fin: null,
       precedente: null,
     };
-    envoyer(d, () => ({ ...nouvelEtat(n, graine, choisi, cle), ecran: "jeu" }));
+    // L'écran passe au jeu tout de suite, comme avant ; la première étape arrive avec la réponse.
+    setS(() => ({ ...nouvelEtat(n, graine, choisi, cle), ecran: "jeu" }));
+    envoyer(d, () => ({}));
   };
 
   const gestes: Gestes = {
@@ -600,8 +604,10 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
     valider: () => {
       const e = s;
       if (e.choix == null || e.attente === "valider") return;
-      const d = demandeDe(e, "valider", { decisions: [...e.decisions.slice(0, e.etape), e.choix] });
-      envoyer(d, (vue) => ({ decisions: [...vue.decisions], phase: "consequence" }));
+      const decisions = [...e.decisions.slice(0, e.etape), e.choix];
+      // La décision est prise tout de suite, comme avant ; sa conséquence arrive avec la réponse.
+      maj(() => ({ decisions, phase: "consequence" }));
+      envoyer(demandeDe(e, "valider", { decisions }), (vue) => ({ decisions: [...vue.decisions] }));
     },
     etapeSuivante: () =>
       maj((e) =>
@@ -664,8 +670,13 @@ function EcranDeLEpisodeBrut({
   const partieJouee = partieJoueeDe(s, choisi);
   // Le tableau de bord : celui de la dernière réponse, ou celui d'avant la partie.
   const tableau: TableauServi = s.ecran === "intro" || !vue ? intro.tableau : vue.tableau;
-  const etape = vue?.etape ?? null;
-  const consequence = s.ecran === "jeu" && s.phase === "consequence" ? vue?.consequence ?? null : null;
+  // L'écran change dès le geste, comme quand tout se calculait ici ; ce qu'il montre arrive
+  // avec la réponse. Tant qu'elle n'est pas là, la vue reçue est celle du geste d'avant : on
+  // ne montre que ce qui correspond à l'étape affichée.
+  const etape = vue?.etape && vue.etape.indice === s.etape ? vue.etape : null;
+  const enConsequence = s.ecran === "jeu" && s.phase === "consequence";
+  const consequence = enConsequence && vue?.consequence?.indice === s.etape ? vue.consequence : null;
+  const affichee = consequence ?? etape;
   // L'EN-TÊTE SUIT L'ÉTAPE AFFICHÉE. À la conséquence, le tableau de bord dit
   // « fin de semaine 2 » : l'en-tête disait encore « Semaine 1 · lundi », le
   // moment de la décision qu'on vient de prendre.
@@ -674,10 +685,10 @@ function EcranDeLEpisodeBrut({
       ? "Avant de commencer"
       : s.ecran === "bilan"
         ? "Fin du trimestre"
-        : consequence
-          ? `Fin de semaine ${consequence.jusqua}`
-          : (etape?.moment ?? "");
-  const titre = consequence ? consequence.titre : (etape?.titre ?? "");
+        : enConsequence && affichee
+          ? `Fin de semaine ${affichee.jusqua}`
+          : (affichee?.moment ?? "");
+  const titre = affichee?.titre ?? "";
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
@@ -738,7 +749,12 @@ function EcranDeLEpisodeBrut({
           <TableauDeBord tableau={tableau} ecarts={consequence !== null} />
         </aside>
 
-        <div ref={scene} className="grid min-w-0 scroll-mt-24 gap-5" aria-live="polite">
+        <div
+          ref={scene}
+          className="grid min-w-0 scroll-mt-24 gap-5"
+          aria-live="polite"
+          aria-busy={s.attente !== null || undefined}
+        >
           {s.ecran === "intro" && (
             <Intro
               intro={intro}
@@ -747,13 +763,14 @@ function EcranDeLEpisodeBrut({
               niveaux={niveaux}
               offre={offre}
               licence={licence}
-              attente={s.attente === "commencer"}
               onNiveau={gestes.onNiveau}
               onCommencer={() => gestes.commencer(null)}
             />
           )}
 
-          {s.ecran === "jeu" && (consequence || etape) && (
+          {s.ecran === "jeu" && !affichee && !s.erreur && <Attente texte="Le trimestre se prépare…" />}
+
+          {s.ecran === "jeu" && affichee && (
             <>
               <header>
                 <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
@@ -766,6 +783,8 @@ function EcranDeLEpisodeBrut({
               </header>
               {consequence ? (
                 <Consequence reglages={reglages} s={s} consequence={consequence} gestes={gestes} />
+              ) : enConsequence ? (
+                !s.erreur && <Attente texte="Les semaines passent…" />
               ) : (
                 <Scene reglages={reglages} s={s} etape={etape!} gestes={gestes} />
               )}
@@ -782,7 +801,6 @@ function EcranDeLEpisodeBrut({
               cle={s.cle}
               niveaux={reglages.niveaux}
               cours={cours}
-              attente={s.attente === "commencer"}
               onAutreHasard={gestes.autreHasard}
               onMemeHasard={gestes.memeHasard}
             />
@@ -830,7 +848,6 @@ function Intro({
   niveaux,
   offre,
   licence,
-  attente,
   onNiveau,
   onCommencer,
 }: {
@@ -840,7 +857,6 @@ function Intro({
   niveaux: readonly CodeNiveau[];
   offre: OffreDesEpisodes | null;
   licence: boolean;
-  attente: boolean;
   onNiveau: (n: CodeNiveau) => void;
   onCommencer: () => void;
 }) {
@@ -949,9 +965,7 @@ function Intro({
           </>
         )}
       </fieldset>
-      <Suite onClick={onCommencer} attente={attente}>
-        Commencer l&apos;épisode
-      </Suite>
+      <Suite onClick={onCommencer}>Commencer l&apos;épisode</Suite>
     </section>
   );
 }
@@ -976,7 +990,6 @@ function Scene({
   const encore = verificationPossible(niveau, i, vues.length);
   const repere = (temps: TempsDeDecision) => niveau.reperes && <Repere texte={reglages.reperes[temps]} />;
   const { suivante, consulter, valider, maj } = gestes;
-  const attenteDecision = s.attente === "valider";
 
   if (s.phase === "signal") {
     const ensuite = phasesDe(i)[1];
@@ -1178,7 +1191,6 @@ function Scene({
                   source={src}
                   vue={vue}
                   impossible={!vue && !encore}
-                  bloque={attenteDecision}
                   pourquoi="une seule vérification"
                   onConsulter={() => consulter(src)}
                 />
@@ -1263,7 +1275,7 @@ function Scene({
           </label>
         </div>
       )}
-      <Suite onClick={valider} disabled={s.choix == null || !previsionOk} attente={attenteDecision}>
+      <Suite onClick={valider} disabled={s.choix == null || !previsionOk}>
         Valider la décision
       </Suite>
     </>

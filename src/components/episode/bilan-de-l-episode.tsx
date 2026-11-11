@@ -194,7 +194,6 @@ function BilanDeLEpisodeBrut({
   onAutreHasard,
   onMemeHasard,
   cours = null,
-  attente = false,
 }: {
   /** Le bilan calculé au serveur à la dernière décision. */
   bilan: BilanServi;
@@ -209,8 +208,6 @@ function BilanDeLEpisodeBrut({
   onMemeHasard: () => void;
   /** Les chapitres et cas pratiques du thème de l'épisode, préparés par la page. */
   cours?: CoursDeLEpisode | null;
-  /** La partie suivante se prépare au serveur : les deux boutons attendent sa réponse. */
-  attente?: boolean;
 }) {
   const a = bilan;
   const constats = bilan.constats;
@@ -460,20 +457,12 @@ function BilanDeLEpisodeBrut({
         personnes.
       </p>
       <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={onAutreHasard}
-          disabled={attente}
-          aria-busy={attente || undefined}
-          className={bouton({ taille: "l" })}
-        >
+        <button type="button" onClick={onAutreHasard} className={bouton({ taille: "l" })}>
           Rejouer avec d&apos;autres aléas
         </button>
         <button
           type="button"
           onClick={onMemeHasard}
-          disabled={attente}
-          aria-busy={attente || undefined}
           className={bouton({ variante: "secondaire", taille: "l" })}
         >
           Recommencer avec les mêmes aléas

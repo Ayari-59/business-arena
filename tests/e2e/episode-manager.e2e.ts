@@ -270,8 +270,7 @@ describe("les niveaux de difficulté", () => {
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11&niveau=expert`);
     await expect.poll(() => page.getByLabel("Expert", { exact: false }).isChecked()).toBe(true);
     await bouton(page, "Commencer l'épisode").click();
-    // La première étape arrive du serveur (pedagogy/episodes/partie-servie.ts) : on l'attend.
-    await expect.poll(() => page.getByText("Niveau Expert", { exact: true }).count()).toBe(1);
+    expect(await page.getByText("Niveau Expert", { exact: true }).count()).toBe(1);
 
     await bouton(page, "Enquêter").click();
     await expect.poll(() => page.getByText("Il vous reste 2,5 jours").count()).toBe(1);
@@ -312,8 +311,9 @@ describe("les niveaux de difficulté", () => {
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
     await choisir(page, "Démonstration");
     await bouton(page, "Commencer l'épisode").click();
-    await expect.poll(() => page.getByText("Niveau Démonstration", { exact: true }).count()).toBe(1);
-    expect(await page.getByText("Repère ·").count()).toBe(1);
+    expect(await page.getByText("Niveau Démonstration", { exact: true }).count()).toBe(1);
+    // La première étape arrive du serveur (pedagogy/episodes/partie-servie.ts), son repère avec elle.
+    await expect.poll(() => page.getByText("Repère ·").count()).toBe(1);
     await bouton(page, "Enquêter").click();
     expect(await bouton(page, /Demander conseil/).count()).toBe(1);
     await bouton(page, "Poser mon diagnostic").click();
