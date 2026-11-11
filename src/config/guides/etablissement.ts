@@ -162,8 +162,9 @@ export const GUIDE_ETABLISSEMENT: Guide = {
       titre: "Se connecter avec l'établissement (RENATER)",
       faire: [
         "Pour les universités, écoles et organismes de la Fédération Éducation-Recherche : la fédération d'identité permet de se connecter avec ses identifiants habituels de l'établissement.",
-        "Sur la page de connexion des enseignants, sur l'entrée par code et sur l'invitation d'une cohorte, le bouton « Se connecter avec mon établissement » mène au service de découverte de RENATER.",
-        "L'enseignant d'un établissement client arrive dans son espace, rattaché à la licence. L'étudiant retrouve ses parties sur n'importe quel appareil, sans code de reprise.",
+        // Prévue ou ouverte, selon l'état de la connexion (config/connexion-etablissement.ts).
+        "{{connexionEtablissement}}",
+        "Avec cette connexion, l'enseignant d'un établissement client arrive dans son espace, rattaché à la licence, et l'étudiant retrouve ses parties sur n'importe quel appareil, sans code de reprise.",
         "Pour votre service informatique, la page d'intégration donne l'identifiant du fournisseur de services, ses métadonnées et son adresse de retour.",
       ],
       voir: "Le compte d'un enseignant se crée à sa première connexion.",

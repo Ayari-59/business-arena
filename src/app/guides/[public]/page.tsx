@@ -17,6 +17,7 @@ import {
   type PublicDuGuide,
 } from "@/config/guides";
 import { valeursDesJetons } from "@/config/guides/jetons";
+import { connexionEtablissementProposee } from "@/saml/configuration";
 import { SITE_URL } from "@/config/site";
 import { lireLeCatalogue } from "@/services/catalogue.service";
 
@@ -69,7 +70,7 @@ const enChaineCss = (t: string) => `"${t.replace(/\\/g, "\\\\").replace(/"/g, '\
 async function GuidePage({ params }: { params: Promise<{ public: string }> }) {
   const brut = guideDe((await params).public);
   if (!brut) notFound();
-  const g = guideResolu(brut, valeursDesJetons(await lireLeCatalogue()));
+  const g = guideResolu(brut, valeursDesJetons(await lireLeCatalogue(), connexionEtablissementProposee()));
   const autres = GUIDES.filter((x) => x.public !== g.public);
   const action = ACTION[g.public];
   const enTeteImprime = `Business Arena · ${g.titre} · version du ${dateDeVersion(g)}`;

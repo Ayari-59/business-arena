@@ -3,6 +3,7 @@ import { NOMBRE_D_EPISODES, SECTEURS } from "@/config/episodes/familles";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
 import { insecables } from "@/lib/typographie";
 import { ouvreLExamen, ouvreLesEpisodes, parametresAreneDe, type Catalogue } from "@/config/catalogue";
+import { connexionEtablissementDite } from "@/config/connexion-etablissement";
 
 /**
  * LES JETONS DES GUIDES : CE QUI SE COMPTE NE S'ÉCRIT PAS À LA MAIN.
@@ -12,6 +13,10 @@ import { ouvreLExamen, ouvreLesEpisodes, parametresAreneDe, type Catalogue } fro
  * l'administrateur édite. Le texte d'un guide les appelle par un jeton `{{nom}}`, résolu
  * au rendu. Un jeton inconnu lève une erreur plutôt que de laisser des accolades à
  * l'écran (garde : tests/architecture/guides.test.ts).
+ *
+ * L'ÉTAT DE LA CONNEXION PAR L'ÉTABLISSEMENT bouge aussi, dans l'environnement : le bouton RENATER
+ * ne paraît que sur la fédération de production. La phrase qui le décrit entre par un jeton, prévue
+ * ou ouverte selon l'état que la page lit (config/connexion-etablissement.ts).
  */
 
 export const JETONS = [
@@ -25,6 +30,7 @@ export const JETONS = [
   "offresArene",
   "offresEpisodes",
   "offresExamen",
+  "connexionEtablissement",
 ] as const;
 
 export type Jeton = (typeof JETONS)[number];
@@ -37,7 +43,7 @@ export function enListe(mots: readonly string[]): string {
 }
 
 /** Ce que la configuration du dépôt dit, sans base de données. */
-export function valeursDeLaConfiguration(): Omit<ValeursDesJetons, "offresArene" | "offresEpisodes" | "offresExamen"> {
+export function valeursDeLaConfiguration(): Omit<ValeursDesJetons, "offresArene" | "offresEpisodes" | "offresExamen" | "connexionEtablissement"> {
   return {
     nombreDeNiveaux: String(DIFFICULTY_PRESETS.length),
     premierNiveau: DIFFICULTY_PRESETS[0]!.name,
@@ -61,8 +67,16 @@ export function valeursDuCatalogue(catalogue: Catalogue): Pick<ValeursDesJetons,
   };
 }
 
-export function valeursDesJetons(catalogue: Catalogue): ValeursDesJetons {
-  return { ...valeursDeLaConfiguration(), ...valeursDuCatalogue(catalogue) };
+/**
+ * Les valeurs de tous les jetons. `connexionEtablissement` : la connexion RENATER est-elle proposée
+ * (saml/configuration.ts, `connexionEtablissementProposee`) ? La page la lit, et la passe ici.
+ */
+export function valeursDesJetons(catalogue: Catalogue, connexionEtablissement: boolean): ValeursDesJetons {
+  return {
+    ...valeursDeLaConfiguration(),
+    ...valeursDuCatalogue(catalogue),
+    connexionEtablissement: connexionEtablissementDite(connexionEtablissement).guide,
+  };
 }
 
 const JETON = /\{\{([a-zA-Z]+)\}\}/g;

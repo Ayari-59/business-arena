@@ -5,7 +5,8 @@ import { connection } from "next/server";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { DemandeDeReinitialisation } from "@/components/mot-de-passe-oublie-forms";
-import { COMPTES_SANS_MOT_DE_PASSE, DUREE_DU_JETON_DITE } from "@/config/mot-de-passe-oublie";
+import { comptesSansMotDePasse, DUREE_DU_JETON_DITE } from "@/config/mot-de-passe-oublie";
+import { connexionEtablissementProposee } from "@/saml/configuration";
 
 export const metadata: Metadata = {
   title: "Mot de passe oublié",
@@ -29,7 +30,7 @@ async function MotDePasseOubliePage() {
       <div className={`${COLONNE_DE_PAGE} space-y-4`}>
         <DemandeDeReinitialisation />
         <p className="max-w-md text-sm text-slate-400" data-comptes-sans-mot-de-passe="">
-          {COMPTES_SANS_MOT_DE_PASSE}
+          {comptesSansMotDePasse(connexionEtablissementProposee())}
         </p>
         <p className="text-sm">
           <Link href="/teacher/login" prefetch={false} className={LIEN_A_L_ENCRE}>

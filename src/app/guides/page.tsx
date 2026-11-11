@@ -6,6 +6,7 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { GUIDES, cheminDuGuide, dureeDeLecture, guideResolu } from "@/config/guides";
 import { valeursDesJetons } from "@/config/guides/jetons";
+import { connexionEtablissementProposee } from "@/saml/configuration";
 import { lireLeCatalogue } from "@/services/catalogue.service";
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
  * les guides y renvoient sans les recopier.
  */
 async function GuidesPage() {
-  const valeurs = valeursDesJetons(await lireLeCatalogue());
+  const valeurs = valeursDesJetons(await lireLeCatalogue(), connexionEtablissementProposee());
   return (
     <>
       <main id="main" className="pb-16">
