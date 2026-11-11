@@ -11,7 +11,8 @@ import { etapesDeMontants } from "../helpers/corriges-du-cours";
  * La règle des deux décimales arrondit chaque ligne, et promettait l'élève qui n'arrondit qu'à la fin
  * accepté par la tolérance d'un centième (pedagogy/cours/deux-decimales.ts). C'était faux dès qu'un
  * résultat arrondi est repris et multiplié : « 1,88 × 28 560 € − 8 500 € = 45 192,80 € » refusait
- * l'élève qui gardait 1,875 compte (45 050 €), et 45 champs au moins faisaient de même.
+ * l'élève qui gardait 1,875 compte (45 050 €). Sur le code du 11 novembre (467c0aa), la garde en trouvait
+ * 73 qui faisaient de même, dans 37 contenus, de 0,02 € à 142,80 €.
  *
  * Pour chaque champ de montant, de pourcentage ou de grandeur du cours (chapitres et cas pratiques, dans
  * chaque entreprise où ils se jouent), la garde refait la chaîne de calcul de son corrigé sans arrondi

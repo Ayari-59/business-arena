@@ -17,7 +17,9 @@
  * « accepter les deux chemins » ; audit pédagogique, P1-1). Le plus souvent, garder tous les chiffres
  * ne change le résultat que d'un centime, que la tolérance couvre. Mais un résultat arrondi repris et
  * multiplié (1,88 compte × 28 560 € au lieu de 1,875) écarte les deux chemins de plus d'un centième :
- * 45 champs refusaient alors l'élève rigoureux, jusqu'à 142,80 €. Ces champs portent l'autre chemin,
+ * sur le code du 11 novembre, 73 champs servis, dans 37 contenus, refusaient alors l'élève rigoureux,
+ * de 0,02 € à 142,80 € (et 376,98 € dans l'essai l-augmentation-generale, que la garde ne lisait pas
+ * jusqu'au bout). Ces champs portent l'autre chemin,
  * le calcul exact arrondi à la fin (`autreChemin`, posé par `deuxChemins`), accepté comme l'attendu ;
  * le corrigé garde le chemin ligne par ligne. La garde tests/architecture/deux-chemins.test.ts refait
  * sans arrondi intermédiaire la chaîne de calcul de chaque corrigé et vérifie que son résultat est
