@@ -7,6 +7,8 @@ import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { SITE_URL } from "@/config/site";
 import { adressesDeLOutil, DUREE_JETON_INSCRIPTION_JOURS } from "@/lti/constantes";
 import { adressesDuSp, ATTRIBUTS_DEMANDES, entityIdDuSp } from "@/saml/constantes";
+import { connexionEtablissementProposee } from "@/saml/configuration";
+import { connexionEtablissementDite } from "@/config/connexion-etablissement";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/integration" },
@@ -23,6 +25,10 @@ export const metadata: Metadata = {
  * coller), la voie manuelle (les adresses à recopier), ce que l'enseignant et l'élève
  * voient, et ce qui transite. Les adresses se lisent du code (lti/constantes.ts) : elles
  * ne peuvent pas diverger de celles que l'outil sert.
+ *
+ * LA CONNEXION PAR L'ÉTABLISSEMENT SE DIT COMME ELLE EST (config/connexion-etablissement.ts) : prévue
+ * tant que le bouton ne paraît pas (saml/configuration.ts, `connexionEtablissementProposee`), décrite
+ * telle quelle le jour où il paraît.
  */
 
 const A = adressesDeLOutil(SITE_URL);
@@ -49,6 +55,7 @@ function Adresse({ libelle, valeur }: { libelle: string; valeur: string }) {
 }
 
 function IntegrationPage() {
+  const renater = connexionEtablissementDite(connexionEtablissementProposee());
   return (
     <>
       <main id="main" className="pb-16">
@@ -206,13 +213,8 @@ function IntegrationPage() {
           </Section>
 
           <Section id="renater" titre="Se connecter avec l'établissement (RENATER)">
-            <p>
-              Disponible pour les établissements de la Fédération Éducation-Recherche : universités, écoles et
-              organismes reliés à RENATER. Sur la page de connexion des enseignants, sur l&apos;entrée par code et
-              sur l&apos;invitation d&apos;une cohorte, un bouton « Se connecter avec mon établissement » mène au
-              service de découverte de RENATER. On y choisit son établissement, on s&apos;identifie chez lui avec
-              ses identifiants habituels, et l&apos;on revient sur Business Arena.
-            </p>
+            <p data-connexion-etablissement-dite={renater.avantLaListe ? "prevue" : "ouverte"}>{renater.integration}</p>
+            {renater.avantLaListe ? <p>{renater.avantLaListe}</p> : null}
             <ul className="list-disc space-y-2 pl-6">
               <li>
                 <strong className="text-slate-100">L&apos;enseignant ou le personnel</strong> d&apos;un établissement

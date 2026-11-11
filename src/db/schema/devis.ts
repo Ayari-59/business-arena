@@ -32,6 +32,12 @@ export const demandesDeDevis = pgTable(
     entreprise: text("entreprise"),
     /** Le niveau souhaité (offre Classe) ; null sinon. */
     niveau: integer("niveau"),
+    /**
+     * LE DIPLÔME OU LE PARCOURS (migration 0058, audit produit du 10 novembre 2026, P1-4) : le code d'un
+     * parcours qu'une classe peut choisir (config/cours/parcours-de-formation.ts), pour une offre qui
+     * ouvre le cours à une école (Classe, Programme, Campus) ; null s'il n'est pas donné.
+     */
+    parcours: text("parcours"),
     email: text("email").notNull(),
     message: text("message").notNull().default(""),
     /**

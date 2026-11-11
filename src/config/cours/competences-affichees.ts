@@ -1,8 +1,7 @@
 import { referentielDeCitation } from "../ateliers/referentiels";
 import { blocsDuChapitre } from "../couverture";
 import { formationParCode } from "../formations";
-import { parcoursDeFormationParCode } from "./parcours-de-formation";
-import { PARCOURS } from "./registre";
+import { formationDuParcours } from "./parcours-a-choisir";
 import type { Chapitre } from "./types";
 
 /**
@@ -58,11 +57,8 @@ export interface ContexteDuChapitre {
 
 const TITRE = "Compétences du référentiel";
 
-/** La formation où mène un parcours, du registre ou de formation ; null pour un parcours de discipline. */
-export function formationDuParcours(code: string | null | undefined): string | null {
-  if (!code) return null;
-  return PARCOURS.find((p) => p.code === code)?.formation ?? parcoursDeFormationParCode(code)?.formation ?? null;
-}
+/** La formation où mène un parcours (sa définition, sans les chapitres : ./parcours-a-choisir.ts). */
+export { formationDuParcours };
 
 /** Le diplôme demandé par l'adresse, s'il en est un : une formation du registre, sinon null. */
 export function diplomeDeLAdresse(demande: unknown): string | null {

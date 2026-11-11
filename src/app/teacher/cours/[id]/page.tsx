@@ -24,7 +24,8 @@ import { chapitresLiberes, parcoursAttribues } from "@/services/attributions.ser
 import { SubmitButton } from "@/components/submit-button";
 import { ENTREPRISES } from "@/app/cours/entreprises";
 import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
-import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { activitesDeLaClasse } from "@/services/activites.service";
 import { ActivitesDeLaClasse } from "./activites";
 import { calculatriceAction, cloreClasseAction, libererChapitreAction, liberationAction, parcoursAction } from "../actions";
@@ -142,7 +143,7 @@ async function ClasseDuCoursPage({
           <p data-classe-du-cours-sans-offre="" className="rounded-lg encadre-neutre px-4 py-2.5 text-sm text-slate-300">
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
             {classeSansOffre(libreDeLaClasse?.titre)}{" "}
-            <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
+            <Link href={lienDuDevisDuCours(classe.parcours)} prefetch={false} className={LIEN_A_L_ENCRE}>
               {LIBELLE_DU_DEVIS}
             </Link>
           </p>
