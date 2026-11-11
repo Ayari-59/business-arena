@@ -253,16 +253,26 @@ const FICHES_ECRITES: readonly FicheEnseignant[] = [
 ];
 
 /**
- * LE REGISTRE QUE LE SITE LIT : À PARTIR DE BAC + 3 (décision du propriétaire, novembre 2026).
+ * LA LIGNE D'UNE FICHE TRANSVERSALE (audit pédagogique du 11 novembre 2026, P2-8). Six fiches écrites
+ * pour le lycée ou le bac professionnel perdent, avec la règle, toutes leurs formations et toutes
+ * leurs lignes de programme : l'enseignant ne lisait plus à quoi elles servent. Elles se disent
+ * transversales : la méthode qu'elles font jouer sert dans toute formation du supérieur.
+ */
+export const LIGNE_TRANSVERSALE =
+  "Transversal : la méthode de l'épisode sert dans toute formation du supérieur, sans bloc de programme qui lui soit propre.";
+
+/**
+ * LE REGISTRE QUE LE SITE LIT : DANS L'ENSEIGNEMENT SUPÉRIEUR (décision du propriétaire, novembre 2026).
  * Une fiche n'annonce que les formations ouvertes aux épisodes, et les lignes de programme qui
  * sont les leurs (config/episodes/public-des-episodes.ts). Elle reste au registre même si plus
- * aucune de ses formations ne l'est : elle s'adresse alors aux publics que la règle nomme.
+ * aucune de ses formations ne l'est : elle s'adresse alors aux publics que la règle nomme, et se
+ * dit transversale si aucune de ses lignes de programme ne reste.
  */
-export const FICHES: readonly FicheEnseignant[] = FICHES_ECRITES.map((f) => ({
-  ...f,
-  formations: formationsOuvertesAuxEpisodes(f.formations),
-  programme: f.programme.filter(ligneDeProgrammeOuverte),
-}));
+export const FICHES: readonly FicheEnseignant[] = FICHES_ECRITES.map((f) => {
+  const formations = formationsOuvertesAuxEpisodes(f.formations);
+  const programme = f.programme.filter(ligneDeProgrammeOuverte);
+  return { ...f, formations, programme: formations.length === 0 && programme.length === 0 ? [LIGNE_TRANSVERSALE] : programme };
+});
 
 export const ficheParCode = (code: string): FicheEnseignant | undefined =>
   FICHES.find((f) => f.code === code);

@@ -84,6 +84,21 @@ describe("le cours par diplôme", () => {
     expect(coursDuDiplome("diplome-inconnu")).toBeNull();
   });
 
+  // Audit pédagogique du 11 novembre 2026, P2-11 : tous les chapitres du bac STMG sont au palier 1, et
+  // leur rang suivait l'ordre du registre. Le premier thème de première commençait au rang 16, après
+  // des chapitres de mercatique de terminale. Le parcours range la première, puis la terminale.
+  it("au bac STMG, les chapitres de première viennent avant ceux de terminale", () => {
+    const parcours = coursDuDiplome("stmg")!;
+    const rangs = (annee: RegExp) =>
+      parcours.blocs.filter((b) => annee.test(b.partie ?? "")).flatMap((b) => b.chapitres.filter((c) => !c.approfondissement).map((c) => c.rang));
+    const premiere = rangs(/^Première/);
+    const terminale = rangs(/^Terminale/);
+    expect(premiere.length).toBeGreaterThan(20);
+    expect(terminale.length).toBeGreaterThan(40);
+    expect(Math.max(...premiere)).toBeLessThan(Math.min(...terminale));
+    expect(parcours.premier?.chapitre.code).toBe("les-flux-de-l-entreprise");
+  });
+
   it("la recherche trouve par mot-clé, sans accent ni casse", () => {
     expect(rechercherChapitres("")).toEqual([]);
     expect(rechercherChapitres("   ")).toEqual([]);

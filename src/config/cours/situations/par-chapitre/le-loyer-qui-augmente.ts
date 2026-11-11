@@ -41,7 +41,7 @@ export function loyerQuiAugmente(c: Pick<Cas, "code">) {
   const hausse = auCentime(nouveauLoyer - ch.loyer);
   const nouvellesCharges = auCentime(s.chargesFixes + hausse);
   const seuilQuantite = plafond(nouvellesCharges / s.margeUnitaire);
-  // Le seuil en valeur sur le taux de marge à deux décimales, comme l'élève.
+  // Le seuil en valeur sur le taux de marge sur coût variable à deux décimales, comme l'élève.
   const seuilValeur = seuilAuTauxArrondi(nouvellesCharges, s.tauxDeMarge).seuilValeur!;
   const resultat = auCentime(s.marge - nouvellesCharges);
   const margeDeSecurite = auCentime(s.chiffreDAffaires - seuilValeur);
@@ -134,7 +134,7 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
       titre: "Le nouveau seuil",
       notions: ["breakeven", "fixed_costs"],
       question: () =>
-        "Avec le nouveau loyer, quelles seront les charges fixes du mois ? À partir de combien d'unités vendues seront-elles couvertes, et pour quel chiffre d'affaires (sur le taux de marge à deux décimales, au centime) ?",
+        "Avec le nouveau loyer, quelles seront les charges fixes du mois ? À partir de combien d'unités vendues seront-elles couvertes, et pour quel chiffre d'affaires (sur le taux de marge sur coût variable à deux décimales, au centime) ?",
       champs: (c) => {
         const r = loyerQuiAugmente(c);
         const { s, ch, f } = r.x;

@@ -861,7 +861,7 @@ export const ASSORTIMENT: Chapitre = {
         {
           texte: "Rien n'est obligatoire : une boutique n'a pas de conditions de vente",
           juste: false,
-          retour: "Non : dès qu'elle vend à des professionnels, comme un comité d'entreprise, la boutique doit pouvoir lui communiquer ses conditions générales de vente.",
+          retour: "Non : dès qu'elle vend à des professionnels, la boutique doit pouvoir leur communiquer ses conditions générales de vente, et le cours traite ici le comité comme l'un d'eux.",
         },
         {
           texte: "Seulement le prix toutes taxes comprises",

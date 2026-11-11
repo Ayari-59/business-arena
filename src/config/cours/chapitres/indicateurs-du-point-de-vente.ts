@@ -698,7 +698,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       question: (c) => {
         const k = indicateursDuPointDeVente(c);
         const v = suivreUnMauvaisPayeur(CSE_DES_LABORATOIRES_VERNAL);
-        return `Hypothèse du cours : ${v.client} passe ${v.objet}, une commande moyenne de comité, ${eur(v.ht)} HT, soit ${eur(v.ttc)} TTC, payable à ${qte(v.delaiConvenu)} jours. Le trésorier du comité ne signe les virements qu'à la réunion du mois : il paie ${qte(v.retard)} jours en retard. ${k.f.entreprise} vend des biens, elle a déjà déclaré la TVA à la livraison et finance la commande toutes taxes comprises. Calculez ce que le retard lui coûte au découvert, à ${pct(v.tauxDeFinancement * 100)} l'an, les pénalités de retard à ${pct(TAUX_DES_PENALITES * 100)} l'an, puis tout ce qu'elle peut réclamer, indemnité forfaitaire comprise.`;
+        return `Hypothèse du cours : ${v.client} passe ${v.objet}, une commande moyenne de comité, ${eur(v.ht)} HT, soit ${eur(v.ttc)} TTC, payable à ${qte(v.delaiConvenu)} jours. Le trésorier du comité ne signe les virements qu'à la réunion du mois : il paie ${qte(v.retard)} jours en retard. Les conditions de vente du magasin, que le comité a acceptées, prévoient des pénalités de retard et l'indemnité forfaitaire. ${k.f.entreprise} vend des biens, elle a déjà déclaré la TVA à la livraison et finance la commande toutes taxes comprises. Calculez ce que le retard lui coûte au découvert, à ${pct(v.tauxDeFinancement * 100)} l'an, les pénalités de retard à ${pct(TAUX_DES_PENALITES * 100)} l'an, puis tout ce qu'elle peut réclamer, indemnité forfaitaire comprise.`;
       },
       champs: () => {
         const v = suivreUnMauvaisPayeur(CSE_DES_LABORATOIRES_VERNAL);
@@ -713,7 +713,9 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
         const lIndemnitePese = v.indemnite > v.penalites;
         return [
           `Sur une petite facture, les pénalités pèsent peu : ${eur(v.penalites)} pour ${qte(v.retard)} jours. L'indemnité forfaitaire de ${eur(v.indemnite)}, due par facture quelle que soit la durée du retard, ${lIndemnitePese ? "pèse plus qu'elles" : "pèse moins qu'elles"} : ${eur(v.reclamable)} réclamables, quand le retard coûte ${eur(v.coutDuRetard)}.`,
-          `Un comité d'entreprise achète pour ses salariés, mais il paie comme un professionnel : le délai convenu et les pénalités s'appliquent. Un gros panier se négocie avec ses conditions de paiement, et un retard se relance, comme pour tout client professionnel.`,
+          // Prudence (audit pédagogique du 11 novembre 2026, P2-10) : un comité qui achète pour les activités sociales
+          // des salariés n'est pas forcément un acheteur professionnel au sens de l'article L. 441-10 du code de commerce.
+          `Un comité social et économique achète pour les activités sociales des salariés. Qu'il doive, comme un acheteur professionnel, les pénalités et l'indemnité forfaitaire dépend de sa situation : cela se vérifie avant toute réclamation. Le cours les applique ici par hypothèse, celle des conditions de vente du magasin. Dans tous les cas, un gros panier se négocie avec ses conditions de paiement, et un retard se relance.`,
         ];
       },
     },

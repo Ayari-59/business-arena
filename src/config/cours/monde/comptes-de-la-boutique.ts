@@ -75,8 +75,10 @@ export const CONDITIONS_DE_VENTE = { seuilDeLaRemise: 50, remise: 0.05, escompte
 /**
  * LES DÉLAIS LÉGAUX DE PAIEMENT ENTRE PROFESSIONNELS (code de commerce, article L441-10, en vigueur en
  * 2026) : 60 jours à compter de la date d'émission de la facture, ou 45 jours fin de mois si les deux
- * parties l'ont écrit au contrat. Un comité d'entreprise achète pour ses salariés : c'est un acheteur
- * professionnel, ces plafonds s'appliquent.
+ * parties l'ont écrit au contrat. HYPOTHÈSE du cours : les comités qui achètent à la boutique y sont
+ * traités en acheteurs professionnels, ces plafonds s'appliquent. Un comité social et économique qui
+ * achète pour les activités sociales des salariés ne l'est pas forcément : cela se vérifie (audit
+ * pédagogique du 11 novembre 2026, P2-10).
  */
 export const DELAIS_LEGAUX = { dateDeFacture: 60, finDeMois: 45 } as const;
 

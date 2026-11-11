@@ -23,7 +23,8 @@ import type { Chapitre } from "./types";
  *    aussi, vide et « en cours ». Un chapitre qui sert le diplôme
  *    par son parcours sans citer de bloc ferme la liste, sous « Autres chapitres ».
  *  · L'ORDRE D'APPRENTISSAGE : les prérequis des chapitres (`Chapitre.prerequis`) d'abord, puis
- *    le palier, puis l'ordre du registre. Le rang est celui du parcours entier : un bloc peut
+ *    l'année du programme quand le texte en a deux (la première, puis la terminale, au bac STMG),
+ *    puis le palier, puis l'ordre du registre. Le rang est celui du parcours entier : un bloc peut
  *    commencer au rang 7, si ses chapitres demandent ceux d'un autre bloc. Les chapitres « pour
  *    aller plus loin » du diplôme (config/cours/pour-aller-plus-loin.ts) viennent après tous les
  *    autres : dans chaque bloc, ils ferment la liste.
@@ -65,14 +66,23 @@ export interface CoursDuDiplome {
 }
 
 /**
- * L'ORDRE D'APPRENTISSAGE : un tri topologique sur les prérequis internes au diplôme, qui
- * choisit à chaque pas le chapitre de plus petit palier, puis le premier du registre. Un
- * cycle (qui ne devrait pas exister) n'arrête rien : ce qui reste suit le palier.
+ * L'ANNÉE D'UNE PARTIE DU PROGRAMME : 0 pour la première, 1 pour la terminale, 0 pour un texte qui
+ * n'en a qu'une. Tous les chapitres du bac STMG sont au palier 1 : sans elle, leur rang suivait
+ * l'ordre du registre, et le premier thème de première commençait au rang 16, après des chapitres
+ * de mercatique de terminale (audit pédagogique du 11 novembre 2026, P2-11).
  */
-export function ordreDApprentissage(chapitres: readonly Chapitre[]): Chapitre[] {
+export const anneeDeLaPartie = (partie: string | undefined) => (partie && /^Terminale\b/u.test(partie) ? 1 : 0);
+
+/**
+ * L'ORDRE D'APPRENTISSAGE : un tri topologique sur les prérequis internes au diplôme, qui
+ * choisit à chaque pas le chapitre de la plus petite année du programme (`annee`, 0 par défaut),
+ * puis de plus petit palier, puis le premier du registre. Un cycle (qui ne devrait pas exister)
+ * n'arrête rien : ce qui reste suit l'année et le palier.
+ */
+export function ordreDApprentissage(chapitres: readonly Chapitre[], annee: (c: Chapitre) => number = () => 0): Chapitre[] {
   const index = new Map(CHAPITRES.map((c, i) => [c.code, i]));
   const avant = (a: Chapitre, b: Chapitre) =>
-    a.palier - b.palier || (index.get(a.code) ?? 0) - (index.get(b.code) ?? 0);
+    annee(a) - annee(b) || a.palier - b.palier || (index.get(a.code) ?? 0) - (index.get(b.code) ?? 0);
   const siens = new Set(chapitres.map((c) => c.code));
   const attend = new Map(chapitres.map((c) => [c.code, new Set((c.prerequis ?? []).filter((p) => siens.has(p) && p !== c.code))]));
   const restants = [...chapitres].sort(avant);
@@ -90,7 +100,19 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
   const formation = formationParCode(code);
   if (!formation || !formationProposee(code)) return null;
   const chapitres = coursDeLaFormation(code).flatMap((g) => g.chapitres);
-  const ordre = approfondissementsALaFin(code, ordreDApprentissage(chapitres), (c) => c.code);
+  // Les entrées du texte, dans son ordre : l'entrée officielle quand le texte a été lu.
+  const entrees = tableauDeCouverture(code).lignes.map((l) => ({
+    bloc: l.couverture?.officiel ?? l.bloc,
+    libelle: l.bloc,
+    partie: l.partie,
+    horsDuChamp: Boolean(l.horsDuChamp),
+  }));
+  // L'année d'un chapitre : celle de la première entrée du texte qu'il cite.
+  const anneeDuChapitre = (c: Chapitre) => {
+    const rangs = blocsDuChapitre(c, code).map((b) => entrees.findIndex((e) => e.bloc === b)).filter((r) => r >= 0);
+    return rangs.length === 0 ? 0 : anneeDeLaPartie(entrees[Math.min(...rangs)]!.partie);
+  };
+  const ordre = approfondissementsALaFin(code, ordreDApprentissage(chapitres, anneeDuChapitre), (c) => c.code);
   const lignes: ChapitreDuDiplome[] = ordre.map((chapitre, i) => ({
     chapitre,
     rang: i + 1,
@@ -102,13 +124,6 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
     }),
   }));
 
-  // Les entrées du texte, dans son ordre : l'entrée officielle quand le texte a été lu.
-  const entrees = tableauDeCouverture(code).lignes.map((l) => ({
-    bloc: l.couverture?.officiel ?? l.bloc,
-    libelle: l.bloc,
-    partie: l.partie,
-    horsDuChamp: Boolean(l.horsDuChamp),
-  }));
   const parEntree = new Map<number, ChapitreDuDiplome[]>();
   const autres: ChapitreDuDiplome[] = [];
   for (const ligne of lignes) {

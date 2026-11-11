@@ -589,10 +589,6 @@ export function communication(f: FicheMercatique) {
 /** Les ventes gagnées qu'il faut pour qu'une campagne se paie, à la marge d'une enceinte, à l'enceinte supérieure. */
 export const ventesPourPayer = (f: FicheMercatique, budget: number) => plafond(budget / margeUnitaire(f));
 
-/** Le budget d'une grille qui laisse le meilleur résultat du trimestre. */
-export const meilleurBudget = (f: FicheMercatique, budgets: readonly number[]) =>
-  budgets.map((b) => trimestreAuBudget(f, b)).reduce((a, b) => (b.resultat > a.resultat ? b : a));
-
 // ═════════════════════════════════════════════════════════════════════════════
 // 8. LES CANAUX DE DISTRIBUTION
 // ═════════════════════════════════════════════════════════════════════════════

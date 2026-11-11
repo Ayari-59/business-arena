@@ -7,7 +7,7 @@ import { programmeDuDiplome } from "@/config/cours/programme";
 import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
 import { FAMILLES } from "@/config/episodes/familles";
-import { FICHES } from "@/config/episodes/fiches";
+import { FICHES, LIGNE_TRANSVERSALE } from "@/config/episodes/fiches";
 import {
   ANNEES_APRES_LE_BAC,
   formationDeLaLigne,
@@ -81,6 +81,17 @@ describe("le registre des fiches enseignant", () => {
 
   it("garde toutes les fiches : aucun épisode n'est retiré", () => {
     expect(FICHES.length).toBe(FAMILLES.flatMap((f) => f.episodes).length);
+  });
+
+  // Audit pédagogique du 11 novembre 2026, P2-8 : six fiches écrites pour le lycée ou le bac pro
+  // perdaient, avec la règle, toutes leurs formations et toutes leurs lignes de programme ; l'enseignant
+  // ne lisait plus à quoi elles servent. Une fiche sans formation ni ligne ouverte se dit transversale.
+  it("dit à quoi sert chaque fiche : une ligne de programme, ou qu'elle est transversale", () => {
+    const muettes = FICHES.filter((f) => f.programme.length === 0).map((f) => f.code);
+    expect(muettes).toEqual([]);
+    const transversales = FICHES.filter((f) => f.programme.includes(LIGNE_TRANSVERSALE)).map((f) => f.code);
+    expect(transversales.sort()).toEqual(["bureau-qui-s-echauffe", "client-qui-s-en-va", "diplome-qui-compte", "libre-service-qui-perd", "lits-vides", "repit-a-creer"]);
+    for (const f of FICHES.filter((x) => x.programme.includes(LIGNE_TRANSVERSALE))) expect(f.formations, f.code).toEqual([]);
   });
 });
 
