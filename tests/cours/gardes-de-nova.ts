@@ -7,6 +7,7 @@ import { lireLeCurseur, lireLeLaboratoire, servirLeChapitre } from "../../src/pe
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 import { NOVA, etape, textesDe } from "./gardes-du-lycee";
 import { typographier } from "../../src/lib/typographie";
+import { chapitresLibresParDiplome } from "../../src/config/cours/chapitres-libres";
 
 /**
  * LES GARDES COMMUNES DES CHAPITRES ET DES CAS DE LA GESTION DE BASE ET DE L'INFORMATION (lot M3),
@@ -135,7 +136,9 @@ export function gardeDuCas(sit: Situation, ch: Chapitre) {
   expect(sit.palier, sit.code).toBe(ch.palier);
   expect(sit.parcours, sit.code).toBe(ch.parcours);
   expect(sit.entreprises?.codes, sit.code).toEqual(ch.entreprises?.codes);
-  expect(sit.libre, sit.code).toBe(false);
+  // Un cas dédié est libre avec son chapitre, le premier d'un parcours (config/cours/chapitres-libres.ts) ;
+  // un cas de synthèse ne l'est jamais.
+  expect(sit.libre, sit.code).toBe(ch.libre && sit.reprend.length === 1);
   expect(sit.blocs, sit.code).toEqual([]);
   expect(sit.etapes[0]!.type, sit.code).toBe("lecture");
   expect(sit.etapes.at(-1)!.type, sit.code).toBe("choix");
@@ -145,7 +148,8 @@ export function gardeDuCas(sit: Situation, ch: Chapitre) {
 /** Les blocs d'un chapitre se résolvent dans le référentiel de leur formation, et son titre est au programme. */
 export function gardeDuProgramme(ch: Chapitre, programme: readonly string[]) {
   expect(programme, ch.code).toContain(ch.titre);
-  expect(ch.libre).toBe(false);
+  // Libre s'il est le premier du parcours d'un diplôme (config/cours/chapitres-libres.ts), réservé sinon.
+  expect(ch.libre, ch.code).toBe(chapitresLibresParDiplome().some((l) => l.chapitre.code === ch.code));
   for (const bloc of ch.blocs) {
     const cite = referentielDeCitation(bloc);
     expect(cite, bloc).not.toBeNull();

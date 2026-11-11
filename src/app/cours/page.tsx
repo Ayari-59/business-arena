@@ -437,28 +437,31 @@ async function CoursPage({
                 </Link>
               )}
             </p>
-            <details className="group">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-slate-200 [&::-webkit-details-marker]:hidden">
-                <span aria-hidden className="mr-2 inline-block text-amber-400 transition-transform group-open:rotate-90">
-                  ▸
-                </span>
-                Choisir une autre entreprise du cas ({entreprisesDuPilote.length})
-              </summary>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-3">
-                {entreprisesDuPilote.map((e) => (
-                  <li key={e.code}>
-                    <Link
-                      href={`/cours/${pilote.code}?entreprise=${e.code}${duDiplome}`}
-                      style={{ borderLeftColor: `var(--secteur-${e.teinte})` }}
-                      className="flex min-h-14 flex-col justify-center rounded-lg border border-l-4 border-white/10 px-3 py-2 transition hover:border-white/30"
-                    >
-                      <span className="font-semibold text-slate-100">{e.nom}</span>
-                      <span className="text-xs text-slate-400">{e.tagline}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </details>
+            {/* Un chapitre qui ne se joue que dans une entreprise n'a pas de choix à replier. */}
+            {entreprisesDuPilote.length > 1 ? (
+              <details className="group">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-slate-200 [&::-webkit-details-marker]:hidden">
+                  <span aria-hidden className="mr-2 inline-block text-amber-400 transition-transform group-open:rotate-90">
+                    ▸
+                  </span>
+                  Choisir une autre entreprise du cas ({entreprisesDuPilote.length})
+                </summary>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {entreprisesDuPilote.map((e) => (
+                    <li key={e.code}>
+                      <Link
+                        href={`/cours/${pilote.code}?entreprise=${e.code}${duDiplome}`}
+                        style={{ borderLeftColor: `var(--secteur-${e.teinte})` }}
+                        className="flex min-h-14 flex-col justify-center rounded-lg border border-l-4 border-white/10 px-3 py-2 transition hover:border-white/30"
+                      >
+                        <span className="font-semibold text-slate-100">{e.nom}</span>
+                        <span className="text-xs text-slate-400">{e.tagline}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
           </section>
 
           {/* L'articulation des offres s'adresse aux enseignants : pas à l'élève d'une classe. */}

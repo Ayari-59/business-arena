@@ -89,7 +89,8 @@ export function gardeDuCas(sit: Situation, ch: Chapitre) {
   expect(sit.palier, sit.code).toBe(ch.palier);
   expect(sit.parcours, sit.code).toBe(ch.parcours);
   expect(sit.entreprises?.codes, sit.code).toEqual(["nova"]);
-  expect(sit.libre, sit.code).toBe(false);
+  // Libre avec son chapitre, le premier d'un parcours (config/cours/chapitres-libres.ts), réservé sinon.
+  expect(sit.libre, sit.code).toBe(ch.libre);
   expect(sit.etapes[0]!.type, sit.code).toBe("lecture");
   expect(sit.etapes.slice(1).filter((e) => e.type === "lecture"), sit.code).toHaveLength(0);
   expect(sit.etapes.at(-1)!.type, sit.code).toBe("choix");

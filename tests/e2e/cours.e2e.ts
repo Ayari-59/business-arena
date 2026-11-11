@@ -1501,15 +1501,28 @@ describe("la page d'un chapitre n'annonce que les compétences du diplôme d'où
 describe("un chapitre libre par diplôme", () => {
   const TELEPHONE = { width: 390, height: 844 };
   const competences = (p: Page) => p.locator("[data-objectifs-du-chapitre] > div.carte").innerText().then(espacesOrdinaires);
-  /** Le haut et le bas de l'encart, dans la fenêtre : visible sans défiler s'il tient entre 0 et sa hauteur. */
+  /**
+   * Le haut et le bas de l'encart, dans la fenêtre, et la limite du premier écran : le bas de la fenêtre,
+   * ou le haut de la barre d'action du téléphone quand elle est à l'écran (components/barre-d-action-mobile.tsx).
+   */
   const dansLaFenetre = (p: Page, d: string) =>
     p.locator(`[data-essai-du-diplome="${d}"]`).evaluate((el) => {
       const b = el.getBoundingClientRect();
-      return { haut: Math.round(b.top), bas: Math.round(b.bottom) };
+      const barre = document.querySelector("[data-barre-action]")?.getBoundingClientRect();
+      const limite = barre && barre.height > 0 && barre.top < window.innerHeight ? barre.top : window.innerHeight;
+      return { haut: Math.round(b.top), bas: Math.round(b.bottom), limite: Math.round(limite) };
     });
 
   it("en tête de chaque page de diplôme, visible sans défiler à 390 px : le chapitre libre et son cas, le diplôme dans l'adresse", async () => {
     const ctx = await navigateur.newContext({ viewport: TELEPHONE, hasTouch: true, locale: "fr-FR" });
+    // L'invitation à installer, comme dans tests/e2e/mobile-public.e2e.ts : un visiteur qui l'a déjà fermée.
+    await ctx.addInitScript(() => {
+      try {
+        localStorage.setItem("install-prompt-ferme-le", String(Date.now()));
+      } catch {
+        /* rien */
+      }
+    });
     const page = await ctx.newPage();
     try {
       for (const f of formationsAvecUnePage()) {
@@ -1519,9 +1532,11 @@ describe("un chapitre libre par diplôme", () => {
           await aller(page, chemin);
           const encart = page.locator(`[data-essai-du-diplome="${d}"]`);
           expect(await encart.count(), chemin).toBe(1);
-          const { haut, bas } = await dansLaFenetre(page, d);
+          // La barre d'action se montre après un temps : on la laisse paraître avant de mesurer.
+          await page.waitForTimeout(400);
+          const { haut, bas, limite } = await dansLaFenetre(page, d);
           expect(haut, `${chemin} : l'encart commence hors de l'écran`).toBeGreaterThanOrEqual(0);
-          expect(bas, `${chemin} : l'encart sort du premier écran`).toBeLessThanOrEqual(TELEPHONE.height);
+          expect(bas, `${chemin} : l'encart sort du premier écran (limite ${limite} px)`).toBeLessThanOrEqual(limite);
           expect(await encart.locator(`[data-chapitre-libre="${e.chapitre.code}"]`).getAttribute("href"), chemin).toMatch(
             new RegExp(`^/cours/${e.chapitre.code}\\?(.*&)?diplome=${d}(&|$)`),
           );

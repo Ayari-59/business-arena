@@ -102,4 +102,24 @@ describe("GET /cours/[chapitre]/diaporama", () => {
     const autre = CHAPITRES.find((c) => c.code !== CHAPITRE && c.parcours === "comptabilite-generale")!;
     expect((await appeler(autre.code, { session: prof })).status).toBe(404);
   });
+
+  /**
+   * UN CHAPITRE LIBRE N'OUVRE PAS SON DIAPORAMA SANS LICENCE (la règle de ../acces.ts, `diaporamaPermis`,
+   * que la route lit). Depuis novembre 2026, chaque diplôme a son chapitre libre
+   * (config/cours/chapitres-libres.ts) : le diaporama reste un outil de la licence pour chacun d'eux.
+   */
+  it("un chapitre libre ne l'ouvre ni au visiteur, ni à l'élève, ni à l'enseignant sans licence ; il l'ouvre sous licence", async () => {
+    const { diaporamaPermis } = await import("@/app/cours/acces");
+    const libres = CHAPITRES.filter((c) => c.libre);
+    expect(libres.length).toBeGreaterThan(1);
+    for (const c of libres) {
+      for (const qui of [{}, { invite: eleve }, { session: sansLicence }]) {
+        session = qui.session ? { userId: qui.session, role: "teacher" } : null;
+        invite = qui.invite ?? null;
+        expect(await diaporamaPermis(c), `${c.code} : ${JSON.stringify(qui)}`).toBe(false);
+      }
+      session = { userId: prof, role: "teacher" };
+      expect(await diaporamaPermis(c), c.code).toBe(true);
+    }
+  }, 60_000);
 });
