@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { EpisodeJoue } from "@/components/episode/episode-joue";
 import { EPISODES } from "@/pedagogy/episodes/registre";
+import { introServie, reglagesDesNiveaux } from "@/pedagogy/episodes/partie-servie";
 import {
   accordsEntreParentheses,
   espacesJsxPerdues,
@@ -99,7 +100,13 @@ describe("la langue des sources", () => {
   it("7. un épisode s'affiche avec les insécables de la typographie française", () => {
     const fautes: string[] = [];
     for (const ep of EPISODES) {
-      const html = renderToStaticMarkup(createElement(EpisodeJoue, { code: ep.code }));
+      const html = renderToStaticMarkup(
+        createElement(EpisodeJoue, {
+          intro: introServie(ep),
+          reglages: reglagesDesNiveaux(),
+          niveaux: ["decouverte", "standard", "expert"],
+        }),
+      );
       const texte = html
         .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/g, " ")
         .replace(/<[^>]+>/g, "\u0000")

@@ -17,6 +17,7 @@ import type { PartieJouee } from "@/config/episodes/types";
 import { construireProfil } from "@/pedagogy/profil/profil";
 import { apercuDuProfil, MENTION_DE_L_APERCU } from "@/pedagogy/profil/apercu";
 import { RetourDeLEpisode } from "@/components/episode/retour-de-l-episode";
+import { bilanServi, reglagesDesNiveaux } from "@/pedagogy/episodes/partie-servie";
 
 /**
  * LES PROMESSES COMMERCIALES DE L'AUDIT (produit.md, P0-1 à P0-3 et P1-11), TENUES.
@@ -114,12 +115,16 @@ describe("P0-2 : l'aperçu du profil d'une démonstration", () => {
   it("le bilan d'une démonstration sans licence montre l'aperçu et la mention ; pas avec une licence", () => {
     const code = EPISODES_DE_DEMO[0]!;
     const ep = EPISODES.find((e) => e.code === code)!;
-    const rendu = (sansLicence: boolean, niveau: PartieJouee["niveau"]) =>
-      texte(
+    // Le bilan se calcule au serveur (pedagogy/episodes/partie-servie.ts) ; l'écran n'affiche que ce qu'il reçoit.
+    const rendu = (sansLicence: boolean, niveau: PartieJouee["niveau"]) => {
+      const partie = partieDeDemo(code, niveau);
+      const { retour } = bilanServi(ep, partie, null, sansLicence);
+      return texte(
         renderToStaticMarkup(
-          createElement(RetourDeLEpisode, { ep, partie: partieDeDemo(code, niveau), cle: null, sansLicence }),
+          createElement(RetourDeLEpisode, { retour, code, partie, cle: null, niveaux: reglagesDesNiveaux().niveaux }),
         ),
       );
+    };
     const demo = rendu(true, "decouverte");
     expect(demo).toContain("Aperçu de votre profil décisionnel");
     expect(demo).toContain(MENTION_DE_L_APERCU);
@@ -128,10 +133,11 @@ describe("P0-2 : l'aperçu du profil d'une démonstration", () => {
     expect(rendu(true, "standard")).not.toContain("Aperçu de votre profil décisionnel");
   });
 
-  it("la page d'épisode transmet la licence au bilan", () => {
+  it("la page d'épisode transmet la licence à l'introduction, et la route la relit pour le bilan", () => {
     expect(lire("app/entreprises/episode/[code]/page.tsx")).toMatch(/licence=\{licencePourLEpisode\(acces, code\)\}/);
-    expect(lire("components/episode/episode-joue.tsx")).toMatch(/sansLicence=\{!licence\}/);
-    expect(lire("components/episode/bilan-de-l-episode.tsx")).toMatch(/sansLicence=\{sansLicence\}/);
+    // Le bilan se calcule au serveur, geste après geste : la route relit la licence à chaque fois.
+    expect(lire("app/api/episodes/partie/route.ts")).toMatch(/sansLicence: !licencePourLEpisode\(acces, ep\.code\)/);
+    expect(lire("pedagogy/episodes/partie-servie.ts")).toMatch(/sansLicence && partie\.niveau === "decouverte" \? apercuDuProfil\(ep, partie\)/);
   });
 
   it("aucune page ne promet sans condition qu'une démonstration construit le profil", () => {

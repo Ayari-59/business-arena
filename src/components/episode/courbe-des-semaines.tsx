@@ -1,5 +1,5 @@
 import { avecTypographie } from "@/components/typographie";
-import type { Episode, Semaine } from "@/config/episodes/types";
+import type { CourbeServie } from "@/pedagogy/episodes/partie-servie";
 
 /**
  * L'INDICATEUR PRINCIPAL, SEMAINE PAR SEMAINE.
@@ -12,6 +12,9 @@ import type { Episode, Semaine } from "@/config/episodes/types";
  * décisions ; au-dessus d'une colonne, un point d'exclamation dit qu'un
  * imprévu l'a frappée.
  *
+ * La courbe arrive du serveur déjà calculée (pedagogy/episodes/partie-servie.ts) : les seules
+ * semaines jouées, leurs valeurs et leurs infobulles déjà écrites, les graduations et les imprévus.
+ *
  * Une seule série : pas de légende, le titre la nomme. Les valeurs sont dans
  * l'infobulle (au survol comme au clavier) et dans un tableau pour les
  * lecteurs d'écran.
@@ -19,52 +22,20 @@ import type { Episode, Semaine } from "@/config/episodes/types";
 
 const SEMAINES = 13;
 
-export interface Repere {
-  semaine: number;
-  nom: string;
-}
-
-/** Les repères des n premières décisions : chacune se prend à la fin de la fenêtre précédente. */
-export function reperesDesDecisions(ep: Pick<Episode, "etapes">, n: number): Repere[] {
-  return ep.etapes.slice(0, n).map((_, i) => ({
-    semaine: i === 0 ? 1 : ep.etapes[i - 1]!.jusqua,
-    nom: `D${i + 1}`,
-  }));
-}
-
-function CourbeDesSemainesBrut({
-  courbe,
-  semaines,
-  jouees,
-  surbrillance,
-  reperes = [],
-  imprevus = [],
-  titre = courbe.titre,
-}: {
-  courbe: Episode["courbe"];
-  /** Les semaines simulées, indexées de 1 à 13. */
-  semaines: readonly (Semaine | null)[];
-  /** Jusqu'à quelle semaine le trimestre a été joué. */
-  jouees: number;
-  /** Les semaines à mettre en avant : celles de la dernière décision. */
-  surbrillance?: readonly [number, number];
-  reperes?: readonly Repere[];
-  imprevus?: readonly { semaine: number; titre: string }[];
-  titre?: string;
-}) {
-  const valeur = (s: Semaine) => s[courbe.cle] ?? 0;
+function CourbeDesSemainesBrut({ courbe }: { courbe: CourbeServie }) {
+  const { semaines, jouees, surbrillance, reperes, imprevus, titre } = courbe;
   const jouee = (w: number) => w <= jouees;
   const max = Math.max(
     courbe.cible * 1.25,
     ...Array.from({ length: jouees }, (_, i) => {
       const s = semaines[i + 1];
-      return s ? valeur(s) : 0;
+      return s ? s.valeur : 0;
     }),
   );
   const hauteur = (v: number) => `${(100 * v) / max}%`;
   // Les colonnes partent de zéro : une graduation négative tomberait sous l'axe,
   // hors du graphique, sur ce qui le suit. Le zéro a déjà son repère.
-  const graduations = courbe.graduations.filter((g) => g > 0 && g < max);
+  const graduations = courbe.graduations.filter((g) => g.valeur > 0 && g.valeur < max);
   const imprevuDe = (w: number) => imprevus.filter((i) => i.semaine === w && jouee(w));
 
   return (
@@ -79,11 +50,11 @@ function CourbeDesSemainesBrut({
         <div className="relative h-36 sm:h-44" aria-hidden="true">
           {graduations.map((g) => (
             <span
-              key={g}
+              key={g.valeur}
               className="absolute right-0 translate-y-1/2 text-xs tabular-nums text-slate-400"
-              style={{ bottom: hauteur(g) }}
+              style={{ bottom: hauteur(g.valeur) }}
             >
-              {courbe.format(g)}
+              {g.texte}
             </span>
           ))}
           <span className="absolute bottom-0 right-0 translate-y-1/2 text-xs text-slate-400">
@@ -94,10 +65,10 @@ function CourbeDesSemainesBrut({
         <div className="relative h-36 border-b border-slate-600 sm:h-44">
           {graduations.map((g) => (
             <span
-              key={g}
+              key={g.valeur}
               aria-hidden="true"
               className="absolute inset-x-0 border-t border-white/5"
-              style={{ bottom: hauteur(g) }}
+              style={{ bottom: hauteur(g.valeur) }}
             />
           ))}
           {/* La cadence de l'objectif : un trait plein, plus marqué que la grille. */}
@@ -131,7 +102,7 @@ function CourbeDesSemainesBrut({
                             ? "bg-[color:var(--metier,var(--donnee))]"
                             : "bg-[var(--donnee-2)]"
                         }`}
-                        style={{ height: hauteur(valeur(s)) }}
+                        style={{ height: hauteur(s.valeur) }}
                       >
                         {ici.length > 0 && (
                           <span
@@ -147,7 +118,7 @@ function CourbeDesSemainesBrut({
                         className={`pointer-events-none absolute bottom-full z-20 mb-2 hidden w-max max-w-56 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm shadow-lg group-focus-within:block group-hover:block ${bord}`}
                       >
                         <span className="block font-semibold text-slate-50">Semaine {w}</span>
-                        {courbe.details(s).map((ligne, k) => (
+                        {s.details.map((ligne, k) => (
                           <span
                             key={ligne}
                             className={`block tabular-nums ${k === 0 ? "text-slate-300" : "text-slate-400"}`}
@@ -213,7 +184,7 @@ function CourbeDesSemainesBrut({
             return (
               <tr key={i}>
                 <td>{i + 1}</td>
-                <td>{courbe.details(s).join(" ; ")}</td>
+                <td>{s.details.join(" ; ")}</td>
               </tr>
             );
           })}

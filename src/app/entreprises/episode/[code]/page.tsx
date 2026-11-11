@@ -18,6 +18,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { accesAuxEpisodes, niveauxDeLEpisode, suitUneCohorte } from "@/services/acces.service";
 import { coursDeLEpisode } from "@/pedagogy/cours/suites";
+import { introServie, reglagesDesNiveaux } from "@/pedagogy/episodes/partie-servie";
 
 /**
  * L'accès se lit à chaque ouverture (licence de la cohorte ou du compte) : la page se
@@ -52,9 +53,13 @@ function secteurDe(code: string) {
  * UN ÉPISODE DE DÉMONSTRATION DE LA VERSION POUR LES ENTREPRISES.
  *
  * Un manager, pas une entreprise simulée : on pilote un trimestre, et le
- * bilan juge les décisions plutôt que le résultat. Tout se joue dans le
- * navigateur ; seuls les faits de la partie terminée sont gardés, pour le
- * profil décisionnel de la personne.
+ * bilan juge les décisions plutôt que le résultat. Seuls les faits de la
+ * partie terminée sont gardés, pour le profil décisionnel de la personne.
+ *
+ * LE JEU SE CALCULE AU SERVEUR (audit du 10 novembre 2026, P1-1). La page n'envoie au
+ * navigateur que l'introduction de l'épisode ouvert ; chaque geste passe ensuite par
+ * /api/episodes/partie, qui refait le même contrôle d'accès (pedagogy/episodes/partie-servie.ts).
+ * Un épisode fermé n'envoie que son titre, son accroche et son métier.
  *
  * L'OUVERTURE SE DÉCIDE ICI, CÔTÉ SERVEUR (services/acces.service.ts). Sans licence,
  * seuls les épisodes de démonstration se lancent, en Découverte ; les autres montrent
@@ -94,7 +99,8 @@ async function EpisodePage({
       <main id="main" data-metier={teinteDuMetierDeLEpisode(code)} className="relative overflow-x-clip">
         {niveaux.length > 0 ? (
           <EpisodeJoue
-            code={code}
+            intro={introServie(ep)}
+            reglages={reglagesDesNiveaux()}
             niveaux={niveaux}
             offre={acces.licence ? null : offre}
             licence={licencePourLEpisode(acces, code)}

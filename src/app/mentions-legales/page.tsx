@@ -245,7 +245,7 @@ function MentionsLegalesPage() {
                   <td className="py-2">
                     {DUREES.parties} après la fin de la partie (sa dernière activité). Les
                     démonstrations d&apos;épisodes jouées sans licence ne sont pas enregistrées :
-                    elles se jouent et se jugent dans le navigateur
+                    le serveur calcule chaque étape de la partie et n&apos;en garde rien
                   </td>
                 </tr>
                 <tr className="border-t border-white/5">
