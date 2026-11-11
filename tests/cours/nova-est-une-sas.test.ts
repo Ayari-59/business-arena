@@ -43,11 +43,11 @@ const UN_AUTRE_DIRIGEANT =
 const LA_DIRIGEANTE_DE_NOVA = /(?<!\p{L})dirigeantes?\s+de\s+NOVA(?!\p{L})/iu;
 
 /**
- * LISTE D'ATTENTE : deux cas qu'un autre lot corrige en même temps (« chacun-son-levier » et
- * « des-clients-repartis-sans-etre-servis »). Leurs fautes sont tolérées ici, et seulement les leurs ;
- * la liste disparaît à la fusion des deux lots : la garde exige qu'une entrée ait encore une faute.
+ * LISTE D'ATTENTE : vide depuis la fusion du lot 4 des deux décimales, qui a corrigé
+ * « chacun-son-levier » et « des-clients-repartis-sans-etre-servis ». Une entrée n'y est tolérée que
+ * tant qu'elle a encore une faute : la garde ci-dessous l'exige.
  */
-const EN_ATTENTE_D_UN_AUTRE_LOT = new Set(["chacun-son-levier", "des-clients-repartis-sans-etre-servis"]);
+const EN_ATTENTE_D_UN_AUTRE_LOT = new Set<string>([]);
 
 /**
  * Les deux textes qui enseignent les formes juridiques elles-mêmes (la SARL, l'EURL, leur gérant et
