@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Semestre, VueDOrientation } from "@/config/orientation";
 import { lireLaRecommandation } from "@/lib/orientation-vue";
+import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { PERIODICITY_LABELS } from "@/config/scenarios/periodicity";
 import {
   envoyerDemandeOrientationAction,
@@ -444,8 +445,10 @@ export function OrientationForm({
           >
             Essayer en solo, sans compte
           </Link>
+          {/* Le devis du cours (audit produit du 10 novembre 2026, P1-4) : une demande qui vient du
+              cours, le parcours du diplôme choisi prérempli quand il n'en a qu'un. */}
           <Link
-            href="/devis?offre=classe"
+            href={lienDuDevisDuCours(vue.parcoursDuCours[diplome])}
             className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
             data-sortie-orientation="cours"
           >

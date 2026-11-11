@@ -25,6 +25,9 @@ const PAGES = [
   "/parcours",
   "/notions",
   "/tarifs",
+  // Le devis venu du cours, et sa liste des parcours aux noms longs (audit produit du 10 novembre 2026, P1-4).
+  "/devis?offre=classe&source=cours&parcours=but-gaco",
+  "/integration",
 ];
 
 let navigateur: Browser;

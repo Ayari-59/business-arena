@@ -407,6 +407,13 @@
       "when": 1794037496529,
       "tag": "0057_suivi_des_activites",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794393241228,
+      "tag": "0058_devis_du_cours",
+      "breakpoints": true
     }
   ]
 }

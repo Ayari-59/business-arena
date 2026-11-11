@@ -36,6 +36,16 @@ import { describe, expect, it } from "vitest";
  * LES SCÉNARIOS À EMBRANCHEMENTS, DE MÊME (novembre 2026) : aucun module client n'atteint leur
  * configuration, leur monde ni leur service (tests/cours/scenario-servi.test.ts vérifie ce que la page
  * sert et ce que chaque choix rend).
+ *
+ * LES ÉPISODES MANAGER, DE MÊME (audit du 10 novembre 2026, P1-1). Le composant qui joue un épisode,
+ * client, importait le registre : les 113 épisodes, payants compris, leurs messages, leurs verdicts et
+ * leurs bilans, se lisaient dans un fichier public de 4,8 Mo chargé par chaque page d'épisode, même la
+ * démonstration gratuite. Le jeu se calcule désormais au serveur, geste par geste, après le contrôle
+ * d'accès (pedagogy/episodes/partie-servie.ts, route /api/episodes/partie) ; aucun module client
+ * n'atteint config/episodes, pedagogy/episodes ni engine/episodes, sauf par `import type`. Le menu du
+ * site cite le nombre d'épisodes et de compétences par deux modules légers, hors de ces dossiers
+ * (config/familles-des-episodes.ts, config/referentiel-des-competences.ts). Ce que chaque geste rend :
+ * tests/episodes/ce-que-la-vue-ne-porte-pas.test.ts ; le build : `fuitesDesEpisodes`.
  */
 
 const RACINE = process.cwd();
@@ -91,6 +101,13 @@ const INTERDITS = [
   /^src\/config\/cours\/monde\/bilan-fonctionnel-de-l-alternant\.ts$/,
   /^src\/config\/cours\/monde\/comptes-annuels-du-stagiaire\.ts$/,
   /^src\/config\/cours\/monde\/flux-de-l-assistante\.ts$/,
+  // Les épisodes manager (audit du 10 novembre 2026, P1-1) : leurs messages, les résultats des
+  // choix, les verdicts et les bilans ne partent au navigateur que joués, un geste à la fois, par
+  // le serveur (pedagogy/episodes/partie-servie.ts, route /api/episodes/partie). Aucun module
+  // client n'atteint leurs définitions, leurs modèles ni leurs réglages : seuls des types passent.
+  /^src\/config\/episodes\//,
+  /^src\/pedagogy\/episodes\//,
+  /^src\/engine\/episodes\//,
 ];
 
 function fichiers(dossier: string): string[] {
@@ -244,6 +261,34 @@ describe("le build ne porte aucun corrigé", () => {
   it.skipIf(!recentPourLeDiaporama)("ni le générateur du diaporama ni sa bibliothèque dans .next/static", async () => {
     const { fuitesDuDiaporama } = await import("../../scripts/verifier-bundles");
     expect(fuitesDuDiaporama(dossierNext).map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
+  }, 60_000);
+
+  it("les marqueurs des épisodes se lisent dans leurs sources : la garde du build sait les voir", async () => {
+    const { codesDesEpisodes, fuitesDesEpisodes, marqueursDesEpisodes } = await import("../../scripts/verifier-bundles");
+    const marqueurs = marqueursDesEpisodes();
+    const codes = codesDesEpisodes();
+    expect(codes.length).toBeGreaterThan(100);
+    // Chaque épisode du registre en donne, par son contenu et par son assemblage.
+    const couverts = new Set(marqueurs.map((m) => m.fichier.replace(/^.*\//, "").replace(/\.ts$/, "")));
+    expect(codes.filter((c) => !couverts.has(c))).toEqual([]);
+    const faux = mkdtempSync(join(tmpdir(), "faux-build-"));
+    try {
+      mkdirSync(join(faux, "static", "chunks"), { recursive: true });
+      copyFileSync(join(RACINE, "src/config/episodes/concurrent-a-racheter.ts"), join(faux, "static", "chunks", "fuite.js"));
+      const fuites = fuitesDesEpisodes(faux, marqueurs);
+      expect(fuites.length).toBeGreaterThan(0);
+      expect(fuites.every((f) => f.marqueur.includes("concurrent-a-racheter"))).toBe(true);
+    } finally {
+      rmSync(faux, { recursive: true, force: true });
+    }
+  });
+
+  const recentPourLesEpisodes =
+    existsSync(buildId) && statSync(buildId).mtimeMs > statSync(join(RACINE, "src/pedagogy/episodes/partie-servie.ts")).mtimeMs;
+  it.skipIf(!recentPourLesEpisodes)("aucun extrait d'un épisode manager dans .next/static", async () => {
+    const { fuitesDesEpisodes } = await import("../../scripts/verifier-bundles");
+    const fuites = fuitesDesEpisodes(dossierNext);
+    expect(fuites.slice(0, 20).map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`), `${fuites.length} extrait(s)`).toEqual([]);
   }, 60_000);
 
   const recentPourLeCours =

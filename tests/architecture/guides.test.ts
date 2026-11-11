@@ -84,7 +84,8 @@ const CODE_DE_L_APPLICATION = fichiers(SRC, /\.tsx?$/)
   )
   .join("\n");
 
-const VALEURS = valeursDesJetons(CATALOGUE_PAR_DEFAUT);
+// La connexion RENATER n'est pas proposée hors de la fédération de production : l'état d'aujourd'hui.
+const VALEURS = valeursDesJetons(CATALOGUE_PAR_DEFAUT, false);
 
 describe("les guides de prise en main", () => {
   it("chaque guide déclaré a sa page, et une seule", () => {
@@ -179,10 +180,13 @@ describe("les guides de prise en main", () => {
     // Les jetons lisent bien la source : un niveau de plus dans la configuration, ou une
     // offre renommée au catalogue, se lit dans le guide sans qu'on le réécrive.
     expect(VALEURS.offresExamen.length).toBeGreaterThan(0);
-    const renomme = valeursDesJetons({
-      ...CATALOGUE_PAR_DEFAUT,
-      offres: CATALOGUE_PAR_DEFAUT.offres.map((o) => (o.code === "campus" ? { ...o, nom: "Université" } : o)),
-    });
+    const renomme = valeursDesJetons(
+      {
+        ...CATALOGUE_PAR_DEFAUT,
+        offres: CATALOGUE_PAR_DEFAUT.offres.map((o) => (o.code === "campus" ? { ...o, nom: "Université" } : o)),
+      },
+      false,
+    );
     expect(renomme.offresArene).toContain("Université");
     expect(renomme.offresArene).not.toContain("Campus");
   });

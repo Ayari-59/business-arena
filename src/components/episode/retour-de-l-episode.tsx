@@ -2,29 +2,25 @@
 
 import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { niveauParCode } from "@/config/episodes/niveaux";
+import { useEffect, useRef, useState } from "react";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
-import type { Episode, PartieJouee } from "@/config/episodes/types";
-import { observer } from "@/pedagogy/profil/observations";
-import { competencesObservees, phrasesDeRobustesse } from "@/pedagogy/profil/retour";
-import { apercuDuProfil, MENTION_DE_L_APERCU } from "@/pedagogy/profil/apercu";
-import { SEUILS_DE_CONFIANCE } from "@/pedagogy/profil/profil";
+import type { PartieJouee } from "@/config/episodes/types";
+import type { NiveauAffiche, RetourServi } from "@/pedagogy/episodes/partie-servie";
 import { enregistrerPartieAction, type SuiteDeLaPartie } from "@/app/entreprises/episode/actions";
 
 /**
  * TROIS BLOCS SOUS LE BILAN : vos choix tenaient-ils, ce que l'épisode a
  * observé, et ensuite.
  *
- * Les deux premiers se calculent ici, à partir de la partie seule. Le
- * troisième demande le profil : la partie est envoyée une fois au serveur,
+ * Les deux premiers se calculent au serveur avec le bilan, à partir de la partie
+ * seule (pedagogy/episodes/partie-servie.ts). Le troisième demande le profil : la partie est envoyée une fois au serveur,
  * qui la garde et répond par le prochain épisode à jouer. Si le serveur ne
  * répond pas, le bilan reste entier ; seule la suite manque.
  *
  * L'APERÇU DU PROFIL (audit P0-2, décision du propriétaire) : une démonstration jouée
  * sans licence, en Découverte, ne compte pas dans le profil. Un quatrième bloc montre
  * alors les axes du profil calculés sur cette partie seule (`pedagogy/profil/apercu.ts`),
- * dans le navigateur. La partie elle-même n'est pas gardée : le serveur refuse d'écrire
+ * avec le bilan, sans rien garder. La partie elle-même n'est pas gardée : le serveur refuse d'écrire
  * une partie de démonstration (`estUnePartieDeDemonstration`, config/episodes/demos.ts).
  */
 
@@ -42,25 +38,24 @@ const SANS_SUITE: SuiteDeLaPartie = {
 };
 
 function RetourDeLEpisodeBrut({
-  ep,
+  retour,
+  code,
   partie,
   cle,
-  sansLicence = false,
+  niveaux,
 }: {
-  ep: Episode;
+  /** Ce que le serveur a calculé avec le bilan. Sans licence, en Découverte, il porte l'aperçu du profil. */
+  retour: RetourServi;
+  code: string;
   partie: PartieJouee;
   cle: string | null;
-  /** Aucune licence ne couvre cet épisode : une partie en Découverte reçoit l'aperçu du profil. */
-  sansLicence?: boolean;
+  /** Les noms des niveaux, pour le niveau conseillé. */
+  niveaux: readonly NiveauAffiche[];
 }) {
-  const { mesures, observations } = useMemo(() => observer(ep, partie), [ep, partie]);
-  const robustesse = useMemo(() => phrasesDeRobustesse(ep, mesures), [ep, mesures]);
-  const observees = useMemo(() => competencesObservees(observations), [observations]);
-  const avecApercu = sansLicence && partie.niveau === "decouverte";
-  const apercu = useMemo(
-    () => (avecApercu ? apercuDuProfil(ep, partie) : null),
-    [avecApercu, ep, partie],
-  );
+  const { robustesse, observees, apercu } = retour;
+  const avecApercu = apercu !== null;
+  const nomDuNiveau = (c: string) =>
+    (niveaux.find((x) => x.code === c) ?? niveaux.find((x) => x.code === "standard"))?.nom;
 
   const [envoi, setEnvoi] = useState<Envoi>({ etat: "attente" });
   const envoyee = useRef<string | null>(null);
@@ -68,7 +63,7 @@ function RetourDeLEpisodeBrut({
     if (!cle || envoyee.current === cle) return;
     envoyee.current = cle;
     let vivant = true;
-    enregistrerPartieAction({ ...partie, niveau: partie.niveau ?? "standard", cle, code: ep.code })
+    enregistrerPartieAction({ ...partie, niveau: partie.niveau ?? "standard", cle, code })
       .catch(() => null)
       .then((suite) => {
         if (vivant) setEnvoi({ etat: "fait", suite: suite ?? SANS_SUITE });
@@ -78,7 +73,7 @@ function RetourDeLEpisodeBrut({
       // Un démontage avant la réponse laisse le prochain montage réessayer.
       if (envoyee.current === cle) envoyee.current = null;
     };
-  }, [cle, ep.code, partie]);
+  }, [cle, code, partie]);
 
   const suite = envoi.etat === "fait" ? envoi.suite : null;
   const neComptePas =
@@ -134,9 +129,9 @@ function RetourDeLEpisodeBrut({
           </p>
           <ul className="grid max-w-3xl gap-2 text-sm leading-relaxed text-slate-300">
             {apercu.competences.map((l) => (
-              <li key={l.competence.code}>
+              <li key={l.code}>
                 <span className="font-semibold text-slate-100">
-                  {l.competence.nom}
+                  {l.nom}
                   {l.score != null ? ` : ${l.score}/100` : ""}.
                 </span>{" "}
                 {l.preuve}
@@ -146,20 +141,20 @@ function RetourDeLEpisodeBrut({
           <ul className="grid max-w-3xl gap-2 text-sm leading-relaxed text-slate-300">
             <li>
               <span className="font-semibold text-slate-100">Robustesse.</span>{" "}
-              {apercu.robustesse.phrase}
+              {apercu.robustesse}
             </li>
             <li>
               <span className="font-semibold text-slate-100">Prise de risque.</span>{" "}
-              {apercu.risque.phrase}
+              {apercu.risque}
             </li>
           </ul>
           <p className="max-w-3xl text-sm text-slate-400">
             Sur un seul épisode, un score n&apos;a pas encore de marge : le profil n&apos;en donne
-            qu&apos;à partir de {SEUILS_DE_CONFIANCE.indicatif.episodes} épisodes, et ne mesure une
+            qu&apos;à partir de {retour.seuilIndicatif} épisodes, et ne mesure une
             progression qu&apos;en comparant les premiers épisodes joués aux plus récents.
           </p>
           <p className="max-w-3xl text-sm font-semibold text-amber-200" data-mention-de-l-apercu="">
-            {MENTION_DE_L_APERCU}
+            {retour.mention}
           </p>
         </section>
       )}
@@ -197,7 +192,7 @@ function RetourDeLEpisodeBrut({
             {suite.conseil && (
               <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
                 <span className="font-semibold text-slate-100">
-                  Niveau conseillé : {niveauParCode(suite.conseil.niveau).nom}.
+                  Niveau conseillé : {nomDuNiveau(suite.conseil.niveau)}.
                 </span>{" "}
                 {suite.conseil.pourquoi}
               </p>

@@ -6,7 +6,7 @@ import { envoyerDemandeDeDevisAction, type DevisFormState } from "@/app/devis/ac
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { euros } from "@/config/catalogue";
 import type { AteliersDeLaClasse } from "@/config/ateliers-de-la-classe";
-import { parametrageRequisAuDevis } from "@/config/parametrage-du-devis";
+import { parametrageRequisAuDevis, parcoursRequisAuDevis } from "@/config/parametrage-du-devis";
 
 /**
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
@@ -17,6 +17,12 @@ import { parametrageRequisAuDevis } from "@/config/parametrage-du-devis";
  * paramètrent à l'achat : le formulaire demande l'entreprise souhaitée, et pour Classe le
  * niveau. Ce composant client ne lit pas la grille : la
  * page serveur lui passe les offres et leurs libellés (config/tarifs.ts).
+ *
+ * LE DIPLÔME OU LE PARCOURS (audit produit du 10 novembre 2026, P1-4) : une offre qui ouvre le cours
+ * à une école (Classe, Programme, Campus) le demande, facultatif, dans la liste que l'enseignant voit
+ * en créant sa classe ; la page serveur la lui passe (config/cours/devis-du-cours.ts), le composant
+ * n'importe pas le registre. Une demande qui vient du cours (`source`) le trouve prérempli quand il
+ * est connu, et n'exige ni l'entreprise ni le niveau.
  *
  * La confirmation DIT LA VÉRITÉ : l'accusé de réception n'est annoncé que s'il est parti.
  *
@@ -38,6 +44,8 @@ export interface OffreDuFormulaire {
   entreprise?: true;
   /** Et le niveau (Classe). */
   niveau?: true;
+  /** L'offre ouvre le cours à une école : le diplôme ou le parcours (`demandeLeParcoursAuDevis`). */
+  parcours?: true;
 }
 
 const ETAT_INITIAL: DevisFormState = { error: null, ok: null, values: null };
@@ -53,6 +61,9 @@ export function DevisForm({
   initial = ETAT_INITIAL,
   entrepriseInitiale = "",
   niveauInitial = "",
+  parcours = [],
+  parcoursInitial = "",
+  source = null,
   ateliers = {},
 }: {
   offres: readonly OffreDuFormulaire[];
@@ -69,6 +80,12 @@ export function DevisForm({
   /** Le réglage déjà choisi ailleurs (`?entreprise=…&niveau=…`, depuis l'orientation). */
   entrepriseInitiale?: string;
   niveauInitial?: string;
+  /** Les parcours qu'une classe peut choisir, dans leur ordre et sous leur nom (config/cours/devis-du-cours.ts). */
+  parcours?: readonly { code: string; titre: string }[];
+  /** Le parcours déjà connu (`?parcours=` ou `?diplome=`, depuis le cours). */
+  parcoursInitial?: string;
+  /** D'où vient la demande : « cours » depuis le cours (config/parametrage-du-devis.ts), null sinon. */
+  source?: string | null;
   /**
    * Les ateliers de chaque combinaison « entreprise:niveau » (config/ateliers-de-la-classe.ts) :
    * l'offre qui se paramètre à un niveau dit, au moment du choix, ce qu'elle ouvre.
@@ -87,8 +104,11 @@ export function DevisForm({
   // avec une offre de l'arène, Classe pour le parcours de la classe, Programme pour ceux de
   // ses classes, Campus pour tout (config/tarifs.ts, LE_COURS_PAR_OFFRE). Une offre qui se
   // paramètre demande donc toujours son entreprise et son niveau.
-  // Exigés pour Classe seulement ; facultatifs pour Programme et Campus (audit UX, P1-7).
-  const requis = parametrageRequisAuDevis(choisie);
+  // Exigés pour Classe seulement ; facultatifs pour Programme et Campus (audit UX, P1-7), et pour
+  // une demande qui vient du cours (audit produit du 10 novembre 2026, P1-4).
+  const requis = parametrageRequisAuDevis(choisie, source);
+  // Le parcours, exigé sous Classe quand la demande vient du cours (décision du propriétaire).
+  const parcoursRequis = parcoursRequisAuDevis(choisie.code, source);
   const [entrepriseChoisie, setEntreprise] = useState(v?.entreprise ?? entrepriseInitiale);
   const [niveauChoisi, setNiveau] = useState(v?.niveau ?? niveauInitial);
   const combinaison =
@@ -236,6 +256,37 @@ export function DevisForm({
         <input name="identifiant" maxLength={40} defaultValue={v?.identifiant ?? ""} className={champ} {...invalide("identifiant")} />
         {erreur("identifiant")}
       </label>
+      {choisie.parcours && parcours.length > 0 ? (
+        // min-w-0 : les noms de parcours sont longs, la liste ne doit pas élargir la grille du téléphone.
+        <label className="block min-w-0 sm:col-span-2" data-champ-devis="parcours">
+          <span className={etiquette}>Le diplôme ou le parcours</span>
+          {/* La clé suit la valeur rendue, comme pour l'entreprise : voir plus bas. */}
+          <select
+            key={v?.parcours ?? parcoursInitial}
+            name="parcours"
+            defaultValue={v?.parcours ?? parcoursInitial}
+            className={`${champ} max-w-full truncate`}
+            required={parcoursRequis}
+            {...invalide("parcours")}
+          >
+            <option value="" disabled={parcoursRequis}>
+              {parcoursRequis ? "Choisir le diplôme ou le parcours" : "À préciser plus tard"}
+            </option>
+            {parcours.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.titre}
+              </option>
+            ))}
+          </select>
+          {parcoursRequis ? null : (
+            <span className="mt-1 block text-xs text-slate-400" data-facultatif="parcours">
+              Facultatif : il dit à l&apos;équipe pour quel diplôme préparer le cours.
+            </span>
+          )}
+          {erreur("parcours")}
+        </label>
+      ) : null}
+      {source ? <input type="hidden" name="source" value={source} /> : null}
       {choisie.entreprise ? (
         <label className="block" data-champ-devis="entreprise">
           <span className={etiquette}>L&apos;entreprise souhaitée</span>

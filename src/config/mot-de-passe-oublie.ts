@@ -30,8 +30,18 @@ export const REPONSE_A_LA_DEMANDE =
   "Si un compte enseignant avec mot de passe existe pour cette adresse, un lien de réinitialisation vient d'y être envoyé. " +
   `Il reste valable ${DUREE_DU_JETON_DITE} et ne sert qu'une fois. Pensez à regarder dans les indésirables.`;
 
-/** Les comptes ouverts par l'établissement n'ont pas de mot de passe ici : la page le dit. */
-export const COMPTES_SANS_MOT_DE_PASSE =
-  "Vous vous connectez par votre établissement (RENATER) ou depuis votre plateforme de cours (Moodle, LTI) ? " +
-  "Votre compte n'a pas de mot de passe sur Business Arena : aucun lien ne vous sera envoyé. " +
-  "Utilisez la connexion par l'établissement ou ouvrez Business Arena depuis votre cours.";
+/**
+ * Les comptes ouverts par l'établissement n'ont pas de mot de passe ici : la page le dit. Tant que la
+ * connexion par l'établissement (RENATER) n'est pas proposée (saml/configuration.ts,
+ * `connexionEtablissementProposee` ; config/connexion-etablissement.ts), la page ne renvoie pas vers
+ * elle : elle ne parle que de la plateforme de cours.
+ */
+export function comptesSansMotDePasse(connexionEtablissement: boolean): string {
+  return connexionEtablissement
+    ? "Vous vous connectez par votre établissement (RENATER) ou depuis votre plateforme de cours (Moodle, LTI) ? " +
+        "Votre compte n'a pas de mot de passe sur Business Arena : aucun lien ne vous sera envoyé. " +
+        "Utilisez la connexion par l'établissement ou ouvrez Business Arena depuis votre cours."
+    : "Vous ouvrez Business Arena depuis votre plateforme de cours (Moodle, LTI) ? " +
+        "Votre compte n'a pas de mot de passe sur Business Arena : aucun lien ne vous sera envoyé. " +
+        "Ouvrez Business Arena depuis votre cours.";
+}

@@ -13,7 +13,7 @@ import type { Situation } from "../types";
  * (monde/marche-a-trois.ts) et son modèle (monde/attractivite.ts, `allerDansLEspaceLibre`), chez NOVA.
  *
  * Le chapitre se termine sur une question qu'il laisse ouverte : une place libre sur la carte, une
- * offre y paierait-elle ses coûts ? La directrice la pose. La place se lit sur les deux indices :
+ * offre y paierait-elle ses coûts ? Le président la pose. La place se lit sur les deux indices :
  * elle a un prix (69 €, le milieu de NOVA et d'Auris) et une qualité (1,17). L'élève compare deux
  * façons d'y aller, chacune tenue toute l'année : par le seul prix (la gamme et les budgets
  * d'aujourd'hui, l'ancienne lecture de la carte), ou en y amenant la qualité (la gamme la moins
@@ -41,7 +41,7 @@ const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDig
 const auCentime = arrondi2;
 const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 
-export type ReponseALaDirectrice = "avec-la-qualite" | "prix-seul" | "rester";
+export type ReponseAuPresident = "avec-la-qualite" | "prix-seul" | "rester";
 
 /**
  * LES VENTES PARTENT DE LA PART AFFICHÉE (audit du 10 novembre 2026, contenu P1-1). La part se
@@ -94,7 +94,7 @@ export function espaceLibre(c: Pick<Cas, "code">) {
   const ventesPourEgalerAuPrixSeul = Math.ceil((x.aujourdhui.resultat + seul.charges) / seul.margeUnitaire - 1e-9);
   const ecartSeul = auCentime(seul.resultat - x.aujourdhui.resultat);
   const ecartAvec = auCentime(avec.resultat - x.aujourdhui.resultat);
-  const reponse: ReponseALaDirectrice = ecartAvec > 0 && ecartAvec >= ecartSeul ? "avec-la-qualite" : ecartSeul > 0 ? "prix-seul" : "rester";
+  const reponse: ReponseAuPresident = ecartAvec > 0 && ecartAvec >= ecartSeul ? "avec-la-qualite" : ecartSeul > 0 ? "prix-seul" : "rester";
   return {
     f,
     k,
@@ -132,15 +132,15 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
   palier: 2,
   blocs: [],
   reprend: [LIRE_LA_STRATEGIE_DES_CONCURRENTS.code],
-  commanditaire: "La directrice",
+  commanditaire: "Le président",
   titre: "Aller dans l'espace libre",
   accroche:
-    "La carte du marché montre une place que personne ne tient. La directrice veut savoir si l'entreprise gagnerait à y aller, et comment : en y plaçant son prix, ou en y amenant la qualité que la place demande.",
+    "La carte du marché montre une place que personne ne tient. Le président veut savoir si l'entreprise gagnerait à y aller, et comment : en y plaçant son prix, ou en y amenant la qualité que la place demande.",
   objectifs: [
     "Repérer la place libre, son prix et sa qualité",
     "Refaire l'année de deux façons d'y aller : par le seul prix, ou avec la qualité",
     "Décomposer l'écart entre les deux en effet du volume et du coût de la gamme",
-    "Répondre à la directrice, chiffre à l'appui",
+    "Répondre au président, chiffre à l'appui",
   ],
   libre: false,
   entreprises: LIRE_LA_STRATEGIE_DES_CONCURRENTS.entreprises!,
@@ -148,7 +148,7 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la directrice",
+      titre: "La question du président",
       tableau: (c) => {
         const k = espaceLibre(c).k;
         return {
@@ -320,7 +320,7 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
       notions: ["breakeven", "contribution_margin"],
       question: (c) => {
         const e = espaceLibre(c);
-        return `La directrice demande la marge de sécurité. Faites varier les ventes de l'année à la place, avec ${e.gamme.nom} (${eur(e.avec.margeUnitaire)} par enceinte, ${eur(e.avec.charges)} de charges). Placez le curseur sur le plus petit nombre de ventes où le résultat égale celui d'aujourd'hui (${eur(e.aujourdhui.resultat)}), puis validez.`;
+        return `Le président demande la marge de sécurité. Faites varier les ventes de l'année à la place, avec ${e.gamme.nom} (${eur(e.avec.margeUnitaire)} par enceinte, ${eur(e.avec.charges)} de charges). Placez le curseur sur le plus petit nombre de ventes où le résultat égale celui d'aujourd'hui (${eur(e.aujourdhui.resultat)}), puis validez.`;
       },
       grandeur: (c) => ({ libelle: "Ventes de l'année à la place", unite: ficheDe(c).unites }),
       cible: (c) => {
@@ -357,9 +357,9 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice",
+      titre: "Votre réponse au président",
       notions: ["segmentation"],
-      question: () => "Quelle phrase envoyez-vous à la directrice ?",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const e = espaceLibre(c);
         const chiffres = `${eur(e.avec.resultat)} avec la qualité, ${eur(e.seul.resultat)} par le seul prix, ${eur(e.aujourdhui.resultat)} aujourd'hui`;

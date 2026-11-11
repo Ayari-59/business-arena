@@ -182,6 +182,15 @@ export const ouvreLExamen = (o: Pick<OffreDuCatalogue, "modules">): boolean =>
   o.modules.some((m) => m.module === "examen");
 
 /**
+ * LE DEVIS DEMANDE-T-IL LE DIPLÔME OU LE PARCOURS ? (audit produit du 10 novembre 2026, P1-4.) Oui
+ * quand l'offre ouvre le cours à une école : une offre de l'arène pour un établissement (Classe,
+ * Programme, Campus ; services/cours.service.ts, `coursOuvert`). C'est le parcours d'une classe qui
+ * ouvre ses chapitres, et l'admin attribue des parcours : sans lui, il ne sait pas quoi attribuer.
+ */
+export const demandeLeParcoursAuDevis = (o: Pick<OffreDuCatalogue, "modules" | "formulaire">): boolean =>
+  o.formulaire === "etablissement" && parametresAreneDe(o) !== null;
+
+/**
  * Le palier de l'arène d'un paramétrage, celui qu'une licence enregistre (`arene`) et que
  * les refus nomment : un niveau choisi, c'est une Classe ; une entreprise, un Programme ;
  * toutes, un Campus.

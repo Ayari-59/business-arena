@@ -13,7 +13,16 @@ import {
 import { envoyerCourriel } from "@/lib/courriel";
 import { ENTREPRISES, libellesDuDevisDe, NIVEAUX_DE_L_ARENE, parametrageRequisAuDevis } from "@/config/tarifs";
 import { VENDEUR } from "@/config/editeur";
-import { chiffrerLeDevis, cleDEtablissement, nomDansLeDevis, offresDuDevis, type DevisChiffre } from "@/config/catalogue";
+import {
+  chiffrerLeDevis,
+  cleDEtablissement,
+  demandeLeParcoursAuDevis,
+  nomDansLeDevis,
+  offresDuDevis,
+  type DevisChiffre,
+} from "@/config/catalogue";
+import { parcoursProposeAChoisir } from "@/config/cours/parcours-a-choisir";
+import { parcoursRequisAuDevis, SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
 import { ETIQUETTE_DU_CATALOGUE, lireLEtatDuCatalogue, verifierUnCodePromo } from "@/services/catalogue.service";
 
 /**
@@ -71,12 +80,13 @@ export async function envoyerDemandeDeDevisAction(
   formData: FormData,
 ): Promise<DevisFormState> {
   const brut = Object.fromEntries(
-    ["offre", "nom", "fonction", "organisation", "identifiant", "effectif", "entreprise", "niveau", "email", "message", "codePromo", "site"].map(
+    ["offre", "nom", "fonction", "organisation", "identifiant", "parcours", "effectif", "entreprise", "niveau", "email", "message", "codePromo", "site", "source"].map(
       (k) => [k, String(formData.get(k) ?? "")],
     ),
   );
   const values = { ...brut };
   delete values.site;
+  delete values.source;
   const parsed = schema.safeParse(brut);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -94,9 +104,22 @@ export async function envoyerDemandeDeDevisAction(
   // valeur saisie hors du registre est refusée. « Le cours seul » n'est plus un choix (audit
   // de l'offre, octobre 2026). REQUIS POUR CLASSE SEULEMENT (audit UX du 29 octobre 2026,
   // P1-7) : pour Programme et Campus, ce sont des choix pédagogiques qu'une direction laisse
-  // à l'équipe ; facultatifs, gardés s'ils sont donnés (`parametrageRequisAuDevis`).
+  // à l'équipe ; facultatifs, gardés s'ils sont donnés (`parametrageRequisAuDevis`). NI L'UN NI
+  // L'AUTRE POUR UNE DEMANDE QUI VIENT DU COURS (audit produit du 10 novembre 2026, P1-4) : c'est le
+  // cours que l'enseignant demande, l'équipe choisira l'entreprise et le niveau avec lui.
   const libelles = libellesDuDevisDe(offre);
-  const requis = parametrageRequisAuDevis(libelles);
+  const source = brut.source === SOURCE_DU_COURS ? SOURCE_DU_COURS : null;
+  const requis = parametrageRequisAuDevis(libelles, source);
+  // LE DIPLÔME OU LE PARCOURS, pour une offre qui ouvre le cours à une école : facultatif, gardé
+  // s'il est donné ; une valeur hors des parcours qu'une classe peut choisir est refusée. EXIGÉ SOUS
+  // CLASSE QUAND LA DEMANDE VIENT DU COURS (décision du propriétaire, `parcoursRequisAuDevis`).
+  const parcours = demandeLeParcoursAuDevis(offre) ? brut.parcours!.trim() : "";
+  if (parcours && !parcoursProposeAChoisir(parcours)) {
+    return { error: "Choisissez le diplôme ou le parcours dans la liste", champ: "parcours", ok: null, values };
+  }
+  if (!parcours && demandeLeParcoursAuDevis(offre) && parcoursRequisAuDevis(offre.code, source)) {
+    return { error: "Choisissez le diplôme ou le parcours", champ: "parcours", ok: null, values };
+  }
   const entreprise = libelles.entreprise ? brut.entreprise!.trim() : "";
   if (libelles.entreprise && (requis || entreprise) && !ENTREPRISES.some((e) => e.code === entreprise)) {
     return { error: "Choisissez l'entreprise souhaitée", champ: "entreprise", ok: null, values };
@@ -137,6 +160,7 @@ export async function envoyerDemandeDeDevisAction(
     effectif: libelles.effectif && d.effectif ? Number(d.effectif) : null,
     entreprise: entreprise || null,
     niveau,
+    parcours: parcours || null,
     email: d.email,
     message: d.message,
     ip: await adresseOrigine(),

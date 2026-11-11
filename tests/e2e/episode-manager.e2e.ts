@@ -312,7 +312,8 @@ describe("les niveaux de difficulté", () => {
     await choisir(page, "Démonstration");
     await bouton(page, "Commencer l'épisode").click();
     expect(await page.getByText("Niveau Démonstration", { exact: true }).count()).toBe(1);
-    expect(await page.getByText("Repère ·").count()).toBe(1);
+    // La première étape arrive du serveur (pedagogy/episodes/partie-servie.ts), son repère avec elle.
+    await expect.poll(() => page.getByText("Repère ·").count()).toBe(1);
     await bouton(page, "Enquêter").click();
     expect(await bouton(page, /Demander conseil/).count()).toBe(1);
     await bouton(page, "Poser mon diagnostic").click();

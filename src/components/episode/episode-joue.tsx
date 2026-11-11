@@ -1,65 +1,60 @@
 "use client";
 
 import { avecTypographie } from "@/components/typographie";
-import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import type { CodeNiveau, TempsDeDecision } from "@/config/episodes/niveaux";
+import type { Message, PartieJouee } from "@/config/episodes/types";
 import type {
-  Contexte,
-  Episode,
-  Etape,
-  Lecture,
-  Message,
-  PartieJouee,
-  Resultat,
-  Source,
-} from "@/config/episodes/types";
-import { episodeParCode } from "@/pedagogy/episodes/registre";
+  DemandeDePartie,
+  EtapeServie,
+  IntroServie,
+  NiveauAffiche,
+  PlumeServie,
+  ReglagesDesNiveaux,
+  SourceServie,
+  TableauServi,
+  VueDeLaPartie,
+} from "@/pedagogy/episodes/partie-servie";
 import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
 import { LigneDuTableau, TableauDeBord } from "./tableau-de-bord";
 import { hautDesBarres } from "@/components/ardoise-repliee";
-import { VerdictDuMarche, type SensDUnEcart } from "@/components/verdict-du-marche";
+import { VerdictDuMarche } from "@/components/verdict-du-marche";
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
 import type { CoursDeLEpisode } from "@/pedagogy/cours/suites";
-import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
-import { nombre } from "@/config/episodes/format";
-import {
-  NIVEAUX,
-  NIVEAU_PAR_DEFAUT,
-  REPERES,
-  budgetDEnquete,
-  niveauParCode,
-  sourcesProposees,
-  verificationPossible,
-  type CodeNiveau,
-  type TempsDeDecision,
-} from "@/config/episodes/niveaux";
-import { effetDuChoix } from "@/pedagogy/episodes/retour-immediat";
+import { CourbeDesSemaines } from "./courbe-des-semaines";
 
 /**
  * UN ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT.
  *
- * Une démonstration de la version pour les entreprises : tout se calcule dans
- * le navigateur, et seuls les faits de la partie terminée sont gardés, pour
- * le profil décisionnel (aucun texte saisi). Chaque décision passe par
- * les mêmes temps qu'au bureau — le signal qui arrive, l'enquête qui coûte du
- * temps, le diagnostic, la décision, puis ses conséquences sur le tableau de
- * bord — et le bilan rejoue le trimestre pour séparer le choix du hasard.
+ * Une démonstration de la version pour les entreprises. Chaque décision passe par les
+ * mêmes temps qu'au bureau (le signal qui arrive, l'enquête qui coûte du temps, le
+ * diagnostic, la décision, puis ses conséquences sur le tableau de bord), et le bilan
+ * rejoue le trimestre pour séparer le choix du hasard. Seuls les faits de la partie
+ * terminée sont gardés, pour le profil décisionnel (aucun texte saisi).
+ *
+ * LE JEU SE CALCULE AU SERVEUR (audit du 10 novembre 2026, P1-1). L'écran ne connaît aucun
+ * épisode : il reçoit de la page son introduction, puis, à chaque geste qui apprend quelque
+ * chose (commencer, vérifier, valider une décision), envoie les faits de la partie à
+ * /api/episodes/partie, qui refait le contrôle d'accès, rejoue la partie et renvoie ce qu'il
+ * faut montrer (pedagogy/episodes/partie-servie.ts). Le résultat d'un choix n'arrive qu'après
+ * ce choix, le bilan qu'à la fin ; passer d'une décision à la suivante n'attend rien, la
+ * réponse à la décision porte déjà l'étape suivante.
  *
  * Le hasard se choisit dans l'adresse (`?hasard=12`) : deux personnes qui
  * jouent le même trimestre peuvent comparer leurs décisions, et les tests
  * jouent un trimestre connu. Le niveau aussi (`?niveau=expert`) : il change ce
  * que le manager sait et voit, jamais le trimestre ni le jugement du bilan.
- *
- * Le composant ne connaît aucun épisode : il lit celui qu'on lui nomme dans
- * le registre, et tout ce qui est propre au métier vient de sa définition.
  */
 
 type Ecran = "intro" | "jeu" | "bilan";
 type Phase = "signal" | "enquete" | "diagnostic" | "reevaluation" | "decision" | "consequence";
+type Geste = DemandeDePartie["geste"];
+/** Ce qu'une réponse du serveur change à l'écran, une fois arrivée. */
+type Apres = (vue: VueDeLaPartie) => Partial<EtatDeLEpisode>;
 
-interface Etat {
+export interface EtatDeLEpisode {
   graine: number | null;
   /** Tirée au début de la partie : le serveur ne la garde qu'une fois, même si le bilan se recharge. */
   cle: string | null;
@@ -77,18 +72,20 @@ interface Etat {
   prevision: { valeur: string; confiance: number };
   justifications: string[];
   choix: number | null;
-  /** La semaine dont le tableau de bord montre la fin. */
-  semaine: number;
-  /** La lecture du tableau de bord juste avant la dernière décision, pour en montrer l'effet. */
-  avant: Lecture | null;
+  /** Ce que le serveur a renvoyé au dernier geste ; `null` avant le premier. */
+  vue: VueDeLaPartie | null;
+  /** Le geste dont on attend la réponse. */
+  attente: Geste | null;
+  /** Le dernier geste n'a pas abouti : ce qu'on en dit. */
+  erreur: string | null;
 }
 
-const nouvelEtat = (
-  ep: Episode,
+export const nouvelEtat = (
+  nombreDeDecisions: number,
   graine: number | null = null,
   niveau: CodeNiveau | null = null,
   cle: string | null = null,
-): Etat => ({
+): EtatDeLEpisode => ({
   graine,
   cle,
   niveau,
@@ -96,15 +93,16 @@ const nouvelEtat = (
   etape: 0,
   phase: "signal",
   decisions: [],
-  consultes: ep.etapes.map(() => []),
+  consultes: Array.from({ length: nombreDeDecisions }, () => []),
   jours: 0,
   diagnostic: { principal: null, second: null },
   reevaluation: { choix: null, principal: null },
   prevision: { valeur: "", confiance: 60 },
   justifications: [],
   choix: null,
-  semaine: 0,
-  avant: null,
+  vue: null,
+  attente: null,
+  erreur: null,
 });
 
 /** Le hasard de l'adresse s'il y en a un, sinon un hasard neuf. */
@@ -122,12 +120,6 @@ function nouvelleCle(): string {
   o[8] = (o[8]! & 0x3f) | 0x80;
   const h = [...o].map((x) => x.toString(16).padStart(2, "0")).join("");
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-}
-
-/** Le niveau demandé dans l'adresse, s'il existe. */
-function niveauDeLAdresse(): CodeNiveau | null {
-  const demande = new URLSearchParams(window.location.search).get("niveau");
-  return NIVEAUX.some((n) => n.code === demande) ? (demande as CodeNiveau) : null;
 }
 
 /** L'adresse ne change pas pendant la partie : rien à écouter. */
@@ -152,10 +144,44 @@ const NOMS_DES_PHASES: Record<Phase, string> = {
 /** « Remise de 5 % » devient « remise de 5 % » ; « Karim », plus loin dans la phrase, reste Karim. */
 const enMinuscule = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 
-const previsionValide = (ep: Episode, v: string) => {
+/** Des jours, au dixième, en français : « 3,5 ». */
+const enJours = (v: number) => v.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
+
+const previsionValide = (p: NonNullable<EtapeServie["prevision"]>, v: string) => {
   const n = Number(v.replace(",", "."));
-  return v.trim() !== "" && Number.isFinite(n) && n >= ep.prevision.min && n <= ep.prevision.max;
+  return v.trim() !== "" && Number.isFinite(n) && n >= p.min && n <= p.max;
 };
+
+/** Le niveau d'un code, Standard s'il est inconnu, comme au serveur. */
+const niveauDe = (reglages: ReglagesDesNiveaux, code: string | null | undefined): NiveauAffiche =>
+  reglages.niveaux.find((n) => n.code === code) ??
+  reglages.niveaux.find((n) => n.code === NIVEAU_PAR_DEFAUT)!;
+
+const NIVEAU_PAR_DEFAUT: CodeNiveau = "standard";
+
+/**
+ * Peut-on encore vérifier quelque chose à cette décision ? La première se règle par le
+ * temps d'enquête ; les suivantes, par le nombre de vérifications (la même règle qu'au
+ * serveur, config/episodes/niveaux.ts, qui la vérifie à chaque geste).
+ */
+const verificationPossible = (niveau: NiveauAffiche, decision: number, dejaVues: number) =>
+  decision === 0 || niveau.verificationsParDecision == null || dejaVues < niveau.verificationsParDecision;
+
+/** L'écriture d'un chiffre qui monte : pour chaque image, la valeur écrite la plus proche. */
+function ecrireAvec(plume: PlumeServie): (n: number) => string {
+  const points = plume.points;
+  return (n: number) => {
+    let bas = 0;
+    let haut = points.length - 1;
+    while (haut - bas > 1) {
+      const milieu = (bas + haut) >> 1;
+      if (points[milieu]![0] <= n) bas = milieu;
+      else haut = milieu;
+    }
+    const [a, b] = [points[bas]!, points[haut]!];
+    return Math.abs(n - a[0]) <= Math.abs(b[0] - n) ? a[1] : b[1];
+  };
+}
 
 /* ------------------------------------------------------------------------- */
 
@@ -184,25 +210,23 @@ function Boite({ messages }: { messages: readonly Message[] }) {
 }
 
 /** Un repère de méthode, au niveau Découverte. */
-function Repere({ temps }: { temps: TempsDeDecision }) {
+function Repere({ texte }: { texte: string }) {
   return (
     <p className="encadre-neutre max-w-2xl rounded-lg px-4 py-3 text-sm leading-relaxed text-slate-200">
       <strong className="font-semibold text-slate-100">Repère · </strong>
-      {REPERES[temps]}
+      {texte}
     </p>
   );
 }
 
 function CarteSource({
   source,
-  ctx,
   vue,
   impossible,
   pourquoi = "plus le temps",
   onConsulter,
 }: {
-  source: Source;
-  ctx: Contexte;
+  source: SourceServie;
   vue: boolean;
   impossible: boolean;
   /** Ce qu'on affiche quand la vérification n'est plus possible. */
@@ -230,12 +254,13 @@ function CarteSource({
             ? "consulté"
             : impossible
               ? pourquoi
-              : `${nombre(source.cout)} jour${source.cout > 1 ? "s" : ""}`}
+              : `${enJours(source.cout)} jour${source.cout > 1 ? "s" : ""}`}
         </span>
       </button>
-      {vue && (
+      {/* Ce que la vérification apprend arrive du serveur une fois qu'elle est faite. */}
+      {vue && source.resultat != null && (
         <p className="max-w-2xl px-4 pb-4 text-base leading-relaxed text-slate-300">
-          {typeof source.resultat === "function" ? source.resultat(ctx) : source.resultat}
+          {source.resultat}
         </p>
       )}
     </li>
@@ -303,6 +328,33 @@ function Suite({
   );
 }
 
+/** La réponse du serveur est en route : l'écran a changé, son contenu arrive. */
+function Attente({ texte }: { texte: string }) {
+  return (
+    <p role="status" className="text-base text-slate-400">
+      {texte}
+    </p>
+  );
+}
+
+/** Le dernier geste n'a pas abouti : on le dit, et on propose de le refaire. */
+function Erreur({ texte, onReessayer }: { texte: string; onReessayer: () => void }) {
+  return (
+    <div role="alert" className="encadre-perte grid max-w-2xl gap-2 rounded-lg px-4 py-3 text-sm text-slate-200">
+      <p>{texte}</p>
+      <p>
+        <button
+          type="button"
+          onClick={onReessayer}
+          className="font-semibold text-amber-300 underline underline-offset-4"
+        >
+          Réessayer
+        </button>
+      </p>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------------- */
 
 /**
@@ -316,14 +368,11 @@ export interface OffreDesEpisodes {
   libelle: string;
 }
 
-function EpisodeJoueBrut({
-  code,
-  niveaux = NIVEAUX.map((n) => n.code),
-  offre = null,
-  cours = null,
-  licence = true,
-}: {
-  code: string;
+interface ProprietesDeLEpisode {
+  /** L'introduction de l'épisode, préparée par la page serveur (pedagogy/episodes/partie-servie.ts). */
+  intro: IntroServie;
+  /** Les noms et les règles des niveaux, génériques, lus par la page serveur. */
+  reglages: ReglagesDesNiveaux;
   /**
    * Une licence qui inclut les épisodes couvre-t-elle celui-ci (la page serveur le lit,
    * `licencePourLEpisode`) ? Sans elle, une partie en Découverte ne compte pas dans le
@@ -337,22 +386,79 @@ function EpisodeJoueBrut({
    * Les niveaux auxquels l'épisode se lance, établis par le serveur
    * (services/acces.service.ts) : sans licence, une démonstration ne se joue qu'en
    * Découverte. Un niveau demandé dans l'adresse hors de cette liste est ignoré.
+   * Le serveur le revérifie à chaque geste.
    */
-  niveaux?: readonly CodeNiveau[];
-}) {
-  const ep = episodeParCode(code)!;
-  const [s, setS] = useState<Etat>(() => nouvelEtat(ep));
-  // Le niveau de l'adresse ne se lit que dans le navigateur ; au rendu serveur,
-  // c'est le niveau par défaut.
-  const demande = useSyncExternalStore(sansAbonnement, niveauDeLAdresse, () => null);
+  niveaux: readonly CodeNiveau[];
+}
+
+/** Ce que l'écran sait faire ; le conteneur le relie au serveur. */
+interface Gestes {
+  maj: (f: (e: EtatDeLEpisode) => Partial<EtatDeLEpisode>) => void;
+  onNiveau: (n: CodeNiveau) => void;
+  commencer: (graine: number | null) => void;
+  recommencer: () => void;
+  suivante: () => void;
+  consulter: (src: SourceServie) => void;
+  valider: () => void;
+  etapeSuivante: () => void;
+  reessayer: () => void;
+  autreHasard: () => void;
+  memeHasard: () => void;
+}
+
+/** Le niveau effectif : celui qu'on a choisi s'il est permis, sinon le premier permis. */
+function niveauChoisi(
+  s: EtatDeLEpisode,
+  demande: CodeNiveau | null,
+  niveaux: readonly CodeNiveau[],
+): CodeNiveau {
   const permis = (n: CodeNiveau | null): n is CodeNiveau => n !== null && niveaux.includes(n);
   const souhaite = s.niveau ?? demande ?? NIVEAU_PAR_DEFAUT;
-  const choisi: CodeNiveau = permis(souhaite) ? souhaite : (niveaux[0] ?? NIVEAU_PAR_DEFAUT);
-  const niveau = niveauParCode(choisi);
+  return permis(souhaite) ? souhaite : (niveaux[0] ?? NIVEAU_PAR_DEFAUT);
+}
+
+/** La partie terminée, telle que le bilan la garde et la compare : des faits, rien d'autre. */
+function partieJoueeDe(s: EtatDeLEpisode, choisi: CodeNiveau): PartieJouee | null {
+  if (s.ecran !== "bilan" || !s.diagnostic.principal || s.reevaluation.choix == null) return null;
+  return {
+    graine: s.graine ?? 1,
+    chemin: s.decisions,
+    consultes: s.consultes,
+    jours: s.jours,
+    diagnostic: s.diagnostic.principal,
+    reevaluation: { choix: s.reevaluation.choix, principal: s.reevaluation.principal },
+    prevision: Number(s.prevision.valeur.replace(",", ".")),
+    confiance: s.prevision.confiance,
+    niveau: choisi,
+  };
+}
+
+const ERREUR_RESEAU =
+  "La partie n'a pas pu continuer : la connexion au serveur a échoué. Vos choix sont gardés sur cette page.";
+const ERREUR_ACCES =
+  "Cet épisode ne s'ouvre plus à ce niveau sur cet appareil : la licence a pu changer. Rechargez la page.";
+
+function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
+  const { intro, reglages, niveaux } = props;
+  const n = intro.nombreDeDecisions;
+  const [s, setS] = useState<EtatDeLEpisode>(() => nouvelEtat(n));
+  // Le niveau de l'adresse ne se lit que dans le navigateur ; au rendu serveur,
+  // c'est le niveau par défaut.
+  const demande = useSyncExternalStore(
+    sansAbonnement,
+    () => {
+      const d = new URLSearchParams(window.location.search).get("niveau");
+      return reglages.niveaux.some((x) => x.code === d) ? (d as CodeNiveau) : null;
+    },
+    () => null,
+  );
+  const choisi = niveauChoisi(s, demande, niveaux);
   // La partie terminée juste avant : le bilan suivant la met en regard.
   const [precedente, setPrecedente] = useState<PartieJouee | null>(null);
   const scene = useRef<HTMLDivElement>(null);
-  const maj = (f: (e: Etat) => Partial<Etat>) => setS((e) => ({ ...e, ...f(e) }));
+  const maj = (f: (e: EtatDeLEpisode) => Partial<EtatDeLEpisode>) => setS((e) => ({ ...e, ...f(e) }));
+  // Le numéro du dernier geste envoyé : une réponse plus ancienne arrive trop tard, on l'ignore.
+  const dernier = useRef(0);
 
   // Chaque nouvel écran se lit depuis son haut : sur téléphone, le bouton
   // qu'on vient de toucher est en bas de l'écran précédent. Le seuil est la
@@ -370,77 +476,6 @@ function EpisodeJoueBrut({
     el.scrollIntoView({ block: "start", behavior: doux ? "smooth" : "auto" });
   }, [repere]);
 
-  const graine = s.graine ?? 1;
-  const tableau = useMemo(
-    () => ep.lire(s.decisions, graine, s.jours, s.semaine),
-    [ep, s.decisions, graine, s.jours, s.semaine],
-  );
-
-  const commencer = (g: number | null) =>
-    setS((e) => ({
-      ...nouvelEtat(ep, g ?? tirerUnHasard(), permis(e.niveau) ? e.niveau : choisi, nouvelleCle()),
-      ecran: "jeu",
-    }));
-  const suivante = () =>
-    maj((e) => {
-      const ps = phasesDe(e.etape);
-      return { phase: ps[ps.indexOf(e.phase) + 1]! };
-    });
-
-  const consulter = (src: Source) =>
-    maj((e) => {
-      if (e.consultes[e.etape]!.includes(src.id)) return {};
-      if (!verificationPossible(niveauParCode(e.niveau), e.etape, e.consultes[e.etape]!.length)) {
-        return {};
-      }
-      const consultes = e.consultes.map((c, i) => (i === e.etape ? [...c, src.id] : c));
-      return { consultes, jours: e.etape === 0 ? e.jours + src.cout : e.jours };
-    });
-
-  const valider = () =>
-    maj((e) => ({
-      avant: tableau,
-      decisions: [...e.decisions.slice(0, e.etape), e.choix!],
-      semaine: ep.etapes[e.etape]!.jusqua,
-      phase: "consequence",
-    }));
-
-  const etapeSuivante = () =>
-    maj((e) =>
-      e.etape === ep.etapes.length - 1
-        ? { ecran: "bilan", avant: null }
-        : { etape: e.etape + 1, phase: "signal", choix: null, avant: null },
-    );
-
-  const partieJouee: PartieJouee | null = useMemo(() => {
-    if (s.ecran !== "bilan" || !s.diagnostic.principal || s.reevaluation.choix == null) return null;
-    return {
-      graine,
-      chemin: ep.neutre.map((n, i) => s.decisions[i] ?? n),
-      consultes: s.consultes,
-      jours: s.jours,
-      diagnostic: s.diagnostic.principal,
-      reevaluation: { choix: s.reevaluation.choix, principal: s.reevaluation.principal },
-      prevision: Number(s.prevision.valeur.replace(",", ".")),
-      confiance: s.prevision.confiance,
-      niveau: choisi,
-    };
-  }, [ep, s, graine, choisi]);
-
-  const etape = ep.etapes[s.etape]!;
-  // L'EN-TÊTE SUIT L'ÉTAPE AFFICHÉE. À la conséquence, le tableau de bord dit
-  // « fin de semaine 2 » : l'en-tête disait encore « Semaine 1 · lundi », le
-  // moment de la décision qu'on vient de prendre.
-  const consequence = s.ecran === "jeu" && s.phase === "consequence";
-  const moment =
-    s.ecran === "intro"
-      ? "Avant de commencer"
-      : s.ecran === "bilan"
-        ? "Fin du trimestre"
-        : consequence
-          ? `Fin de semaine ${etape.jusqua}`
-          : etape.moment;
-
   // Où coller la ligne du tableau de bord sur téléphone : sous l'en-tête du
   // site, dont la hauteur se mesure (elle change avec la largeur).
   const [haut, setHaut] = useState(0);
@@ -455,6 +490,206 @@ function EpisodeJoueBrut({
     };
   }, []);
 
+  /**
+   * UN GESTE AU SERVEUR. La demande porte toute la partie : le serveur ne garde rien, il la
+   * rejoue. `apres` dit ce que la réponse change à l'écran, une fois arrivée. Le dernier geste
+   * envoyé est gardé : « Réessayer » le renvoie tel quel.
+   */
+  const aRefaire = useRef<{ demande: DemandeDePartie; apres: Apres } | null>(null);
+  const envoyer = (demandeDePartie: DemandeDePartie, apres: Apres) => {
+    const numero = ++dernier.current;
+    aRefaire.current = { demande: demandeDePartie, apres };
+    maj(() => ({ attente: demandeDePartie.geste, erreur: null }));
+    fetch("/api/episodes/partie", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(demandeDePartie),
+    })
+      .then(async (r) => {
+        if (numero !== dernier.current) return;
+        if (!r.ok) {
+          maj(() => ({ attente: null, erreur: r.status === 403 ? ERREUR_ACCES : ERREUR_RESEAU }));
+          return;
+        }
+        const vue = (await r.json()) as VueDeLaPartie;
+        if (numero !== dernier.current) return;
+        setS((e) => ({ ...e, ...apres(vue), vue, attente: null, erreur: null }));
+      })
+      .catch(() => {
+        if (numero !== dernier.current) return;
+        maj(() => ({ attente: null, erreur: ERREUR_RESEAU }));
+      });
+  };
+
+  /** La demande d'un geste : les faits de la partie, et, à la dernière décision, ce que le bilan lit. */
+  const demandeDe = (
+    e: EtatDeLEpisode,
+    geste: Geste,
+    faits: Partial<Pick<DemandeDePartie, "decisions" | "consultes">> = {},
+  ): DemandeDePartie => {
+    const decisions = faits.decisions ?? e.decisions;
+    const fin =
+      geste === "valider" && decisions.length === n && e.diagnostic.principal && e.reevaluation.choix
+        ? {
+            diagnostic: e.diagnostic.principal,
+            reevaluation: { choix: e.reevaluation.choix, principal: e.reevaluation.principal },
+            prevision: Number(e.prevision.valeur.replace(",", ".")),
+            confiance: e.prevision.confiance,
+          }
+        : null;
+    return {
+      code: intro.code,
+      geste,
+      niveau: e.niveau ?? choisi,
+      graine: e.graine ?? 1,
+      decisions,
+      consultes: faits.consultes ?? e.consultes,
+      fin,
+      precedente:
+        fin && precedente
+          ? {
+              graine: precedente.graine,
+              chemin: [...precedente.chemin],
+              jours: precedente.jours,
+              ...(precedente.niveau ? { niveau: precedente.niveau } : {}),
+            }
+          : null,
+    };
+  };
+
+  const commencer = (g: number | null) => {
+    const graine = g ?? tirerUnHasard();
+    const cle = nouvelleCle();
+    const d: DemandeDePartie = {
+      code: intro.code,
+      geste: "commencer",
+      niveau: choisi,
+      graine,
+      decisions: [],
+      consultes: [],
+      fin: null,
+      precedente: null,
+    };
+    // L'écran passe au jeu tout de suite, comme avant ; la première étape arrive avec la réponse.
+    setS(() => ({ ...nouvelEtat(n, graine, choisi, cle), ecran: "jeu" }));
+    envoyer(d, () => ({}));
+  };
+
+  const gestes: Gestes = {
+    maj,
+    onNiveau: (niveau) => maj(() => ({ niveau })),
+    commencer,
+    recommencer: () => {
+      // Une réponse encore en route ne ramène pas la partie abandonnée.
+      dernier.current += 1;
+      setS((e) => nouvelEtat(n, null, e.niveau));
+    },
+    suivante: () =>
+      maj((e) => {
+        const ps = phasesDe(e.etape);
+        return { phase: ps[ps.indexOf(e.phase) + 1]! };
+      }),
+    consulter: (src) => {
+      const e = s;
+      if (e.attente === "valider" || e.attente === "commencer") return;
+      if (e.consultes[e.etape]!.includes(src.id)) return;
+      if (!verificationPossible(niveauDe(reglages, e.niveau), e.etape, e.consultes[e.etape]!.length)) return;
+      // La vérification compte tout de suite (le temps, le nombre) ; ce qu'elle apprend
+      // arrive avec la réponse.
+      const consultes = e.consultes.map((c, i) => (i === e.etape ? [...c, src.id] : c));
+      const jours = e.etape === 0 ? e.jours + src.cout : e.jours;
+      maj(() => ({ consultes, jours }));
+      envoyer(demandeDe(e, "verifier", { consultes }), () => ({}));
+    },
+    valider: () => {
+      const e = s;
+      if (e.choix == null || e.attente === "valider") return;
+      const decisions = [...e.decisions.slice(0, e.etape), e.choix];
+      // La décision est prise tout de suite, comme avant ; sa conséquence arrive avec la réponse.
+      maj(() => ({ decisions, phase: "consequence" }));
+      envoyer(demandeDe(e, "valider", { decisions }), (vue) => ({ decisions: [...vue.decisions] }));
+    },
+    etapeSuivante: () =>
+      maj((e) =>
+        e.etape === n - 1
+          ? { ecran: "bilan" }
+          : { etape: e.etape + 1, phase: "signal", choix: null },
+      ),
+    reessayer: () => {
+      const r = aRefaire.current;
+      if (r) envoyer(r.demande, r.apres);
+    },
+    autreHasard: () => {
+      setPrecedente(partieJoueeDe(s, choisi));
+      commencer(1 + Math.floor(Math.random() * 9000));
+    },
+    memeHasard: () => {
+      setPrecedente(partieJoueeDe(s, choisi));
+      commencer(s.graine ?? 1);
+    },
+  };
+
+  return (
+    <EcranDeLEpisode
+      {...props}
+      s={s}
+      choisi={choisi}
+      haut={haut}
+      scene={scene}
+      gestes={gestes}
+    />
+  );
+}
+
+/**
+ * L'ÉCRAN, POUR UN ÉTAT DONNÉ : rien que de l'affichage. Le test d'or le rend à chaque écran
+ * d'une partie (tests/episodes/partie-servie.test.ts).
+ */
+function EcranDeLEpisodeBrut({
+  intro,
+  reglages,
+  niveaux,
+  offre = null,
+  cours = null,
+  licence = true,
+  s,
+  choisi,
+  haut = 0,
+  scene,
+  gestes,
+}: ProprietesDeLEpisode & {
+  s: EtatDeLEpisode;
+  choisi: CodeNiveau;
+  haut?: number;
+  scene?: RefObject<HTMLDivElement | null>;
+  gestes: Gestes;
+}) {
+  const niveau = niveauDe(reglages, choisi);
+  const n = intro.nombreDeDecisions;
+  const vue = s.vue;
+  const partieJouee = partieJoueeDe(s, choisi);
+  // Le tableau de bord : celui de la dernière réponse, ou celui d'avant la partie.
+  const tableau: TableauServi = s.ecran === "intro" || !vue ? intro.tableau : vue.tableau;
+  // L'écran change dès le geste, comme quand tout se calculait ici ; ce qu'il montre arrive
+  // avec la réponse. Tant qu'elle n'est pas là, la vue reçue est celle du geste d'avant : on
+  // ne montre que ce qui correspond à l'étape affichée.
+  const etape = vue?.etape && vue.etape.indice === s.etape ? vue.etape : null;
+  const enConsequence = s.ecran === "jeu" && s.phase === "consequence";
+  const consequence = enConsequence && vue?.consequence?.indice === s.etape ? vue.consequence : null;
+  const affichee = consequence ?? etape;
+  // L'EN-TÊTE SUIT L'ÉTAPE AFFICHÉE. À la conséquence, le tableau de bord dit
+  // « fin de semaine 2 » : l'en-tête disait encore « Semaine 1 · lundi », le
+  // moment de la décision qu'on vient de prendre.
+  const moment =
+    s.ecran === "intro"
+      ? "Avant de commencer"
+      : s.ecran === "bilan"
+        ? "Fin du trimestre"
+        : enConsequence && affichee
+          ? `Fin de semaine ${affichee.jusqua}`
+          : (affichee?.moment ?? "");
+  const titre = affichee?.titre ?? "";
+
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
       <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -462,7 +697,7 @@ function EpisodeJoueBrut({
           <Link href="/entreprises/episode" className="hover:text-slate-300">
             Épisodes manager
           </Link>{" "}
-          / {ep.numero}
+          / {intro.numero}
         </p>
         <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400">
           Démonstration · données fictives
@@ -474,13 +709,13 @@ function EpisodeJoueBrut({
         )}
         <div className="ml-auto flex items-center gap-4">
           <span className="text-sm tabular-nums text-slate-400">{moment}</span>
-          <ol className="flex gap-1.5" aria-label={`Avancement : ${ep.etapes.length} décisions`}>
-            {ep.etapes.map((e, i) => {
+          <ol className="flex gap-1.5" aria-label={`Avancement : ${n} décisions`}>
+            {Array.from({ length: n }, (_, i) => {
               const fait = i < s.decisions.length;
               const enCours = !fait && i === s.etape && s.ecran === "jeu";
               return (
                 <li
-                  key={e.moment}
+                  key={i}
                   aria-label={`Décision ${i + 1}${fait ? ", prise" : enCours ? ", en cours" : ""}`}
                   className={`h-1.5 w-5 rounded-full ${
                     // L'avancement est un état : l'encre, pas l'orange de l'action.
@@ -493,7 +728,7 @@ function EpisodeJoueBrut({
           {s.ecran !== "intro" && (
             <button
               type="button"
-              onClick={() => setS((e) => nouvelEtat(ep, null, e.niveau))}
+              onClick={gestes.recommencer}
               className="min-h-11 text-sm text-slate-400 underline underline-offset-4 hover:text-slate-200"
             >
               Recommencer
@@ -504,83 +739,70 @@ function EpisodeJoueBrut({
 
       {/* Sur téléphone, le tableau de bord tient en une ligne collée sous
           l'en-tête, et le récit passe en premier. */}
-      <LigneDuTableau
-        nom={ep.nomDuTableau}
-        indicateurs={ep.indicateurs}
-        semaine={s.semaine}
-        lecture={tableau}
-        avant={s.avant}
-        haut={haut}
-      />
+      <LigneDuTableau tableau={tableau} ecarts={consequence !== null} haut={haut} />
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <aside
           className="max-lg:hidden lg:sticky lg:top-24 lg:order-last"
-          aria-label={`Tableau de bord : ${ep.nomDuTableau.toLowerCase()}`}
+          aria-label={`Tableau de bord : ${intro.nomDuTableau.toLowerCase()}`}
         >
-          <TableauDeBord
-            nom={ep.nomDuTableau}
-            indicateurs={ep.indicateurs}
-            semaine={s.semaine}
-            lecture={tableau}
-            avant={s.avant}
-          />
+          <TableauDeBord tableau={tableau} ecarts={consequence !== null} />
         </aside>
 
-        <div ref={scene} className="grid min-w-0 scroll-mt-24 gap-5" aria-live="polite">
+        <div
+          ref={scene}
+          className="grid min-w-0 scroll-mt-24 gap-5"
+          aria-live="polite"
+          aria-busy={s.attente !== null || undefined}
+        >
           {s.ecran === "intro" && (
             <Intro
-              ep={ep}
+              intro={intro}
+              reglages={reglages}
               niveau={choisi}
               niveaux={niveaux}
               offre={offre}
               licence={licence}
-              onNiveau={(n) => maj(() => ({ niveau: n }))}
-              onCommencer={() => commencer(null)}
+              onNiveau={gestes.onNiveau}
+              onCommencer={() => gestes.commencer(null)}
             />
           )}
 
-          {s.ecran === "jeu" && (
+          {s.ecran === "jeu" && !affichee && !s.erreur && <Attente texte="Le trimestre se prépare…" />}
+
+          {s.ecran === "jeu" && affichee && (
             <>
               <header>
                 <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-                  Décision {s.etape + 1} sur {ep.etapes.length} · {moment}
+                  Décision {s.etape + 1} sur {n} · {moment}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
-                  {etape.titre}
+                  {titre}
                 </h1>
                 <Fil etape={s.etape} phase={s.phase} />
               </header>
-              <Scene
-                ep={ep}
-                s={s}
-                etape={etape}
-                tableau={tableau}
-                maj={maj}
-                suivante={suivante}
-                consulter={consulter}
-                valider={valider}
-                etapeSuivante={etapeSuivante}
-              />
+              {consequence ? (
+                <Consequence reglages={reglages} s={s} consequence={consequence} gestes={gestes} />
+              ) : enConsequence ? (
+                !s.erreur && <Attente texte="Les semaines passent…" />
+              ) : (
+                <Scene reglages={reglages} s={s} etape={etape!} gestes={gestes} />
+              )}
             </>
           )}
 
-          {s.ecran === "bilan" && partieJouee && (
+          {s.erreur && <Erreur texte={s.erreur} onReessayer={gestes.reessayer} />}
+
+          {s.ecran === "bilan" && partieJouee && vue?.bilan && (
             <BilanDeLEpisode
-              ep={ep}
+              bilan={vue.bilan}
+              code={intro.code}
               partie={partieJouee}
               cle={s.cle}
-              sansLicence={!licence}
-              precedente={precedente}
+              niveaux={reglages.niveaux}
               cours={cours}
-              onAutreHasard={() => {
-                setPrecedente(partieJouee);
-                commencer(1 + Math.floor(Math.random() * 9000));
-              }}
-              onMemeHasard={() => {
-                setPrecedente(partieJouee);
-                commencer(graine);
-              }}
+              onAutreHasard={gestes.autreHasard}
+              onMemeHasard={gestes.memeHasard}
             />
           )}
         </div>
@@ -620,7 +842,8 @@ function Fil({ etape, phase }: { etape: number; phase: Phase }) {
 }
 
 function Intro({
-  ep,
+  intro,
+  reglages,
   niveau,
   niveaux,
   offre,
@@ -628,7 +851,8 @@ function Intro({
   onNiveau,
   onCommencer,
 }: {
-  ep: Episode;
+  intro: IntroServie;
+  reglages: ReglagesDesNiveaux;
   niveau: CodeNiveau;
   niveaux: readonly CodeNiveau[];
   offre: OffreDesEpisodes | null;
@@ -636,6 +860,7 @@ function Intro({
   onNiveau: (n: CodeNiveau) => void;
   onCommencer: () => void;
 }) {
+  const NIVEAUX = reglages.niveaux;
   // Sans licence, une démonstration ne se joue qu'en Découverte : les autres niveaux
   // restent visibles, marqués, avec ce qui les ouvre (jamais un choix grisé muet).
   const fermes = NIVEAUX.filter((n) => !niveaux.includes(n.code));
@@ -643,36 +868,36 @@ function Intro({
     <section className="carte grid gap-5 p-5 sm:p-7">
       <div>
         <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-          Épisode {ep.numero} · {ep.domaine}
+          Épisode {intro.numero} · {intro.domaine}
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-          {ep.titre}
+          {intro.titre}
         </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{ep.persona}</p>
+        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{intro.persona}</p>
       </div>
       <div className="grid gap-3 border-y border-white/10 py-4">
         <h2 className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">
           Votre mandat pour le trimestre
         </h2>
         <ul className="grid gap-x-6 gap-y-2 text-slate-200 sm:grid-cols-2">
-          {ep.mandat.map((m) => (
+          {intro.mandat.map((m) => (
             <li key={m.texte}>
               <strong className="font-display text-lg text-slate-50">{m.fort}</strong> {m.texte}
             </li>
           ))}
         </ul>
-        <p className="max-w-2xl text-slate-300">{ep.jugement}</p>
+        <p className="max-w-2xl text-slate-300">{intro.jugement}</p>
       </div>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
-        {ep.etapes.length} décisions, {ep.duree}. Les chiffres bougent avec vos choix ; à la fin, le
-        bilan rejoue chacune de vos décisions sous les mêmes {GRAINES_DU_BILAN.length} tirages au hasard.{" "}
+        {intro.nombreDeDecisions} décisions, {intro.duree}. Les chiffres bougent avec vos choix ; à la fin, le
+        bilan rejoue chacune de vos décisions sous les mêmes {intro.tirages} tirages au hasard.{" "}
         {!licence && niveaux.every((n) => n === "decouverte") ? (
           <>
             Une démonstration se joue au niveau Démonstration, qui ne compte pas dans le profil
             décisionnel : à la fin, le bilan en montre un aperçu, calculé sur cet épisode seul.
             Avec une licence, chaque épisode enrichit votre profil. Une démonstration n&apos;est
-            pas enregistrée : la partie se joue et se juge dans votre navigateur, rien n&apos;est
-            gardé sur nos serveurs.
+            pas enregistrée : le serveur calcule chaque étape de la partie et n&apos;en garde
+            rien.
           </>
         ) : (
           <>
@@ -748,41 +973,30 @@ function Intro({
 /* ------------------------------------------------------------------------- */
 
 function Scene({
-  ep,
+  reglages,
   s,
   etape,
-  tableau,
-  maj,
-  suivante,
-  consulter,
-  valider,
-  etapeSuivante,
+  gestes,
 }: {
-  ep: Episode;
-  s: Etat;
-  etape: Etape;
-  tableau: Lecture;
-  maj: (f: (e: Etat) => Partial<Etat>) => void;
-  suivante: () => void;
-  consulter: (src: Source) => void;
-  valider: () => void;
-  etapeSuivante: () => void;
+  reglages: ReglagesDesNiveaux;
+  s: EtatDeLEpisode;
+  etape: EtapeServie;
+  gestes: Gestes;
 }) {
-  const graine = s.graine ?? 1;
   const i = s.etape;
-  const contexte: Contexte = ep.contexte(tableau, s.decisions);
-  const niveau = niveauParCode(s.niveau);
-  const sources = sourcesProposees(niveau, etape);
+  const niveau = niveauDe(reglages, s.niveau);
+  const sources = etape.sources;
   const vues = s.consultes[i]!;
   const encore = verificationPossible(niveau, i, vues.length);
-  const repere = (temps: TempsDeDecision) => niveau.reperes && <Repere temps={temps} />;
+  const repere = (temps: TempsDeDecision) => niveau.reperes && <Repere texte={reglages.reperes[temps]} />;
+  const { suivante, consulter, valider, maj } = gestes;
 
   if (s.phase === "signal") {
     const ensuite = phasesDe(i)[1];
     return (
       <>
         {repere("signal")}
-        <Boite messages={etape.messages(contexte)} />
+        <Boite messages={etape.messages} />
         <Suite onClick={suivante}>
           {ensuite === "decision" ? "Décider" : ensuite === "enquete" ? "Enquêter" : "Continuer"}
         </Suite>
@@ -791,11 +1005,11 @@ function Scene({
   }
 
   if (s.phase === "enquete") {
-    const budget = budgetDEnquete(niveau, ep, etape);
+    const budget = etape.budget;
     const compte = i === 0 && budget != null;
     const reste = compte ? budget! - s.jours : 0;
-    const perte = ep.enquete.perte(s.jours);
-    const echeance = ep.enquete.echeance ?? "le point de vendredi";
+    const perte = etape.perte;
+    const echeance = etape.echeance;
     return (
       <>
         {repere("enquete")}
@@ -803,9 +1017,9 @@ function Scene({
           <div className="grid gap-2.5">
             <p className="max-w-2xl text-base leading-relaxed text-slate-200">
               <strong className="text-slate-50">
-                Il vous reste {nombre(reste)} jour{reste > 1 ? "s" : ""} avant {echeance}.
+                Il vous reste {enJours(reste)} jour{reste > 1 ? "s" : ""} avant {echeance}.
               </strong>{" "}
-              {ep.enquete.consigne}
+              {etape.consigne}
             </p>
             <div
               className="grid max-w-md gap-1"
@@ -817,7 +1031,7 @@ function Scene({
                   key={k}
                   className={`h-2 rounded-md border ${
                     k < s.jours * 2
-                      ? k >= ep.enquete.joursSansPerte * 2
+                      ? k >= etape.joursSansPerte * 2
                         ? "border-red-400 bg-red-400"
                         : "border-[var(--donnee)] bg-[var(--donnee)]"
                       : "border-white/10 bg-slate-800"
@@ -840,7 +1054,6 @@ function Scene({
               <CarteSource
                 key={src.id}
                 source={src}
-                ctx={contexte}
                 vue={vue}
                 impossible={!vue && ((compte && src.cout > reste + 1e-9) || !encore)}
                 pourquoi={compte ? "plus le temps" : "une seule vérification"}
@@ -867,7 +1080,7 @@ function Scene({
           <Choix
             nom="principal"
             valeur={d.principal}
-            options={ep.diagnostics}
+            options={etape.diagnostics}
             onChoisir={(id) =>
               maj((e) => ({
                 diagnostic: {
@@ -888,7 +1101,7 @@ function Scene({
             valeur={d.second}
             options={[
               { id: "aucun", t: "Aucun autre" },
-              ...ep.diagnostics.filter((x) => x.id !== d.principal),
+              ...etape.diagnostics.filter((x) => x.id !== d.principal),
             ]}
             onChoisir={(id) =>
               maj((e) => ({
@@ -905,7 +1118,7 @@ function Scene({
   }
 
   if (s.phase === "reevaluation") {
-    const avant = ep.diagnostics.find((x) => x.id === s.diagnostic.principal);
+    const avant = etape.diagnostics.find((x) => x.id === s.diagnostic.principal);
     const r = s.reevaluation;
     return (
       <>
@@ -939,7 +1152,7 @@ function Scene({
             <Choix
               nom="reprincipal"
               valeur={r.principal}
-              options={ep.diagnostics.filter((x) => x.id !== s.diagnostic.principal)}
+              options={etape.diagnostics.filter((x) => x.id !== s.diagnostic.principal)}
               onChoisir={(id) =>
                 maj((e) => ({ reevaluation: { ...e.reevaluation, principal: id } }))
               }
@@ -956,178 +1169,184 @@ function Scene({
     );
   }
 
-  if (s.phase === "decision") {
-    const avecSources = i >= 2 && sources.length > 0;
-    const previsionOk = !etape.prevision || previsionValide(ep, s.prevision.valeur);
-    return (
-      <>
-        {repere("decision")}
-        {avecSources && (
-          <>
-            <p className="text-base text-slate-200">
-              Avant de décider, vous pouvez vérifier
-              {niveau.verificationsParDecision === 1 ? " une chose :" : " :"}
-            </p>
-            <ul className="grid gap-2">
-              {sources.map((src) => {
-                const vue = vues.includes(src.id);
-                return (
-                  <CarteSource
-                    key={src.id}
-                    source={src}
-                    ctx={contexte}
-                    vue={vue}
-                    impossible={!vue && !encore}
-                    pourquoi="une seule vérification"
-                    onConsulter={() => consulter(src)}
-                  />
-                );
-              })}
-            </ul>
-          </>
-        )}
-        <fieldset className="grid gap-2">
-          <legend className="mb-2 text-lg font-semibold text-slate-50">{etape.question}</legend>
-          <Choix
-            nom="option"
-            grande
-            valeur={s.choix == null ? null : String(s.choix)}
-            options={etape.options.map((o, k) => ({ id: String(k), t: o.t, d: o.d }))}
-            onChoisir={(id) => maj(() => ({ choix: Number(id) }))}
-          />
-        </fieldset>
-        <label className="grid gap-1.5">
-          <span className="font-semibold text-slate-50">
-            Pourquoi ce choix ?{" "}
-            <span className="ml-1 text-sm font-normal text-slate-400">une phrase, facultatif</span>
-          </span>
-          <textarea
-            rows={2}
-            value={s.justifications[i] ?? ""}
-            onChange={(ev) => {
-              const v = ev.target.value;
-              maj((e) => {
-                const j = [...e.justifications];
-                j[i] = v;
-                return { justifications: j };
-              });
-            }}
-            placeholder="Ce que vous attendez de cette décision"
-            className="champ champ-facultatif w-full px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-400"
-          />
-        </label>
-        {etape.prevision && (
-          <div className="carte grid gap-4 p-4 sm:grid-cols-2 sm:items-end">
-            <label className="grid gap-1.5">
-              <span className="font-semibold text-slate-50">
-                Votre prévision : {ep.prevision.libelle}
-              </span>
-              <span className="flex max-w-40 items-center gap-2">
-                <input
-                  type="number"
-                  onWheel={sansMolette}
-                  inputMode="decimal"
-                  min={ep.prevision.min}
-                  max={ep.prevision.max}
-                  step={ep.prevision.step}
-                  value={s.prevision.valeur}
-                  placeholder={ep.prevision.placeholder}
-                  onChange={(ev) => {
-                    const v = ev.target.value;
-                    maj((e) => ({ prevision: { ...e.prevision, valeur: v } }));
-                  }}
-                  className="champ w-full px-3 py-2 text-base tabular-nums text-slate-100"
-                />
-                <span className="text-slate-300">{ep.prevision.unite}</span>
-              </span>
-            </label>
-            <label className="grid gap-1.5">
-              <span className="font-semibold text-slate-50">
-                Votre confiance :{" "}
-                <output className="tabular-nums">{s.prevision.confiance} %</output>
-              </span>
-              <input
-                type="range"
-                onWheel={sansMolette}
-                min={10}
-                max={100}
-                step={10}
-                value={s.prevision.confiance}
-                onChange={(ev) => {
-                  const v = Number(ev.target.value);
-                  maj((e) => ({ prevision: { ...e.prevision, confiance: v } }));
-                }}
-                className="w-full accent-amber-400"
-              />
-            </label>
-          </div>
-        )}
-        <Suite onClick={valider} disabled={s.choix == null || !previsionOk}>
-          Valider la décision
-        </Suite>
-      </>
-    );
-  }
-
-  // Conséquence
-  const de = i === 0 ? 1 : ep.etapes[i - 1]!.jusqua + 1;
-  const chemin = ep.neutre.map((n, k) => s.decisions[k] ?? n);
-  const t = ep.simuler(chemin, graine, s.jours);
-  const choix = s.decisions[i]!;
-  // Ce qui est arrivé pendant ces semaines : les suites de décisions prises,
-  // et les imprévus, qui n'en découlent pas. Les seconds sont posés à part,
-  // sous un titre qui le dit.
-  const arrive = ep.evenements(chemin, graine, de, etape.jusqua);
-  // En Expert, les imprévus arrivent avec le reste : à chacun de faire la part
-  // de la chance et de ses choix.
-  const reactions: Message[] = [
-    ...(ep.reactions(i, choix, graine) ?? etape.reactions[choix] ?? []),
-    ...arrive.lies,
-    ...(niveau.imprevusSignales ? [] : arrive.imprevus),
-  ];
-  const effet = niveau.retourImmediat ? effetDuChoix(ep, s.decisions, i, graine, s.jours) : null;
-  const kE = ep.bilan.formatObjectif;
-  const derniere = i === ep.etapes.length - 1;
-  const verdict = verdictDesSemaines(ep, t.semaines, de, etape.jusqua);
+  // La décision.
+  const avecSources = i >= 2 && sources.length > 0;
+  const prevision = etape.prevision;
+  const previsionOk = !prevision || previsionValide(prevision, s.prevision.valeur);
   return (
     <>
-      {/*
-        LA CONSÉQUENCE, DANS LA GRAMMAIRE DU « MARCHÉ RÉPOND ». Une bande marine
-        en tête de l'écran : le chiffre clé des semaines jouées (celui de la
-        courbe du trimestre), son écart à la cible que l'épisode déclare (le
-        budget, l'objectif), et ce qu'on a choisi. Les cartes de l'indicateur,
-        juste dessous, ne disaient pas qu'on était sous le budget.
-      */}
+      {repere("decision")}
+      {avecSources && (
+        <>
+          <p className="text-base text-slate-200">
+            Avant de décider, vous pouvez vérifier
+            {niveau.verificationsParDecision === 1 ? " une chose :" : " :"}
+          </p>
+          <ul className="grid gap-2">
+            {sources.map((src) => {
+              const vue = vues.includes(src.id);
+              return (
+                <CarteSource
+                  key={src.id}
+                  source={src}
+                  vue={vue}
+                  impossible={!vue && !encore}
+                  pourquoi="une seule vérification"
+                  onConsulter={() => consulter(src)}
+                />
+              );
+            })}
+          </ul>
+        </>
+      )}
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-lg font-semibold text-slate-50">{etape.question}</legend>
+        <Choix
+          nom="option"
+          grande
+          valeur={s.choix == null ? null : String(s.choix)}
+          options={etape.options.map((o, k) => ({ id: String(k), t: o.t, d: o.d }))}
+          onChoisir={(id) => maj(() => ({ choix: Number(id) }))}
+        />
+      </fieldset>
+      <label className="grid gap-1.5">
+        <span className="font-semibold text-slate-50">
+          Pourquoi ce choix ?{" "}
+          <span className="ml-1 text-sm font-normal text-slate-400">une phrase, facultatif</span>
+        </span>
+        <textarea
+          rows={2}
+          value={s.justifications[i] ?? ""}
+          onChange={(ev) => {
+            const v = ev.target.value;
+            maj((e) => {
+              const j = [...e.justifications];
+              j[i] = v;
+              return { justifications: j };
+            });
+          }}
+          placeholder="Ce que vous attendez de cette décision"
+          className="champ champ-facultatif w-full px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-400"
+        />
+      </label>
+      {prevision && (
+        <div className="carte grid gap-4 p-4 sm:grid-cols-2 sm:items-end">
+          <label className="grid gap-1.5">
+            <span className="font-semibold text-slate-50">
+              Votre prévision : {prevision.libelle}
+            </span>
+            <span className="flex max-w-40 items-center gap-2">
+              <input
+                type="number"
+                onWheel={sansMolette}
+                inputMode="decimal"
+                min={prevision.min}
+                max={prevision.max}
+                step={prevision.step}
+                value={s.prevision.valeur}
+                placeholder={prevision.placeholder}
+                onChange={(ev) => {
+                  const v = ev.target.value;
+                  maj((e) => ({ prevision: { ...e.prevision, valeur: v } }));
+                }}
+                className="champ w-full px-3 py-2 text-base tabular-nums text-slate-100"
+              />
+              <span className="text-slate-300">{prevision.unite}</span>
+            </span>
+          </label>
+          <label className="grid gap-1.5">
+            <span className="font-semibold text-slate-50">
+              Votre confiance :{" "}
+              <output className="tabular-nums">{s.prevision.confiance} %</output>
+            </span>
+            <input
+              type="range"
+              onWheel={sansMolette}
+              min={10}
+              max={100}
+              step={10}
+              value={s.prevision.confiance}
+              onChange={(ev) => {
+                const v = Number(ev.target.value);
+                maj((e) => ({ prevision: { ...e.prevision, confiance: v } }));
+              }}
+              className="w-full accent-amber-400"
+            />
+          </label>
+        </div>
+      )}
+      <Suite onClick={valider} disabled={s.choix == null || !previsionOk}>
+        Valider la décision
+      </Suite>
+    </>
+  );
+}
+
+/**
+ * LA CONSÉQUENCE, DANS LA GRAMMAIRE DU « MARCHÉ RÉPOND ». Une bande marine
+ * en tête de l'écran : le chiffre clé des semaines jouées (celui de la
+ * courbe du trimestre), son écart à la cible que l'épisode déclare (le
+ * budget, l'objectif), et ce qu'on a choisi. Les cartes de l'indicateur,
+ * juste dessous, ne disaient pas qu'on était sous le budget. Tout arrive du
+ * serveur après la décision (pedagogy/episodes/partie-servie.ts).
+ */
+function Consequence({
+  reglages,
+  s,
+  consequence,
+  gestes,
+}: {
+  reglages: ReglagesDesNiveaux;
+  s: EtatDeLEpisode;
+  consequence: NonNullable<VueDeLaPartie["consequence"]>;
+  gestes: Gestes;
+}) {
+  const niveau = niveauDe(reglages, s.niveau);
+  const c = consequence;
+  const verdict = c.verdict;
+  const effet = c.effet;
+  return (
+    <>
       <section
         aria-label="Conséquence de votre décision"
         className="ardoise rounded-xl bg-slate-950 px-4 py-4 text-slate-100 sm:px-6 sm:py-5"
       >
         <VerdictDuMarche
           forme="bande"
-          surtitre={`${ep.nomDuTableau} · conséquence`}
-          titre={`Semaines ${de} à ${etape.jusqua} · le verdict`}
+          surtitre={c.surtitre}
+          titre={`Semaines ${c.de} à ${c.jusqua} · le verdict`}
           chiffre={{
             libelle: verdict.libelle,
             valeur: verdict.valeur,
             sens: null,
-            ...(verdict.nombre === null ? {} : { nombre: verdict.nombre, ecrire: verdict.ecrire }),
+            ...(verdict.nombre === null || !verdict.plume
+              ? {}
+              : { nombre: verdict.nombre, ecrire: ecrireAvec(verdict.plume) }),
           }}
-          ecart={verdict.ecart}
-          phrase={`Vous avez choisi : ${enMinuscule(etape.options[choix]!.t)}.`}
+          ecart={
+            verdict.ecart
+              ? {
+                  valeur: verdict.ecart.valeur,
+                  mention: verdict.ecart.mention,
+                  sens: verdict.ecart.sens,
+                  nombre: verdict.ecart.nombre,
+                  ecrire: ecrireAvec(verdict.ecart.plume),
+                }
+              : null
+          }
+          phrase={`Vous avez choisi : ${enMinuscule(c.option)}.`}
         />
       </section>
       {niveau.retourImmediat && (
         <p className="encadre-neutre max-w-2xl rounded-lg px-4 py-3 text-sm leading-relaxed text-slate-200">
           <strong className="font-semibold text-slate-100">Retour immédiat · </strong>
           {effet
-            ? `Sur ce trimestre-ci, ce choix ${effet.ecart >= 0 ? "rapporte" : "coûte"} ${kE(
-                Math.abs(effet.ecart),
-              )} par rapport à « ${enMinuscule(etape.options[effet.reference]!.t)} ». C'est un seul tirage au hasard : le bilan dira ce que ce choix vaut en moyenne.`
+            ? `Sur ce trimestre-ci, ce choix ${effet.rapporte ? "rapporte" : "coûte"} ${effet.montant} par rapport à « ${effet.reference} ». C'est un seul tirage au hasard : le bilan dira ce que ce choix vaut en moyenne.`
             : "Vous avez choisi de ne rien changer : le trimestre suit son cours. Le bilan dira si c'était le bon choix."}
         </p>
       )}
       <dl className="grid grid-cols-3 gap-2 sm:gap-3">
-        {ep.recap(t, de, etape.jusqua).map(([nom, valeur]) => (
+        {c.recap.map(([nom, valeur]) => (
           <div key={nom} className="carte min-w-0 px-3 py-2.5 sm:px-4 sm:py-3">
             <dt className="text-sm text-slate-400">{nom}</dt>
             <dd className="font-display text-lg font-semibold tabular-nums text-slate-50 sm:text-xl">
@@ -1136,16 +1355,9 @@ function Scene({
           </div>
         ))}
       </dl>
-      <CourbeDesSemaines
-        courbe={ep.courbe}
-        semaines={t.semaines}
-        jouees={etape.jusqua}
-        surbrillance={[de, etape.jusqua]}
-        reperes={reperesDesDecisions(ep, i + 1)}
-        imprevus={niveau.imprevusSignales ? ep.imprevus(graine) : []}
-      />
-      <Boite messages={reactions} />
-      {niveau.imprevusSignales && arrive.imprevus.length > 0 && (
+      <CourbeDesSemaines courbe={c.courbe} />
+      <Boite messages={c.reactions} />
+      {niveau.imprevusSignales && c.imprevus.length > 0 && (
         <section aria-labelledby="imprevus-titre" className="grid gap-2">
           <h2
             id="imprevus-titre"
@@ -1153,86 +1365,13 @@ function Scene({
           >
             Pendant ce temps, sans rapport avec vos décisions
           </h2>
-          <Boite messages={arrive.imprevus} />
+          <Boite messages={c.imprevus} />
         </section>
       )}
-      <Suite onClick={etapeSuivante}>{derniere ? "Voir le bilan" : "Continuer"}</Suite>
+      <Suite onClick={gestes.etapeSuivante}>{c.derniere ? "Voir le bilan" : "Continuer"}</Suite>
     </>
   );
 }
 
-/**
- * LE CHIFFRE CLÉ DES SEMAINES JOUÉES, ET SON ÉCART À LA CIBLE.
- *
- * Tout vient de la définition de l'épisode, rien n'est inventé : la grandeur
- * est celle de sa courbe (`courbe.cle`), moyennée sur les semaines que la
- * décision a couvertes ; la cible est la cadence que la courbe trace déjà
- * (`courbe.cible`, nommée par `courbe.libelleCible` : un budget, un objectif,
- * un plafond). Le sens de l'écart (bon ou mauvais) est celui de l'indicateur
- * du tableau de bord qui suit la même grandeur ; quand aucun ne la suit,
- * l'écart reste écrit avec son signe, à l'encre, sans vert ni rouge.
- */
-function verdictDesSemaines(
-  ep: Episode,
-  semaines: Resultat["semaines"],
-  de: number,
-  a: number,
-): {
-  libelle: string;
-  valeur: string;
-  /** Le nombre derrière la valeur, pour qu'elle MONTE au lieu de s'imprimer. */
-  nombre: number | null;
-  ecrire: (n: number) => string;
-  ecart: {
-    valeur: string;
-    mention: string;
-    sens: SensDUnEcart;
-    nombre: number;
-    ecrire: (n: number) => string;
-  } | null;
-} {
-  const { courbe } = ep;
-  const valeurs = semaines
-    .slice(de, a + 1)
-    .map((w) => w?.[courbe.cle])
-    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-  const nom = courbe.titre.replace(/,?\s*semaine par semaine\s*$/i, "");
-  const periode = de === a ? `semaine ${de}` : `moyenne des semaines ${de} à ${a}`;
-  if (valeurs.length === 0)
-    return {
-      libelle: `${nom} · ${periode}`,
-      valeur: "—",
-      nombre: null,
-      ecrire: courbe.format,
-      ecart: null,
-    };
-  const moyenne = valeurs.reduce((x, v) => x + v, 0) / valeurs.length;
-  const indicateur = ep.indicateurs.find((ind) => ind.cle === courbe.cle);
-  const d = moyenne - courbe.cible;
-  const formatEcart = indicateur?.formatEcart ?? courbe.format;
-  // La même plume pour la valeur finale et pour chaque image du compteur :
-  // l'écart s'écrit signé, et le zéro de départ n'invente pas de signe.
-  const ecrireEcart = (n: number) =>
-    `${n > 1e-9 ? "+" : n < -1e-9 ? "−" : ""}${formatEcart(Math.abs(n))}`;
-  const ecart =
-    Math.abs(d) < 1e-9 || formatEcart(Math.abs(d)) === formatEcart(0)
-      ? null
-      : {
-          valeur: ecrireEcart(d),
-          mention: `face à la cible (${courbe.libelleCible})`,
-          sens: indicateur
-            ? ((indicateur.sensBon * d > 0 ? "gain" : "perte") as SensDUnEcart)
-            : null,
-          nombre: d,
-          ecrire: ecrireEcart,
-        };
-  return {
-    libelle: `${nom} · ${periode}`,
-    valeur: courbe.format(moyenne),
-    nombre: moyenne,
-    ecrire: courbe.format,
-    ecart,
-  };
-}
-
+export const EcranDeLEpisode = avecTypographie(EcranDeLEpisodeBrut);
 export const EpisodeJoue = avecTypographie(EpisodeJoueBrut);

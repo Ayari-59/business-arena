@@ -779,7 +779,7 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
 
   it("le cas dédié : sa forme, son commanditaire", () => {
     casDedie(s, LIRE_LA_STRATEGIE_DES_CONCURRENTS);
-    expect(s.commanditaire).toBe("La directrice");
+    expect(s.commanditaire).toBe("Le président");
   });
 
   it("la place : son prix et sa qualité", () => {

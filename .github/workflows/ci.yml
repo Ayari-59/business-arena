@@ -43,6 +43,12 @@ jobs:
         run: npm test
       - name: Compilation de production
         run: npm run build
+      # LE JAVASCRIPT PUBLIC NE PORTE NI CORRIGÉ, NI CHAPITRE RÉSERVÉ, NI ÉPISODE (audit du
+      # 10 novembre 2026, P2-2). Les gardes du build de la suite (`it.skipIf`) ne voient que le
+      # build présent : les tests passent avant la compilation, elles étaient donc ignorées ici.
+      # Le script fouille `.next/static` juste après la compilation et échoue au premier extrait.
+      - name: Rien de réservé dans le JavaScript public
+        run: npm run verifier-bundles
 
   parcours:
     name: Parcours en navigateur
