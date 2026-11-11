@@ -105,6 +105,7 @@ export const LA_PERFORMANCE_GLOBALE: Chapitre = {
         const p = performanceDeNova();
         return [
           `L'efficacité compare le résultat à l'objectif : ${pct(p.efficacitePct)}, l'objectif n'est pas tout à fait atteint. L'efficience compare le résultat aux moyens qu'il a demandés : vendre au même prix sans brader, avec la même équipe et la même ligne, c'est être efficient. Une entreprise peut être efficace sans être efficiente : atteindre l'objectif en dépensant trop.`,
+          `${eur(quotient2(p.chiffreDAffaires, p.enceintes))} par enceinte, un peu moins que le prix de ${eur(p.prix)} : seule la remise de ${pct(p.sonora.remise * 100)} accordée à Sonora sur ses ${qte(p.sonora.enceintes)} enceintes l'abaisse.`,
         ];
       },
     },

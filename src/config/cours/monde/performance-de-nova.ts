@@ -1,6 +1,6 @@
 import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { affectationDeNova } from "./capitaux-propres";
-import { bilanDuLycee, compteDuLycee, exerciceDe } from "./comptes-du-lycee";
+import { bilanDuLycee, compteDuLycee, enceintesDeSonora, exerciceDe } from "./comptes-du-lycee";
 import { tableauDeBord } from "./couts-et-budgets";
 import { NOVA_GESTION } from "./nova-gestion";
 import { KG_CO2_PAR_KWH, KWH_DU_BATIMENT_PAR_MOIS, KWH_PAR_ENCEINTE, tableauDeBordDurable } from "./tableau-de-bord-durable";
@@ -58,6 +58,9 @@ function calculer() {
   const co2 = auCentime(kwh * KG_CO2_PAR_KWH);
   return {
     enceintes: k.quantite,
+    prix: k.prix,
+    /** Les enceintes de Sonora et leur remise : le chiffre d'affaires par enceinte est un peu sous le prix. */
+    sonora: { enceintes: enceintesDeSonora(f), remise: f.sonora.remise },
     chiffreDAffaires: k.ventes,
     resultatNet: k.resultatNet,
     capitauxPropres: b.capitauxPropres,

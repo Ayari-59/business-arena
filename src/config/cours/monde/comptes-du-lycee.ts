@@ -84,15 +84,25 @@ export interface VarianteDeLAnnee {
  */
 export const coutVariableDeLEnceinte = (f: FicheDeLExercice) => auCentime(f.fournisseur.prixDuJeu + f.autresCoutsDeLEnceinte);
 
-/** Les enceintes que les ventes de la fiche représentent : le chiffre d'affaires au prix de l'enceinte. */
-export const enceintesDeLAnnee = (f: FicheDeLExercice) => Math.round(credit(cloture(f).soldes, ["70"]) / f.prixDeLEnceinte);
+/**
+ * LES ENCEINTES DE L'ANNÉE (audit pédagogique du 11 novembre 2026, P2-2) : celles que l'entreprise a
+ * livrées, mois par mois, 23 609 pour NOVA. Son chiffre d'affaires n'est pas leur nombre au prix de
+ * l'enceinte : les 900 de Sonora sont facturées 5 % moins cher (`remiseDeSonora`). Diviser les ventes
+ * par le prix donnait 23 564 enceintes, que NOVA n'a pas vendues.
+ */
+export const enceintesDeLAnnee = (f: FicheDeLExercice) => f.livraisons.reduce((t, x) => t + x, 0);
+
+/** Les enceintes de Sonora, et la remise de 5 % de ses deux factures, au prix donné : 900 × 59 € × 5 % = 2 655 €. */
+export const enceintesDeSonora = (f: FicheDeLExercice) => f.sonora.premiereCommande.enceintes + f.sonora.secondeCommande.enceintes;
+export const remiseDeSonora = (f: FicheDeLExercice, prix: number = f.prixDeLEnceinte) => auCentime(enceintesDeSonora(f) * prix * f.sonora.remise);
 
 /**
  * LE COMPTE DE RÉSULTAT DE L'ANNÉE, en lignes du lycée, et ses totaux. Sans variante, c'est celui de
  * la clôture au centime. Une variante rejoue l'année :
- *   · HYPOTHÈSE : un prix ou une quantité qui change fait varier les ventes (prix × quantité) et les
- *     coûts variables des enceintes en plus ou en moins (`coutVariableDeLEnceinte`), et rien
- *     d'autre ; le cours ne dit pas ici combien de clients un prix plus haut ferait fuir ;
+ *   · HYPOTHÈSE : un prix ou une quantité qui change fait varier les ventes (prix × quantité, moins
+ *     la remise de Sonora, dont les deux commandes restent) et les coûts variables des enceintes en
+ *     plus ou en moins (`coutVariableDeLEnceinte`), et rien d'autre ; le cours ne dit pas ici combien
+ *     de clients un prix plus haut ferait fuir ;
  *   · la hausse des salaires s'applique aux salaires et à leurs cotisations, toute l'année ;
  *   · l'impôt se recalcule sur le nouveau résultat, au barème de la fiche.
  */
@@ -107,7 +117,8 @@ export function compteDuLycee(f: FicheDeLExercice, v: Partial<VarianteDeLAnnee> 
   const varie = v.prix !== undefined || v.quantite !== undefined;
   const montants: Record<string, number> = {
     ...base,
-    ventes: varie ? auCentime(prix * quantite) : base.ventes!,
+    // Les ventes d'une variante : les enceintes au prix, moins la remise de Sonora, dont les deux commandes restent.
+    ventes: varie ? auCentime(prix * quantite - remiseDeSonora(f, prix)) : base.ventes!,
     composants: auCentime(base.composants! + ecart * f.fournisseur.prixDuJeu),
     emballage: auCentime(base.emballage! + ecart * f.autresCoutsDeLEnceinte),
     personnel: auCentime(base.personnel! * (1 + (v.hausseDesSalaires ?? 0))),
@@ -136,6 +147,8 @@ export function compteDuLycee(f: FicheDeLExercice, v: Partial<VarianteDeLAnnee> 
     prix,
     quantite,
     quantiteDeLaFiche,
+    /** La remise de Sonora, au prix de l'année : les ventes sont les enceintes au prix, moins elle. */
+    remise: remiseDeSonora(f, prix),
     coutVariable: coutVariableDeLEnceinte(f),
     lignes,
     ligne,

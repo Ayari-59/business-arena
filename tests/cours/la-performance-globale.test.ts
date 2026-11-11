@@ -26,11 +26,14 @@ describe("le chapitre, dans son parcours", () => {
 describe("les quatre performances", () => {
   it("efficacité, rentabilité, profitabilité, émissions", () => {
     const p = performanceDeNova();
-    expect([p.enceintes, p.chiffreDAffaires, p.resultatNet, p.capitauxPropres, p.caf]).toEqual([23_564, 1_390_276, 79_225.96, 229_225.96, 105_297.07]);
-    expect(attendusSgn(CH, "efficacite-et-efficience")).toEqual([94.26, 59]);
+    // 23 609 enceintes livrées, dont 900 à Sonora avec 5 % de remise (audit du 11 novembre, P2-2 : 23 564 avant).
+    expect([p.enceintes, p.chiffreDAffaires, p.resultatNet, p.capitauxPropres, p.caf]).toEqual([23_609, 1_390_276, 79_225.96, 229_225.96, 105_297.07]);
+    // 23 609 ÷ 25 000 ; 1 390 276 € ÷ 23 609 = 58,89 €, un peu sous les 59 € du prix.
+    expect(attendusSgn(CH, "efficacite-et-efficience")).toEqual([94.44, 58.89]);
     expect(attendusSgn(CH, "rentabilite-et-profitabilite")).toEqual([34.56, 5.7]);
-    expect(p.kwh).toBe(1.2 * 23_564 + 1_500 * 12);
-    expect(attendusSgn(CH, "l-indicateur-environnemental")).toEqual([2_406.39, 102.12]);
+    expect(p.kwh).toBe(1.2 * 23_609 + 1_500 * 12);
+    // 46 330,80 kWh × 0,052 kg ; 2 409,20 kg ÷ 23 609 × 1 000.
+    expect(attendusSgn(CH, "l-indicateur-environnemental")).toEqual([2_409.2, 102.05]);
   });
 
   it("le laboratoire : 25 000 € de dividendes, seule solution ; les 30 000 € retenus laissent 75 297,07 €", () => {

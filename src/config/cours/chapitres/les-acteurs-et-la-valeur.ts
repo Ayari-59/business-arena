@@ -127,7 +127,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
       texte: (c) => {
         const k = acteursEtValeur();
         return [
-          `Dans l'année, les clients ${dE(c.entreprise)} lui ont payé ${eur(k.avant.ventes)} (${qte(k.avant.enceintes)} ${c.unites} à ${eur(k.avant.prix)}). Cet argent ne reste pas dans l'entreprise : il passe aux fournisseurs et prestataires qui l'ont livrée, aux salariés qui ont travaillé, à la banque qui lui a prêté, à l'État. Ce qui reste, le résultat net, revient aux associés.`,
+          `Dans l'année, les clients ${dE(c.entreprise)} lui ont payé ${eur(k.avant.ventes)} : ${qte(k.avant.enceintes)} ${c.unites} à ${eur(k.avant.prix)}, moins ${eur(k.avant.remise)} de remise à Sonora. Cet argent ne reste pas dans l'entreprise : il passe aux fournisseurs et prestataires qui l'ont livrée, aux salariés qui ont travaillé, à la banque qui lui a prêté, à l'État. Ce qui reste, le résultat net, revient aux associés.`,
           "Ce sont les acteurs de l'organisation, qu'on appelle aussi ses parties prenantes. Chacun attend quelque chose d'elle : les clients, un bon produit au juste prix ; les fournisseurs, des commandes payées à temps ; les salariés, un salaire et de bonnes conditions de travail ; les prêteurs, des intérêts et le remboursement ; l'État, l'impôt ; les associés, un résultat.",
           `${c.entreprise} ne verse pas de dividende cette année : le résultat net reste chez elle, mais il appartient aux associés. Une part de ce que paient les clients sert aussi à mettre de côté l'usure de la ligne et les risques de l'année : le tableau ne la montre pas.`,
         ];

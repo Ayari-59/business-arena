@@ -211,7 +211,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
         const m = masseSalariale(c);
         const q = enceintesPourLePlafond(EFFECTIF_ESSAYE);
         return [
-          `Avec ${EFFECTIF_ESSAYE} salariés, la masse salariale serait de ${eur(EFFECTIF_ESSAYE * m.coutAnnuel)} : il faudrait vendre ${qte(q)} ${c.unites} dans l'année pour qu'elle reste sous ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes. Le premier exercice en a vendu ${qte(Math.round(m.ventes / m.prix))}.`,
+          `Avec ${EFFECTIF_ESSAYE} salariés, la masse salariale serait de ${eur(EFFECTIF_ESSAYE * m.coutAnnuel)} : il faudrait vendre ${qte(q)} ${c.unites} dans l'année pour qu'elle reste sous ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes. Le premier exercice en a vendu ${qte(m.enceintes)}.`,
           "Un salarié de plus se décide sur les ventes qu'il permettra : sans elles, le personnel pèse plus lourd sur chaque euro vendu.",
         ];
       },

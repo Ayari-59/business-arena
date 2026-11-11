@@ -67,10 +67,10 @@ describe("la capacité de remboursement de NOVA", () => {
     gardeDuLaboratoire(ch, "le-laboratoire-de-la-banque");
     expect(SOLUTION_DE_LA_BANQUE).toEqual({ emprunt: EMPRUNT_DU_DEFI, baisse: BAISSE_DU_DEFI });
     const x = banqueDuLaboratoire(k, SOLUTION_DE_LA_BANQUE);
-    expect(x.caf).toBe(43_694.07);
-    expect(Math.round(x.capaciteDeRemboursement * 100) / 100).toBe(3.84); // 168 000 ÷ 43 694,07
+    expect(x.caf).toBe(43_587.07);
+    expect(Math.round(x.capaciteDeRemboursement * 100) / 100).toBe(3.85); // 168 000 ÷ 43 587,07
     const defi = etape(ch, "le-laboratoire-de-la-banque", "simulation").defi(NOVA);
-    expect(defi.atteint({ emprunt: 110_000, baisse: 15 })).toBe(false); // 4,11 ans
+    expect(defi.atteint({ emprunt: 110_000, baisse: 15 })).toBe(false); // 4,12 ans
     expect(defi.atteint({ emprunt: 100_000, baisse: 20 })).toBe(false); // 20 % : l'année est trop mauvaise
     expect(defi.atteint({ emprunt: 100_000, baisse: 10 })).toBe(false); // le défi demande 15 % au moins
     expect(defi.atteint({ emprunt: 140_000, baisse: 0 })).toBe(false); // l'indépendance tombe sous 50 %
@@ -88,14 +88,16 @@ describe("la capacité de remboursement de NOVA", () => {
 
 describe("le cas : la banque teste une année difficile", () => {
   const r = anneeDifficile(NOVA);
-  it("10 % de ventes en moins et 150 000 € empruntés : 3,48 ans, mais 48,43 % d'indépendance", () => {
-    expect(r.enceintes).toBe(21_208);
-    // (23 564 − 21 208) × 21 € de marge en moins, 7 500 € d'intérêts : 42 991,96 € avant impôt.
-    expect(c(99_967.96 - 2_356 * 21 - 7_500)).toBe(42_991.96);
-    expect(r.resultatNet).toBe(c(42_991.96 - 6_498));
-    expect(r.caf).toBe(c(36_493.96 + 26_071.11));
+  it("10 % de ventes en moins et 150 000 € empruntés : 3,49 ans, mais 48,43 % d'indépendance", () => {
+    // 10 % des 23 609 enceintes livrées (audit du 11 novembre, P2-2 : 23 564 avant).
+    expect(r.enceintesAvant).toBe(23_609);
+    expect(r.enceintes).toBe(21_248);
+    // (23 609 − 21 248) × 21 € de marge en moins, 7 500 € d'intérêts : 42 886,96 € avant impôt.
+    expect(c(99_967.96 - 2_361 * 21 - 7_500)).toBe(42_886.96);
+    expect(r.resultatNet).toBe(c(42_886.96 - 6_472)); // 6 375 + 25 % × 386,96, à l'euro
+    expect(r.caf).toBe(c(36_414.96 + 26_071.11));
     expect(r.dettes).toBe(218_000);
-    expect(r.capacite).toBe(3.48);
+    expect(r.capacite).toBe(3.49); // 218 000 ÷ 62 486,07
     expect(r.ressources).toBe(473_297.07);
     expect(r.independance).toBe(48.43);
     expect([r.capaciteTient, r.independanceTient]).toEqual([true, false]);
