@@ -99,8 +99,8 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
     "Calculer les entrées et les sorties d'argent d'un mois, et la banque à la fin du mois",
     "Dire ce que les partenaires doivent encore, ou attendent de l'entreprise",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du bac STMG (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du bac STMG (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
   libre: true,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_LA_GESTION_DE_BASE },
   etapes: [

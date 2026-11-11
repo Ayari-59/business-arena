@@ -113,7 +113,9 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
     "Retrouver le net le plus haut qu'un budget de coût employeur permet",
     "Juger une promesse faite en net face à un budget tenu en coût",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du BTS SAM (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   etapes: [
     {
       id: "demande",

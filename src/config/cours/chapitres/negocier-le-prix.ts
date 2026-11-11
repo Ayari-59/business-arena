@@ -222,8 +222,8 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     "Fixer le plancher d'une affaire en plus selon la capacité qui reste libre",
     "Mesurer ce qu'une baisse de prix accordée à tous rapporte vraiment, et repérer les clients qui tiennent le prix",
   ],
-  // Libre : le premier chapitre du parcours du BTS NDRC (décision du propriétaire, novembre 2026 ;
-  // config/cours/chapitres-libres.ts).
+  // Libre : le chapitre libre du BTS NDRC et du BUT TC
+  // (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
   libre: true,
   entreprises: {
     codes: ENTREPRISES_DE_LA_NEGOCIATION,

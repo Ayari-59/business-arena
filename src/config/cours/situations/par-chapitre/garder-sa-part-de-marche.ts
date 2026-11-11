@@ -80,9 +80,9 @@ export const GARDER_SA_PART_DE_MARCHE: Situation = {
     "Calculer les ventes qui gardent la même part de marché",
     "Rédiger une réponse chiffrée à la direction",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du BUT TC et du BUT GACO (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: MARCHE_ET_PART_DE_MARCHE.entreprises,
   etapes: [
     {

@@ -181,7 +181,8 @@ function casDedie(s: Situation, ch: Chapitre) {
   expect(s.palier).toBe(ch.palier);
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
-  expect(s.libre).toBe(false);
+  // Libre avec son chapitre quand c'est le chapitre libre d'un diplôme (config/cours/chapitres-libres.ts), réservé sinon.
+  expect(s.libre).toBe(ch.libre);
   expect(s.blocs).toEqual([]);
   expect(s.etapes[0]!.type).toBe("lecture");
   expect(s.etapes[0]!.tableau).toBeDefined();

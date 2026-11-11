@@ -152,9 +152,9 @@ export const VOIR_PLUS_GRAND: Situation = {
     "Croiser deux machines : les ventes en plus qui égalisent leurs VAN, et la demande où la plus grande passe devant",
     "Répondre à la direction, chiffres à l'appui",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du DSCG (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_LA_CROISSANCE,
     pourquoi: "ce cas reprend le chapitre « Croître en investissant », qui se calcule sur l'atelier de NOVA et son catalogue de machines.",

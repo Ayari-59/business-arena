@@ -493,9 +493,8 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     "Enregistrer la paie : salaires bruts, cotisations, net à payer, règlement à l'URSSAF",
     "Construire le compte de résultat et le bilan à partir du journal",
   ],
-  // Libre depuis octobre 2026. Il n'est le premier d'aucun parcours (le chapitre libre de chaque diplôme,
-  // config/cours/chapitres-libres.ts), mais il reste ouvert par décision du propriétaire, novembre 2026,
-  // pour que les liens déjà partagés et les classes sans offre continuent de marcher.
+  // Libre depuis octobre 2026 ; le chapitre libre du BTS CG depuis la liste des chapitres libres
+  // (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
   libre: true,
   etapes: [
     {

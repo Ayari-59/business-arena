@@ -136,7 +136,7 @@ export function gardeDuCas(sit: Situation, ch: Chapitre) {
   expect(sit.palier, sit.code).toBe(ch.palier);
   expect(sit.parcours, sit.code).toBe(ch.parcours);
   expect(sit.entreprises?.codes, sit.code).toEqual(ch.entreprises?.codes);
-  // Un cas dédié est libre avec son chapitre, le premier d'un parcours (config/cours/chapitres-libres.ts) ;
+  // Un cas dédié est libre avec son chapitre, le chapitre libre d'un diplôme (config/cours/chapitres-libres.ts) ;
   // un cas de synthèse ne l'est jamais.
   expect(sit.libre, sit.code).toBe(ch.libre && sit.reprend.length === 1);
   expect(sit.blocs, sit.code).toEqual([]);
@@ -148,7 +148,7 @@ export function gardeDuCas(sit: Situation, ch: Chapitre) {
 /** Les blocs d'un chapitre se résolvent dans le référentiel de leur formation, et son titre est au programme. */
 export function gardeDuProgramme(ch: Chapitre, programme: readonly string[]) {
   expect(programme, ch.code).toContain(ch.titre);
-  // Libre s'il est le premier du parcours d'un diplôme (config/cours/chapitres-libres.ts), réservé sinon.
+  // Libre s'il est le chapitre libre d'un diplôme, celui de la liste (config/cours/chapitres-libres.ts), réservé sinon.
   expect(ch.libre, ch.code).toBe(chapitresLibresParDiplome().some((l) => l.chapitre.code === ch.code));
   for (const bloc of ch.blocs) {
     const cite = referentielDeCitation(bloc);

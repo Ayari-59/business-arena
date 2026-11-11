@@ -126,7 +126,9 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
     "Retrouver à rebours le taux le plus haut qu'un seuil de résultat permet, impôt compris",
     "Juger la hausse, chiffres à l'appui",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du DCG (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DES_SOLDES,
     pourquoi: "ce cas reprend le chapitre « Soldes intermédiaires de gestion et CAF », qui se joue sur l'exercice de NOVA dans la simulation du cours.",

@@ -297,9 +297,9 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     "Calculer les flux, la VAN et le délai de récupération d'un investissement, et dire pourquoi les intérêts n'y entrent pas",
     "Remonter de la VAN nulle aux ventes et à la hausse de la demande qu'elle exige, et critiquer un ratio qui n'est pas une rentabilité",
   ],
-  // Libre : le premier chapitre du parcours du DSCG (décision du propriétaire, novembre 2026 ;
-  // config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_LA_CROISSANCE,
     pourquoi:

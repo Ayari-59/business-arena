@@ -110,7 +110,9 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
     "Remonter à rebours de la marge à garder aux clients qu'une hausse peut perdre",
     "Juger une décision à ce qu'elle rapporte, et pas au seul ratio",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du BTS MHR (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: CUISINES,
     pourquoi: "ce cas suit le coût des denrées d'une cuisine, et elle n'a pas de cuisine.",

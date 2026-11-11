@@ -83,9 +83,9 @@ export const L_AUGMENTATION_GENERALE: Situation = {
     "Calculer les ventes qui gardent le même taux de frais de personnel",
     "Répondre à la direction, chiffre à l'appui",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS SAM (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: {
     codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
     pourquoi: "le cas reprend la masse salariale du premier exercice de NOVA, celle du chapitre.",

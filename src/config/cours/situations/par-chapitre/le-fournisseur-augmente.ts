@@ -85,9 +85,9 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
     "Calculer le prix de vente qui garde le même taux de marge sur coût variable",
     "Rédiger une réponse chiffrée au président",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS CG et du DCG (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {

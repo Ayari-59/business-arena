@@ -151,7 +151,7 @@ function casDedie(s: Situation, ch: Chapitre) {
   expect(s.palier).toBe(ch.palier);
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
-  // Libre avec son chapitre, le premier d'un parcours (config/cours/chapitres-libres.ts), réservé sinon.
+  // Libre avec son chapitre quand c'est le chapitre libre d'un diplôme (config/cours/chapitres-libres.ts), réservé sinon.
   expect(s.libre).toBe(ch.libre);
   expect(s.blocs).toEqual([]);
   expect(s.etapes[0]!.type).toBe("lecture");
@@ -212,7 +212,7 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect(CHAPITRES).toContain(ch);
     expect(ch.parcours).toBe("controle-de-gestion");
     expect(ch.palier).toBe(2);
-    // Libre : le premier chapitre du parcours du BTS MHR (config/cours/chapitres-libres.ts).
+    // Libre : le chapitre libre du BUT GEA et du BUT GACO (config/cours/chapitres-libres.ts).
     expect(CHAPITRES[0]!.code).not.toBe(ch.code);
     expect(ch.libre).toBe(true);
     expect(ch.entreprises?.codes).toEqual(["nova"]);

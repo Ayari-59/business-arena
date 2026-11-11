@@ -18,58 +18,67 @@ import { fichierLibre, sourcesDuCours } from "../../scripts/verifier-bundles";
 
 /**
  * UN CHAPITRE LIBRE PAR DIPLÔME (décision du propriétaire, novembre 2026 ; audit du 10 novembre,
- * produit P1-1). Le premier chapitre du parcours de chaque diplôme, dans son ordre d'apprentissage,
- * est libre, avec son cas pratique dédié ; aucun autre chapitre ni cas ne l'est, hors de l'exception
- * nommée ci-dessous (`LIBRES_HORS_DU_PREMIER_RANG`). La règle :
- * config/cours/chapitres-libres.ts. Les drapeaux restent dans les fichiers (`libre: true`), là où la
- * règle d'accès et la fouille des fichiers publics les lisent : cette garde vérifie qu'ils disent la
- * décision, ni plus ni moins.
+ * produit P1-1). Chaque diplôme a son chapitre libre, avec son cas pratique dédié ; aucun autre
+ * chapitre ni cas ne l'est. Depuis le 11 novembre 2026, ce chapitre est celui d'une liste choisie, et
+ * non plus le premier du parcours (audit pédagogique du 11 novembre, P1-5 : la règle ouvrait un
+ * chapitre de lycée au BTS CG, au DCG, au BTS SAM et aux trois BUT, des enceintes au BTS MHR). La
+ * liste : config/cours/chapitres-libres.ts. Les drapeaux restent dans les fichiers (`libre: true`), là
+ * où la règle d'accès et la fouille des fichiers publics les lisent : cette garde vérifie qu'ils
+ * disent la décision, ni plus ni moins.
  */
-
-/** La liste que la décision donne en novembre 2026 : diplômes, chapitre, cas dédié. */
-const LISTE_DE_NOVEMBRE: readonly [string[], string, string][] = [
-  [["stmg"], "les-flux-de-l-entreprise", "l-acompte-du-client"],
-  [["bts-cg", "dcg"], "prix-cout-et-marge", "le-fournisseur-augmente"],
-  [["bts-mco"], "taux-de-marque-et-coefficient", "l-etiquette-du-concurrent"],
-  [["bts-ndrc"], "negocier-le-prix", "la-remise-autorisee"],
-  [["bts-gpme"], "choisir-son-fournisseur", "le-fournisseur-allonge-son-delai"],
-  [["bts-sam"], "effectif-et-masse-salariale", "l-augmentation-generale"],
-  [["bts-mhr"], "seuil-de-rentabilite", "le-loyer-qui-augmente"],
-  [["but-gea"], "salaire-brut-net-cout", "la-prime-de-fin-d-annee"],
-  [["but-tc", "but-gaco"], "marche-et-part-de-marche", "garder-sa-part-de-marche"],
-  [["dscg"], "croitre-en-investissant", "voir-plus-grand"],
-];
 
 /**
- * L'EXCEPTION, UNE SEULE : libres sans être le premier d'aucun parcours. « De la création au premier
- * bilan » et son cas, libres depuis octobre 2026, restent ouverts par décision du propriétaire
- * (novembre 2026), pour que les liens déjà partagés et les classes sans offre continuent de marcher.
- * Un chapitre de plus ici est une décision : la garde ne l'accepte que nommé.
+ * La liste que le propriétaire a validée le 11 novembre 2026 : diplômes, chapitre, cas dédié. « De la
+ * création au premier bilan », libre depuis octobre, y entre pour le BTS CG et n'est plus une exception.
  */
-const LIBRES_HORS_DU_PREMIER_RANG: readonly { chapitre: string; cas: string }[] = [
-  { chapitre: "creation-premier-bilan", cas: "la-commande-du-31-janvier" },
+const LISTE_DU_11_NOVEMBRE: readonly [string[], string, string][] = [
+  [["stmg"], "les-flux-de-l-entreprise", "l-acompte-du-client"],
+  [["bts-cg"], "creation-premier-bilan", "la-commande-du-31-janvier"],
+  [["bts-mco"], "taux-de-marque-et-coefficient", "l-etiquette-du-concurrent"],
+  [["bts-ndrc", "but-tc"], "negocier-le-prix", "la-remise-autorisee"],
+  [["bts-gpme"], "choisir-son-fournisseur", "le-fournisseur-allonge-son-delai"],
+  [["bts-sam"], "la-paie", "la-prime-exceptionnelle"],
+  [["bts-mhr"], "le-cout-matiere", "monter-la-carte-ou-preparer-juste"],
+  [["but-gea", "but-gaco"], "seuil-de-rentabilite", "le-loyer-qui-augmente"],
+  [["dcg"], "soldes-intermediaires-de-gestion", "quand-le-taux-monte"],
+  [["dscg"], "l-effet-de-levier", "le-levier-face-a-la-hausse-du-taux"],
+];
+
+/** Les cinq chapitres libres du 9 au 11 novembre que la liste ferme, avec leurs cas : pas d'exception de plus. */
+const FERMES_LE_11_NOVEMBRE: readonly [string, string][] = [
+  ["prix-cout-et-marge", "le-fournisseur-augmente"],
+  ["effectif-et-masse-salariale", "l-augmentation-generale"],
+  ["salaire-brut-net-cout", "la-prime-de-fin-d-annee"],
+  ["marche-et-part-de-marche", "garder-sa-part-de-marche"],
+  ["croitre-en-investissant", "voir-plus-grand"],
 ];
 
 /** Les diplômes proposés qui ont des chapitres au cours, une option comptant pour le sien. */
 const AVEC_DES_CHAPITRES = DIPLOMES_PROPOSES.filter((f) => coursDuDiplome(f.code)?.premier);
 
 describe("un chapitre libre par diplôme", () => {
-  it("la liste : un chapitre par diplôme qui a des chapitres, partagé quand deux diplômes commencent par le même", () => {
+  it("la liste : un chapitre par diplôme qui a des chapitres, partagé quand deux diplômes ont le même", () => {
     expect(AVEC_DES_CHAPITRES.length).toBeGreaterThanOrEqual(12);
-    expect(chapitresLibresParDiplome().map((l) => [l.diplomes.map((f) => f.code), l.chapitre.code, l.cas?.code])).toEqual(LISTE_DE_NOVEMBRE);
+    expect(chapitresLibresParDiplome().map((l) => [l.diplomes.map((f) => f.code), l.chapitre.code, l.cas?.code])).toEqual(LISTE_DU_11_NOVEMBRE);
   });
 
-  it("chaque diplôme a exactement un chapitre libre à lui : le premier de son ordre d'apprentissage, et il est libre", () => {
+  it("chaque diplôme a exactement un chapitre libre à lui : celui de la liste, au parcours du diplôme, et il est libre", () => {
     for (const f of AVEC_DES_CHAPITRES) {
-      const cours = coursDuDiplome(f.code)!;
-      const ordre = cours.blocs.flatMap((b) => b.chapitres).sort((a, b) => a.rang - b.rang);
-      expect(ordre[0]!.chapitre, f.code).toBe(cours.premier!.chapitre);
-      expect(cours.premier!.chapitre.libre, `${f.code} : ${cours.premier!.chapitre.code} n'est pas libre`).toBe(true);
-      expect(essaiDuDiplome(f.code)?.chapitre, f.code).toBe(cours.premier!.chapitre);
-      // Le parcours d'un diplôme commence par un chapitre libre. Ceux d'autres diplômes peuvent y
-      // paraître plus loin (le bac STMG reprend le premier chapitre du BTS CG, du BUT TC…) : ils sont
-      // libres pour leur diplôme, et la page ne met en tête que celui de ce diplôme.
-      expect(ordre.findIndex((l) => l.chapitre.libre), f.code).toBe(0);
+      const essai = essaiDuDiplome(f.code);
+      expect(essai, f.code).not.toBeNull();
+      const ligne = LISTE_DU_11_NOVEMBRE.find(([diplomes]) => diplomes.includes(f.code));
+      expect(essai!.chapitre.code, f.code).toBe(ligne?.[1]);
+      expect(essai!.chapitre.libre, `${f.code} : ${essai!.chapitre.code} n'est pas libre`).toBe(true);
+      // Le chapitre libre est au parcours du diplôme : sa page le montre parmi les autres, à son rang.
+      const parcours = coursDuDiplome(f.code)!.blocs.flatMap((b) => b.chapitres.map((l) => l.chapitre.code));
+      expect(parcours, `${f.code} : ${essai!.chapitre.code} n'est pas au parcours`).toContain(essai!.chapitre.code);
+    }
+  });
+
+  it("les cinq chapitres libres que la liste remplace se ferment, avec leurs cas", () => {
+    for (const [chapitre, cas] of FERMES_LE_11_NOVEMBRE) {
+      expect(CHAPITRES.find((c) => c.code === chapitre)?.libre, chapitre).toBe(false);
+      expect(SITUATIONS.find((s) => s.code === cas)?.libre, cas).toBe(false);
     }
   });
 
@@ -89,27 +98,10 @@ describe("un chapitre libre par diplôme", () => {
     }
   });
 
-  it("l'exception est unique et nommée : libre avec son cas dédié, premier d'aucun parcours", () => {
-    expect(LIBRES_HORS_DU_PREMIER_RANG).toHaveLength(1);
-    const premiers = new Set(chapitresLibresParDiplome().map((l) => l.chapitre.code));
-    for (const x of LIBRES_HORS_DU_PREMIER_RANG) {
-      const chapitre = CHAPITRES.find((c) => c.code === x.chapitre);
-      expect(chapitre?.libre, `${x.chapitre} n'est plus libre`).toBe(true);
-      expect(casDuChapitre(x.chapitre)?.code, x.chapitre).toBe(x.cas);
-      expect(casDuChapitre(x.chapitre)?.libre, `${x.cas} n'est plus libre`).toBe(true);
-      // Premier d'un parcours, il serait dans la liste : l'exception ne servirait plus.
-      expect(premiers.has(x.chapitre), x.chapitre).toBe(false);
-    }
-  });
-
   it("aucun autre chapitre, cas, enquête, bureau ni scénario n'est libre", () => {
     const liste = chapitresLibresParDiplome();
-    expect(CHAPITRES.filter((c) => c.libre).map((c) => c.code).sort()).toEqual(
-      [...liste.map((l) => l.chapitre.code), ...LIBRES_HORS_DU_PREMIER_RANG.map((x) => x.chapitre)].sort(),
-    );
-    expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code).sort()).toEqual(
-      [...liste.map((l) => l.cas!.code), ...LIBRES_HORS_DU_PREMIER_RANG.map((x) => x.cas)].sort(),
-    );
+    expect(CHAPITRES.filter((c) => c.libre).map((c) => c.code).sort()).toEqual(liste.map((l) => l.chapitre.code).sort());
+    expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code).sort()).toEqual(liste.map((l) => l.cas!.code).sort());
     for (const x of [...ENQUETES, ...BUREAUX, ...SCENARIOS]) expect(x.libre, x.code).toBe(false);
   });
 
@@ -140,7 +132,8 @@ describe("un chapitre libre par diplôme", () => {
       expect(fichierLibre(readFileSync(join(process.cwd(), "src/config/cours/chapitres", f), "utf8")), f).toBe(false);
     }
     expect(libresSautes.sort()).toEqual(
-      [...liste.flatMap((l) => [l.chapitre.code, l.cas!.code]), ...LIBRES_HORS_DU_PREMIER_RANG.flatMap((x) => [x.chapitre, x.cas])]
+      liste
+        .flatMap((l) => [l.chapitre.code, l.cas!.code])
         .filter((c) => !fouillesEnEntier.includes(c))
         .sort(),
     );
