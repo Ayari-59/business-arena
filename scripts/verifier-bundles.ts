@@ -159,6 +159,67 @@ export function fuitesDuDiaporama(dossierNext: string, marqueurs = MARQUEURS_DU_
   });
 }
 
+/**
+ * LES ÉPISODES MANAGER NE PARTENT PAS DANS LE NAVIGATEUR (audit du 10 novembre 2026, P1-1).
+ *
+ * Constaté en production : la page d'une démonstration gratuite chargeait un fichier de 4,8 Mo où se
+ * lisaient 114 épisodes, payants compris, leurs messages, leurs verdicts et leurs bilans. Le jeu se
+ * calcule désormais au serveur, geste par geste, après le contrôle de la licence
+ * (pedagogy/episodes/partie-servie.ts, route /api/episodes/partie).
+ *
+ * Les marqueurs viennent des sources de chaque épisode du registre : son contenu (messages, résultats
+ * des vérifications, réactions), son assemblage (tableau de bord, bilan, comportements), son modèle
+ * (les événements qu'il raconte) et sa fiche de débrief. Dans chacun, les plus longues suites de
+ * caractères simples de ses textes, comme pour le cours. Aucun épisode n'est libre : la démonstration
+ * gratuite elle-même se joue par le serveur.
+ */
+const DOSSIERS_D_UN_EPISODE = ["src/config/episodes", "src/pedagogy/episodes", "src/engine/episodes", "src/config/episodes/fiches"];
+
+/** Les codes des épisodes, lus des imports du registre : sans charger les épisodes. */
+export function codesDesEpisodes(racine = process.cwd()): string[] {
+  const registre = readFileSync(join(racine, "src/pedagogy/episodes/registre.ts"), "utf8");
+  return [...registre.matchAll(/import\s+\{\s*EPISODE_\w+\s*\}\s+from\s+["']\.\/([\w-]+)["']/g)].map((m) => m[1]!);
+}
+
+export function sourcesDesEpisodes(racine = process.cwd()): string[] {
+  return codesDesEpisodes(racine).flatMap((code) =>
+    DOSSIERS_D_UN_EPISODE.map((d) => join(racine, d, `${code}.ts`)).filter((f) => existsSync(f)),
+  );
+}
+
+/** Les textes d'un fichier source, sans ses commentaires, que le build efface. */
+function textesDuSource(source: string): string[] {
+  const sansCommentaires = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  return [...sansCommentaires.matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g)].map((m) => m[1] ?? m[2] ?? "");
+}
+
+export function marqueursDesEpisodes(racine = process.cwd(), parFichier = 3): { fichier: string; marqueur: string }[] {
+  const out: { fichier: string; marqueur: string }[] = [];
+  for (const fichier of sourcesDesEpisodes(racine)) {
+    const morceaux = textesDuSource(readFileSync(fichier, "utf8"))
+      .flatMap((t) => t.split(/\$\{[^}]*\}/))
+      .flatMap((t) => t.match(/[A-Za-z ,.]{40,}/g) ?? [])
+      .map((m) => m.trim())
+      .filter((m) => m.length >= 40 && m.split(" ").length >= 6);
+    const choisis = [...new Set(morceaux)].sort((a, b) => b.length - a.length).slice(0, parFichier);
+    for (const m of choisis) out.push({ fichier: relative(racine, fichier), marqueur: m.slice(0, 70) });
+  }
+  return out;
+}
+
+export function fuitesDesEpisodes(dossierNext: string, marqueurs = marqueursDesEpisodes()): Fuite[] {
+  const statique = join(dossierNext, "static");
+  if (!existsSync(statique)) throw new Error(`aucun build dans ${dossierNext} : lancez d'abord next build`);
+  const fuites: Fuite[] = [];
+  for (const fichier of fichiersJs(statique)) {
+    const texte = readFileSync(fichier, "utf8");
+    for (const m of marqueurs) {
+      if (texte.includes(m.marqueur)) fuites.push({ fichier, marqueur: `${m.fichier} : ${m.marqueur}` });
+    }
+  }
+  return fuites;
+}
+
 const estLancéDirectement = process.argv[1]?.endsWith("verifier-bundles.ts");
 if (estLancéDirectement) {
   const dossier = process.argv[2] ?? ".next";
@@ -183,5 +244,16 @@ if (estLancéDirectement) {
     console.error(`${fuitesDuGenerateur.length} trace(s) du générateur de diaporama dans ${dossier}/static :`);
     for (const f of fuitesDuGenerateur.slice(0, 20)) console.error(`  ${f.fichier} : ${f.marqueur}`);
   } else console.log(`Aucun générateur de diaporama dans ${dossier}/static (${MARQUEURS_DU_DIAPORAMA.length} marqueurs cherchés).`);
-  if (fuites.length > 0 || fuitesDuContenu.length > 0 || fuitesDuGenerateur.length > 0) process.exit(1);
+  const desEpisodes = marqueursDesEpisodes();
+  const fuitesDEpisodes = fuitesDesEpisodes(dossier, desEpisodes);
+  if (fuitesDEpisodes.length > 0) {
+    const fichiers = new Set(fuitesDEpisodes.map((f) => f.fichier));
+    const sourcesTrouvees = new Set(fuitesDEpisodes.map((f) => f.marqueur.split(" : ")[0]!));
+    const episodesTrouves = new Set([...sourcesTrouvees].map((s) => s.replace(/^.*\//, "").replace(/\.ts$/, "")));
+    console.error(
+      `${fuitesDEpisodes.length} extrait(s) d'épisodes manager dans ${dossier}/static (${episodesTrouves.size} épisode(s), ${sourcesTrouvees.size} fichier(s) source, dans ${fichiers.size} fichier(s) JS) :`,
+    );
+    for (const f of fuitesDEpisodes.slice(0, 20)) console.error(`  ${f.fichier} : ${f.marqueur}`);
+  } else console.log(`Aucun épisode manager dans ${dossier}/static (${desEpisodes.length} extraits cherchés).`);
+  if (fuites.length > 0 || fuitesDuContenu.length > 0 || fuitesDuGenerateur.length > 0 || fuitesDEpisodes.length > 0) process.exit(1);
 }

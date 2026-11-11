@@ -2,13 +2,11 @@
 
 import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
-import { useMemo } from "react";
-import { GRAINES_DU_BILAN, moyenne } from "@/engine/episodes/commun";
-import { CAS, analyser, type Cas, type Enchainement } from "@/pedagogy/episodes/bilan";
-import type { Episode, PartieJouee } from "@/config/episodes/types";
+import type { Cas } from "@/pedagogy/episodes/bilan";
+import type { PartieJouee } from "@/config/episodes/types";
+import type { BilanServi, ComparaisonServie, NiveauAffiche } from "@/pedagogy/episodes/partie-servie";
 import { bouton } from "@/components/bouton";
-import { niveauParCode } from "@/config/episodes/niveaux";
-import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
+import { CourbeDesSemaines } from "./courbe-des-semaines";
 import { RetourDeLEpisode } from "./retour-de-l-episode";
 import type { CoursDeLEpisode } from "@/pedagogy/cours/suites";
 
@@ -19,6 +17,10 @@ import type { CoursDeLEpisode } from "@/pedagogy/cours/suites";
  * le remet aussitôt à sa place : la moyenne de ses choix sur trente tirages,
  * et ce que le hasard lui a apporté ou coûté. Le reste de la page sert à
  * séparer les deux, décision par décision.
+ *
+ * Le bilan se calcule au serveur, une fois la dernière décision prise
+ * (pedagogy/episodes/partie-servie.ts, `bilanServi`) : l'écran n'en reçoit que
+ * les textes et les chiffres, déjà écrits.
  */
 
 // La matrice se lit au filet plein, pas à une dragée : le mérité porte le
@@ -49,34 +51,16 @@ function Jeton({ d, titre }: { d: number; titre?: string }) {
  * même hasard, l'écart de résultat est entièrement celui des décisions ; sous
  * un autre, seul l'écart de moyenne sur trente tirages se compare.
  */
-function Comparaison({
-  ep,
-  avant,
-  apres,
-}: {
-  ep: Episode;
-  avant: PartieJouee;
-  apres: PartieJouee;
-}) {
-  const [x, y] = useMemo(() => {
-    const lire = (p: PartieJouee) => ({
-      resultat: ep.simuler(p.chemin, p.graine, p.jours).objectif,
-      attendu: moyenne(GRAINES_DU_BILAN.map((g) => ep.simuler(p.chemin, g, p.jours).objectif)),
-    });
-    return [lire(avant), lire(apres)];
-  }, [ep, avant, apres]);
-  const kE = ep.bilan.formatObjectif;
-  const memeHasard = avant.graine === apres.graine;
-  const ecart = (v: number) => `${v >= 0 ? "+" : "−"}${kE(Math.abs(v))}`;
+function Comparaison({ c }: { c: ComparaisonServie }) {
   return (
     <section className="carte grid gap-4 p-5">
       <h2 className="text-lg font-bold text-slate-50">Votre partie précédente, et celle-ci</h2>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-300">
-        {memeHasard
+        {c.memeHasard
           ? "Mêmes aléas pour les deux parties : l'écart de résultat vient entièrement de vos décisions."
-          : `Les deux parties n'ont pas eu les mêmes aléas : comparez plutôt la moyenne sur ${GRAINES_DU_BILAN.length} tirages, qui ne dépend que de vos décisions.`}
-        {(avant.niveau ?? "standard") !== (apres.niveau ?? "standard") &&
-          ` Niveau ${niveauParCode(avant.niveau).nom} pour la précédente, ${niveauParCode(apres.niveau).nom} pour celle-ci : le niveau change ce que vous saviez, pas le jugement des décisions.`}
+          : `Les deux parties n'ont pas eu les mêmes aléas : comparez plutôt la moyenne sur ${c.tirages} tirages, qui ne dépend que de vos décisions.`}
+        {c.niveaux &&
+          ` Niveau ${c.niveaux.avant} pour la précédente, ${c.niveaux.apres} pour celle-ci : le niveau change ce que vous saviez, pas le jugement des décisions.`}
       </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
@@ -88,19 +72,19 @@ function Comparaison({
             </tr>
           </thead>
           <tbody>
-            {ep.etapes.map((e, d) => {
-              const change = avant.chemin[d] !== apres.chemin[d];
+            {c.lignes.map((l, d) => {
+              const change = l.change;
               return (
-                <tr key={e.moment} className="border-t border-white/5 align-top">
+                <tr key={d} className="border-t border-white/5 align-top">
                   <td className="py-2.5 pr-3">
                     <Jeton d={d} />
                   </td>
-                  <td className="py-2.5 pr-3 text-slate-300">{e.options[avant.chemin[d]!]!.t}</td>
+                  <td className="py-2.5 pr-3 text-slate-300">{l.avant}</td>
                   <td
                     className={`py-2.5 ${change ? "font-semibold text-slate-50" : "text-slate-300"}`}
                   >
                     {change && <span className="sr-only">Changé : </span>}
-                    {e.options[apres.chemin[d]!]!.t}
+                    {l.apres}
                     {change && (
                       <span
                         aria-hidden="true"
@@ -116,19 +100,19 @@ function Comparaison({
             <tr className="border-t border-white/10">
               <td className="py-2.5 pr-3 font-semibold text-slate-200">Résultat</td>
               <td className="py-2.5 pr-3 tabular-nums text-slate-200">
-                {kE(x.resultat)} <span className="text-slate-400">· tirage n° {avant.graine}</span>
+                {c.resultat.avant} <span className="text-slate-400">· tirage n° {c.resultat.graine}</span>
               </td>
               <td className="py-2.5 tabular-nums text-slate-50">
-                {kE(y.resultat)}{" "}
-                <span className="font-semibold">({ecart(y.resultat - x.resultat)})</span>
+                {c.resultat.apres}{" "}
+                <span className="font-semibold">({c.resultat.ecart})</span>
               </td>
             </tr>
             <tr className="border-t border-white/5">
               <td className="py-2.5 pr-3 font-semibold text-slate-200">Moyenne sur 30 tirages</td>
-              <td className="py-2.5 pr-3 tabular-nums text-slate-200">{kE(x.attendu)}</td>
+              <td className="py-2.5 pr-3 tabular-nums text-slate-200">{c.attendu.avant}</td>
               <td className="py-2.5 tabular-nums text-slate-50">
-                {kE(y.attendu)}{" "}
-                <span className="font-semibold">({ecart(y.attendu - x.attendu)})</span>
+                {c.attendu.apres}{" "}
+                <span className="font-semibold">({c.attendu.ecart})</span>
               </td>
             </tr>
           </tbody>
@@ -143,18 +127,14 @@ function Comparaison({
  * Quand les décisions, jugées une à une, cachent l'écart à la méthode : on
  * montre ce que reprendre la méthode à chaque étape aurait rapporté.
  */
-function LEnchainement({ e, kE }: { e: Enchainement; kE: (v: number) => string }) {
-  const signe = (v: number) => `${v >= 0 ? "+" : "−"}${kE(Math.abs(v))}`;
+function LEnchainement({ e }: { e: NonNullable<BilanServi["enchainement"]> }) {
   return (
     <div className="encadre-neutre rounded-lg p-4">
       <h3 className="font-semibold text-slate-50">Vos décisions s&apos;enchaînent</h3>
       <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-300">
         Chaque décision est jugée dans la situation que les précédentes ont créée, et plusieurs des
-        vôtres y répondaient bien. Mais la méthode « {e.methode} » fait {kE(e.ecart)} de plus en
-        moyenne
-        {e.explique < e.ecart
-          ? `, et le détail décision par décision n'en explique que ${kE(e.explique)}`
-          : ""}
+        vôtres y répondaient bien. Mais la méthode « {e.methode} » fait {e.ecart} de plus en
+        moyenne{e.explique}
         . Le reste tient à l&apos;enchaînement : c&apos;est en amont qu&apos;il fallait choisir
         autrement.
       </p>
@@ -162,7 +142,7 @@ function LEnchainement({ e, kE }: { e: Enchainement; kE: (v: number) => string }
         {e.reprises.map((r) => (
           <li key={r.d}>
             Reprendre la méthode à partir de la décision {r.d + 1} :{" "}
-            <span className="font-semibold tabular-nums text-slate-100">{signe(r.gain)}</span> en
+            <span className="font-semibold tabular-nums text-slate-100">{r.gain}</span> en
             moyenne
           </li>
         ))}
@@ -206,63 +186,62 @@ function Sommaire({ nombre }: { nombre: number }) {
 }
 
 function BilanDeLEpisodeBrut({
-  ep,
+  bilan,
+  code,
   partie,
   cle,
-  precedente,
+  niveaux,
   onAutreHasard,
   onMemeHasard,
   cours = null,
-  sansLicence = false,
 }: {
-  ep: Episode;
+  /** Le bilan calculé au serveur à la dernière décision. */
+  bilan: BilanServi;
+  code: string;
+  /** Les faits de la partie, que le retour garde pour le profil. */
   partie: PartieJouee;
-  /** Aucune licence ne couvre cet épisode (la page serveur le sait) : voir `RetourDeLEpisode`. */
-  sansLicence?: boolean;
   /** La clé de la partie, pour la garder une seule fois ; `null` : on ne la garde pas. */
   cle: string | null;
-  /** La partie jouée juste avant, pour les comparer. */
-  precedente: PartieJouee | null;
+  /** Les noms des niveaux, pour le niveau conseillé. */
+  niveaux: readonly NiveauAffiche[];
   onAutreHasard: () => void;
   onMemeHasard: () => void;
   /** Les chapitres et cas pratiques du thème de l'épisode, préparés par la page. */
   cours?: CoursDeLEpisode | null;
 }) {
-  const a = useMemo(() => analyser(ep, partie), [ep, partie]);
-  const t = a.trimestre;
-  const constats = useMemo(() => ep.comportements(partie, t), [ep, partie, t]);
-  const axe = ep.axe(constats);
-  const kE = ep.bilan.formatObjectif;
-  const chance = t.objectif - a.attendu;
-  const hasard = ep.bilan.hasard(t, partie.graine);
+  const a = bilan;
+  const constats = bilan.constats;
+  const axe = bilan.axe;
+  const hasard = bilan.hasard;
+  const CAS = bilan.cas;
 
-  const barres = [{ nom: "Vous", valeur: t.objectif, vous: true }, ...a.references];
+  const barres = bilan.barres;
   const max = Math.max(...barres.map((b) => b.valeur));
   const min = Math.min(...barres.map((b) => b.valeur));
   // L'échelle part un peu sous la plus petite valeur : les écarts se voient,
   // et une barre reste visible même pour une valeur négative.
   const plancher = min - 0.03 * Math.max(Math.abs(min), max - min, 1);
   const largeur = (v: number) => 20 + (80 * (v - plancher)) / Math.max(1, max - plancher);
-  const tuiles = ep.bilan.tuiles(t);
+  const tuiles = bilan.tuiles;
 
   return (
     <div className="grid gap-5">
       <header>
         <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-          Bilan de l&apos;épisode · niveau {niveauParCode(partie.niveau).nom} · tirage n°{" "}
-          {partie.graine}
+          Bilan de l&apos;épisode · niveau {bilan.niveau} · tirage n°{" "}
+          {bilan.graine}
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 tabular-nums sm:text-4xl">
-          {ep.bilan.titre(t)}
+          {bilan.titre}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300">
-          Avec vos choix, la moyenne sur {GRAINES_DU_BILAN.length} tirages au hasard est de {kE(a.attendu)}. Ce
-          trimestre-ci, le hasard vous a {chance >= 0 ? "apporté" : "coûté"} {kE(Math.abs(chance))}.
+          Avec vos choix, la moyenne sur {bilan.tirages} tirages au hasard est de {bilan.attendu}. Ce
+          trimestre-ci, le hasard vous a {bilan.chance.apporte ? "apporté" : "coûté"} {bilan.chance.montant}.
           C&apos;est la qualité de vos décisions qui compte, pas ce hasard.
         </p>
       </header>
 
-      <Sommaire nombre={ep.etapes.length} />
+      <Sommaire nombre={bilan.nombreDeDecisions} />
 
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {tuiles.map((u) => (
@@ -288,16 +267,9 @@ function BilanDeLEpisodeBrut({
         ))}
       </ul>
 
-      {precedente && <Comparaison ep={ep} avant={precedente} apres={partie} />}
+      {bilan.comparaison && <Comparaison c={bilan.comparaison} />}
 
-      <CourbeDesSemaines
-        courbe={ep.courbe}
-        titre="Votre trimestre, semaine par semaine"
-        semaines={t.semaines}
-        jouees={13}
-        reperes={reperesDesDecisions(ep, ep.etapes.length)}
-        imprevus={ep.imprevus(partie.graine)}
-      />
+      <CourbeDesSemaines courbe={bilan.courbe} />
       <section aria-labelledby="hasard-titre" className="grid scroll-mt-24 gap-2">
         <h2
           id="hasard-titre"
@@ -344,17 +316,17 @@ function BilanDeLEpisodeBrut({
                 />
               </span>
               <span className="text-right text-sm font-semibold tabular-nums text-slate-100">
-                {kE(b.valeur)}
+                {b.texte}
               </span>
             </li>
           ))}
         </ul>
-        <p className="max-w-2xl text-sm text-slate-400">{ep.bilan.noteDesBarres}</p>
+        <p className="max-w-2xl text-sm text-slate-400">{bilan.noteDesBarres}</p>
       </section>
 
       <section aria-labelledby="decisions-titre" className="carte grid scroll-mt-24 gap-4 p-5">
         <h2 id="decisions-titre" className="text-lg font-bold text-slate-50">
-          Vos {ep.etapes.length} décisions : ce qui relevait du choix, ce qui relevait
+          Vos {bilan.nombreDeDecisions} décisions : ce qui relevait du choix, ce qui relevait
           du hasard
         </h2>
         <div
@@ -389,7 +361,7 @@ function BilanDeLEpisodeBrut({
                     <span className="text-xs text-slate-400">{CAS[cle].aide}</span>
                     <span className="mt-1.5 flex flex-wrap gap-1.5">
                       {ici.map((x) => (
-                        <Jeton key={x.d} d={x.d} titre={x.e.options[x.pris.option]!.t} />
+                        <Jeton key={x.d} d={x.d} titre={x.choix} />
                       ))}
                     </span>
                   </div>
@@ -398,7 +370,7 @@ function BilanDeLEpisodeBrut({
             </div>
           ))}
         </div>
-        {a.enchainement && <LEnchainement e={a.enchainement} kE={kE} />}
+        {a.enchainement && <LEnchainement e={a.enchainement} />}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-sm">
             <thead>
@@ -417,23 +389,21 @@ function BilanDeLEpisodeBrut({
                   <td className="py-2.5 pr-3 text-slate-300">
                     <span className="flex items-center gap-2">
                       <Jeton d={x.d} />
-                      {x.e.moment}
+                      {x.moment}
                     </span>
                   </td>
-                  <td className="py-2.5 pr-3 text-slate-200">{x.e.options[x.pris.option]!.t}</td>
+                  <td className="py-2.5 pr-3 text-slate-200">{x.choix}</td>
                   <td className="whitespace-nowrap py-2.5 pr-3 tabular-nums text-slate-300">
                     {x.rang} sur {x.n}
                   </td>
                   <td className="py-2.5 pr-3 text-slate-300">
-                    {x.rang === 1 ? "votre choix" : x.e.options[x.meilleur.option]!.t}
+                    {x.meilleure}
                   </td>
                   <td className="whitespace-nowrap py-2.5 pr-3 text-right tabular-nums text-slate-200">
-                    {x.rang === 1 ? "—" : `−${kE(x.meilleur.attendu - x.pris.attendu)}`}
+                    {x.ecart}
                   </td>
                   <td className="whitespace-nowrap py-2.5 text-right tabular-nums text-slate-200">
-                    {x.plusSur.p10 - x.pris.p10 < 500
-                      ? "le plus sûr"
-                      : `−${kE(x.plusSur.p10 - x.pris.p10)}`}
+                    {x.pireCas}
                   </td>
                 </tr>
               ))}
@@ -441,7 +411,7 @@ function BilanDeLEpisodeBrut({
           </table>
         </div>
         <p className="max-w-2xl text-sm text-slate-400">
-          Chaque décision est rejouée sous {GRAINES_DU_BILAN.length} tirages au hasard, vos autres choix inchangés. «
+          Chaque décision est rejouée sous {bilan.tirages} tirages au hasard, vos autres choix inchangés. «
           Pire cas » : le résultat du trimestre dans les 10 % de tirages les moins favorables,
           comparé à l&apos;option qui protège le mieux.
         </p>
@@ -477,7 +447,7 @@ function BilanDeLEpisodeBrut({
         </div>
       </section>
 
-      <RetourDeLEpisode ep={ep} partie={partie} cle={cle} sansLicence={sansLicence} />
+      <RetourDeLEpisode retour={bilan.retour} code={code} partie={partie} cle={cle} niveaux={niveaux} />
 
       {cours && <LeCoursDuTheme cours={cours} />}
 

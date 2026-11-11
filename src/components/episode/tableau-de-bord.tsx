@@ -1,5 +1,5 @@
 import { avecTypographie } from "@/components/typographie";
-import type { Indicateur, Lecture } from "@/config/episodes/types";
+import type { IndicateurServi, TableauServi } from "@/pedagogy/episodes/partie-servie";
 
 /**
  * LE TABLEAU DE BORD DU MANAGER.
@@ -10,57 +10,47 @@ import type { Indicateur, Lecture } from "@/config/episodes/types";
  * chiffre d'affaires qui monte une bonne. Le signe dit le sens ; la couleur
  * ne fait que le confirmer.
  *
+ * Les chiffres arrivent du serveur déjà écrits (pedagogy/episodes/partie-servie.ts) : l'écran
+ * ne connaît ni la façon de les calculer ni celle de les écrire.
+ *
  * C'est un ÉCRAN DE CHIFFRES : il prend la matière du tableau (`ardoise`), le
  * marine de l'arène, à côté du récit qui reste sur le clair. L'œil sait ainsi
  * où regarder pour savoir où l'on en est.
  */
 function Ecart({
-  apres,
-  avant,
-  format,
-  sensBon,
+  ecart,
   serre = false,
 }: {
-  apres: number | null | undefined;
-  avant: number | null | undefined;
-  format: (v: number) => string;
-  sensBon: 1 | -1;
+  ecart: IndicateurServi["ecart"];
   /** Dans la ligne repliée : sans marge, au corps du texte voisin. */
   serre?: boolean;
 }) {
-  if (avant == null || apres == null) return null;
-  const d = apres - avant;
-  if (Math.abs(d) < 1e-9) return null;
-  const bon = sensBon * d > 0;
+  if (!ecart) return null;
   return (
     <span
       // L'écart dit un résultat : son signe et sa couleur, francs, sans voile.
       className={`${serre ? "" : "ml-2"} text-xs font-semibold tabular-nums ${
-        bon ? "text-emerald-300" : "text-red-300"
+        ecart.bon ? "text-emerald-300" : "text-red-300"
       }`}
     >
-      {d > 0 ? "+" : "−"}
-      {format(Math.abs(d))}
+      {ecart.signe}
+      {ecart.montant}
     </span>
   );
 }
 
 function TableauDeBordBrut({
-  nom,
-  indicateurs,
-  semaine,
-  lecture,
-  avant,
+  tableau,
+  ecarts,
   nu = false,
 }: {
-  nom: string;
-  indicateurs: readonly Indicateur[];
-  semaine: number;
-  lecture: Lecture;
-  avant: Lecture | null;
+  tableau: TableauServi;
+  /** Juste après une décision : chaque chiffre porte son écart à la lecture d'avant. */
+  ecarts: boolean;
   /** Déplié depuis la ligne collante : sans cadre ni titre, la ligne les porte. */
   nu?: boolean;
 }) {
+  const { nom, semaine, indicateurs } = tableau;
   return (
     <section
       aria-labelledby={nu ? undefined : "tableau-titre"}
@@ -79,23 +69,17 @@ function TableauDeBordBrut({
         className={`grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-1 lg:gap-y-4 ${nu ? "" : "mt-3"}`}
       >
         {indicateurs.map((ind) => {
-          const v = lecture[ind.cle];
-          const jauge = ind.jauge?.(lecture);
+          const jauge = ind.jauge;
           return (
             <div key={ind.cle} className="min-w-0">
               <dt className="text-sm text-slate-400">{ind.nom}</dt>
               <dd className="mt-0.5 flex flex-wrap items-baseline">
                 <span className="font-display text-2xl font-bold tabular-nums text-slate-50">
-                  {v == null ? "—" : ind.format(v)}
+                  {ind.valeur}
                 </span>
-                <Ecart
-                  apres={v}
-                  avant={avant?.[ind.cle]}
-                  format={ind.formatEcart ?? ind.format}
-                  sensBon={ind.sensBon}
-                />
+                <Ecart ecart={ecarts ? ind.ecart : null} />
               </dd>
-              <dd className="mt-0.5 text-xs text-slate-400">{ind.aide(semaine, lecture)}</dd>
+              <dd className="mt-0.5 text-xs text-slate-400">{ind.aide}</dd>
               {jauge && (
                 <dd
                   className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-800"
@@ -131,21 +115,16 @@ function TableauDeBordBrut({
  * panneau entier, aides comprises.
  */
 function LigneDuTableauBrut({
-  nom,
-  indicateurs,
-  semaine,
-  lecture,
-  avant,
+  tableau,
+  ecarts,
   haut = 0,
 }: {
-  nom: string;
-  indicateurs: readonly Indicateur[];
-  semaine: number;
-  lecture: Lecture;
-  avant: Lecture | null;
+  tableau: TableauServi;
+  ecarts: boolean;
   /** Où coller la ligne : sous l'en-tête du site, mesuré par la page. */
   haut?: number;
 }) {
+  const { nom, semaine, indicateurs } = tableau;
   return (
     <details
       data-ligne-du-tableau=""
@@ -158,20 +137,11 @@ function LigneDuTableauBrut({
         </span>
         <span className="flex min-w-0 flex-1 gap-x-4 overflow-x-auto whitespace-nowrap text-sm tabular-nums [scrollbar-width:none]">
           {indicateurs.map((ind) => {
-            const v = lecture[ind.cle];
             return (
               <span key={ind.cle} className="flex shrink-0 items-baseline gap-1.5">
                 <span className="max-w-[9rem] truncate text-xs text-slate-400">{ind.nom}</span>
-                <span className="font-semibold text-slate-50">
-                  {v == null ? "—" : ind.format(v)}
-                </span>
-                <Ecart
-                  apres={v}
-                  avant={avant?.[ind.cle]}
-                  format={ind.formatEcart ?? ind.format}
-                  sensBon={ind.sensBon}
-                  serre
-                />
+                <span className="font-semibold text-slate-50">{ind.valeur}</span>
+                <Ecart ecart={ecarts ? ind.ecart : null} serre />
               </span>
             );
           })}
@@ -184,14 +154,7 @@ function LigneDuTableauBrut({
         </span>
       </summary>
       <div className="max-h-[60dvh] overflow-y-auto border-t border-white/10 px-4 pb-4 sm:px-6">
-        <TableauDeBord
-          nom={nom}
-          indicateurs={indicateurs}
-          semaine={semaine}
-          lecture={lecture}
-          avant={avant}
-          nu
-        />
+        <TableauDeBord tableau={tableau} ecarts={ecarts} nu />
       </div>
     </details>
   );

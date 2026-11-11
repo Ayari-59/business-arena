@@ -27,8 +27,9 @@
  * LES ADRESSES NE CHANGENT PAS. Seuls les libellés et leur rangement bougent :
  * un lien partagé, un signet, un support imprimé restent justes.
  */
-import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/episodes/familles";
-import { COMPETENCES } from "@/config/episodes/competences";
+// Les modules légers, hors des épisodes : le menu est lu par des composants client.
+import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/familles-des-episodes";
+import { COMPETENCES } from "@/config/referentiel-des-competences";
 
 export interface LienDeMenu {
   href: string;
