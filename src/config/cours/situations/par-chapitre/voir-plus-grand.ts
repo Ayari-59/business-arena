@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2, donneeTelleQuelle, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { CROITRE_EN_INVESTISSANT, ENTREPRISES_DE_LA_CROISSANCE, croissance, tableauDesMachines } from "../../chapitres/croitre-en-investissant";
 import { machineEnPlus } from "../../monde/capacite";
@@ -199,7 +199,7 @@ export const VOIR_PLUS_GRAND: Situation = {
             libelle: "Capacité de l'équipe avec son opérateur",
             nature: "quantite",
             attendu: g.capaciteEquipe,
-            calcul: `${qte(f.operateurs.heuresParMois)} heures ÷ ${qte(g.machine.heuresParEnceinte)} × 3 mois = ${qte(g.equipeEnPlus)} ; ${qte(equipe)} + ${qte(g.equipeEnPlus)} = ${qte(g.capaciteEquipe)}`,
+            calcul: `${qte(f.operateurs.heuresParMois)} heures ÷ ${donneeTelleQuelle(g.machine.heuresParEnceinte)} × 3 mois = ${qte(g.equipeEnPlus)} ; ${qte(equipe)} + ${qte(g.equipeEnPlus)} = ${qte(g.capaciteEquipe)}`,
           },
           {
             libelle: "Ventes gagnées sur l'année",

@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { donneesDuMois, investissementDeLaFiche, leviersDeBase, tableauDeBord, type LeviersDuSemestre } from "../monde/couts-et-budgets";
 import { DELAI_CONVENU_DE_CAMPUSTECH, GESTION_DU_COURS, type CodeDIndicateur, type FicheDeGestion } from "../monde/nova-gestion";
@@ -308,7 +308,8 @@ export const TABLEAU_DE_BORD: Chapitre = {
           },
           {
             libelle: "Seuil de rentabilité du mois",
-            attendu: m.seuil,
+            // L'autre chemin : le taux de marge gardé avec tous ses chiffres, l'arrondi à la fin.
+            ...deuxChemins(m.seuil, (m.chargesFixes * m.chiffreDAffaires) / m.marge),
             calcul: `${eur(m.chargesFixes)} ÷ ${pourcent(m.tauxDeMargePct)} = ${eur(m.seuil)}, sur le taux à deux décimales`,
           },
           {

@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutQuiGardeLeTauxDeMarque, fournisseurDe, margeDeLArticle, margeDuMois, margesDeLaGamme, prixHtDuTtc, prixQuiGardeLeTauxDeMarque, referenceDe } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeFournisseur, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -158,6 +158,10 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
   const achatAtelier = auCentime(r.coutDAchat * atelier.multiplicateur);
   const prixAtelier = prixQuiGardeLeTauxDeMarque(achatAtelier, tMarque / 100);
   const ttcAtelier = auCentime(prixAtelier * (1 + r.tauxTva));
+  // Sur le taux de marque exact (30 ÷ 55), là où se croisent les droites du curseur : l'étiquette est
+  // proportionnelle au prix d'achat. Sur le taux arrondi, un centime de plus (audit du 11 novembre 2026, P1-2).
+  const prixAtelierExact = auCentime(achatAtelier / (1 - tauxDeMarqueExact));
+  const ttcAtelierExact = auCentime((achatAtelier * (1 + r.tauxTva)) / (1 - tauxDeMarqueExact));
   // La plus petite étiquette ronde (en euros TTC) qui garde le taux de marque.
   const etiquetteRondeAtelier = Math.ceil((achatAtelier * (1 + r.tauxTva)) / (1 - tauxDeMarqueExact) - 1e-9);
 
@@ -232,8 +236,10 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
     achatAtelier,
     prixAtelier,
     ttcAtelier,
+    prixAtelierExact,
+    ttcAtelierExact,
     coefTtcAtelier: auCentime(ttcAtelier / achatAtelier),
-    hausseDeLEtiquette: auCentime((ttcAtelier / r.prixTtc - 1) * 100),
+    hausseDeLEtiquette: auCentime((ttcAtelierExact / r.prixTtc - 1) * 100),
     etiquetteRondeAtelier,
     achatFins,
     tMarqueFins: auCentime(margeFins.tauxDeMarque * 100),
@@ -586,9 +592,15 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       },
       explication: (c) => {
         const m = margesDuRayon(c);
+        // Le taux de l'étape suivante est arrondi à deux décimales : son étiquette peut y gagner un centime.
+        const ecart = auCentime(m.ttcAtelier - m.ttcAtelierExact);
         return [
-          `Les deux droites se croisent à ${eur(m.ttcAtelier)} TTC, soit ${eur(m.prixAtelier)} HT : l'étiquette ronde qui garde le taux de marque est donc ${eur(m.etiquetteRondeAtelier)}. De ${eur(m.r.prixTtc)} à ${eur(m.ttcAtelier)}, l'étiquette monte de ${pct(m.hausseDeLEtiquette)}, exactement comme le prix d'achat : à taux de marque constant, le prix de vente est proportionnel au prix d'achat.`,
-          `Le coefficient ne change pas : ${eur(m.achatAtelier)} × ${coef(m.coefTtcAtelier)} = ${eur(m.ttcAtelier)}. C'est la formule que l'étape suivante fait calculer.`,
+          `Les deux droites se croisent à ${eur(m.ttcAtelierExact)} TTC, soit ${eur(m.prixAtelierExact)} HT : l'étiquette ronde qui garde le taux de marque est donc ${eur(m.etiquetteRondeAtelier)}. De ${eur(m.r.prixTtc)} à ${eur(m.ttcAtelierExact)}, l'étiquette monte de ${pct(m.hausseDeLEtiquette)}, exactement comme le prix d'achat : à taux de marque constant, le prix de vente est proportionnel au prix d'achat.`,
+          `Le coefficient ne change pas : ${eur(m.achatAtelier)} × ${coef(m.coefTtc)} = ${eur(m.ttcAtelierExact)}. C'est la formule que l'étape suivante fait calculer${
+            ecart === 0
+              ? "."
+              : `, sur le taux de marque arrondi à ${pct(m.tMarque)} : elle trouve ${eur(m.ttcAtelier)}, ${Math.abs(ecart) === 0.01 ? "un centime" : eur(Math.abs(ecart))} de ${ecart > 0 ? "plus" : "moins"}. L'écart vient de l'arrondi du taux, pas de la règle.`
+          }`,
         ];
       },
     },
@@ -824,8 +836,17 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
             attendu: m.achatQuiGardeLaMarge,
             calcul: `${eur(m.htConcurrent)} − ${eur(m.margeDuMoisDeJanvier)} ÷ ${qte(m.aligne.ventes)} = ${eur(m.achatQuiGardeLaMarge)}, au centime inférieur`,
           },
-          { libelle: "Baisse qui garde le taux de marque (%)", attendu: m.baisseQuiGardeLaMarque, calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarque)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarque)}` },
-          { libelle: "Baisse qui garde la marge du mois (%)", attendu: m.baisseQuiGardeLaMarge, calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarge)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarge)}` },
+          // L'autre chemin : les prix d'achat gardés avec tous leurs chiffres, l'arrondi à la fin.
+          {
+            libelle: "Baisse qui garde le taux de marque (%)",
+            ...deuxChemins(m.baisseQuiGardeLaMarque, ((m.r.coutDAchat - m.htConcurrent * (1 - m.tMarque / 100)) / m.r.coutDAchat) * 100),
+            calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarque)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarque)}`,
+          },
+          {
+            libelle: "Baisse qui garde la marge du mois (%)",
+            ...deuxChemins(m.baisseQuiGardeLaMarge, ((m.r.coutDAchat - (m.htConcurrent - m.margeDuMoisDeJanvier / m.aligne.ventes)) / m.r.coutDAchat) * 100),
+            calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarge)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarge)}`,
+          },
         ];
       },
       explication: (c) => {

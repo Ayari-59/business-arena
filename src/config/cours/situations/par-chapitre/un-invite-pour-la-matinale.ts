@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_EVENEMENT, evenementDuCabinet } from "../../chapitres/l-evenement-commercial";
 import { MATINALES, matinales } from "../../monde/terrain-d-atlas";
@@ -171,9 +171,9 @@ export const UN_INVITE_POUR_LA_MATINALE: Situation = {
             attendu: a.comptes,
             calcul: `${qte(a.contacts)} × ${pct(MATINALES.tauxDeRendezVous)} ÷ ${qte(1 / MATINALES.devisParRendezVous)} × ${pct(MATINALES.tauxDeSignature)} = ${qte(a.comptes)} comptes`,
           },
-          { libelle: "Coût par compte avec l'intervenant", attendu: a.coutParCompte, calcul: `${eur(a.cout)} ÷ ${qte(a.comptes)} = ${eur(a.coutParCompte)}` },
-          { libelle: "Gain de la matinale avec l'intervenant", attendu: a.gain, calcul: `${qte(a.comptes)} × ${eur(r.x.s.valeurDUnCompte)} − ${eur(a.cout)} = ${eur(a.gain)}` },
-          { libelle: "Gain en plus grâce à l'intervenant", attendu: r.gainEnPlus, calcul: `${eur(a.gain)} − ${eur(r.sans.gain)} = ${eur(r.gainEnPlus)}` },
+          { libelle: "Coût par compte avec l'intervenant", ...deuxChemins(a.coutParCompte, a.sansArrondi.coutParCompte), calcul: `${eur(a.cout)} ÷ ${qte(a.comptes)} = ${eur(a.coutParCompte)}` },
+          { libelle: "Gain de la matinale avec l'intervenant", ...deuxChemins(a.gain, a.sansArrondi.gain), calcul: `${qte(a.comptes)} × ${eur(r.x.s.valeurDUnCompte)} − ${eur(a.cout)} = ${eur(a.gain)}` },
+          { libelle: "Gain en plus grâce à l'intervenant", ...deuxChemins(r.gainEnPlus, a.sansArrondi.gain - r.sans.gain), calcul: `${eur(a.gain)} − ${eur(r.sans.gain)} = ${eur(r.gainEnPlus)}` },
         ];
       },
       explication: (c) => {

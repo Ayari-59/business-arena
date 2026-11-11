@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CABINETS_DU_COURS, type FicheDuCabinet } from "../monde/atlas-conseil";
 import {
@@ -182,8 +182,12 @@ export function valeurDesComptes(c: Pick<Cas, "code">) {
     equilibreEnRecrutant: auCentime(equilibreEnRecrutant),
     equilibreEnFidelisant: auCentime(equilibreEnFidelisant),
     // Sur le portefeuille arrondi au centième, comme sur la copie.
-    journeesEnFidelisant: auCentime(auCentime(equilibreEnFidelisant) * journeesParCompte),
-    journeesEnRecrutant: auCentime(auCentime(equilibreEnRecrutant) * journeesParCompte),
+    // Les journées sur le portefeuille exact, pas sur son arrondi : 8 ÷ 18,75 % × 60 = 2 560 journées, quand
+    // 42,67 × 60 en ferait 2 560,20 (audit pédagogique du 11 novembre 2026, P1-2). L'élève qui part du
+    // portefeuille arrondi est accepté aussi (`journeesSurLeComptesArrondi`, l'autre chemin).
+    journeesEnFidelisant: auCentime(equilibreEnFidelisant * journeesParCompte),
+    journeesEnRecrutant: auCentime(equilibreEnRecrutant * journeesParCompte),
+    journeesSurLeComptesArrondi: auCentime(auCentime(equilibreEnFidelisant) * journeesParCompte),
     annee,
     valeurVisee,
     attritionMaxActualisee,
@@ -603,8 +607,8 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
           {
             libelle: "Journées demandées par le plus grand portefeuille",
             nature: "grandeur",
-            attendu: x.journeesEnFidelisant,
-            calcul: `${qte(x.equilibreEnFidelisant)} × ${qte(x.journeesParCompte)} = ${qte(x.journeesEnFidelisant)} journées (pour ${qte(x.capacite)} de capacité)`,
+            ...deuxChemins(x.journeesEnFidelisant, x.journeesSurLeComptesArrondi),
+            calcul: `${qte(x.n.nouveaux)} ÷ ${pct(x.attritionReduite)} × ${qte(x.journeesParCompte)} = ${qte(x.journeesEnFidelisant)} journées (pour ${qte(x.capacite)} de capacité), sur le portefeuille gardé avec tous ses chiffres`,
           },
         ];
       },

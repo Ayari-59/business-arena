@@ -47,7 +47,23 @@ const BRUT_MAXIMAL_DU_CURSEUR = 2_200;
 /** La paie d'un opérateur en janvier, et ce que coûte une hausse de son net (le cas de la prime la reprend). */
 export function salaire(_c?: Cas) {
   const p = paieDUnOperateur();
-  return { ...p, hausseDuNet: p.hausse.net, hausseDuBrut: p.hausse.brut, hausseDuCout: p.hausse.cout };
+  return {
+    ...p,
+    hausseDuNet: p.hausse.net,
+    hausseDuBrut: p.hausse.brut,
+    hausseDuCout: p.hausse.cout,
+    // Le coût de la hausse sans arrondir le brut en route : celui des « 100 € de net » de l'étape du coût.
+    // Le brut payé, lui, s'arrondit au centime, et ses cotisations avec lui (audit du 11 novembre 2026, P1-2).
+    hausseDuCoutSansArrondi: arrondi2((p.hausse.net / (1 - p.tauxSalarial)) * (1 + p.tauxPatronal)),
+  };
+}
+
+/** Ce que l'arrondi du brut au centime ajoute au coût d'une hausse, dit en clair ; vide s'il n'ajoute rien. */
+function centimeDuBrut(s: ReturnType<typeof salaire>): string {
+  const ecart = arrondi2(s.hausseDuCout - s.hausseDuCoutSansArrondi);
+  if (ecart === 0) return "";
+  const combien = Math.abs(ecart) === 0.01 ? "un centime" : eur(Math.abs(ecart));
+  return ` C'est, à ${combien} près, ce que coûtent ${eur(s.hausseDuNet)} de net à l'étape précédente (${eur(s.hausseDuCoutSansArrondi)}) : le brut payé s'arrondit au centime, et ses cotisations avec lui.`;
 }
 
 export const SALAIRE_BRUT_NET_COUT: Chapitre = {
@@ -165,7 +181,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
           {
             texte: eur(s.hausseDuCout),
             juste: true,
-            retour: `Oui : pour ${eur(s.hausseDuNet)} de net en plus, le brut doit monter de ${eur(s.hausseDuNet)} ÷ (1 − ${pct(s.tauxSalarial)}) = ${eur(s.hausseDuBrut)}, et l'entreprise paie ses cotisations sur ce brut : ${eur(s.hausseDuBrut)} × (1 + ${pct(s.tauxPatronal)}) = ${eur(s.hausseDuCout)}.`,
+            retour: `Oui : pour ${eur(s.hausseDuNet)} de net en plus, le brut doit monter de ${eur(s.hausseDuNet)} ÷ (1 − ${pct(s.tauxSalarial)}) = ${eur(s.hausseDuBrut)}, et l'entreprise paie ses cotisations sur ce brut : ${eur(s.hausseDuBrut)} × (1 + ${pct(s.tauxPatronal)}) = ${eur(s.hausseDuCout)}.${centimeDuBrut(s)}`,
           },
           {
             texte: `${eur(s.hausseDuNet)}, ce que reçoit le salarié`,
@@ -256,7 +272,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
       texte: (c) => {
         const s = salaire(c);
         return [
-          `Chez ${c.entreprise}, un opérateur payé ${eur(s.brut)} bruts reçoit ${eur(s.net)} nets et coûte ${eur(s.cout)} à l'entreprise. Une hausse de ${eur(s.hausseDuNet)} nets lui coûte ${eur(s.hausseDuCout)}.`,
+          `Chez ${c.entreprise}, un opérateur payé ${eur(s.brut)} bruts reçoit ${eur(s.net)} nets et coûte ${eur(s.cout)} à l'entreprise : pour 100 € de net, elle en débourse ${eur(s.coutPour100DeNet)}. Une hausse de ${eur(s.hausseDuNet)} nets lui coûte ${eur(s.hausseDuCout)}${s.hausseDuCout === s.hausseDuCoutSansArrondi ? "" : ", le brut payé arrondi au centime"}.`,
           "Négocier un salaire, c'est parler de trois montants à la fois : le salarié pense au net, le contrat écrit le brut, et l'entreprise décide sur le coût.",
         ];
       },

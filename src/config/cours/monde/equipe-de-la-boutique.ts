@@ -523,7 +523,11 @@ export function coutDesAbsences(f: FicheDeLaBoutique, absences: number = indicat
   const remplacement = auCentime(r * coutDUneHeureComplementaire(f));
   const margePerdue = auCentime(nonRemplacees * PASSAGES_PERDUS_PAR_HEURE * marge);
   const total = auCentime(remplacement + margePerdue);
-  return { absences, remplacees: r, nonRemplacees, heureComplementaire: coutDUneHeureComplementaire(f), margeDUnPassage: marge, remplacement, margePerdue, total, parAn: auCentime(total * 12) };
+  // L'autre chemin (pedagogy/cours/deux-decimales.ts, `deuxChemins`) : le coût de l'heure gardé avec tous
+  // ses chiffres, l'arrondi à la fin.
+  const remplacementSansArrondi = r * BRUT_HORAIRE_DU_RENFORT * (1 + MAJORATION_DES_HEURES_COMPLEMENTAIRES) * (1 + f.tauxPatronal);
+  const sansArrondi = { remplacement: remplacementSansArrondi, total: remplacementSansArrondi + margePerdue, parAn: (remplacementSansArrondi + margePerdue) * 12 };
+  return { absences, remplacees: r, nonRemplacees, heureComplementaire: coutDUneHeureComplementaire(f), margeDUnPassage: marge, remplacement, margePerdue, total, parAn: auCentime(total * 12), sansArrondi };
 }
 
 /**

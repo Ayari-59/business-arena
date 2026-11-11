@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent, taux2 } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct as pourcent, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { coutsDeLaGamme, donneesDuMois, seuilAuTauxArrondi, seuilDeRentabilite } from "../monde/couts-et-budgets";
@@ -847,7 +847,8 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           },
           {
             libelle: "Seuil de rentabilité de la gamme",
-            attendu: gamme.seuilValeur,
+            // L'autre chemin : le taux moyen gardé avec tous ses chiffres, l'arrondi à la fin.
+            ...deuxChemins(gamme.seuilValeur, (gamme.chargesFixes * gamme.chiffreDAffaires) / gamme.marge),
             calcul: `(${eur(gamme.communes)} + ${eur(gamme.publicite)} de publicité) ÷ ${pourcent(gamme.tauxPct)} = ${eur(gamme.chargesFixes)} ÷ ${pourcent(gamme.tauxPct)} = ${eur(gamme.seuilValeur)}`,
           },
           {

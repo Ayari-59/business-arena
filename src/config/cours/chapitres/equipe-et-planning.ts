@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { equipeDuMois, heuresDuMois, indicateursDuMois, planningFaceAuBesoin, seuilDuPointDeVente } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, OUVERTURE, type FicheDeLaBoutique, type JourDOuverture } from "../monde/maille-et-co";
@@ -670,7 +670,8 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
           { libelle: "Heures de contrat à ajouter par semaine", nature: "quantite", attendu: b.aAjouter, calcul: `${h(b.planning.heuresManquantes)} − ${h(b.planning.heuresEnTrop)} déplacées = ${h(b.aAjouter)}` },
           {
             libelle: "Coût du mois des heures ajoutées",
-            attendu: b.cout,
+            // L'autre chemin : les heures du mois gardées avec tous leurs chiffres, l'arrondi à la fin.
+            ...deuxChemins(b.cout, ((b.aAjouter * 52) / 12) * x.tauxHoraire),
             calcul: `${h(b.aAjouter)} × 52 ÷ 12 = ${h(b.heuresAjouteesDuMois)} ; ${h(b.heuresAjouteesDuMois)} × ${eur(x.tauxHoraire)} = ${eur(b.cout)}`,
           },
         ];
@@ -703,7 +704,8 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
             attendu: x.tauxMcvAffiche,
             calcul: `(${eur(x.ca)} − ${eur(x.coutsVariables)}) ÷ ${eur(x.ca)} × 100 = ${pct(x.tauxMcvAffiche)}`,
           },
-          { libelle: "Chiffre d'affaires à réaliser en plus", attendu: x.caPourUneEmbauche, calcul: `${eur(x.coutMoyen)} ÷ ${pct(x.tauxMcvAffiche)} = ${eur(x.caPourUneEmbauche)}` },
+          // L'autre chemin : le coût moyen et le taux gardés avec tous leurs chiffres, l'arrondi à la fin.
+          { libelle: "Chiffre d'affaires à réaliser en plus", ...deuxChemins(x.caPourUneEmbauche, x.e.cout / x.e.effectif / ((x.ca - x.coutsVariables) / x.ca)), calcul: `${eur(x.coutMoyen)} ÷ ${pct(x.tauxMcvAffiche)} = ${eur(x.caPourUneEmbauche)}` },
         ];
       },
       explication: (c) => {

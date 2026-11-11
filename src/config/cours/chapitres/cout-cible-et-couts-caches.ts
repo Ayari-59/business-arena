@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
@@ -509,8 +509,9 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
         return [
           { libelle: "Marge sur coût variable de N + 1", attendu: h.marge, calcul: `${qte(h.production)} × ${eur(h.margeUnitaire)} = ${eur(h.marge)}` },
           { libelle: "CHMCV", attendu: h.valeur, calcul: `${eur(h.marge)} ÷ ${qte(h.heures)} = ${qte(h.marge / h.heures)} €, au centime ${eur(h.valeur)} de l'heure` },
-          { libelle: "Non-production de l'absentéisme", attendu: k.lignes.absenteisme.nonProduction, calcul: `${qte(HEURES_D_ABSENCE)} × ${pct(1 - PART_DES_ABSENCES_RATTRAPEES)} = ${qte(k.perdues)} heures × ${eur(h.valeur)} = ${eur(k.lignes.absenteisme.nonProduction)}` },
-          { libelle: "Surtemps de la recherche du stock", attendu: k.lignes.productivite.surtemps, calcul: `${qte(HEURES_DE_RECHERCHE_DU_STOCK)} heures × ${eur(h.valeur)} = ${eur(k.lignes.productivite.surtemps)}` },
+          // L'autre chemin : la CHMCV gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Non-production de l'absentéisme", ...deuxChemins(k.lignes.absenteisme.nonProduction, (k.perdues * h.marge) / h.heures), calcul: `${qte(HEURES_D_ABSENCE)} × ${pct(1 - PART_DES_ABSENCES_RATTRAPEES)} = ${qte(k.perdues)} heures × ${eur(h.valeur)} = ${eur(k.lignes.absenteisme.nonProduction)}` },
+          { libelle: "Surtemps de la recherche du stock", ...deuxChemins(k.lignes.productivite.surtemps, (HEURES_DE_RECHERCHE_DU_STOCK * h.marge) / h.heures), calcul: `${qte(HEURES_DE_RECHERCHE_DU_STOCK)} heures × ${eur(h.valeur)} = ${eur(k.lignes.productivite.surtemps)}` },
         ];
       },
       explication: (c) => {

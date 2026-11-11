@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/equipe-et-planning";
 import { COURBE_SANS_INTEGRATION, DEPART_DE_LA_VENDEUSE, HEURES_D_UN_TEMPS_COMPLET, PASSAGES_PERDUS_PAR_HEURE, retenirLaVendeuse, tableauDeBordDesVendeurs } from "../../monde/equipe-de-la-boutique";
@@ -127,10 +127,12 @@ export const RETENIR_LA_VENDEUSE: Situation = {
         const x = departDeLaVendeuse(c);
         const r = x.r;
         const brut = x.f.equipe.find((s) => s.code === DEPART_DE_LA_VENDEUSE.remplacant)!.brutMensuel;
+        const samediSansArrondi = DEPART_DE_LA_VENDEUSE.heuresDuSamedi * (brut / HEURES_D_UN_TEMPS_COMPLET) * (1 + DEPART_DE_LA_VENDEUSE.majoration) * (1 + x.f.tauxPatronal);
         return [
           { libelle: "Salaire horaire brut", attendu: auCentime(r.horaire), calcul: `${eur(brut)} ÷ ${qte(HEURES_D_UN_TEMPS_COMPLET)} = ${eur(auCentime(r.horaire))}` },
-          { libelle: "Coût d'un samedi par mois", attendu: r.parMois, calcul: `${h(DEPART_DE_LA_VENDEUSE.heuresDuSamedi)} × ${eur(auCentime(r.horaire))} × ${qte(1 + DEPART_DE_LA_VENDEUSE.majoration)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(r.parMois)}` },
-          { libelle: "Coût sur un an", attendu: r.parAn, calcul: `${eur(r.parMois)} × 12 = ${eur(r.parAn)}` },
+          // L'autre chemin : le salaire horaire gardé avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Coût d'un samedi par mois", ...deuxChemins(r.parMois, samediSansArrondi), calcul: `${h(DEPART_DE_LA_VENDEUSE.heuresDuSamedi)} × ${eur(auCentime(r.horaire))} × ${qte(1 + DEPART_DE_LA_VENDEUSE.majoration)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(r.parMois)}` },
+          { libelle: "Coût sur un an", ...deuxChemins(r.parAn, samediSansArrondi * 12), calcul: `${eur(r.parMois)} × 12 = ${eur(r.parAn)}` },
         ];
       },
       explication: (c) => {

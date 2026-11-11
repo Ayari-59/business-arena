@@ -74,10 +74,16 @@ export function lireNombre(texte: string): number | null {
   return Number(net);
 }
 
-/** Un champ de calcul est juste quand le nombre saisi tombe dans sa tolérance (le centime par défaut). */
-export function champJuste(texte: string, champ: { attendu: number; tolerance?: number }): boolean {
+/**
+ * Un champ de calcul est juste quand le nombre saisi tombe dans sa tolérance (le centime par défaut),
+ * autour de l'attendu ou de l'autre chemin, quand le champ en porte un (config/cours/types.ts,
+ * `autreChemin` : l'élève qui n'arrondit qu'à la fin).
+ */
+export function champJuste(texte: string, champ: { attendu: number; tolerance?: number; autreChemin?: number }): boolean {
   const x = lireNombre(texte);
-  return x !== null && !Number.isNaN(x) && Math.abs(x - champ.attendu) <= (champ.tolerance ?? 0.01) + 1e-9;
+  if (x === null || Number.isNaN(x)) return false;
+  const tolerance = (champ.tolerance ?? 0.01) + 1e-9;
+  return Math.abs(x - champ.attendu) <= tolerance || (champ.autreChemin !== undefined && Math.abs(x - champ.autreChemin) <= tolerance);
 }
 
 /**

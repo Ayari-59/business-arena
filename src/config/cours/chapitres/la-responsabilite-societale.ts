@@ -1,4 +1,4 @@
-import { arrondi, arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi, arrondi2, deuxChemins, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   anneeDuMarche,
@@ -432,7 +432,8 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
           { libelle: "Effort d'un trimestre", nature: "grandeur", attendu: x.effort, calcul: `ln(1 + ${eur(x.b)} ÷ ${eur(x.r.echelle)}) = ${dec(x.effort)}` },
           { libelle: "Capital-image à la fin du trimestre 1", nature: "grandeur", attendu: x.capitalT1, calcul: `${kk} × 0 + ${reste} × ${dec(x.effort)} = ${dec(x.capitalT1)}` },
           { libelle: "Capital-image à la fin du trimestre 2", nature: "grandeur", attendu: x.capitalT2, calcul: `${kk} × ${dec(x.capitalT1)} + ${reste} × ${dec(x.effort)} = ${dec(x.capitalT2)}` },
-          { libelle: "Hausse d'attractivité au trimestre 2 (%)", attendu: x.hausseT2, calcul: `${dec(x.r.sensibilite)} × ${dec(x.capitalT1)} × 100 = ${pct(x.hausseT2)}` },
+          // L'autre chemin : l'effort et le capital gardés avec tous leurs chiffres, l'arrondi à la fin.
+          { libelle: "Hausse d'attractivité au trimestre 2 (%)", ...deuxChemins(x.hausseT2, x.r.sensibilite * (1 - x.k) * Math.log(1 + x.b / x.r.echelle) * 100), calcul: `${dec(x.r.sensibilite)} × ${dec(x.capitalT1)} × 100 = ${pct(x.hausseT2)}` },
         ];
       },
       explication: (c) => {

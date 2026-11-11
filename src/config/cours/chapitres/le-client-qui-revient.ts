@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -176,7 +176,8 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
         const k = clientesDeLaCarte(c);
         return [
           { libelle: "Marge d'un passage", attendu: k.margeDUnPassage, calcul: `${eur(k.marge)} ÷ ${qte(k.tickets)} = ${eur(k.margeDUnPassage)}` },
-          { libelle: "Marge d'une cliente sur l'année", attendu: k.margeDeLAnnee, calcul: `12 × ${eur(k.margeDUnMois)} = ${eur(k.margeDeLAnnee)}` },
+          // L'autre chemin : la marge d'un passage gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Marge d'une cliente sur l'année", ...deuxChemins(k.margeDeLAnnee, (12 * k.marge) / k.tickets), calcul: `12 × ${eur(k.margeDUnMois)} = ${eur(k.margeDeLAnnee)}` },
         ];
       },
       explication: (c) => [`Une cliente gardée toute l'année laisse ${eur(clientesDeLaCarte(c).margeDeLAnnee)} de marge à la boutique : bien plus que son panier d'un jour.`],

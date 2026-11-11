@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_TABLEAU_DE_BORD, ficheDe } from "../../chapitres/tableau-de-bord";
 import { investissementDeLaFiche, tableauDeBord } from "../../monde/couts-et-budgets";
@@ -162,7 +162,8 @@ export const REGLER_LE_VOYANT: Situation = {
           },
           {
             libelle: "Seuil de rentabilité du semestre",
-            attendu: r.seuil,
+            // L'autre chemin : le taux de marge gardé avec tous ses chiffres, l'arrondi à la fin.
+            ...deuxChemins(r.seuil, (r.chargesFixes * r.chiffreDAffaires) / r.marge),
             calcul: `${eur(r.chargesFixes)} ÷ ${pct(r.tauxDeMarge)} = ${eur(r.seuil)}, sur le taux à deux décimales`,
           },
           {

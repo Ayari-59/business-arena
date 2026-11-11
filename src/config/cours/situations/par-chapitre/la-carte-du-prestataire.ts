@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/taux-de-marque";
 import { DEPARTS_AVEC_LA_REMISE, DEPARTS_D_UNE_BOUTIQUE_COMPARABLE, REMISE_DU_PRESTATAIRE, remiseQuiTient, valeurDUneCliente } from "../../monde/clientele-de-la-boutique";
@@ -123,10 +123,16 @@ export const LA_CARTE_DU_PRESTATAIRE: Situation = {
         "Calculez la marge d'un passage après la remise du prestataire, puis la valeur d'une cliente si la promesse se vérifie, et si les départs ne tombent qu'au taux de la boutique comparable.",
       champs: (c) => {
         const x = laCarteDuPrestataire(c);
+        const margeSansArrondi = x.base.margeDUnPassage - x.base.panierHt * REMISE_DU_PRESTATAIRE;
         return [
           { libelle: "Marge d'un passage après remise", attendu: x.promise.margeDUnPassage, calcul: `${eur(x.base.margeDUnPassage)} − ${eur(x.base.panierHt)} × ${pct(REMISE_DU_PRESTATAIRE * 100)} = ${eur(x.base.margeDUnPassage)} − ${eur(x.promise.remiseDUnPassage)} = ${eur(x.promise.margeDUnPassage)}` },
-          { libelle: "Valeur, départs promis", attendu: x.promise.valeur, calcul: `${eur(x.promise.margeDUnPassage)} ÷ ${fraction(DEPARTS_AVEC_LA_REMISE)} = ${eur(x.promise.valeur)}` },
-          { libelle: "Valeur, départs de la boutique comparable", attendu: x.comparable.valeur, calcul: `${eur(x.comparable.margeDUnPassage)} ÷ ${fraction(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE)} = ${eur(x.comparable.valeur)}` },
+          // L'autre chemin : la marge d'un passage après remise gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Valeur, départs promis", ...deuxChemins(x.promise.valeur, margeSansArrondi / DEPARTS_AVEC_LA_REMISE), calcul: `${eur(x.promise.margeDUnPassage)} ÷ ${fraction(DEPARTS_AVEC_LA_REMISE)} = ${eur(x.promise.valeur)}` },
+          {
+            libelle: "Valeur, départs de la boutique comparable",
+            ...deuxChemins(x.comparable.valeur, margeSansArrondi / DEPARTS_D_UNE_BOUTIQUE_COMPARABLE),
+            calcul: `${eur(x.comparable.margeDUnPassage)} ÷ ${fraction(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE)} = ${eur(x.comparable.valeur)}`,
+          },
         ];
       },
       explication: (c) => {

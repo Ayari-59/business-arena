@@ -1,4 +1,4 @@
-import { aLUnite, arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte as entier, taux2 } from "../../../pedagogy/cours/deux-decimales";
+import { aLUnite, arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct, qte as entier, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { assortiment as assortimentDuMonde, retirerUneReference } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -558,8 +558,13 @@ export const ASSORTIMENT: Chapitre = {
             calcul: `(${eur(x.margeDuMois)} − ${eur(r.visee.marge)}) ÷ (${qte(x.ventes)} − ${qte(r.visee.ventes)}) = ${eur(r.margeDesAutres)} ÷ ${qte(r.ventesDesAutres)} = ${eur(r.margeUnitaireDesAutres)}`,
           },
           { libelle: "Articles reportés", nature: "quantite", attendu: r.unitesReportees, calcul: `${qte(r.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(r.unitesReportees)}` },
-          { libelle: "Marge récupérée par le report", attendu: r.margeRecuperee, calcul: `${qte(r.unitesReportees)} × ${eur(r.margeUnitaireDesAutres)} = ${eur(r.margeRecuperee)}` },
-          { libelle: "Effet net du retrait sur la marge du mois", attendu: r.effetNet, calcul: `${eur(r.margeRecuperee)} − ${eur(r.visee.marge)} = ${eur(r.effetNet)}` },
+          // L'autre chemin : la marge moyenne des autres références gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Marge récupérée par le report", ...deuxChemins(r.margeRecuperee, (r.unitesReportees * r.margeDesAutres) / r.ventesDesAutres), calcul: `${qte(r.unitesReportees)} × ${eur(r.margeUnitaireDesAutres)} = ${eur(r.margeRecuperee)}` },
+          {
+            libelle: "Effet net du retrait sur la marge du mois",
+            ...deuxChemins(r.effetNet, (r.unitesReportees * r.margeDesAutres) / r.ventesDesAutres - r.visee.marge),
+            calcul: `${eur(r.margeRecuperee)} − ${eur(r.visee.marge)} = ${eur(r.effetNet)}`,
+          },
         ];
       },
       explication: (c) => {

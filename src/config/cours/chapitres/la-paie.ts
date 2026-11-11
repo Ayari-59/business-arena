@@ -1,4 +1,4 @@
-import { arrondi, eur } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi, deuxChemins, eur } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { dateDuCours as date } from "../dates";
 import { TAUX_DE_LA_PAIE } from "../monde/exercice-de-nova";
@@ -650,7 +650,10 @@ export const LA_PAIE: Chapitre = {
           },
           {
             libelle: "Prime brute par salarié",
-            attendu: x.primeBrute,
+            // Deux chemins (audit pédagogique du 11 novembre 2026, P1-4) : le plus petit brut que le bulletin
+            // arrondi ligne par ligne fait verser, et le résultat de la méthode du chapitre, la division par
+            // ce qu'un euro brut laisse au salarié.
+            ...deuxChemins(x.primeBrute, cheminDuNetAuBrut(NET_PROMIS, T, x.netPour100).depart),
             calcul: cheminDuNetAuBrut(NET_PROMIS, T, x.netPour100).calcul,
           },
           {

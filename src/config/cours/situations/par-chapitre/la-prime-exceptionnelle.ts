@@ -1,4 +1,4 @@
-import { arrondi, eur } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi, deuxChemins, eur } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { dateDuCours as date } from "../../dates";
 import { TAUX_DE_LA_PAIE } from "../../monde/exercice-de-nova";
@@ -163,7 +163,9 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
           },
           {
             libelle: "Prime brute par salarié",
-            attendu: k.brutParSalarie,
+            // Deux chemins (audit pédagogique du 11 novembre 2026, P1-4) : le plus petit brut que le bulletin
+            // fait verser, et le résultat de la méthode du chapitre, la division par le net d'un euro brut.
+            ...deuxChemins(k.brutParSalarie, cheminDuNetAuBrut(PRIME_NETTE_PROMISE, T, k.netPour100).depart),
             calcul: cheminDuNetAuBrut(PRIME_NETTE_PROMISE, T, k.netPour100).calcul,
           },
           {

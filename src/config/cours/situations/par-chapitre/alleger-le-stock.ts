@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_STOCK, stockDeLaBoutique, tableauDuStock } from "../../chapitres/stock-du-point-de-vente";
 import type { Situation } from "../types";
@@ -124,7 +124,8 @@ export const ALLEGER_LE_STOCK: Situation = {
           { libelle: "Stock moyen", attendu: s.stockMoyen, calcul: `(${eur(s.valeurInitiale)} + ${eur(s.valeurFinale)}) ÷ 2 = ${eur(s.stockMoyen)}` },
           { libelle: "Coût d'achat des marchandises vendues", attendu: s.coutDAchatDesVendues, calcul: `${eur(s.valeurInitiale)} + ${eur(s.achats)} − ${eur(s.valeurFinale)} = ${eur(s.coutDAchatDesVendues)}` },
           { libelle: "Rotation du stock", nature: "grandeur", attendu: r.rotation, calcul: `${eur(s.coutDAchatDesVendues)} ÷ ${eur(s.stockMoyen)} = ${deux(r.rotation)}` },
-          { libelle: "Durée moyenne de stockage (jours)", nature: "grandeur", attendu: r.duree, calcul: `${qte(r.f.joursDuMois)} ÷ ${deux(r.rotation)} = ${qte(r.duree)}` },
+          // L'autre chemin : la rotation gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Durée moyenne de stockage (jours)", nature: "grandeur", ...deuxChemins(r.duree, (r.f.joursDuMois * s.stockMoyen) / s.coutDAchatDesVendues), calcul: `${qte(r.f.joursDuMois)} ÷ ${deux(r.rotation)} = ${qte(r.duree)}` },
         ];
       },
       explication: (c) => {

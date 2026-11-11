@@ -1,4 +1,4 @@
-import { eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { clienteleDuSeuil, coutVariable, grille, prixPsychologique as lirePrix, prixRemise, remiseLaPlusForte } from "../monde/economie-et-marketing";
 import { POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
@@ -155,7 +155,8 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
         const p = prixPsychologique(c);
         return [
           { libelle: "Hausse de prix (%)", attendu: p.hausse, calcul: `(${eur(p.dessus)} ÷ ${eur(p.sous)} − 1) × 100 = ${pct(p.hausse)}` },
-          { libelle: "Demande perdue ÷ hausse de prix", nature: "grandeur", attendu: p.rapport, calcul: `${nombreAuCentieme(p.perte)} ÷ ${nombreAuCentieme(p.hausse)} = ${nombreAuCentieme(p.rapport)}` },
+          // L'autre chemin : la hausse de prix gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Demande perdue ÷ hausse de prix", nature: "grandeur", ...deuxChemins(p.rapport, arrondi2(p.perte) / ((p.dessus / p.sous - 1) * 100)), calcul: `${nombreAuCentieme(p.perte)} ÷ ${nombreAuCentieme(p.hausse)} = ${nombreAuCentieme(p.rapport)}` },
         ];
       },
       explication: (c) => {

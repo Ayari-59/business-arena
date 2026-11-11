@@ -1,4 +1,4 @@
-import { arrondi2, eur, partDe2, pct as enPoints, quotient2 } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, partDe2, pct as enPoints, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { dateDuCours as date } from "../dates";
@@ -182,7 +182,10 @@ export function escompteMaximalDuClient(c: Cas) {
   const periodeEnPoints = arrondi2((TAUX_DU_DECOUVERT * v.joursAvances * 100) / JOURS_PAR_AN);
   const maximalEnPoints = arrondi2(periodeEnPoints / (1 + periodeEnPoints / 100));
   const auCentieme = maximalEnPoints / 100;
-  return { periode: periodeEnPoints / 100, maximal: auCentieme, periodeEnPoints, maximalEnPoints, auCentieme, montant: partDe2(v.netCommercial, maximalEnPoints) };
+  // L'autre chemin : le taux de la période et l'escompte gardés avec tous leurs chiffres, l'arrondi à la fin.
+  const periodeExacte = (TAUX_DU_DECOUVERT * v.joursAvances) / JOURS_PAR_AN;
+  const montantSansArrondi = v.netCommercial * (periodeExacte / (1 + periodeExacte));
+  return { periode: periodeEnPoints / 100, maximal: auCentieme, periodeEnPoints, maximalEnPoints, auCentieme, montant: partDe2(v.netCommercial, maximalEnPoints), montantSansArrondi };
 }
 
 /**
@@ -704,7 +707,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
             attendu: m.maximalEnPoints,
             calcul: `t ≤ (1 − t) × ${enPoints(m.periodeEnPoints)}, soit t = ${enPoints(m.periodeEnPoints)} ÷ (1 + ${enPoints(m.periodeEnPoints)}) = ${enPoints(m.maximalEnPoints)}`,
           },
-          { libelle: "Escompte sur la facture, à ce taux arrondi", attendu: m.montant, calcul: `${eur(v.netCommercial)} × ${pct(m.auCentieme)} = ${eur(m.montant)}` },
+          { libelle: "Escompte sur la facture, à ce taux arrondi", ...deuxChemins(m.montant, m.montantSansArrondi), calcul: `${eur(v.netCommercial)} × ${pct(m.auCentieme)} = ${eur(m.montant)}` },
         ];
       },
       explication: (c) => {
