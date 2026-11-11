@@ -46,7 +46,7 @@ export function EssaiDuDiplome({
         <span className="text-xs tabular-nums text-slate-400">{dureeEnClair(dureeDuChapitre(chapitre))}</span>
       </p>
       <p className="text-sm leading-relaxed text-slate-300">
-        Un chapitre de ce parcours, à son niveau et dans son métier.
+        Un chapitre de ce parcours, à son niveau.
         {cas ? (
           <>
             {" "}
