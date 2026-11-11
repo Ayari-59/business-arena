@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -8,7 +8,6 @@ import { describe, expect, it, vi } from "vitest";
 // Le retour du bilan garde la partie par une action serveur, dans un effet : au rendu statique, rien ne part.
 vi.mock("@/app/entreprises/episode/actions", () => ({ enregistrerPartieAction: vi.fn() }));
 
-import { EpisodeJoue as AncienEpisode, nouvelEtat as ancienEtat, type Etat } from "./ancien/episode-joue";
 import { EcranDeLEpisode, nouvelEtat, type EtatDeLEpisode } from "@/components/episode/episode-joue";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import {
@@ -30,21 +29,26 @@ import { mulberry32 } from "@/engine/episodes/commun";
 import type { Episode, PartieJouee } from "@/config/episodes/types";
 
 /**
- * L'ANCIEN CALCUL CONTRE LE NOUVEAU, ÉCRAN PAR ÉCRAN (audit du 10 novembre 2026, P1-1).
+ * LE TEST D'OR DES ÉPISODES SERVIS (audit du 10 novembre 2026, P1-1).
  *
- * Avant de retirer le calcul du navigateur, chaque épisode du registre est joué sous trois suites de
- * décisions (la première option partout, la dernière partout, une suite tirée), à trois niveaux, et
- * chaque écran est rendu deux fois : par l'ancien composant (copié dans ./ancien), qui calculait
- * tout lui-même, et par le nouveau, qui n'affiche que la vue servie. Les deux pages doivent être
- * identiques. Les empreintes des pages de l'ancien calcul deviennent celles du test d'or
- * (tests/fixtures/episodes-servis-or.json) : METTRE_A_JOUR_L_OR=1 les écrit.
+ * Le jeu se calculait dans le navigateur ; il se calcule désormais au serveur, geste par geste
+ * (pedagogy/episodes/partie-servie.ts), et l'écran n'affiche que ce qu'il reçoit. Avant de retirer
+ * l'ancien calcul, chaque écran de chaque épisode a été rendu par les deux chemins et comparé : les
+ * pages étaient identiques, à une phrase près (l'introduction d'une démonstration ne dit plus que la
+ * partie « se joue et se juge dans votre navigateur »). Les empreintes de ces pages, rendues par
+ * l'ancien calcul, sont gardées dans tests/fixtures/episodes-servis-or.json.
  *
- * Une seule phrase change, et c'est voulu : l'introduction d'une démonstration ne dit plus que la
- * partie « se joue et se juge dans votre navigateur », ce qui n'est plus vrai.
+ * Ce test rejoue les mêmes parties par le nouveau chemin et compare chaque écran à son empreinte :
+ * chaque épisode du registre, sous trois suites de décisions (la première option partout, la dernière
+ * partout, une suite tirée), à trois niveaux, avec ou sans licence, vérifications, diagnostic,
+ * réévaluation, prévision et partie précédente compris. Mêmes textes, mêmes chiffres, même courbe,
+ * même tableau de bord, même bilan. L'empreinte d'une page ignore ses classes, qui ne disent que le
+ * style.
+ *
+ * Un changement voulu d'un épisode (un texte, un chiffre) change ses empreintes : on les réécrit,
+ * après avoir regardé ce qui change, par
+ *   METTRE_A_JOUR_L_OR=1 npx vitest run tests/episodes/partie-servie.test.ts
  */
-
-const PHRASE_ANCIENNE = "la partie se joue et se juge dans votre navigateur, rien n&#x27;est gardé sur nos serveurs.";
-const PHRASE_NOUVELLE = "le serveur calcule chaque étape de la partie et n&#x27;en garde rien.";
 
 const OR = join(process.cwd(), "tests/fixtures/episodes-servis-or.json");
 
@@ -137,7 +141,7 @@ const GESTES = {
   memeHasard: sansGeste,
 };
 
-/** Une partie jouée de bout en bout : les écrans de l'ancien calcul, ceux du nouveau. */
+/** Une partie jouée de bout en bout, comme l'écran la joue : chaque geste au serveur, chaque écran rendu. */
 function jouer(ep: Episode, script: Script, precedente: PartieJouee | null) {
   const r = mulberry32(ep.numero * 31 + script.nom.length);
   const n = ep.etapes.length;
@@ -148,17 +152,14 @@ function jouer(ep: Episode, script: Script, precedente: PartieJouee | null) {
   const reglages = reglagesDesNiveaux();
   const niv = niveauParCode(script.niveau);
   const graine = script.graine(ep);
-  const ecrans: { nom: string; ancien: string; nouveau: string }[] = [];
+  const ecrans: { nom: string; html: string }[] = [];
 
-  const rendre = (nom: string, a: Etat, b: EtatDeLEpisode) => {
-    const ancien = renderToStaticMarkup(
-      createElement(AncienEpisode, { code: ep.code, niveaux, offre, licence: script.licence, cours, depart: a, precedenteDeDepart: precedente }),
-    ).replace(PHRASE_ANCIENNE, PHRASE_NOUVELLE);
+  const rendre = (nom: string, b: EtatDeLEpisode) => {
     const choisi = b.niveau && niveaux.includes(b.niveau) ? b.niveau : niveaux[0]!;
-    const nouveau = renderToStaticMarkup(
+    const html = renderToStaticMarkup(
       createElement(EcranDeLEpisode, { intro, reglages, niveaux, offre, licence: script.licence, cours, s: b, choisi, gestes: GESTES }),
     );
-    ecrans.push({ nom, ancien, nouveau });
+    ecrans.push({ nom, html });
   };
 
   const servir = (b: EtatDeLEpisode, geste: DemandeDePartie["geste"], fin: DemandeDePartie["fin"] = null): VueDeLaPartie =>
@@ -178,16 +179,12 @@ function jouer(ep: Episode, script: Script, precedente: PartieJouee | null) {
     );
 
   // L'introduction, le niveau choisi.
-  let a: Etat = { ...ancienEtat(ep), niveau: script.niveau };
   let b: EtatDeLEpisode = { ...nouvelEtat(n), niveau: script.niveau };
-  rendre("introduction", a, b);
+  rendre("introduction", b);
 
   // Commencer.
-  a = { ...ancienEtat(ep, graine, script.niveau, CLE), ecran: "jeu" };
   b = { ...nouvelEtat(n, graine, script.niveau, CLE), ecran: "jeu" };
   b = { ...b, vue: servir(b, "commencer") };
-
-  const lecture = (x: Etat) => ep.lire(x.decisions, x.graine ?? 1, x.jours, x.semaine);
 
   const verifierCe = (i: number, phase: string) => {
     const proposees = sourcesProposees(niv, ep.etapes[i]!).map((s) => s.id);
@@ -196,56 +193,50 @@ function jouer(ep: Episode, script: Script, precedente: PartieJouee | null) {
     for (const id of script.verifier(proposees, r)) {
       if (voulues <= 0) break;
       const source = ep.etapes[i]!.sources.find((s) => s.id === id)!;
-      const vues = a.consultes[i]!;
+      const vues = b.consultes[i]!;
       if (vues.includes(id) || !verificationPossible(niv, i, vues.length)) continue;
-      if (i === 0 && budget != null && source.cout > budget - a.jours + 1e-9) continue;
+      if (i === 0 && budget != null && source.cout > budget - b.jours + 1e-9) continue;
       voulues -= 1;
-      const consultes = a.consultes.map((c, k) => (k === i ? [...c, id] : c));
-      const jours = i === 0 ? a.jours + source.cout : a.jours;
-      a = { ...a, consultes, jours };
+      const consultes = b.consultes.map((c, k) => (k === i ? [...c, id] : c));
+      const jours = i === 0 ? b.jours + source.cout : b.jours;
       b = { ...b, consultes, jours };
       b = { ...b, vue: servir(b, "verifier") };
-      rendre(`décision ${i + 1} · ${phase} · ${id}`, a, b);
+      rendre(`décision ${i + 1} · ${phase} · ${id}`, b);
     }
   };
 
   for (let i = 0; i < n; i += 1) {
     const etape = ep.etapes[i]!;
     for (const phase of phasesDe(i)) {
-      a = { ...a, phase };
       b = { ...b, phase };
-      rendre(`décision ${i + 1} · ${phase}`, a, b);
+      rendre(`décision ${i + 1} · ${phase}`, b);
       if (phase === "enquete") verifierCe(i, phase);
       if (phase === "diagnostic") {
         const ids = ep.diagnostics.map((x) => x.id);
         const principal = script.diagnostic(ids, r);
         const second = r() < 0.5 ? "aucun" : (ids.find((x) => x !== principal) ?? "aucun");
-        a = { ...a, diagnostic: { principal, second } };
         b = { ...b, diagnostic: { principal, second } };
-        rendre(`décision ${i + 1} · diagnostic posé`, a, b);
+        rendre(`décision ${i + 1} · diagnostic posé`, b);
       }
       if (phase === "reevaluation") {
         const corrige = script.corrige(r);
-        const autre = ep.diagnostics.find((x) => x.id !== a.diagnostic.principal)!.id;
+        const autre = ep.diagnostics.find((x) => x.id !== b.diagnostic.principal)!.id;
         const reevaluation = corrige
           ? { choix: "corrige" as const, principal: autre }
           : { choix: "maintient" as const, principal: null };
-        a = { ...a, reevaluation };
         b = { ...b, reevaluation };
-        rendre(`décision ${i + 1} · réévaluation faite`, a, b);
+        rendre(`décision ${i + 1} · réévaluation faite`, b);
       }
       if (phase === "decision") {
         if (i >= 2) verifierCe(i, phase);
         const choix = script.option(i, etape.options.length, r);
-        const prevision = etape.prevision ? { valeur: script.prevision(ep.prevision, r), confiance: script.confiance } : a.prevision;
-        a = { ...a, choix, prevision };
+        const prevision = etape.prevision ? { valeur: script.prevision(ep.prevision, r), confiance: script.confiance } : b.prevision;
         b = { ...b, choix, prevision };
-        rendre(`décision ${i + 1} · choix fait`, a, b);
+        rendre(`décision ${i + 1} · choix fait`, b);
       }
     }
-    // Valider : l'ancien calcul garde la lecture d'avant ; le nouveau demande la conséquence au serveur.
-    const decisions = [...a.decisions.slice(0, i), a.choix!];
-    a = { ...a, avant: lecture(a), decisions, semaine: etape.jusqua, phase: "consequence" };
+    // Valider : la conséquence, et à la dernière décision le bilan.
+    const decisions = [...b.decisions.slice(0, i), b.choix!];
     const fin =
       i === n - 1
         ? {
@@ -257,65 +248,68 @@ function jouer(ep: Episode, script: Script, precedente: PartieJouee | null) {
         : null;
     const vue = servir({ ...b, decisions }, "valider", fin);
     b = { ...b, decisions: [...vue.decisions], phase: "consequence", vue };
-    rendre(`décision ${i + 1} · conséquence`, a, b);
+    rendre(`décision ${i + 1} · conséquence`, b);
     // Continuer.
-    if (i === n - 1) {
-      a = { ...a, ecran: "bilan", avant: null };
-      b = { ...b, ecran: "bilan" };
-    } else {
-      a = { ...a, etape: i + 1, phase: "signal", choix: null, avant: null };
-      b = { ...b, etape: i + 1, phase: "signal", choix: null };
-    }
+    b = i === n - 1 ? { ...b, ecran: "bilan" } : { ...b, etape: i + 1, phase: "signal", choix: null };
   }
-  rendre("bilan", a, b);
+  rendre("bilan", b);
   const partie: PartieJouee = {
     graine,
-    chemin: a.decisions,
-    consultes: a.consultes,
-    jours: a.jours,
-    diagnostic: a.diagnostic.principal!,
-    reevaluation: { choix: a.reevaluation.choix!, principal: a.reevaluation.principal },
-    prevision: Number(a.prevision.valeur.replace(",", ".")),
-    confiance: a.prevision.confiance,
+    chemin: b.decisions,
+    consultes: b.consultes,
+    jours: b.jours,
+    diagnostic: b.diagnostic.principal!,
+    reevaluation: { choix: b.reevaluation.choix!, principal: b.reevaluation.principal },
+    prevision: Number(b.prevision.valeur.replace(",", ".")),
+    confiance: b.prevision.confiance,
     niveau: script.niveau,
   };
   return { ecrans, partie };
 }
 
-/** Le premier endroit où deux pages divergent, avec ce qui l'entoure. */
-function ecart(x: string, y: string): string {
-  let k = 0;
-  while (k < x.length && x[k] === y[k]) k += 1;
-  return `ancien « …${x.slice(Math.max(0, k - 80), k + 80)}… »\n        nouveau « …${y.slice(Math.max(0, k - 80), k + 80)}… »`;
-}
-
-/** L'empreinte d'un écran pour le test d'or : sa page sans les classes, qui ne disent que le style. */
+/** L'empreinte d'un écran : sa page sans les classes, qui ne disent que le style. */
 const empreinte = (html: string) =>
   createHash("sha256").update(html.replace(/ class="[^"]*"/g, "")).digest("hex").slice(0, 10);
 
+const reecrire = process.env.METTRE_A_JOUR_L_OR === "1";
+const or = JSON.parse(readFileSync(OR, "utf8")) as Record<string, Record<string, string[]>>;
+
 describe("l'épisode servi rend chaque écran comme l'ancien calcul", () => {
-  const or: Record<string, Record<string, string[]>> = {};
+  const nouvelOr: Record<string, Record<string, string[]>> = {};
+
+  it("chaque épisode du registre a ses empreintes, et rien d'autre", () => {
+    if (reecrire) return;
+    expect(Object.keys(or).sort()).toEqual(EPISODES.map((e) => e.code).sort());
+  });
+
   for (const ep of EPISODES) {
     it(`${ep.numero} · ${ep.code}`, () => {
       const fautes: string[] = [];
       let precedente: PartieJouee | null = null;
-      or[ep.code] = {};
+      nouvelOr[ep.code] = {};
       for (const script of SCRIPTS) {
         const { ecrans, partie } = jouer(ep, script, script.precedente ? precedente : null);
         precedente = partie;
-        for (const e of ecrans) {
-          if (e.ancien !== e.nouveau) fautes.push(`${script.nom} · ${e.nom}\n        ${ecart(e.ancien, e.nouveau)}`);
-        }
+        const empreintes = ecrans.map((e) => empreinte(e.html));
+        nouvelOr[ep.code]![script.nom] = empreintes;
         expect(ecrans.length).toBeGreaterThan(15);
-        or[ep.code]![script.nom] = ecrans.map((e) => empreinte(e.ancien));
+        // Ce que chaque partie montre, au moins : la conséquence de chaque décision, et le bilan.
+        expect(ecrans.filter((e) => e.nom.endsWith("conséquence")).every((e) => e.html.includes("· le verdict"))).toBe(true);
+        expect(ecrans.at(-1)!.html).toContain("Votre axe de travail");
+        if (reecrire) continue;
+        const attendues = or[ep.code]?.[script.nom] ?? [];
+        if (attendues.length !== empreintes.length) fautes.push(`${script.nom} : ${empreintes.length} écrans, ${attendues.length} attendus`);
+        ecrans.forEach((e, k) => {
+          if (attendues[k] !== empreintes[k]) fautes.push(`${script.nom} · écran ${k + 1}, ${e.nom}`);
+        });
       }
-      expect(fautes.slice(0, 3), `${fautes.length} écran(s) différent(s)`).toEqual([]);
+      expect(fautes.slice(0, 5), `${fautes.length} écran(s) différent(s)`).toEqual([]);
     }, 120_000);
   }
 
-  it.runIf(process.env.METTRE_A_JOUR_L_OR === "1")("écrit les empreintes du test d'or", () => {
+  it.runIf(reecrire)("réécrit les empreintes", () => {
     // Une ligne par partie : un changement se lit dans le diff, épisode par épisode.
-    const lignes = Object.entries(or).map(
+    const lignes = Object.entries(nouvelOr).map(
       ([code, parties]) =>
         `${JSON.stringify(code)}: {\n${Object.entries(parties)
           .map(([nom, empreintes]) => `  ${JSON.stringify(nom)}: ${JSON.stringify(empreintes)}`)
