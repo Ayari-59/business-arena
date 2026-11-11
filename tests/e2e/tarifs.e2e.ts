@@ -174,7 +174,8 @@ describe("le site mène aux tarifs", () => {
     const page = await contexte.newPage();
     await aller(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    const groupe = page.locator('#plan-du-site button[aria-controls^="groupe-"]', { hasText: "Offres et contact" });
+    // Le groupe s'appelle « Offres » (config/navigation.ts) : le contact est au pied de page.
+    const groupe = page.locator('#plan-du-site button[aria-controls^="groupe-"]', { hasText: "Offres" });
     if ((await groupe.getAttribute("aria-expanded")) === "false") await groupe.click();
     const lien = page.locator('#plan-du-site a[href="/tarifs"]');
     await lien.waitFor({ state: "visible" });
