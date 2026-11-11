@@ -5,7 +5,7 @@ import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { ScenarioAEmbranchements } from "@/components/cours/scenario";
 import { PiedDePage } from "@/components/pied-de-page";
 import { essaiPour } from "@/config/cours/chapitres-libres";
-import { parcoursDuContenu } from "@/config/cours/devis-du-cours";
+import { parcoursDuContenu } from "@/config/cours/devis-du-contenu";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { lienDuScenario, scenarioParCode } from "@/config/cours/scenarios";
 import { getGuestUserId } from "@/lib/guest";

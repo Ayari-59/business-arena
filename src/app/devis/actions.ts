@@ -21,7 +21,7 @@ import {
   offresDuDevis,
   type DevisChiffre,
 } from "@/config/catalogue";
-import { parcoursProposeAChoisir } from "@/config/cours/parcours-de-formation";
+import { parcoursProposeAChoisir } from "@/config/cours/parcours-a-choisir";
 import { SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
 import { ETIQUETTE_DU_CATALOGUE, lireLEtatDuCatalogue, verifierUnCodePromo } from "@/services/catalogue.service";
 

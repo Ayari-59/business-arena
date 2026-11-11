@@ -10,7 +10,7 @@ import { db } from "@/db";
 import { demandesDeDevis } from "@/db/schema";
 import { VENDEUR } from "@/config/editeur";
 import { MENTION_TVA, nomDeLEntreprise, nomDuNiveau, type LibellesDuDevis } from "@/config/tarifs";
-import { titreDuParcours } from "@/config/cours/parcours-de-formation";
+import { titreDuParcours } from "@/config/cours/parcours-a-choisir";
 import { LIBELLE_DU_PARCOURS } from "@/config/parametrage-du-devis";
 
 /**

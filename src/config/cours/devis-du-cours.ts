@@ -1,6 +1,5 @@
 import { formationParCode } from "../formations";
-import { formationDuParcours } from "./competences-affichees";
-import { PARCOURS_PROPOSES_A_CHOISIR, parcoursProposeAChoisir, parcoursQuiOuvrent, type OuvrablePar } from "./parcours-de-formation";
+import { formationDuParcours, PARCOURS_PROPOSES_A_CHOISIR, parcoursProposeAChoisir } from "./parcours-a-choisir";
 
 /**
  * LE DEVIS DEMANDE LE DIPLÔME OU LE PARCOURS (audit produit du 10 novembre 2026, P1-4).
@@ -14,7 +13,10 @@ import { PARCOURS_PROPOSES_A_CHOISIR, parcoursProposeAChoisir, parcoursQuiOuvren
  * classe peut choisir aujourd'hui, dans leur ordre et sous leur nom (`PARCOURS_PROPOSES_A_CHOISIR`).
  * La demande enregistre le code ; l'admin et le courriel lisent le nom (`titreDuParcours`).
  *
- * Ce module tire le registre : le serveur le lit et passe la liste au formulaire, qui ne l'importe pas.
+ * CE MODULE NE TIRE PAS LE REGISTRE DU COURS (./parcours-a-choisir.ts, sans les chapitres) : la page
+ * du devis, son action et le service des devis le lisent sans charger tous les chapitres (une garde le
+ * tient : tests/architecture/devis-du-diplome.test.ts). Le serveur passe la liste au formulaire, qui
+ * ne l'importe pas. Le parcours d'un contenu réservé, qui lit les chapitres : ./devis-du-contenu.ts.
  */
 
 /** Les parcours du devis : code et nom, rien d'autre ne part au navigateur. */
@@ -39,19 +41,4 @@ export function parcoursDuDevis(parcours: unknown, diplome?: unknown): string | 
     return siens.length === 1 ? siens[0]!.code : null;
   }
   return parcoursProposeAChoisir(diplome) ? diplome : null;
-}
-
-/**
- * LE PARCOURS D'UNE DEMANDE VENUE D'UN CONTENU RÉSERVÉ (un chapitre, un cas pratique, une enquête, un
- * bureau, un scénario) : parmi les parcours proposés qui l'ouvrent (`parcoursQuiOuvrent`), celui du
- * diplôme d'où l'on vient (`?diplome=` de la page), sinon le sien. Aucun si aucun parcours proposé ne
- * l'ouvre (une formation retirée).
- */
-export function parcoursDuContenu(contenu: OuvrablePar, diplome?: string | null): string | null {
-  const candidats = parcoursQuiOuvrent(contenu).filter(parcoursProposeAChoisir);
-  if (diplome) {
-    const duDiplome = candidats.find((p) => p === diplome || formationDuParcours(p) === diplome);
-    if (duDiplome) return duDiplome;
-  }
-  return candidats[0] ?? null;
 }

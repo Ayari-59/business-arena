@@ -6,7 +6,7 @@ import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { PiedDePage } from "@/components/pied-de-page";
 import { bureauParCode } from "@/config/cours/bureaux";
 import { essaiPour } from "@/config/cours/chapitres-libres";
-import { parcoursDuContenu } from "@/config/cours/devis-du-cours";
+import { parcoursDuContenu } from "@/config/cours/devis-du-contenu";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";

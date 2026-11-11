@@ -38,7 +38,7 @@ import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import { parametrageDe, type OrgLicence } from "@/services/licence.service";
 import { FormulaireDeLicence } from "@/components/formulaire-de-licence";
 import { listerDemandesDeDevis } from "@/services/devis.service";
-import { titreDuParcours } from "@/config/cours/parcours-de-formation";
+import { titreDuParcours } from "@/config/cours/parcours-a-choisir";
 import { LIBELLE_DU_PARCOURS } from "@/config/parametrage-du-devis";
 import type { PreuvesPubliees } from "@/config/preuves-dusage";
 import {

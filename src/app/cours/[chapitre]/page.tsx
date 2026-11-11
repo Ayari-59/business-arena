@@ -6,7 +6,7 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { chapitreParCode } from "@/config/cours/registre";
 import { essaiPour } from "@/config/cours/chapitres-libres";
-import { parcoursDuContenu } from "@/config/cours/devis-du-cours";
+import { parcoursDuContenu } from "@/config/cours/devis-du-contenu";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { chapitrePropose } from "@/config/formations-proposees";
 import { motsDuContenu } from "@/config/cours/situations";

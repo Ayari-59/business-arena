@@ -1,7 +1,19 @@
 import { blocOfficielDans, referentielDeCitation } from "../ateliers/referentiels";
-import { formationProposee } from "../formations";
-import { CHAPITRES, PARCOURS } from "./registre";
+import { CHAPITRES } from "./registre";
+import { PARCOURS_DE_FORMATION } from "./parcours-a-choisir";
 import type { Chapitre } from "./types";
+
+// Les parcours qu'une classe peut choisir, sans les chapitres : ./parcours-a-choisir.ts.
+export {
+  PARCOURS_A_CHOISIR,
+  PARCOURS_DE_FORMATION,
+  PARCOURS_PROPOSES_A_CHOISIR,
+  parcoursAChoisir,
+  parcoursDeFormationParCode,
+  parcoursProposeAChoisir,
+  titreDuParcours,
+  type ParcoursDeFormation,
+} from "./parcours-a-choisir";
 
 /**
  * LES PARCOURS DE FORMATION : UNE FORMATION QUI REGROUPE DES CHAPITRES EXISTANTS.
@@ -25,39 +37,6 @@ import type { Chapitre } from "./types";
  * regroupe. Un cas dédié s'ouvre avec le chapitre qu'il reprend.
  */
 
-export interface ParcoursDeFormation {
-  /** Le code que la classe enregistre : distinct de tout parcours du registre. */
-  code: string;
-  /** La formation (config/formations.ts) dont les blocs cités font la liste. */
-  formation: string;
-  titre: string;
-  resume: string;
-}
-
-export const PARCOURS_DE_FORMATION: readonly ParcoursDeFormation[] = [
-  {
-    code: "but-gea",
-    formation: "but-gea",
-    titre: "BUT GEA · Gestion des entreprises et des administrations",
-    resume:
-      "Les chapitres qui travaillent une compétence du BUT GEA, d'où qu'ils viennent : la comptabilité, le contrôle de gestion, la paie, la finance et la comptabilité approfondie, sur les chiffres de la simulation du cours.",
-  },
-  {
-    code: "but-tc",
-    formation: "but-tc",
-    titre: "BUT TC · Techniques de commercialisation",
-    resume:
-      "Les chapitres qui travaillent une compétence du BUT TC : vendre, piloter un espace de vente, conduire les actions marketing, manager la relation client, sur le marché et la boutique de la simulation du cours.",
-  },
-  {
-    code: "but-gaco",
-    formation: "but-gaco",
-    titre: "BUT GACO · Gestion administrative et commerciale des organisations",
-    resume:
-      "Les chapitres qui travaillent une compétence du BUT GACO : le pilotage interne et celui des ressources humaines, la démarche marketing, le développement des affaires, sur les chiffres de la simulation du cours.",
-  },
-];
-
 /** Le chapitre cite au moins un bloc de la formation, qui désigne une entrée de son référentiel. */
 export function citeLaFormation(chapitre: Pick<Chapitre, "blocs">, formation: string): boolean {
   return chapitre.blocs.some((bloc) => {
@@ -71,7 +50,6 @@ export const CHAPITRES_DES_PARCOURS_DE_FORMATION: Readonly<Record<string, readon
   PARCOURS_DE_FORMATION.map((p) => [p.code, CHAPITRES.filter((c) => citeLaFormation(c, p.formation)).map((c) => c.code)]),
 );
 
-export const parcoursDeFormationParCode = (code: string | null | undefined) => PARCOURS_DE_FORMATION.find((p) => p.code === code);
 
 /** Les chapitres d'un parcours de formation, rangés par palier. */
 export function chapitresDuParcoursDeFormation(code: string): Chapitre[] {
@@ -91,29 +69,3 @@ export function parcoursQuiOuvrent(chapitre: OuvrablePar): string[] {
   const formations = PARCOURS_DE_FORMATION.filter((p) => codes.some((c) => CHAPITRES_DES_PARCOURS_DE_FORMATION[p.code]!.includes(c))).map((p) => p.code);
   return [chapitre.parcours, ...formations];
 }
-
-/** Les parcours qu'une classe peut choisir : ceux du registre, puis les parcours de formation. */
-export const PARCOURS_A_CHOISIR: readonly { code: string; titre: string; formation: boolean }[] = [
-  ...PARCOURS.map((p) => ({ code: p.code as string, titre: p.titre, formation: false })),
-  ...PARCOURS_DE_FORMATION.map((p) => ({ code: p.code, titre: `${p.titre} (parcours de formation)`, formation: true })),
-];
-
-/** Le titre d'un parcours que la classe a choisi, du registre ou de formation. */
-export const titreDuParcours = (code: string | null | undefined) => PARCOURS_A_CHOISIR.find((p) => p.code === code)?.titre;
-
-/** Le code est-il un parcours qu'une classe peut choisir ? */
-export const parcoursAChoisir = (code: string | null | undefined): code is string => PARCOURS_A_CHOISIR.some((p) => p.code === code);
-
-/**
- * LES PARCOURS QU'UNE CLASSE PEUT CHOISIR AUJOURD'HUI : sans ceux des formations retirées
- * (config/formations-proposees.ts). Une classe qui en a déjà un le garde : `titreDuParcours` et
- * l'accès aux chapitres lisent la liste entière.
- */
-export const PARCOURS_PROPOSES_A_CHOISIR = PARCOURS_A_CHOISIR.filter((p) => {
-  const formation = PARCOURS.find((x) => x.code === p.code)?.formation;
-  return !formation || formationProposee(formation);
-});
-
-/** Le code est-il un parcours qu'une classe peut choisir aujourd'hui ? */
-export const parcoursProposeAChoisir = (code: string | null | undefined): code is string =>
-  PARCOURS_PROPOSES_A_CHOISIR.some((p) => p.code === code);

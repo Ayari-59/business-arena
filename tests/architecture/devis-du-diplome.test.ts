@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -9,7 +9,8 @@ vi.mock("@/db", () => ({ db: {} }));
 import { DevisForm, type OffreDuFormulaire } from "@/components/devis-form";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { demandeLeParcoursAuDevis } from "@/config/catalogue";
-import { PARCOURS_DU_DEVIS, parcoursDuContenu, parcoursDuDevis } from "@/config/cours/devis-du-cours";
+import { PARCOURS_DU_DEVIS, parcoursDuDevis } from "@/config/cours/devis-du-cours";
+import { parcoursDuContenu } from "@/config/cours/devis-du-contenu";
 import { CHAPITRES_DES_PARCOURS_DE_FORMATION, PARCOURS_PROPOSES_A_CHOISIR } from "@/config/cours/parcours-de-formation";
 import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
@@ -219,5 +220,65 @@ describe("l'équipe lit le parcours là où elle lit les devis", () => {
   it("dans la liste des demandes de /admin, sous son nom", () => {
     const admin = lire("app/admin/page.tsx");
     expect(admin).toMatch(/\{d\.parcours \? \([\s\S]{0,120}\{LIBELLE_DU_PARCOURS\}[\s\S]{0,120}\{titreDuParcours\(d\.parcours\) \?\? d\.parcours\}/);
+  });
+});
+
+/**
+ * LE DEVIS NE CHARGE PAS LE COURS. La liste des parcours vit sans les chapitres
+ * (config/cours/parcours.ts, config/cours/parcours-a-choisir.ts). Tirée du registre, elle ajoutait à
+ * la première demande de devis le chargement de tous les chapitres (près d'une demi-seconde
+ * mesurée, le registre compilé pèse plus de dix mégaoctets) : la recette du code promo, qui attend
+ * le refus en une seconde, échouait. La page du devis, son action, le service des devis et l'aide au
+ * choix n'atteignent donc pas le registre, même de proche en proche.
+ */
+describe("le devis ne charge pas le registre du cours", () => {
+  const SRC = join(process.cwd(), "src");
+  const REGISTRE = join(SRC, "config", "cours", "registre.ts");
+  /** Les imports qui chargent du code (pas les `import type`), résolus en fichiers. */
+  function importsDe(fichier: string): string[] {
+    const source = readFileSync(fichier, "utf8");
+    const chemins: string[] = [];
+    for (const m of source.matchAll(/^(?:import|export)\s+(?!type\b)[\s\S]*?\sfrom\s+"([^"]+)"/gm)) chemins.push(m[1]!);
+    for (const m of source.matchAll(/^import\s+"([^"]+)"/gm)) chemins.push(m[1]!);
+    return chemins.flatMap((c) => {
+      const base = c.startsWith("@/") ? join(SRC, c.slice(2)) : c.startsWith(".") ? resolve(dirname(fichier), c) : null;
+      if (!base) return [];
+      const candidat = [`${base}.ts`, `${base}.tsx`, join(base, "index.ts")].find((x) => existsSync(x));
+      return candidat ? [candidat] : [];
+    });
+  }
+  /** Le premier chemin d'imports qui atteint le registre, ou rien. */
+  function cheminVersLeRegistre(depart: string): string[] | null {
+    const vus = new Set<string>();
+    const pile: string[][] = [[join(SRC, depart)]];
+    while (pile.length) {
+      const chemin = pile.pop()!;
+      const ici = chemin.at(-1)!;
+      if (ici === REGISTRE) return chemin.map((x) => relative(SRC, x));
+      if (vus.has(ici)) continue;
+      vus.add(ici);
+      for (const suivant of importsDe(ici)) pile.push([...chemin, suivant]);
+    }
+    return null;
+  }
+
+  it.each([
+    "app/devis/page.tsx",
+    "app/devis/actions.ts",
+    "services/devis.service.ts",
+    "components/devis-form.tsx",
+    "config/orientation.ts",
+    "config/cours/devis-du-cours.ts",
+    "config/cours/parcours-a-choisir.ts",
+  ])("%s n'atteint pas le registre", (f) => {
+    expect(cheminVersLeRegistre(f)).toBeNull();
+  });
+
+  it("la garde voit le registre, même de proche en proche", () => {
+    expect(cheminVersLeRegistre("config/cours/devis-du-contenu.ts")).not.toBeNull();
+    expect(cheminVersLeRegistre("config/cours/parcours-de-formation.ts")).toEqual([
+      "config/cours/parcours-de-formation.ts",
+      "config/cours/registre.ts",
+    ]);
   });
 });
