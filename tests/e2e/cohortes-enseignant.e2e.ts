@@ -6,6 +6,7 @@ import { episodeParCode } from "../../src/pedagogy/episodes/registre";
 import { estUneDemo, EPISODES_DE_DEMO } from "../../src/config/episodes/demos";
 import { FICHES } from "../../src/config/episodes/fiches";
 import { REFUS_SANS_LICENCE } from "../../src/config/cohortes";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * DES COHORTES CRÉÉES PAR L'ENSEIGNANT, DANS UN VRAI NAVIGATEUR.
@@ -14,9 +15,9 @@ import { REFUS_SANS_LICENCE } from "../../src/config/cohortes";
  * espace, copie le lien ; un élève sans compte le suit, rejoint, et joue un épisode NON
  * démo de la cohorte jusqu'au bilan, mais pas un épisode hors cohorte ; l'enseignant le
  * voit dans la vue de l'animateur, projette le code, puis clôt la cohorte, qui refuse
- * alors un nouveau venu. Sans licence, la page se montre et le serveur refuse la
- * création, avec le lien vers les tarifs. Depuis une fiche d'épisode, le bouton arrive
- * avec l'épisode coché. À 390 px, rien ne déborde.
+ * alors un nouveau venu. Sans licence, la page se montre, le formulaire est grisé, et
+ * le serveur refuse la création forcée, avec le lien vers les tarifs. Depuis une fiche
+ * d'épisode, le bouton arrive avec l'épisode coché. À 390 px, rien ne déborde.
  */
 
 let navigateur: Browser;
@@ -80,6 +81,28 @@ async function creer(page: Page, nom: string, episodes: string[]) {
   if ((await formulaire.getAttribute("open")) === null) {
     await formulaire.locator(":scope > summary").click();
   }
+  await page.getByLabel("Nom de la cohorte").fill(nom);
+  for (const code of episodes) await cocher(page, code);
+  await page.getByRole("button", { name: "Créer la cohorte" }).click();
+}
+
+/**
+ * Sans offre épisodes, le formulaire est grisé sous son avis (audit UX du 29 octobre 2026,
+ * P0-1) : on le constate, puis on le dégrise à la main, comme une page restée ouverte depuis
+ * la fin de la licence, pour voir le serveur refuser quand même (comme parcours.e2e.ts).
+ */
+async function forcerLaCreation(page: Page, nom: string, episodes: string[]) {
+  await aller(page, "/teacher/cohortes");
+  const formulaire = page.locator("#nouvelle-cohorte");
+  if ((await formulaire.getAttribute("open")) === null) {
+    await formulaire.locator(":scope > summary").click();
+  }
+  expect(await page.locator("#nouvelle-cohorte fieldset[data-formulaire-sans-offre]").count()).toBe(1);
+  expect(await page.getByLabel("Nom de la cohorte").isDisabled()).toBe(true);
+  expect(await page.getByRole("button", { name: "Créer la cohorte" }).isDisabled()).toBe(true);
+  await page.evaluate(() =>
+    document.querySelectorAll("[data-formulaire-sans-offre]").forEach((f) => f.removeAttribute("disabled")),
+  );
   await page.getByLabel("Nom de la cohorte").fill(nom);
   for (const code of episodes) await cocher(page, code);
   await page.getByRole("button", { name: "Créer la cohorte" }).click();
@@ -154,7 +177,7 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     const ctxEleve = await contexte();
     const eleve = await ctxEleve.newPage();
     await eleve.goto(lien);
-    expect(await eleve.getByRole("heading", { level: 1 }).textContent()).toBe(`Rejoindre « ${NOM} »`);
+    expect(await eleve.getByRole("heading", { level: 1 }).textContent()).toBe(insecables(`Rejoindre « ${NOM} »`));
     await eleve.getByRole("button", { name: "Rejoindre la cohorte" }).click();
     await expect
       .poll(() => eleve.getByText(`Vous avez rejoint la cohorte « ${NOM} »`).count())
@@ -171,7 +194,7 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     expect(await eleve.getByRole("button", { name: "Commencer l'épisode" }).count()).toBe(0);
     // Devant un élève (il suit une cohorte), pas de message de vente : une phrase neutre.
     expect(await eleve.locator("[data-episode-ferme-eleve]").innerText()).toBe(
-      "Cet épisode n'est pas ouvert sur cet appareil ; demandez le lien à votre enseignant.",
+      insecables("Cet épisode n'est pas ouvert sur cet appareil ; demandez le lien à votre enseignant."),
     );
     expect(await eleve.getByText("Épisodes manager · sur devis").count()).toBe(0);
     // Dans le contenu de la page (la barre du site porte « Tarifs » partout, comme le pied).
@@ -190,7 +213,7 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     expect(await pleinsVisibles(prof)).toEqual(["+ Nouvelle cohorte"]);
     await carte.getByRole("link", { name: "Vue de l'animateur" }).click();
     await prof.waitForURL(/\/entreprises\/episode\/animation\//);
-    expect(await prof.getByRole("heading", { level: 1 }).textContent()).toBe(`Cohorte « ${NOM} »`);
+    expect(await prof.getByRole("heading", { level: 1 }).textContent()).toBe(insecables(`Cohorte « ${NOM} »`));
     expect(await prof.getByText(/1 membre, dont 1 avec au moins un épisode/).count()).toBe(1);
 
     // Clore : un nouveau venu est refusé.
@@ -204,7 +227,7 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     const ctxRetard = await contexte();
     const retard = await ctxRetard.newPage();
     await retard.goto(lien);
-    expect(await retard.getByRole("heading", { level: 1 }).textContent()).toBe(`« ${NOM} » est close`);
+    expect(await retard.getByRole("heading", { level: 1 }).textContent()).toBe(insecables(`« ${NOM} » est close`));
     expect(await retard.getByRole("button", { name: "Rejoindre la cohorte" }).count()).toBe(0);
 
     await ctxProf.close();
@@ -220,7 +243,7 @@ describe("un enseignant sous licence Classe seule (sans les épisodes)", () => {
     const page = await ctx.newPage();
     await aller(page, "/teacher/cohortes");
     expect(await page.locator("[data-cohortes-sans-licence]").count()).toBe(1);
-    await creer(page, "Seconde 4", [EPISODES_DE_DEMO[0]]);
+    await forcerLaCreation(page, "Seconde 4", [EPISODES_DE_DEMO[0]]);
     await page.waitForURL(/refus=licence/);
     const refus = page.locator('[data-refus-de-cohorte="licence"]');
     expect(await refus.textContent()).toContain(REFUS_SANS_LICENCE);
@@ -242,7 +265,7 @@ describe("un enseignant sans licence", () => {
     );
 
     // Même une cohorte des seules démonstrations.
-    await creer(page, "Seconde 3", [EPISODES_DE_DEMO[0]]);
+    await forcerLaCreation(page, "Seconde 3", [EPISODES_DE_DEMO[0]]);
     await page.waitForURL(/refus=licence/);
     const refus = page.locator('[data-refus-de-cohorte="licence"]');
     expect(await refus.getAttribute("role")).toBe("alert");
@@ -303,7 +326,7 @@ describe("à 390 px", () => {
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.waitForURL(/rejoindre\?code=/);
     expect(await page.getByRole("heading", { level: 1 }).textContent()).toBe(
-      "Rejoindre « Terminale STMG · groupe B »",
+      insecables("Rejoindre « Terminale STMG · groupe B »"),
     );
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await aller(page, `/enseignants/episodes/${FICHES[0]!.code}`);
