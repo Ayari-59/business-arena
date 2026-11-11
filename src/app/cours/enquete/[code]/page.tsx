@@ -5,7 +5,7 @@ import { BureauDuComptable } from "@/components/cours/bureau";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { PiedDePage } from "@/components/pied-de-page";
 import { enqueteParCode, lienDeLEnquete } from "@/config/cours/enquetes";
-import { CHAPITRES } from "@/config/cours/registre";
+import { essaiPour } from "@/config/cours/chapitres-libres";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { servirLeBureau } from "@/pedagogy/cours/bureau-servi";
@@ -13,8 +13,6 @@ import { classeDeLEleve } from "@/services/cours.service";
 import { chapitreOuvert } from "../../acces";
 import { ENTREPRISES } from "../../entreprises";
 
-/** Le chapitre que tout le monde peut ouvrir, lu dans le registre : la sortie d'une enquête réservée. */
-const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
 
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const { code } = await params;
@@ -45,7 +43,7 @@ async function EnquetePage({ params }: { params: Promise<{ code: string }> }) {
     const eleve = classe && !(await getSession()) ? { classe: classe.classe } : null;
     return (
       <>
-        <ChapitreReserve titre={enquete.titre} reserve="Ce cas pratique est réservé" chapitreLibre={CHAPITRE_LIBRE} eleve={eleve} />
+        <ChapitreReserve titre={enquete.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(enquete, { classe: classe?.parcours })} eleve={eleve} />
         <PiedDePage />
       </>
     );

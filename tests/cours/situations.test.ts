@@ -3,6 +3,7 @@ import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
+import { chapitresLibresParDiplome } from "../../src/config/cours/chapitres-libres";
 import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
 import { NEGOCIATIONS } from "../../src/config/cours/chapitres/negocier-le-prix";
 import { commandePourLaPromotion } from "../../src/config/cours/situations/commander-pour-la-promotion";
@@ -247,8 +248,9 @@ describe("embaucher pour la saison", () => {
 });
 
 describe("l'accès aux cas pratiques", () => {
-  it("le cas dédié du chapitre libre est libre, et lui seul (décision d'octobre 2026 : « cas pratique inclus »)", () => {
-    const pilote = CHAPITRES.find((c) => c.libre)!;
-    expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code)).toEqual([casDuChapitre(pilote.code)!.code]);
+  it("le cas dédié de chaque chapitre libre est libre, et eux seuls (décisions d'octobre 2026, « cas pratique inclus », et de novembre 2026, un chapitre libre par diplôme)", () => {
+    const libres = CHAPITRES.filter((c) => c.libre);
+    expect(libres.length).toBe(chapitresLibresParDiplome().length);
+    expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code).sort()).toEqual(libres.map((c) => casDuChapitre(c.code)!.code).sort());
   });
 });

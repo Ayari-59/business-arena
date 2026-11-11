@@ -213,7 +213,9 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     "Juger un escompte de fournisseur par son taux annuel, face au découvert",
     "Retrouver le délai qui fait rattraper une offre, et trancher entre résultat et trésorerie",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du BTS GPME (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DES_FOURNISSEURS,
     pourquoi:

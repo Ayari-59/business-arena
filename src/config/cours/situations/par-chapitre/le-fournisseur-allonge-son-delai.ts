@@ -95,7 +95,9 @@ export const LE_FOURNISSEUR_ALLONGE_SON_DELAI: Situation = {
     "Financer un besoin de trésorerie et le confronter à ce que l'entreprise peut porter",
     "Répondre au président, chiffres à l'appui",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS GPME (décision du
+  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DES_FOURNISSEURS,
     pourquoi: "ce cas reprend le chapitre « Choisir son fournisseur », qui se joue chez NOVA, dans la simulation du cours, sur ses offres de composants de l'année N + 1.",

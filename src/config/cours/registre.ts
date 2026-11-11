@@ -272,7 +272,8 @@ import type { Chapitre } from "./types";
  * humaines du bac STMG), et ne couvrent
  * que les paliers où elle a quelque chose à apprendre, sous ses mots. Tant qu'il se construit, la carte dit ce qui vient.
  *
- * ACCÈS (décision du propriétaire) : un chapitre est libre (`libre`), il sert de
+ * ACCÈS (décision du propriétaire) : un chapitre par diplôme est libre (`libre`), le premier de
+ * son parcours, avec son cas pratique (novembre 2026, config/cours/chapitres-libres.ts) ; il sert de
  * démonstration ; la suite du cours est réservée aux établissements sous licence.
  */
 

@@ -55,8 +55,8 @@ describe("la règle : au lycée, le bac STMG seul", () => {
     expect(retires.length).toBe(20);
     expect(CHAPITRES_PROPOSES.length).toBe(CHAPITRES.length - retires.length);
     for (const c of retires) expect(chapitrePropose(c), c.code).toBe(false);
-    // Le chapitre libre reste proposé : c'est la porte du cours.
-    expect(chapitrePropose(CHAPITRES.find((c) => c.libre)!)).toBe(true);
+    // Les chapitres libres restent proposés : un par diplôme proposé, c'est la porte du cours.
+    for (const c of CHAPITRES.filter((x) => x.libre)) expect(chapitrePropose(c), c.code).toBe(true);
   });
 
   it("aucune page de diplôme, aucun programme ni aucune tuile pour une formation retirée", () => {

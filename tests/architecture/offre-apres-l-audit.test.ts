@@ -27,8 +27,8 @@ describe("l'accès au cours, dit par les offres", () => {
     expect(inclus("classe")).toMatch(/Le cours : les chapitres d'un parcours, le même pour toutes vos classes/);
     expect(inclus("programme")).toMatch(/Le cours : les chapitres des parcours de vos classes/);
     expect(inclus("campus")).toMatch(/Le cours : tous les chapitres de tous les parcours/);
-    // « Un chapitre » : le chapitre libre n'est pas le premier du catalogue (audit du 10 novembre 2026).
-    expect(inclus("decouverte")).toMatch(/Un chapitre du cours et son cas pratique, en libre accès/);
+    // Un chapitre par diplôme, le premier de son parcours (novembre 2026, config/cours/chapitres-libres.ts).
+    expect(inclus("decouverte")).toMatch(/Un chapitre par diplôme, le premier de son parcours, et son cas pratique, en libre accès/);
   });
 
   it("le catalogue en base reçoit les mêmes textes (drizzle/0053)", () => {

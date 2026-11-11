@@ -226,10 +226,12 @@ const ch: Chapitre = {
 };
 
 describe("de la création au premier bilan : le chapitre pilote, dans les neuf entreprises", () => {
-  it("reste le chapitre libre du palier 2, joué partout, avec les étapes que l'e2e parcourt", () => {
+  it("est le premier chapitre du registre, au palier 2, réservé, joué partout, avec les étapes que l'e2e parcourt", () => {
     expect(CHAPITRES[0]).toBe(CREATION_PREMIER_BILAN);
     expect(CHAPITRES[1]).toBe(DU_RESULTAT_A_LA_TRESORERIE);
-    expect(ch.libre).toBe(true);
+    // Réservé depuis novembre 2026 : chaque diplôme a son chapitre libre, le premier de son parcours
+    // (config/cours/chapitres-libres.ts) ; celui-ci vient au deuxième rang du BTS CG et du BUT GEA.
+    expect(ch.libre).toBe(false);
     expect([DU_RESULTAT_A_LA_TRESORERIE.libre, DU_RESULTAT_A_LA_TRESORERIE.palier, DU_RESULTAT_A_LA_TRESORERIE.parcours]).toEqual([false, 2, "comptabilite-generale"]);
     // Le découpage : vingt étapes jusqu'au bilan et son laboratoire, treize pour la trésorerie et les échéances.
     expect([CREATION_PREMIER_BILAN.etapes.length, DU_RESULTAT_A_LA_TRESORERIE.etapes.length]).toEqual([20, 13]);
@@ -549,11 +551,11 @@ describe("le cas : la commande du 31 janvier", () => {
     return { m, enveloppe, prixTtc, quantite, horsTaxes: Math.floor(enveloppe / v.prixUnitaire + 1e-9), ht, tva, ttc: centime(ht + tva) };
   }
 
-  it("est le cas dédié du chapitre, libre comme lui, sans cours, et passé sur le monde du cours", () => {
+  it("est le cas dédié du chapitre, réservé comme lui, sans cours, et passé sur le monde du cours", () => {
     expect(casDuChapitre(ch.code)).toBe(s);
     expect(SITUATIONS).toContain(s);
     expect(s.reprend).toEqual([ch.code]);
-    expect([s.palier, s.parcours, s.libre]).toEqual([2, "comptabilite-generale", true]);
+    expect([s.palier, s.parcours, s.libre]).toEqual([2, "comptabilite-generale", false]);
     expect(s.entreprises).toBeUndefined();
     expect(s.etapes[0]!.type).toBe("lecture");
     expect(s.etapes[0]!.tableau).toBeDefined();

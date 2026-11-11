@@ -148,7 +148,8 @@ function casDedie(s: Situation, ch: Chapitre) {
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
   expect(s.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
-  expect(s.libre).toBe(false);
+  // Libre avec son chapitre, le premier d'un parcours (config/cours/chapitres-libres.ts), réservé sinon.
+  expect(s.libre).toBe(ch.libre);
   expect(s.blocs).toEqual([]);
   expect(s.etapes[0]!.type).toBe("lecture");
   expect(s.etapes[0]!.tableau).toBeDefined();
@@ -217,7 +218,8 @@ describe("les deux chapitres et leurs cas, chez NOVA du monde du cours", () => {
       expect(ch.parcours).toBe("gpme");
       expect(ch.palier).toBe(2);
       expect(ch.blocs).toEqual(ch === LE_CLIENT_QUI_PAIE_TARD ? [BLOC_1, BLOC_P1_DU_BTS_CG] : [BLOC_1]);
-      expect(ch.libre).toBe(false);
+      // « Choisir son fournisseur » est libre : le premier chapitre du parcours du BTS GPME.
+      expect(ch.libre, ch.code).toBe(ch === CHOISIR_SON_FOURNISSEUR);
       expect(ch.entreprises?.codes).toEqual(["nova"]);
       expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
       expect(ch.etapes[0]!.type).toBe("lecture");

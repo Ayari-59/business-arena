@@ -104,7 +104,9 @@ export const PRIX_COUT_MARGE: Chapitre = {
     "Mesurer l'effet d'une baisse de prix sur la marge",
     "Dire pourquoi la marge se calcule hors taxes",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du BTS CG et du DCG (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {

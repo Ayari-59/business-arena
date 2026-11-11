@@ -1,7 +1,7 @@
 import { ATELIERS } from "./ateliers";
 import { dureeDuChapitre, dureeEnClair } from "./cours/duree";
 import { CHIFFRES_DU_COURS, SITUATIONS_PROPOSEES } from "./chiffres-du-cours";
-import { CHAPITRES } from "./cours/registre";
+import { chapitreLibreParDefaut } from "./cours/chapitres-libres";
 import { coursDeLaFormation } from "./couverture";
 import { CHAPITRES_PROPOSES, FORMATIONS_PROPOSEES } from "./formations-proposees";
 import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "./episodes/familles";
@@ -54,11 +54,12 @@ export function briques(): readonly Brique[] {
       geste: "Apprendre",
       nom: "Le cours",
       texte:
-        "Une notion à la fois, guidée pas à pas, sur les chiffres d'une entreprise de l'arène : l'élève passe les écritures et fait les calculs, la correction explique chaque étape.",
+        "Une notion à la fois, guidée pas à pas, sur les chiffres d'une entreprise de l'arène : l'élève passe les écritures et fait les calculs, la correction explique chaque étape. Chaque diplôme a son chapitre libre.",
       forme: `Seul, ${etendue(CHAPITRES_PROPOSES.map(dureeDuChapitre))}`,
       compte: `${n.chapitres} chapitres`,
       lien: { href: "/cours#catalogue", libelle: "Le catalogue par thème" },
-      essai: { href: `/cours/${CHAPITRES.find((c) => c.libre)!.code}`, libelle: "Le chapitre libre" },
+      // Un chapitre libre par diplôme (config/cours/chapitres-libres.ts) : ici, sans diplôme, l'essai par défaut.
+      essai: { href: `/cours/${chapitreLibreParDefaut().code}`, libelle: "Un chapitre libre" },
     },
     {
       code: "situations",
@@ -110,10 +111,11 @@ export const ENCHAINEMENT: readonly string[] = [
  * disaient pas un mot. Les nombres comptent ce qui est proposé (audit du 10 novembre 2026 :
  * 255 chapitres, 262 cas et 18 formations annoncés pour 235, 242 et 12). Les chapitres, les
  * laboratoires et les cas viennent de config/chiffres-du-cours.ts ; les formations que le cours
- * sert (une option comptant pour son diplôme) se comptent ici, et seulement ici.
+ * sert (une option comptant pour son diplôme) se comptent ici, et seulement ici. L'essai, sans
+ * diplôme, est l'essai par défaut : chaque diplôme a le sien (config/cours/chapitres-libres.ts).
  */
 export function leCoursEnChiffres() {
-  const libre = CHAPITRES.find((c) => c.libre)!;
+  const libre = chapitreLibreParDefaut();
   return {
     ...CHIFFRES_DU_COURS,
     formations: FORMATIONS_PROPOSEES.filter((f) => !f.optionDe && coursDeLaFormation(f.code).length > 0).length,

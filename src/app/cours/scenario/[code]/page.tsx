@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { ScenarioAEmbranchements } from "@/components/cours/scenario";
 import { PiedDePage } from "@/components/pied-de-page";
-import { CHAPITRES } from "@/config/cours/registre";
+import { essaiPour } from "@/config/cours/chapitres-libres";
 import { lienDuScenario, scenarioParCode } from "@/config/cours/scenarios";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
@@ -13,8 +13,6 @@ import { classeDeLEleve } from "@/services/cours.service";
 import { chapitreOuvert } from "../../acces";
 import { ENTREPRISES } from "../../entreprises";
 
-/** Le chapitre que tout le monde peut ouvrir, lu dans le registre : la sortie d'un scénario réservé. */
-const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
 
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const { code } = await params;
@@ -45,7 +43,7 @@ async function ScenarioPage({ params }: { params: Promise<{ code: string }> }) {
     const eleve = classe && !(await getSession()) ? { classe: classe.classe } : null;
     return (
       <>
-        <ChapitreReserve titre={scenario.titre} reserve="Ce cas pratique est réservé" chapitreLibre={CHAPITRE_LIBRE} eleve={eleve} />
+        <ChapitreReserve titre={scenario.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(scenario, { classe: classe?.parcours })} eleve={eleve} />
         <PiedDePage />
       </>
     );

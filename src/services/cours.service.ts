@@ -345,8 +345,9 @@ export async function classeSousLicence(userId: string): Promise<boolean> {
 }
 
 /**
- * QUI OUVRE QUEL CHAPITRE (décision du propriétaire, octobre 2026). Le chapitre libre s'ouvre
- * à tous (la Découverte). Les autres :
+ * QUI OUVRE QUEL CHAPITRE (décision du propriétaire, octobre 2026). Un chapitre libre s'ouvre
+ * à tous (la Découverte ; un par diplôme depuis novembre 2026, config/cours/chapitres-libres.ts).
+ * Les autres :
  *  · Campus : tous ;
  *  · Classe : ceux du parcours de la classe (`cours_classes.parcours`), pour l'élève par sa
  *    classe, pour l'enseignant par les classes qu'il a créées ;

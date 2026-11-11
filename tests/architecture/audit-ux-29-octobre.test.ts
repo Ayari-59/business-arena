@@ -92,16 +92,18 @@ describe("P1-1 · la classe du cours sans offre, et l'élève devant un chapitre
   });
 
   it("la création d'une classe sans offre le dit, et la page de la classe marque les chapitres fermés", () => {
-    expect(classeSansOffre("Créer son entreprise")).toMatch(/n'ouvre à vos élèves que le chapitre libre, « Créer son entreprise »/);
+    // Un chapitre libre par diplôme (novembre 2026) : la phrase le dit, et nomme celui de la classe.
+    expect(classeSansOffre()).toMatch(/n'ouvre à vos élèves que les chapitres libres, un par diplôme, avec leur cas pratique ; les autres/);
+    expect(classeSansOffre("Les flux de l'entreprise")).toMatch(/\(pour cette classe, « Les flux de l'entreprise »\)/);
     const creation = lire("app/teacher/cours/page.tsx");
-    expect(creation).toMatch(/!offre && libre \? \(\s*<p data-classe-du-cours-sans-offre/);
+    expect(creation).toMatch(/!offre \? \(\s*<p data-classe-du-cours-sans-offre/);
     const page = lire("app/teacher/cours/[id]/page.tsx");
     expect(page).toContain("data-classe-du-cours-sans-offre");
     expect(page).toContain('data-chapitre-ferme={ouvert(c) ? undefined : ""}');
   });
 
   it("l'élève d'une classe ne voit ni « Voir les offres » ni « Demander un devis »", () => {
-    const props = { titre: "Les flux", reserve: "Ce chapitre est réservé", chapitreLibre: "creation-premier-bilan" };
+    const props = { titre: "Les flux", reserve: "Ce chapitre est réservé", essai: { href: "/cours/les-flux-de-l-entreprise?diplome=stmg", titre: "Les flux de l'entreprise", sigle: "STMG" } };
     const eleve = rendu(createElement(ChapitreReserve, { ...props, eleve: { classe: "BTS 1" } }));
     expect(texte(eleve)).toContain("n'est pas encore ouvert pour votre classe, « BTS 1 »");
     expect(texte(eleve)).toContain("votre enseignant");

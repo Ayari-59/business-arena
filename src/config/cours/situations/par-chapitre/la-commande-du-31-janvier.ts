@@ -108,9 +108,8 @@ export const LA_COMMANDE_DU_31_JANVIER: Situation = {
     "Dire ce qu'une vente change au résultat, à la TVA du mois, aux créances et à la banque",
     "Rattacher une vente au bon mois, et rédiger une réponse chiffrée au dirigeant",
   ],
-  // Libre comme le chapitre qu'il reprend (décision du propriétaire, octobre 2026 :
-  // « cas pratique inclus ») : la démonstration va du chapitre à son cas pratique.
-  libre: true,
+  // Réservé comme le chapitre qu'il reprend (novembre 2026 : config/cours/chapitres-libres.ts).
+  libre: false,
   ouverture: journalDeJanvier,
   etapes: [
     {

@@ -9,6 +9,8 @@ import { classeDeLEnseignant, parcoursImposeALEnseignant } from "@/services/cour
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
 import { chapitrePropose } from "@/config/formations-proposees";
+import { essaiDuDiplome } from "@/config/cours/chapitres-libres";
+import { formationDuParcours } from "@/config/cours/competences-affichees";
 import { chapitreDuCas } from "@/pedagogy/cours/deroule";
 import { vueDeLaClasse, type LigneDEleve } from "@/pedagogy/cours/suivi";
 import { SITE_URL } from "@/config/site";
@@ -114,7 +116,9 @@ async function ClasseDuCoursPage({
   // (config/formations-proposees.ts) : une classe garde ce qu'elle avait.
   const montres = CHAPITRES.filter((c) => chapitrePropose(c) || c.parcours === classe.parcours);
   const ouverts = montres.filter(ouvert).length;
-  const libre = CHAPITRES.find((c) => c.libre);
+  // Les chapitres libres s'ouvrent à tous, un par diplôme (config/cours/chapitres-libres.ts) : la page
+  // nomme celui du diplôme de la classe, quand son parcours en suit un.
+  const libreDeLaClasse = essaiDuDiplome(formationDuParcours(classe.parcours))?.chapitre ?? null;
 
   return (
     <main id="main" className="pb-16">
@@ -134,10 +138,10 @@ async function ClasseDuCoursPage({
           </p>
         ) : null}
 
-        {!offre && libre ? (
+        {!offre ? (
           <p data-classe-du-cours-sans-offre="" className="rounded-lg encadre-neutre px-4 py-2.5 text-sm text-slate-300">
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-            {classeSansOffre(libre.titre)}{" "}
+            {classeSansOffre(libreDeLaClasse?.titre)}{" "}
             <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
               {LIBELLE_DU_DEVIS}
             </Link>
@@ -224,7 +228,7 @@ async function ClasseDuCoursPage({
           <p className="text-sm text-slate-300">
             {classe.liberation === "tout"
               ? "Tout est ouvert : vos élèves voient tous les chapitres que votre offre permet."
-              : `Vous libérez chapitre par chapitre : ${compter(montres.filter((c) => !c.libre && liberes.has(c.code)).length, "chapitre libéré", "chapitres libérés")}, en plus du chapitre libre.`}
+              : `Vous libérez chapitre par chapitre : ${compter(montres.filter((c) => !c.libre && liberes.has(c.code)).length, "chapitre libéré", "chapitres libérés")}, en plus des chapitres libres.`}
           </p>
           {classe.liberation === "chapitre" && !chapitre.libre ? (
             permis(choisi) ? (

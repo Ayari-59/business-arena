@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { CHAPITRES } from "@/config/cours/registre";
+import { chapitreLibreParDefaut } from "@/config/cours/chapitres-libres";
 import {
   LIEN_MENTIONS,
   LIENS_TRANSVERSES,
@@ -130,7 +130,8 @@ describe("le menu rangé par public", () => {
   });
 
   it("Élèves : une seule porte pour tous les codes, le solo, le cours à l'essai, la reprise, le profil, les cas", () => {
-    const libre = CHAPITRES.find((c) => c.libre)!;
+    // L'essai par défaut : chaque diplôme a son chapitre libre (config/cours/chapitres-libres.ts).
+    const libre = chapitreLibreParDefaut();
     expect(rangee("eleves")).toEqual([
       ["J'ai un code", "/join"],
       ["Jouer en solo", "/jouer"],

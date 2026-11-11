@@ -17,6 +17,7 @@ import { DIFFICULTES } from "@/config/ateliers/types";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
 import { CATALOGUE_PAR_DEFAUT, ENTREPRISES, NIVEAUX_DE_L_ARENE, OFFRES } from "@/config/tarifs";
 import { leCoursEnChiffres } from "@/config/articulation";
+import { chapitreLibreParDefaut } from "@/config/cours/chapitres-libres";
 import { ateliersDeLaClasse, ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { LeCoursEnBref } from "@/components/le-cours-en-bref";
 import { DevisForm } from "@/components/devis-form";
@@ -55,7 +56,9 @@ describe("1. le cours sur les pages des publics", () => {
     expect(n.avecLaboratoire).toBe(CHAPITRES_PROPOSES.filter((c) => c.etapes.some((e) => e.type === "simulation")).length);
     expect(n.formations).toBeGreaterThan(0);
     expect(n.formations).toBeLessThanOrEqual(FORMATIONS.length);
-    expect(n.libre.href).toBe(`/cours/${CHAPITRES.find((c) => c.libre)!.code}`);
+    // Sans diplôme, l'essai par défaut : chaque diplôme a le sien (config/cours/chapitres-libres.ts).
+    expect(n.libre.href).toBe(`/cours/${chapitreLibreParDefaut().code}`);
+    expect(CHAPITRES.find((c) => c.code === chapitreLibreParDefaut().code)?.libre).toBe(true);
   });
 
   it("l'encart dit ces nombres, mène au catalogue et au chapitre libre", () => {
@@ -70,6 +73,7 @@ describe("1. le cours sur les pages des publics", () => {
     else expect(t).toContain(`dont ${n.avecLaboratoire} avec leur laboratoire`);
     expect(html).toContain('href="/cours"');
     expect(html).toContain(`href="${n.libre.href}"`);
+    expect(t).toContain("chaque diplôme a son chapitre libre");
   });
 
   it.each(["app/enseignants/page.tsx", "app/ecoles/page.tsx", "app/fonctionnalites/page.tsx"])(

@@ -77,7 +77,9 @@ export const LES_FLUX: Chapitre = {
     "Lire les entrées et les sorties d'argent d'un trimestre",
     "Voir ce qu'un délai de paiement fait à la banque",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du bac STMG (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_LA_GESTION_DE_BASE },
   etapes: [
     {

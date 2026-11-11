@@ -1,13 +1,15 @@
 import { expect, it } from "vitest";
 import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME, chapitreParCode, paliersDuParcours } from "../../src/config/cours/registre";
+import { chapitresLibresParDiplome } from "../../src/config/cours/chapitres-libres";
 
 /**
  * LA CARTE DU COURS DIT VRAI.
  *
  * Un parcours achevé ouvre un chapitre à chaque palier de sa carte (la page /cours n'affiche
  * plus « En préparation » pour lui) ; un parcours qui se construit le dit, et aucun chapitre
- * ne tombe sur un palier que sa carte ne montre pas. Chaque chapitre a un code unique ; le
- * premier, le seul libre, est le chapitre pilote.
+ * ne tombe sur un palier que sa carte ne montre pas. Chaque chapitre a un code unique ; les
+ * chapitres libres sont ceux de la décision de novembre 2026, un par diplôme, le premier de son
+ * parcours (tests/architecture/un-chapitre-libre-par-diplome.test.ts).
  */
 
 const ouvre = (code: string, palier: number) => CHAPITRES.some((c) => c.parcours === code && c.palier === palier);
@@ -30,10 +32,12 @@ it("un parcours en préparation a encore des chapitres à écrire, et aucun chap
   for (const c of CHAPITRES) expect(PROGRAMME[c.parcours][c.palier], `${c.code} : palier ${c.palier} de ${c.parcours}`).toBeDefined();
 });
 
-it("chaque chapitre a un code unique, et seul le premier est libre", () => {
+it("chaque chapitre a un code unique, et seuls les premiers des parcours des diplômes sont libres", () => {
   expect(new Set(CHAPITRES.map((c) => c.code)).size).toBe(CHAPITRES.length);
   for (const c of CHAPITRES) expect(chapitreParCode(c.code)).toBe(c);
-  expect(CHAPITRES.filter((c) => c.libre)).toEqual([CHAPITRES[0]]);
+  expect(CHAPITRES.filter((c) => c.libre).map((c) => c.code).sort()).toEqual(chapitresLibresParDiplome().map((l) => l.chapitre.code).sort());
+  // Le chapitre pilote, premier du registre, ne l'est plus : il vient au deuxième rang du BTS CG.
+  expect(CHAPITRES[0]!.libre).toBe(false);
 });
 
 it("les prérequis déclarés existent, viennent avant, et sont servis à l'élève (audit pédagogique, P1-2)", async () => {

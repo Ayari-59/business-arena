@@ -89,7 +89,9 @@ export const LE_LOYER_QUI_AUGMENTE: Situation = {
     "Retrouver à rebours le loyer, la hausse et le prix qui tiendraient",
     "Rendre au dirigeant une réponse chiffrée qui tranche",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS MHR (décision du
+  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DU_SEUIL,
     pourquoi: "ce cas reprend le chapitre « Le seuil de rentabilité », qui se calcule sur le mois de janvier de NOVA dans la simulation du cours.",

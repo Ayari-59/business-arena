@@ -81,10 +81,25 @@ export function fuitesDuBuild(dossierNext: string, marqueurs = marqueursDesCorri
  *
  * Les marqueurs viennent des sources : dans chaque fichier de chapitre ou de cas
  * pratique réservé (`libre: false`), les plus longues suites de caractères simples
- * de ses textes. Un fichier qui se déclare libre (`libre: true`) n'en donne pas : il
- * peut rester public.
+ * de ses textes. Un fichier libre (`fichierLibre`) n'en donne pas : il peut rester public.
  */
 const DOSSIERS_DU_COURS = ["src/config/cours/chapitres", "src/config/cours/situations", "src/config/cours/bureaux", "src/config/cours/enquetes", "src/config/cours/scenarios"];
+
+/**
+ * UN FICHIER LIBRE se déclare libre (`libre: true`) et n'exporte qu'un contenu (novembre 2026, un
+ * chapitre libre par diplôme : config/cours/chapitres-libres.ts). Le fichier d'un chapitre découpé
+ * (config/cours/chapitres/decoupage.ts, `partieDuChapitre`) exporte la première partie, libre, et sa
+ * suite, réservée : il se fouille en entier, pour que la suite reste gardée. Garde :
+ * tests/architecture/un-chapitre-libre-par-diplome.test.ts.
+ */
+const CONTENU_EXPORTE = /^export const \w+\s*:\s*(?:Chapitre|Situation|Bureau|Enquete|Scenario)\b/gm;
+export function fichierLibre(source: string): boolean {
+  return /\blibre:\s*true\b/.test(source) && (source.match(CONTENU_EXPORTE)?.length ?? 0) <= 1;
+}
+
+export function sourcesDuCours(racine = process.cwd()): string[] {
+  return DOSSIERS_DU_COURS.flatMap((d) => sources(join(racine, d)));
+}
 
 function sources(dossier: string): string[] {
   if (!existsSync(dossier)) return [];
@@ -97,9 +112,9 @@ function sources(dossier: string): string[] {
 
 export function marqueursDuCours(racine = process.cwd(), parFichier = 3): { fichier: string; marqueur: string }[] {
   const out: { fichier: string; marqueur: string }[] = [];
-  for (const fichier of DOSSIERS_DU_COURS.flatMap((d) => sources(join(racine, d)))) {
+  for (const fichier of sourcesDuCours(racine)) {
     const source = readFileSync(fichier, "utf8");
-    if (/\blibre:\s*true\b/.test(source)) continue;
+    if (fichierLibre(source)) continue;
     // Les textes seulement : les commentaires disent aussi des phrases, que le build efface.
     const sansCommentaires = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     const textes = [...sansCommentaires.matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g)].map((m) => m[1] ?? m[2] ?? "");

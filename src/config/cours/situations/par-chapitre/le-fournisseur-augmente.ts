@@ -85,7 +85,9 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
     "Calculer le prix de vente qui garde le même taux de marque",
     "Rédiger une réponse chiffrée au président",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS CG et du DCG (décision du
+  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {

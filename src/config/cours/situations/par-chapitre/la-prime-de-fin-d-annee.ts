@@ -89,7 +89,9 @@ export const LA_PRIME_DE_FIN_D_ANNEE: Situation = {
     "Calculer les cotisations salariales et le net",
     "Répondre à la direction, chiffre à l'appui",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le premier du parcours du BUT GEA (décision du
+  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
     pourquoi: "le cas reprend la paie de NOVA, celle du chapitre, et les ventes de son premier exercice.",

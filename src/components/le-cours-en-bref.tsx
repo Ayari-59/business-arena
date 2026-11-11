@@ -23,14 +23,14 @@ export function LeCoursEnBref({ className = "" }: { className?: string }) {
         {n.chapitres} chapitres guidés pas à pas sur les chiffres d&apos;une entreprise de l&apos;arène, {laboratoire} :
         des curseurs et des leviers dont l&apos;élève voit l&apos;effet en direct. {n.casPratiques} cas pratiques pour
         vérifier sans guide, sur les référentiels de {n.formations} formations. Il se prend seul, sans partie
-        d&apos;arène.
+        d&apos;arène, et chaque diplôme a son chapitre libre, à ouvrir sans compte avec son cas pratique.
       </p>
       <p className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
         <Link href="/cours" className={LIEN_A_L_ENCRE}>
           Le catalogue et le filtre par diplôme
         </Link>
         <Link href={n.libre.href} className={LIEN_A_L_ENCRE} data-essai-gratuit="">
-          Essayer le chapitre libre, sans compte
+          Essayer un chapitre libre, sans compte
         </Link>
       </p>
     </section>

@@ -85,7 +85,9 @@ export const L_ETIQUETTE_DU_CONCURRENT: Situation = {
     "Retrouver à rebours les ventes, puis le prix d'achat, qui gardent la marge du mois",
     "Répondre à la gérante sur le bon critère, chiffres à l'appui",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS MCO (décision du
+  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DU_POINT_DE_VENTE,
     pourquoi: "ce cas reprend le chapitre « Taux de marque, taux de marge, coefficient », qui se joue dans la boutique du cours, MAILLE & CO.",

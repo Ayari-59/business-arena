@@ -271,7 +271,9 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
     "Chiffrer l'effet d'une baisse de prix, et lire le levier opérationnel",
     "Calculer le seuil d'une gamme et celui de charges fixes par paliers, et en tirer une décision",
   ],
-  libre: false,
+  // Libre : le premier chapitre du parcours du BTS MHR (décision du propriétaire, novembre 2026 ;
+  // config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DU_SEUIL,
     pourquoi:
@@ -1141,5 +1143,7 @@ export const LES_LEVIERS_DU_SEUIL: Chapitre = partieDuChapitre(
     accroche: "Le seuil de NOVA est connu : une baisse de prix, le levier opérationnel, le seuil d'une gamme et des charges fixes par paliers, jusqu'à la décision chiffrée.",
     prerequis: ["seuil-de-rentabilite"],
     ouverture: undefined,
+    // La suite reste réservée : seul le premier chapitre du parcours est libre (config/cours/chapitres-libres.ts).
+    libre: false,
   },
 );

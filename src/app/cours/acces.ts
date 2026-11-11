@@ -6,7 +6,7 @@ import { coursOuvert } from "@/services/cours.service";
 
 /**
  * QUI PEUT OUVRIR UN CHAPITRE (décision du propriétaire, octobre 2026). Un chapitre libre
- * s'ouvre à tous (la Découverte) ; sous Campus, tous les chapitres ; sous Classe, ceux du
+ * s'ouvre à tous (la Découverte ; un par diplôme, config/cours/chapitres-libres.ts) ; sous Campus, tous les chapitres ; sous Classe, ceux du
  * parcours de la classe ; sous Programme, ceux des parcours des classes de l'établissement
  * (la règle : services/cours.service.ts, coursOuvert). L'enseignant par son compte, l'élève
  * par sa classe.
