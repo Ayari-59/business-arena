@@ -235,7 +235,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
         "Le président signe les commandes et signe aussi les virements : il autorise et il détient les fonds. Dans une entreprise de cette taille, impossible de faire autrement. Que fait le cabinet ?",
       options: () => [
         {
-          texte: "Il compense : rapprochements faits par un autre qu'elle",
+          texte: "Il compense : rapprochements faits par un autre que lui",
           juste: true,
           retour:
             "Oui. Quand la séparation est impossible, un contrôle compensatoire la remplace : le cabinet rapproche commande, réception et facture avant le bon à payer, puis le relevé bancaire après. Le président décide, un autre vérifie.",
@@ -246,7 +246,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
           retour: "Ce serait donner les fonds à celui qui reçoit les biens : un autre cumul, plus dangereux. Le président garde la signature ; on contrôle autour de lui.",
         },
         {
-          texte: "Rien : la dirigeante d'une petite entreprise est par nature au-dessus de tout contrôle",
+          texte: "Rien : le dirigeant d'une petite entreprise est par nature au-dessus de tout contrôle",
           juste: false,
           retour: "Le contrôle ne vise pas sa probité : il protège aussi le président contre ses propres erreurs, et contre ceux qui se font passer pour un fournisseur.",
         },

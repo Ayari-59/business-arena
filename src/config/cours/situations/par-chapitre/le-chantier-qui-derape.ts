@@ -7,7 +7,7 @@ import type { Situation } from "../types";
  *
  * En janvier N + 2, avant l'arrêté des comptes de N + 1, le chef de chantier annonce que la
  * sonorisation de la salle Arpège coûtera `COUT_REESTIME` au lieu du coût prévu : il faut refaire
- * l'acoustique d'une galerie. La directrice financière veut le résultat du contrat en N + 1, et
+ * l'acoustique d'une galerie. Le président veut le résultat du contrat en N + 1, et
  * savoir quoi passer. L'élève refait les calculs du chapitre (`contratALAvancement`) sur le coût
  * réestimé.
  */
@@ -23,19 +23,19 @@ export const LE_CHANTIER_QUI_DERAPE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["les-contrats-a-long-terme"],
-  commanditaire: "La directrice financière",
+  commanditaire: "Le président",
   titre: "Le chantier qui dérape",
   accroche: "Le coût du chantier de la salle Arpège dépasse son prix : ce que l'exercice doit porter, avant même la livraison.",
-  objectifs: ["Recalculer l'avancement sur un coût réestimé", "Calculer la provision pour perte à terminaison", "Répondre à la directrice, chiffre à l'appui"],
+  objectifs: ["Recalculer l'avancement sur un coût réestimé", "Calculer la provision pour perte à terminaison", "Répondre au président, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend le chantier de NOVA pour la salle Arpège, celui du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la directrice",
+      titre: "La question du président",
       texte: () => [
-        `« Le chef de chantier vient de m'appeler : la galerie de la salle Arpège est à reprendre, le chantier coûtera ${eur(COUT_REESTIME)} et non ${eur(CHANTIER_ARPEGE.coutTotalEstime)}. Nous n'en sommes qu'au début. Qu'est-ce que cela change aux comptes de N + 1, que nous arrêtons la semaine prochaine ? » La directrice financière`,
+        `« Le chef de chantier vient de m'appeler : la galerie de la salle Arpège est à reprendre, le chantier coûtera ${eur(COUT_REESTIME)} et non ${eur(CHANTIER_ARPEGE.coutTotalEstime)}. Nous n'en sommes qu'au début. Qu'est-ce que cela change aux comptes de N + 1, que nous arrêtons la semaine prochaine ? » Le président`,
         "Pas de cours cette fois : l'avancement et la perte à terminaison, vous savez les calculer.",
       ],
       tableau: () => ({
@@ -75,8 +75,8 @@ export const LE_CHANTIER_QUI_DERAPE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice",
-      question: () => "Que répondez-vous à la directrice ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const a = chantierQuiDerape();
         return [

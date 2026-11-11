@@ -8,7 +8,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LE COÛT PRÉÉTABLI, LE BUDGET STANDARD ET LE BUDGET FLEXIBLE » : LE
  * BUDGET DÉPASSÉ (contrôle de gestion, palier 4).
  *
- * Le directeur de l'usine lit le réel du trimestre face au budget standard et veut annoncer au
+ * Le président lit le réel du trimestre de l'usine face au budget standard et veut annoncer au
  * comité de direction l'écart entier comme un dérapage, alors que l'usine a fabriqué moins
  * d'enceintes que prévu. L'élève refait seul les calculs du chapitre : le coût standard de
  * l'heure-machine et la fiche de chaque enceinte, le coût préétabli de la production réelle,
@@ -33,11 +33,11 @@ export function budgetDepasse(c: Pick<Cas, "code">) {
   return { ...b, aAnalyser, nomsAAnalyser: enListe(aAnalyser.map((p) => p.nom.toLowerCase())) };
 }
 
-function tableauDuDirecteur(c: Cas): TableauDeDonnees {
+function tableauDuPresident(c: Cas): TableauDeDonnees {
   const b = budgetDepasse(c);
   const e = b.e;
   return {
-    titre: `Le trimestre de l'usine ${b.f.entreprise}, tel que le directeur le lit`,
+    titre: `Le trimestre de l'usine ${b.f.entreprise}, tel que le président le lit`,
     colonnes: ["Budget", "Réel"],
     lignes: [
       ...b.modeles.map((x) => ({ libelle: `${x.m.nom} fabriquées`, valeurs: [qte(x.prevue), qte(x.reelle)] })),
@@ -55,15 +55,15 @@ export const LE_BUDGET_DEPASSE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["le-cout-preetabli-et-les-budgets"],
-  commanditaire: "Le directeur de l'usine",
+  commanditaire: "Le président",
   titre: "Le budget dépassé",
   accroche:
-    "Le directeur lit les coûts du trimestre face au budget et veut annoncer tout l'écart comme un dérapage, alors que l'usine a fabriqué moins d'enceintes que prévu. Quel chiffre annoncer, et où chercher ?",
+    "Le président lit les coûts du trimestre face au budget et veut annoncer tout l'écart comme un dérapage, alors que l'usine a fabriqué moins d'enceintes que prévu. Quel chiffre annoncer, et où chercher ?",
   objectifs: [
     "Établir le coût préétabli de la production réelle",
     "Séparer l'effet des quantités produites et l'écart global sur coûts",
     "Calculer les écarts par poste et leur appliquer un seuil de significativité",
-    "Répondre au directeur, chiffres à l'appui",
+    "Répondre au président, chiffres à l'appui",
   ],
   libre: false,
   entreprises: {
@@ -74,8 +74,8 @@ export const LE_BUDGET_DEPASSE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "Le directeur et son budget",
-      tableau: tableauDuDirecteur,
+      titre: "Le président et le budget de l'usine",
+      tableau: tableauDuPresident,
       texte: (c) => {
         const b = budgetDepasse(c);
         return [
@@ -83,7 +83,7 @@ export const LE_BUDGET_DEPASSE: Situation = {
           "Pas de cours cette fois : les calculs sont ceux du chapitre. Les standards de chaque enceinte sont dans la fiche de l'usine, à l'étape suivante.",
         ];
       },
-      repere: () => "À rendre : le coût préétabli de chaque enceinte, celui de la production réelle, l'écart global sur coûts et les écarts par poste, puis votre réponse au directeur.",
+      repere: () => "À rendre : le coût préétabli de chaque enceinte, celui de la production réelle, l'écart global sur coûts et les écarts par poste, puis votre réponse au président.",
     },
     {
       id: "fiche",
@@ -123,7 +123,7 @@ export const LE_BUDGET_DEPASSE: Situation = {
       titre: "Ce que la production réelle devait coûter",
       notions: ["standard_costing", "cost_variance"],
       question: () =>
-        "Calculez le coût préétabli de la production réelle, puis la part de l'écart du directeur qui ne vient que des quantités produites, et l'écart global sur coûts. Négatif pour un écart favorable.",
+        "Calculez le coût préétabli de la production réelle, puis la part de l'écart lu par le président qui ne vient que des quantités produites, et l'écart global sur coûts. Négatif pour un écart favorable.",
       champs: (c) => {
         const b = budgetDepasse(c);
         const e = b.e;
@@ -221,9 +221,9 @@ export const LE_BUDGET_DEPASSE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au directeur",
+      titre: "Votre réponse au président",
       notions: ["cost_variance", "standard_costing"],
-      question: () => "Quelle réponse rendez-vous au directeur ?",
+      question: () => "Quelle réponse rendez-vous au président ?",
       options: (c) => {
         const b = budgetDepasse(c);
         const e = b.e;

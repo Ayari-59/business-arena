@@ -10,7 +10,7 @@ import type { Situation } from "../types";
  * (Bac STMG, systèmes d'information de gestion, palier 1).
  *
  * Le commercial annonce, pour le rapport du semestre, une part de marché égale à la moyenne de ses
- * parts mensuelles. La directrice commerciale veut savoir si c'est la part du semestre avant de la
+ * parts mensuelles. La responsable commerciale veut savoir si c'est la part du semestre avant de la
  * publier. L'élève refait le calcul du chapitre (la moyenne de ratios face au ratio des sommes) sur
  * un autre indicateur : la part de marché de NOVA, ses ventes rapportées aux enceintes vendues par
  * tout le marché, sur les six mois du semestre.
@@ -65,9 +65,9 @@ export const LA_PART_DE_MARCHE_ANNONCEE: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["construire-un-indicateur-juste"],
-  commanditaire: "La directrice commerciale",
+  commanditaire: "La responsable commerciale",
   titre: "La part de marché annoncée",
-  accroche: "Le commercial annonce une part de marché du semestre égale à la moyenne de ses parts mensuelles. Avant de la publier, la directrice commerciale veut savoir si c'est la bonne.",
+  accroche: "Le commercial annonce une part de marché du semestre égale à la moyenne de ses parts mensuelles. Avant de la publier, la responsable commerciale veut savoir si c'est la bonne.",
   objectifs: ["Calculer la moyenne simple de parts mensuelles", "Calculer la part du semestre comme un ratio des sommes", "Dire si l'indicateur annoncé est juste, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_L_INDICATEUR },
@@ -133,9 +133,9 @@ export const LA_PART_DE_MARCHE_ANNONCEE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice commerciale",
+      titre: "Votre réponse à la responsable commerciale",
       notions: ["demand_market_share"],
-      question: () => "Quelle réponse envoyez-vous à la directrice commerciale ?",
+      question: () => "Quelle réponse envoyez-vous à la responsable commerciale ?",
       options: (c) => {
         const k = partAnnoncee();
         const chiffres = `${pct(k.partDuSemestre)} sur le semestre, contre ${pct(k.moyenne)} annoncés : ${points(k.ecart)} d'écart`;

@@ -7,7 +7,7 @@ import type { Situation } from "../types";
  * (DCG · Comptabilité approfondie, palier 4).
  *
  * En décembre N + 1, le technicien du fabricant revient : les moteurs de la seconde ligne tournent
- * plus qu'annoncé, ils ne tiendront que 2 ans. La directrice financière veut savoir, avant
+ * plus qu'annoncé, ils ne tiendront que 2 ans. Le président veut savoir, avant
  * l'inventaire, ce que cela change à la dotation de l'exercice. Le calcul est celui du chapitre
  * (`composantsDeLaSecondeLigne`, monde/comptabilite-approfondie.ts), sur une durée révisée.
  */
@@ -29,19 +29,19 @@ export const LES_MOTEURS_QUI_S_USENT_PLUS_VITE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["les-composants-et-l-amortissement-derogatoire"],
-  commanditaire: "La directrice financière",
+  commanditaire: "Le président",
   titre: "Les moteurs qui s'usent plus vite",
   accroche: "Le fabricant révise la durée des moteurs de la seconde ligne : ce que cela change à la dotation de l'exercice, avant l'inventaire.",
-  objectifs: ["Recalculer la dotation d'un composant sur sa durée révisée", "Mesurer l'effet sur la dotation de l'exercice", "Répondre à la directrice, chiffre à l'appui"],
+  objectifs: ["Recalculer la dotation d'un composant sur sa durée révisée", "Mesurer l'effet sur la dotation de l'exercice", "Répondre au président, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend la seconde ligne de NOVA, celle du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la directrice",
+      titre: "La question du président",
       texte: () => [
-        `« Le technicien est formel : nos moteurs ne tiendront que ${DUREE_REVISEE_DES_MOTEURS} ans, pas ${SECONDE_LIGNE.composant.dureeAns}. Avant l'inventaire, je veux savoir ce que cela change à la dotation de la seconde ligne cette année, et ce que nous devons faire. » La directrice financière`,
+        `« Le technicien est formel : nos moteurs ne tiendront que ${DUREE_REVISEE_DES_MOTEURS} ans, pas ${SECONDE_LIGNE.composant.dureeAns}. Avant l'inventaire, je veux savoir ce que cela change à la dotation de la seconde ligne cette année, et ce que nous devons faire. » Le président`,
         "Pas de cours cette fois : la règle des composants, vous la connaissez.",
       ],
       tableau: () => {
@@ -80,8 +80,8 @@ export const LES_MOTEURS_QUI_S_USENT_PLUS_VITE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice",
-      question: () => "Que répondez-vous à la directrice ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = moteursQuiSUsent();
         return [

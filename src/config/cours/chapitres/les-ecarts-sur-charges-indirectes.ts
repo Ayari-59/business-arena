@@ -680,7 +680,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
       notions: ["efficiency_variance", "fixed_costs", "variable_costs"],
       question: (c) => {
         const x = centreDeMontage(c);
-        return `Le directeur veut chiffrer ce que les ${qte(x.perdues)} heures-machine perdues ont coûté à l'usine sur le trimestre, à charges fixes inchangées. Quelle réponse lui donnez-vous ?`;
+        return `Le président veut chiffrer ce que les ${qte(x.perdues)} heures-machine perdues ont coûté à l'usine sur le trimestre, à charges fixes inchangées. Quelle réponse lui donnez-vous ?`;
       },
       options: (c) => {
         const x = centreDeMontage(c);

@@ -7,7 +7,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LES OPÉRATIONS EN DEVISES » (DCG · Comptabilité approfondie, palier 4).
  *
  * Le 15 novembre N + 1, la banque propose à NOVA de lui acheter à terme les dollars de Harbor Audio,
- * au cours de `COURS_A_TERME`. Le directeur financier veut savoir ce que cette couverture coûte
+ * au cours de `COURS_A_TERME`. Le président veut savoir ce que cette couverture coûte
  * aujourd'hui, ce qu'elle change à la clôture, et s'il faut la prendre. L'élève refait les calculs
  * du chapitre (`operationsEnDevises`) sur la créance seule, couverte ou non.
  */
@@ -35,21 +35,21 @@ export const COUVRIR_LA_CREANCE_EN_DOLLARS: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["les-operations-en-devises"],
-  commanditaire: "Le directeur financier",
+  commanditaire: "Le président",
   titre: "Couvrir la créance en dollars",
   accroche: "La banque propose de figer aujourd'hui le cours des dollars attendus : ce que la couverture coûte, ce qu'elle change à la clôture, ce qu'elle aurait fait manquer.",
-  objectifs: ["Calculer la créance couverte", "Comparer la couverture et le risque", "Répondre au directeur, chiffre à l'appui"],
+  objectifs: ["Calculer la créance couverte", "Comparer la couverture et le risque", "Répondre au président, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend la créance de NOVA sur Harbor Audio, celle du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question du directeur",
+      titre: "La question du président",
       texte: () => {
         const k = creanceCouverte();
         return [
-          `« La banque nous propose d'acheter dès aujourd'hui les ${k.dollars.toLocaleString("fr-FR")} $ de ${HARBOR_AUDIO.nom}, livrables le ${HARBOR_AUDIO.echeance}, à ${cours(COURS_A_TERME)}. Le cours du jour est de ${cours(COURS_DU_DOLLAR.facture)}. Combien cela nous coûte-t-il, et qu'est-ce que cela change au 31 décembre ? » Le directeur financier`,
+          `« La banque nous propose d'acheter dès aujourd'hui les ${k.dollars.toLocaleString("fr-FR")} $ de ${HARBOR_AUDIO.nom}, livrables le ${HARBOR_AUDIO.echeance}, à ${cours(COURS_A_TERME)}. Le cours du jour est de ${cours(COURS_DU_DOLLAR.facture)}. Combien cela nous coûte-t-il, et qu'est-ce que cela change au 31 décembre ? » Le président`,
           "Pas de cours cette fois : la conversion et la provision, vous les connaissez.",
         ];
       },
@@ -77,8 +77,8 @@ export const COUVRIR_LA_CREANCE_EN_DOLLARS: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au directeur",
-      question: () => "Que répondez-vous au directeur financier ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = creanceCouverte();
         return [

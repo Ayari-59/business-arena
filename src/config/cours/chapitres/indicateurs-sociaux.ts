@@ -180,7 +180,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
       },
       question: (c) => {
         const s = indicateursSociaux(c);
-        return `Au deuxième trimestre, le chiffre d'affaires par salarié ${dE(c.entreprise)} monte de ${pct(s.evolutionDuCaParSalarie)}. Le directeur y voit une équipe plus efficace. Que lui répondez-vous ?`;
+        return `Au deuxième trimestre, le chiffre d'affaires par salarié ${dE(c.entreprise)} monte de ${pct(s.evolutionDuCaParSalarie)}. Le président y voit une équipe plus efficace. Que lui répondez-vous ?`;
       },
       options: (c) => {
         const s = indicateursSociaux(c);

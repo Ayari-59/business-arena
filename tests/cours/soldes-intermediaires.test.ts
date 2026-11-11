@@ -431,7 +431,7 @@ describe("le cas : quand le taux de l'emprunt monte", () => {
 
   it("tient la forme d'un cas dédié", () => {
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("La directrice financière");
+    expect(s.commanditaire).toBe("Le président"); // NOVA a un président, pas de directrice financière (audit du 11 novembre, P2-4)
     expect([HAUSSE_DU_TAUX, PERTE_DE_RESULTAT_TOLEREE]).toEqual([0.02, 2_000]);
   });
 

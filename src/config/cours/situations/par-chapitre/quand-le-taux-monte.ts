@@ -11,8 +11,8 @@ import type { Situation } from "../types";
  * (comptabilité générale, palier 4).
  *
  * La banque annonce que le taux de l'emprunt de NOVA sera relevé de 2 points à la renégociation. La
- * directrice financière demande quels soldes l'auraient senti si la hausse avait joué tout l'exercice,
- * et de combien, et si elle peut l'accepter : elle ne veut pas perdre plus de 2 000 € de résultat net.
+ * président demande quels soldes l'auraient senti si la hausse avait joué tout l'exercice, et de
+ * combien, et s'il peut l'accepter : il ne veut pas perdre plus de 2 000 € de résultat net.
  * L'élève refait seul la cascade du chapitre sur l'exercice de NOVA, puis la redescend avec des
  * intérêts plus lourds, l'impôt recalculé au barème (le taux réduit, puis le taux normal). Un curseur
  * sur le taux montre jusqu'où la perte reste tolérable ; un calcul à rebours donne le taux limite,
@@ -20,7 +20,7 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses chiffres viennent de
  * `soldesDeNova` et `anneeDeNova` (la charge d'intérêts au nouveau taux est celle du contrat de prêt,
- * monde/emprunt.ts). Le seuil de la directrice est une hypothèse de l'histoire.
+ * monde/emprunt.ts). Le seuil du président est une hypothèse de l'histoire.
  */
 
 /**
@@ -105,7 +105,7 @@ function documents(c: Pick<Cas, "code">): TableauDeDonnees {
       ligne("Taux de l'emprunt aujourd'hui", pct(t.taux * 100)),
       ligne("Hausse annoncée du taux", `${qte(HAUSSE_DU_TAUX * 100)} points`),
       ligne("Impôt sur les sociétés, le barème", `${pct(f.impot.tauxReduit * 100)} jusqu'à ${eur(f.impot.plafondDuTauxReduit)}, ${pct(f.impot.tauxNormal * 100)} au-delà, arrondi à l'euro`),
-      ligne("Perte de résultat net que la directrice tolère", eur(PERTE_DE_RESULTAT_TOLEREE)),
+      ligne("Perte de résultat net que le président tolère", eur(PERTE_DE_RESULTAT_TOLEREE)),
     ],
   };
 }
@@ -116,10 +116,10 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["soldes-intermediaires-de-gestion"],
-  commanditaire: "La directrice financière",
+  commanditaire: "Le président",
   titre: "Quand le taux de l'emprunt monte",
   accroche:
-    "La banque relèvera le taux de l'emprunt à la renégociation. La directrice financière veut savoir quels soldes de gestion le sentiraient, de combien, et si elle peut l'accepter.",
+    "La banque relèvera le taux de l'emprunt à la renégociation. Le président veut savoir quels soldes de gestion le sentiraient, de combien, et s'il peut l'accepter.",
   objectifs: [
     "Calculer la valeur ajoutée, l'excédent brut d'exploitation, le résultat d'exploitation et le résultat courant avant impôt",
     "Recalculer les intérêts, l'impôt au barème, le résultat net et la capacité d'autofinancement avec un taux plus élevé",
@@ -135,7 +135,7 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande de la directrice financière",
+      titre: "La demande du président",
       tableau: documents,
       texte: (c) => {
         const t = tauxQuiMonte(c);
@@ -145,7 +145,7 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
         ];
       },
       repere: () =>
-        "À rendre : les soldes de l'exercice, puis les intérêts, l'impôt, le résultat net et la capacité d'autofinancement au nouveau taux, les soldes qui bougent, le taux le plus haut que la directrice peut accepter, et votre réponse.",
+        "À rendre : les soldes de l'exercice, puis les intérêts, l'impôt, le résultat net et la capacité d'autofinancement au nouveau taux, les soldes qui bougent, le taux le plus haut que le président peut accepter, et votre réponse.",
     },
     {
       id: "les-soldes-de-l-annee",
@@ -252,15 +252,15 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
       notions: ["loan_schedule", "income_statement"],
       question: (c) => {
         const t = tauxQuiMonte(c);
-        return `Faites monter le taux de l'emprunt de ${pct(TAUX_DU_CURSEUR.min)} à ${pct(TAUX_DU_CURSEUR.max)}. Une droite donne la perte de résultat net que la directrice tolère, ${eur(PERTE_DE_RESULTAT_TOLEREE)} ; l'autre ce que la hausse coûte au résultat net, l'impôt économisé déduit (chaque point coûte environ ${eur(t.parPoint)} d'intérêts sur l'exercice). Placez le curseur sur le taux entier le plus haut qui tient le seuil, puis validez.`;
+        return `Faites monter le taux de l'emprunt de ${pct(TAUX_DU_CURSEUR.min)} à ${pct(TAUX_DU_CURSEUR.max)}. Une droite donne la perte de résultat net que le président tolère, ${eur(PERTE_DE_RESULTAT_TOLEREE)} ; l'autre ce que la hausse coûte au résultat net, l'impôt économisé déduit (chaque point coûte environ ${eur(t.parPoint)} d'intérêts sur l'exercice). Placez le curseur sur le taux entier le plus haut qui tient le seuil, puis validez.`;
       },
       grandeur: () => ({ libelle: "Taux de l'emprunt", unite: "%" }),
       sens: "plus-grande",
       cible: (c) => ({ attendu: tauxQuiMonte(c).tauxDuCurseur, min: TAUX_DU_CURSEUR.min, max: TAUX_DU_CURSEUR.max }),
-      zones: ["Dans le seuil de la directrice", "Au-delà du seuil"],
+      zones: ["Dans le seuil du président", "Au-delà du seuil"],
       rates: () => ({
         dessous: "À ce taux, la perte reste sous le seuil : le taux peut monter encore.",
-        dessus: "À ce taux, le résultat net perd déjà plus que la directrice ne tolère.",
+        dessus: "À ce taux, le résultat net perd déjà plus que le président ne tolère.",
       }),
       montrer: "Montrer le taux",
       lecture: (c, taux) => {
@@ -279,7 +279,7 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
         return {
           produit: () => PERTE_DE_RESULTAT_TOLEREE,
           cout: (taux) => (taux - t.taux * 100) * t.parPointExact * (1 - t.tauxMarginal),
-          libelles: ["Perte que la directrice tolère", "Perte de résultat net, impôt déduit"],
+          libelles: ["Perte que le président tolère", "Perte de résultat net, impôt déduit"],
         };
       },
       explication: (c) => {
@@ -295,7 +295,7 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
       titre: "Le taux le plus haut, à rebours",
       notions: ["loan_schedule", "income_statement"],
       question: () =>
-        "Le curseur donne un taux entier ; la directrice veut le taux exact. Retrouvez la hausse d'intérêts qui coûte exactement le seuil de résultat net, impôt déduit, la hausse du taux qu'elle représente, en points, puis le taux le plus haut acceptable.",
+        "Le curseur donne un taux entier ; le président veut le taux exact. Retrouvez la hausse d'intérêts qui coûte exactement le seuil de résultat net, impôt déduit, la hausse du taux qu'elle représente, en points, puis le taux le plus haut acceptable.",
       champs: (c) => {
         const t = tauxQuiMonte(c);
         return [
@@ -324,8 +324,8 @@ export const QUAND_LE_TAUX_MONTE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice financière",
-      question: () => "Quelle phrase envoyez-vous à la directrice financière ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const t = tauxQuiMonte(c);
         const x = t.x;

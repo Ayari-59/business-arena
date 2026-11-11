@@ -5,14 +5,14 @@ import type { Situation } from "../types";
 /**
  * CAS PRATIQUE DU CHAPITRE « LES ÉCARTS ET LEURS RESPONSABLES » (contrôle de gestion, palier 4).
  *
- * Le directeur de l'usine veut primer le chef d'atelier sur l'écart sur temps de la main-d'œuvre,
+ * Le président veut primer le chef d'atelier sur l'écart sur temps de la main-d'œuvre,
  * favorable. L'élève reprend le tableau de passage du chapitre (`syntheseDesEcarts`) et les
  * responsables de chaque écart (`RESPONSABLE_DE_L_ECART`) : l'écart sur temps, la somme des écarts
  * que l'atelier maîtrise, et ce que le reste des écarts ajoute. Les écarts sont des effets sur le
  * résultat : négatifs quand ils le font baisser.
  */
 
-/** Le responsable que vise la prime, et l'écart sur lequel le directeur veut la calculer. */
+/** Le responsable que vise la prime, et l'écart sur lequel le président veut la calculer. */
 export const RESPONSABLE_PRIME = "atelier";
 export const ECART_DE_LA_PRIME = "Main-d'œuvre directe : écart sur temps";
 
@@ -33,9 +33,9 @@ export const LA_PRIME_DU_CHEF_D_ATELIER: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["les-ecarts-et-leurs-responsables"],
-  commanditaire: "Le directeur de l'usine",
+  commanditaire: "Le président",
   titre: "La prime du chef d'atelier",
-  accroche: "Le directeur veut primer le chef d'atelier sur un écart favorable : ce que l'atelier maîtrise vraiment, écart par écart.",
+  accroche: "Le président veut primer le chef d'atelier sur un écart favorable : ce que l'atelier maîtrise vraiment, écart par écart.",
   objectifs: ["Retrouver les écarts qu'un responsable maîtrise", "Faire la somme de sa part, chaque écart avec son signe", "Dire si une prime sur un seul écart est juste"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend le tableau de passage de l'usine de NOVA, celui du chapitre." },
@@ -43,11 +43,11 @@ export const LA_PRIME_DU_CHEF_D_ATELIER: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La proposition du directeur",
+      titre: "La proposition du président",
       texte: () => {
         const k = primeDuChefDAtelier();
         return [
-          `« L'écart sur temps de la main-d'œuvre est favorable, ${eur(k.temps)} sur le résultat. Je veux primer le chef d'atelier sur ce chiffre. » Le directeur de l'usine`,
+          `« L'écart sur temps de la main-d'œuvre est favorable, ${eur(k.temps)} sur le résultat. Je veux primer le chef d'atelier sur ce chiffre. » Le président`,
           `Pas de cours cette fois : l'atelier répond de ${k.lignes.length.toLocaleString("fr-FR")} écarts du tableau de passage. Un écart est un effet sur le résultat, négatif quand il le fait baisser.`,
         ];
       },
@@ -75,8 +75,8 @@ export const LA_PRIME_DU_CHEF_D_ATELIER: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au directeur",
-      question: () => "Que répondez-vous au directeur de l'usine ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = primeDuChefDAtelier();
         return [
