@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { ecrireEnUnBloc } from "@/db/en-un-bloc";
 import {
@@ -100,6 +100,19 @@ export async function chapitresLiberes(classeId: string): Promise<Set<string>> {
     .from(coursLiberations)
     .where(eq(coursLiberations.classeId, classeId));
   return new Set(lignes.map((l) => l.chapitre));
+}
+
+/**
+ * Les chapitres libérés d'une classe, du plus récemment libéré au plus ancien : « Ma classe » et le
+ * suivi de l'enseignant s'ouvrent sur le premier (audit UX du 11 novembre 2026, P1-1 et P1-2).
+ */
+export async function chapitresLiberesDuPlusRecent(classeId: string): Promise<string[]> {
+  const lignes = await db
+    .select({ chapitre: coursLiberations.chapitre })
+    .from(coursLiberations)
+    .where(eq(coursLiberations.classeId, classeId))
+    .orderBy(desc(coursLiberations.libereLe), desc(coursLiberations.chapitre));
+  return lignes.map((l) => l.chapitre);
 }
 
 /** Change le mode de libération d'une classe, par son enseignant seulement. */

@@ -6,6 +6,7 @@ import { getSession } from "@/lib/session";
 import { choisirLeParcours, cloreClasse, creerClasse, parcoursImposeALEnseignant, permettreLaCalculatrice } from "@/services/cours.service";
 import { changerLaLiberation, libererLeChapitre } from "@/services/attributions.service";
 import { chapitreParCode } from "@/config/cours/registre";
+import { OFFRES } from "@/config/tarifs";
 
 /**
  * LES GESTES DE L'ENSEIGNANT SUR SES CLASSES DU COURS. L'enseignant est celui de la
@@ -18,20 +19,49 @@ async function enseignant(): Promise<string> {
   return session.userId;
 }
 
-export async function creerClasseAction(formData: FormData): Promise<void> {
+/**
+ * LE FORMULAIRE DE CRÉATION, APRÈS UN REFUS (audit UX du 11 novembre 2026, P2-6) : chaque erreur sous
+ * son champ, toutes d'un coup, et la saisie à remettre dans les champs (components/nouvelle-classe-du-cours.tsx).
+ */
+export interface EtatDeLaNouvelleClasse {
+  erreurs: { nom?: string; parcours?: string };
+  valeurs: { nom: string; parcours: string; entreprise: string; liberation: "tout" | "chapitre" } | null;
+}
+
+const REFUS_DE_LA_CLASSE = {
+  nom: "Donnez un nom à la classe, par exemple « BTS CG 1 · groupe A ».",
+  parcours: "Choisissez le parcours du cours de la classe dans la liste.",
+  impose: `Avec l'offre ${OFFRES.classe.nom}, une nouvelle classe suit le parcours de vos autres classes : choisissez-le dans la liste.`,
+  horsDeLaListe: "Ce parcours n'est pas ouvert à votre établissement : choisissez-en un dans la liste.",
+} as const;
+
+export async function creerClasseAction(_avant: EtatDeLaNouvelleClasse, formData: FormData): Promise<EtatDeLaNouvelleClasse> {
   const enseignantId = await enseignant();
+  const valeurs: NonNullable<EtatDeLaNouvelleClasse["valeurs"]> = {
+    nom: String(formData.get("nom") ?? ""),
+    parcours: String(formData.get("parcours") ?? ""),
+    entreprise: String(formData.get("entreprise") ?? ""),
+    liberation: formData.get("liberation") === "chapitre" ? "chapitre" : "tout",
+  };
+  const erreurs: EtatDeLaNouvelleClasse["erreurs"] = {};
+  if (!valeurs.nom.trim()) erreurs.nom = REFUS_DE_LA_CLASSE.nom;
+  if (!valeurs.parcours) erreurs.parcours = REFUS_DE_LA_CLASSE.parcours;
+  if (erreurs.nom || erreurs.parcours) return { erreurs, valeurs };
   const cree = await creerClasse({
     enseignantId,
-    nom: String(formData.get("nom") ?? ""),
-    entreprise: String(formData.get("entreprise") ?? "") || null,
-    parcours: String(formData.get("parcours") ?? "") || null,
-    liberation: formData.get("liberation") === "chapitre" ? "chapitre" : "tout",
+    nom: valeurs.nom,
+    entreprise: valeurs.entreprise || null,
+    parcours: valeurs.parcours,
+    liberation: valeurs.liberation,
   });
   if (!cree) {
-    // Sous l'offre Classe, un autre parcours que celui de la licence est refusé ; sinon, un nom et un parcours manquent.
+    // Sous l'offre Classe, un autre parcours que celui de la licence est refusé ; sinon, il n'est pas
+    // de ceux qu'on propose, ou l'admin ne l'a pas attribué.
     const impose = await parcoursImposeALEnseignant(enseignantId);
-    const parcours = String(formData.get("parcours") ?? "");
-    redirect(`/teacher/cours?refus=${impose !== null && parcours !== "" && parcours !== impose ? "parcours" : "nom"}#nouvelle-classe`);
+    return {
+      erreurs: { parcours: impose !== null && valeurs.parcours !== impose ? REFUS_DE_LA_CLASSE.impose : REFUS_DE_LA_CLASSE.horsDeLaListe },
+      valeurs,
+    };
   }
   revalidatePath("/teacher/cours");
   redirect(`/teacher/cours/${cree.id}?creee=1`);
@@ -67,11 +97,24 @@ export async function liberationAction(classeId: string, mode: "tout" | "chapitr
   redirect(`/teacher/cours/${classeId}?fait=${mode === "tout" ? "tout-libere" : "chapitre-par-chapitre"}#liberation`);
 }
 
-/** Libérer ou refermer un chapitre de la classe. */
-export async function libererChapitreAction(classeId: string, chapitre: string, libere: boolean): Promise<void> {
+/**
+ * Libérer ou refermer un chapitre de la classe, d'un clic sur sa case (audit UX du 11 novembre 2026,
+ * P1-3). `vu` : le chapitre que la page suit ; il reste suivi après le geste.
+ */
+export async function libererChapitreAction(classeId: string, chapitre: string, libere: boolean, vu?: string): Promise<void> {
   const enseignantId = await enseignant();
   if (!chapitreParCode(chapitre) || !(await libererLeChapitre({ enseignantId, classeId, chapitre, libere })))
     redirect("/teacher/cours?refus=introuvable");
   revalidatePath(`/teacher/cours/${classeId}`);
-  redirect(`/teacher/cours/${classeId}?chapitre=${chapitre}&fait=${libere ? "libere" : "referme"}#liberation`);
+  const suivi = vu && chapitreParCode(vu) ? vu : chapitre;
+  redirect(`/teacher/cours/${classeId}?chapitre=${suivi}&fait=${libere ? "libere" : "referme"}#liberation`);
+}
+
+/**
+ * LA LISTE DE LIBÉRATION, UN SEUL FORMULAIRE : la case cliquée envoie « code:1 » pour libérer son
+ * chapitre, « code:0 » pour le refermer (components/case-de-liberation.tsx).
+ */
+export async function libererDepuisLaListeAction(classeId: string, vu: string, formData: FormData): Promise<void> {
+  const [chapitre = "", geste] = String(formData.get("case") ?? "").split(":");
+  await libererChapitreAction(classeId, chapitre, geste === "1", vu);
 }

@@ -19,16 +19,20 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { CHAPITRES } from "@/config/cours/registre";
+import { parcoursQuiOuvrent } from "@/config/cours/parcours-de-formation";
 import { placerSousLicence } from "./helpers/licence";
 import {
   classeSousLicence,
   classeDeLEleve,
   classeDeLEnseignant,
   cloreClasse,
+  coursOuvert,
   creerClasse,
   enregistrerProgression,
   rejoindreClasse,
+  resumeDeLaClasse,
 } from "@/services/cours.service";
+import { chapitresLiberesDuPlusRecent, libererLeChapitre } from "@/services/attributions.service";
 
 const chapitre = CHAPITRES[0]!;
 const [, apport] = chapitre.etapes;
@@ -127,5 +131,83 @@ describe("une classe du cours", () => {
     expect(await classeSousLicence(eleve)).toBe(false);
     await rejoindreClasse(eleve, ouverte.code, "Avec licence");
     expect(await classeSousLicence(eleve)).toBe(true);
+  });
+});
+
+describe("le suivi de l'enseignant, élève par élève (audit UX du 11 novembre 2026, P1-2, P1-5, P2-9)", () => {
+  it("une ligne par élève : le chapitre de sa dernière activité, son étape ; deux homonymes numérotés ; « pas commencé »", async () => {
+    const p = await utilisateur();
+    const c = (await creerClasse({ enseignantId: p, nom: "Suivi", parcours: "comptabilite-generale" }))!;
+    const [lea1, lea2, tom] = [await utilisateur(), await utilisateur(), await utilisateur()];
+    await rejoindreClasse(lea1, c.code, "Léa");
+    await rejoindreClasse(lea2, c.code, "léa");
+    await rejoindreClasse(tom, c.code, "Tom");
+    const autre = CHAPITRES[1]!;
+    await enregistrerProgression(lea1, { chapitre: chapitre.code, entreprise: "hotel", etape: 2, etapes: {} });
+    await new Promise((r) => setTimeout(r, 5));
+    await enregistrerProgression(lea1, { chapitre: autre.code, entreprise: "hotel", etape: 1, etapes: {} });
+    const resume = (await resumeDeLaClasse(p, c.id))!;
+    // Les homonymes, dans l'ordre où ils ont rejoint ; la casse ne les sépare pas.
+    expect(resume.map((r) => r.eleve)).toEqual(["Léa n°1", "léa n°2", "Tom"]);
+    expect(resume[0]).toMatchObject({ chapitre: autre.code, etape: 1 });
+    expect(resume[0]!.majLe).toBeInstanceOf(Date);
+    expect(resume[1]).toMatchObject({ chapitre: null, etape: 0, majLe: null });
+    // Le tableau d'un chapitre : celui qui ne l'a pas ouvert n'est pas « à l'étape 1 ».
+    const lu = (await classeDeLEnseignant(p, c.id, chapitre.code))!;
+    expect(lu.progressions.map((x) => [x.eleve, x.commence])).toEqual([
+      ["Léa n°1", true],
+      ["léa n°2", false],
+      ["Tom", false],
+    ]);
+    // Un autre enseignant ne lit pas la classe.
+    expect(await resumeDeLaClasse(autreProf, c.id)).toBeNull();
+  });
+
+  it("les chapitres libérés, du plus récent au plus ancien", async () => {
+    const p = await utilisateur();
+    const c = (await creerClasse({ enseignantId: p, nom: "Libérée", parcours: "comptabilite-generale", liberation: "chapitre" }))!;
+    const [a, b] = CHAPITRES.filter((x) => x.parcours === "comptabilite-generale" && !x.libre);
+    await libererLeChapitre({ enseignantId: p, classeId: c.id, chapitre: a!.code, libere: true });
+    await new Promise((r) => setTimeout(r, 5));
+    await libererLeChapitre({ enseignantId: p, classeId: c.id, chapitre: b!.code, libere: true });
+    expect(await chapitresLiberesDuPlusRecent(c.id)).toEqual([b!.code, a!.code]);
+  });
+});
+
+describe("les prérequis annoncés s'ouvrent avec le chapitre qui les annonce, au serveur", () => {
+  // « DCG · Comptabilité approfondie » : ses chapitres annoncent des chapitres de comptabilité générale.
+  const approfondie = CHAPITRES.filter((c) => c.parcours === "dcg-comptabilite-approfondie");
+  const annonce = approfondie.find((c) => (c.prerequis ?? []).some((p) => CHAPITRES.find((x) => x.code === p)!.parcours !== c.parcours))!;
+  const prerequis = CHAPITRES.find((c) => c.code === (annonce.prerequis ?? []).find((p) => CHAPITRES.find((x) => x.code === p)!.parcours !== annonce.parcours))!;
+  // Un chapitre du même parcours que le prérequis, qu'aucun chapitre ouvert à la classe n'annonce.
+  const sansLien = CHAPITRES.find((c) => !c.libre && c.parcours === prerequis.parcours && !parcoursQuiOuvrent(c).includes("dcg-comptabilite-approfondie"))!;
+
+  it("sous l'offre Classe, l'élève et l'enseignant ouvrent le prérequis, hors du parcours, et pas son voisin", async () => {
+    const p = await utilisateur();
+    await placerSousLicence(p, { arene: "classe", entreprises: ["hotel"], niveaux: [2] });
+    const c = (await creerClasse({ enseignantId: p, nom: "DCG UE10", parcours: "dcg-comptabilite-approfondie" }))!;
+    const eleve = await utilisateur();
+    await rejoindreClasse(eleve, c.code, "Inès");
+    expect(prerequis.parcours).not.toBe("dcg-comptabilite-approfondie");
+    expect(await coursOuvert({ eleve }, annonce)).toBe(true);
+    expect(await coursOuvert({ eleve }, prerequis)).toBe(true);
+    expect(await coursOuvert({ enseignant: p }, prerequis)).toBe(true);
+    // Son voisin, qu'aucun chapitre ouvert à la classe n'annonce, reste fermé.
+    expect(await coursOuvert({ eleve }, sansLien)).toBe(false);
+    expect(await coursOuvert({ enseignant: p }, sansLien)).toBe(false);
+  });
+
+  it("une classe qui libère chapitre par chapitre ouvre le prérequis quand elle libère le chapitre qui l'annonce", async () => {
+    const p = await utilisateur();
+    await placerSousLicence(p, { arene: "classe", entreprises: ["hotel"], niveaux: [2] });
+    const c = (await creerClasse({ enseignantId: p, nom: "DCG pas à pas", parcours: "dcg-comptabilite-approfondie", liberation: "chapitre" }))!;
+    const eleve = await utilisateur();
+    await rejoindreClasse(eleve, c.code, "Inès");
+    expect(await coursOuvert({ eleve }, prerequis)).toBe(false);
+    await libererLeChapitre({ enseignantId: p, classeId: c.id, chapitre: annonce.code, libere: true });
+    expect(await coursOuvert({ eleve }, annonce)).toBe(true);
+    expect(await coursOuvert({ eleve }, prerequis)).toBe(true);
+    await libererLeChapitre({ enseignantId: p, classeId: c.id, chapitre: annonce.code, libere: false });
+    expect(await coursOuvert({ eleve }, prerequis)).toBe(false);
   });
 });

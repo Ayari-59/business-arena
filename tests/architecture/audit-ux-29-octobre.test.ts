@@ -201,8 +201,12 @@ describe("P1-8 · /jouer présélectionne le niveau qu'elle conseille", () => {
 });
 
 describe("P1-9 · le suivi de classe ne commence pas par cinquante chapitres", () => {
-  it("la liste des chapitres est repliée", () => {
-    expect(lire("app/teacher/cours/[id]/page.tsx")).toMatch(/<details className="group" data-chapitres-de-la-classe="">/);
+  it("la liste des chapitres est repliée quand tout est ouvert ; dépliée quand la classe libère chapitre par chapitre", () => {
+    // Depuis l'audit du 11 novembre 2026 (P1-3), elle ne montre que le parcours de la classe et les
+    // chapitres libres, une case par chapitre, et la classe élève par élève vient avant elle.
+    const page = lire("app/teacher/cours/[id]/page.tsx");
+    expect(page).toMatch(/<details className="group" data-chapitres-de-la-classe="" open=\{classe\.liberation === "chapitre" \|\| undefined\}>/);
+    expect(page.indexOf("data-eleves-de-la-classe")).toBeLessThan(page.indexOf("data-chapitres-de-la-classe"));
   });
 });
 

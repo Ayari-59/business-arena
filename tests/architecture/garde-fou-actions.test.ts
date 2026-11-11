@@ -33,6 +33,7 @@ const COMPOSANTS_GARDES = [
   "src/components/formulaire-de-reprise.tsx", // reprise de sa place (/reprendre)
   "src/components/editeur-d-offre.tsx", // une offre du catalogue (/admin/offres)
   "src/components/suppression-confirmee.tsx", // suppression du compte, d'un établissement, d'un élève (RGPD)
+  "src/components/nouvelle-classe-du-cours.tsx", // création d'une classe du cours (/teacher/cours)
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */

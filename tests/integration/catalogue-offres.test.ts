@@ -140,24 +140,15 @@ const vente = (patch: Partial<SaisieDeLicence> & { offre: string }): SaisieDeLic
 });
 
 /**
- * CE QUE LA GRILLE DU CODE A CHANGÉ SANS MIGRATION (novembre 2026). Décision du propriétaire :
- * la base de production ne se modifie pas depuis le dépôt pour ces textes ; ils se corrigent
- * dans /admin/offres. La base migrée garde donc l'ancien texte, et la garde le sait : texte
- * du code → texte encore en base. Une migration ou une modification dans /admin/offres qui
- * les aligne retire la ligne d'ici.
+ * CE QUE LA GRILLE DU CODE A CHANGÉ SANS MIGRATION : texte du code → texte encore en base. VIDE
+ * depuis la migration 0059 (décision du propriétaire du 11 novembre 2026 : les quatre textes en
+ * attente, le nom de l'offre gratuite, sa ligne du cours, les lignes du cours et des ateliers de
+ * Classe, sont alignés par le déploiement, seulement là où l'ancien texte était en place ; la
+ * preuve : tests/integration/catalogue-aligne-sur-le-code.test.ts). Le catalogue migré EST la grille
+ * du code. Un texte changé demain dans config/tarifs.ts sans migration fait tomber la garde : on y
+ * ajoute la ligne, ou on écrit la migration.
  */
-const TEXTES_ENCORE_EN_BASE: Record<string, string> = {
-  // Le nom de l'offre gratuite : « Essai gratuit » dans le code, « Découverte » en base.
-  "Essai gratuit": "Découverte",
-  "Les ateliers clés en main écrits pour cette entreprise et ce niveau, ou à un niveau près, avec déroulé, corrigés et dossier enseignant. Certaines combinaisons n'en ont aucun : le formulaire de devis dit lesquels votre choix comprend.":
-    "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
-  // L'offre Classe ouvre un seul parcours (décision du propriétaire, 10 novembre 2026).
-  "Le cours : les chapitres d'un parcours, le même pour toutes vos classes, et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.":
-    "Le cours : les chapitres du parcours de la classe et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
-  // Un chapitre libre par diplôme, le premier de son parcours (novembre 2026) ; la base garde la
-  // phrase de la migration 0053, à reprendre dans /admin/offres.
-  "Un chapitre par diplôme, le premier de son parcours, et son cas pratique, en libre accès.": "Le premier chapitre du cours et son cas pratique, en libre accès.",
-};
+const TEXTES_ENCORE_EN_BASE: Record<string, string> = {};
 const telleQueMigree = (o: OffreDuCatalogue): OffreDuCatalogue => ({
   ...o,
   nom: TEXTES_ENCORE_EN_BASE[o.nom] ?? o.nom,

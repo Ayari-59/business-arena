@@ -630,11 +630,20 @@ const LE_SUIVI =
  * choisi à sa création ; Programme, ceux des parcours des classes du programme ; Campus, tout.
  * L'OFFRE CLASSE OUVRE UN SEUL PARCOURS (décision du propriétaire, 10 novembre 2026) : toutes les
  * classes de l'enseignant le suivent (services/chapitres-de-la-classe.ts, `parcoursDeLaLicenceClasse`).
+ *
+ * LA LIGNE DE CLASSE DIT LA RÈGLE DU CODE, MOT POUR MOT (décision du propriétaire, 11 novembre 2026 ;
+ * audit de l'offre du même jour, P1-1) : un parcours de la liste, le cours d'un diplôme ou une matière
+ * (config/cours/parcours-a-choisir.ts) ; le même pour toutes les classes ; fixé par l'attribution du
+ * devis ou par la première classe créée sous la licence, une classe d'essai ne comptant pas ; autant de
+ * classes que voulu (services/cours.service.ts, `creerClasse`, n'en limite pas le nombre), chacune de
+ * {elevesParClasse} élèves au plus (`plafondDEleves`). La ligne de la Découverte ne dit plus « le premier
+ * de son parcours » : la liste des chapitres libres se choisit (chantier du 11 novembre 2026). Le
+ * catalogue en base reprend ces deux lignes par la migration 0059.
  */
 export const LE_COURS_PAR_OFFRE = {
-  decouverte: "Un chapitre par diplôme, le premier de son parcours, et son cas pratique, en libre accès.",
+  decouverte: "Un chapitre libre par diplôme et son cas pratique, en libre accès.",
   classe:
-    "Le cours : les chapitres d'un parcours, le même pour toutes vos classes, et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
+    "Le cours : les chapitres d'un parcours de la liste (le cours d'un diplôme ou une matière) et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise. Le même parcours pour toutes vos classes, fixé au devis ou par votre première classe créée sous la licence ; autant de classes que vous voulez, de {elevesParClasse} élèves au plus.",
   programme:
     "Le cours : les chapitres des parcours de vos classes et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
   campus:
@@ -1112,7 +1121,9 @@ export const CONDITIONS_DE_VENTE: readonly string[] = [
   QUI_FACTURE,
   `Facture payable à ${CONDITIONS.delaiFactureJours} jours, par virement ou par mandat administratif. Les factures publiques passent par Chorus Pro.`,
   `Durée : un an pour les offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom} et pour les épisodes manager, une année scolaire pour l'offre ${OFFRES.campus.nom}.`,
-  `Les offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom} se paramètrent à l'achat : l'entreprise, et pour ${OFFRES.classe.nom} le niveau, sont écrits sur le devis et ouverts pour l'année.`,
+  `Les offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom} se paramètrent à l'achat : l'entreprise, et pour ${OFFRES.classe.nom} le niveau et le parcours du cours, sont écrits sur le devis et ouverts pour l'année.`,
+  // La règle de l'offre Classe dans le cours (décision du propriétaire, 11 novembre 2026 ; services/chapitres-de-la-classe.ts).
+  `Sous l'offre ${OFFRES.classe.nom}, le parcours du cours est un parcours de la liste : le cours d'un diplôme ou une matière. C'est le même pour toutes les classes de l'enseignant : celui écrit au devis, sinon celui de sa première classe créée sous la licence. Il crée autant de classes du cours qu'il le souhaite, de ${ELEVES_PAR_CLASSE} élèves au plus chacune.`,
   "Pas de reconduction tacite : l'échéance s'affiche dans l'espace enseignant, et le renouvellement passe par un nouveau devis.",
   `À la fin de l'offre, les parties et les résultats restent consultables ${CONDITIONS.consultationApresMois} mois, relevé de notes compris.`,
   // Comme les mentions légales (audit du 10 novembre 2026 : « sans nom » était faux pour le cours et l'examen).
@@ -1147,7 +1158,7 @@ export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
   },
   {
     q: "Comment commander ?",
-    r: `Demandez un devis écrit depuis cette page : il précise l'offre, l'entreprise et le niveau pour ${OFFRES.classe.nom}, l'entreprise et le nombre d'enseignants et d'intervenants pour ${OFFRES.programme.nom}, et la durée. Bon de commande, mandat administratif et Chorus Pro sont acceptés.`,
+    r: `Demandez un devis écrit depuis cette page : il précise l'offre ; pour ${OFFRES.classe.nom}, l'entreprise, le niveau et le parcours du cours, le même pour toutes vos classes ; pour ${OFFRES.programme.nom}, l'entreprise et le nombre d'enseignants et d'intervenants ; et la durée. Bon de commande, mandat administratif et Chorus Pro sont acceptés.`,
   },
   {
     q: `Quelle différence entre ${OFFRES.classe.nom}, ${OFFRES.programme.nom} et ${OFFRES.campus.nom} ?`,

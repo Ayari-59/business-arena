@@ -5,7 +5,8 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { VENDEUR } from "@/config/editeur";
-import { CONDITIONS, ELEVES_PAR_CLASSE, LE_COURS_PAR_OFFRE, MENTION_TVA, OFFRES } from "@/config/tarifs";
+import { CONDITIONS, ELEVES_PAR_CLASSE, LE_COURS_PAR_OFFRE, MENTION_TVA, OFFRES, variablesDuCatalogue } from "@/config/tarifs";
+import { remplir } from "@/config/catalogue";
 import {
   DELAI_DE_MISE_EN_DEMEURE_JOURS,
   DISPONIBILITE_ENGAGEE_POURCENT,
@@ -72,8 +73,13 @@ function CgvPage() {
                 {LE_COURS_PAR_OFFRE.decouverte}
               </li>
               <li>
-                <strong className="text-slate-200">{OFFRES.classe.nom}</strong> : un enseignant, un groupe de {ELEVES_PAR_CLASSE}{" "}
-                élèves au plus, une partie à la fois, une entreprise et un niveau écrits au devis. {LE_COURS_PAR_OFFRE.classe}
+                {/* LA RÈGLE DU CODE (décision du propriétaire, 11 novembre 2026 ; audit de l'offre du même jour,
+                    P1-1 : « un groupe » et « toutes vos classes » dans la même ligne, et le parcours pas dit
+                    « écrit au devis ») : dans l'arène, une partie à la fois ; dans le cours, un parcours pour
+                    toutes les classes, autant de classes que voulu. */}
+                <strong className="text-slate-200">{OFFRES.classe.nom}</strong> : un enseignant ; dans l&apos;arène, une partie à la fois, de{" "}
+                {ELEVES_PAR_CLASSE} élèves au plus, avec une entreprise et un niveau écrits au devis.{" "}
+                {remplir(LE_COURS_PAR_OFFRE.classe, variablesDuCatalogue())}
               </li>
               <li>
                 <strong className="text-slate-200">{OFFRES.programme.nom}</strong> : l&apos;équipe d&apos;un programme, au nombre

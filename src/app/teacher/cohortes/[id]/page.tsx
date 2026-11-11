@@ -10,6 +10,7 @@ import { getStaffContext } from "@/services/admin.service";
 import { cohorteDeLEnseignant } from "@/services/cohortes.service";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { lienDuDebrief } from "@/config/episodes/debrief";
+import { ficheParCode } from "@/config/episodes/fiches";
 import { NOM_DE_COHORTE_MAX } from "@/config/cohortes";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -195,6 +196,19 @@ async function MaCohortePage({
                   {`${origine}${lienDuDebrief(ep.code)}`}
                 </Link>
               </p>
+              {/* LA FICHE ENSEIGNANT DE L'ÉPISODE (audit UX du 11 novembre 2026, P2-9) : son déroulé, son
+                  corrigé et ses questions de débrief, à un lien de la cohorte. */}
+              {ficheParCode(ep.code) ? (
+                <p className="text-sm">
+                  <Link
+                    href={`/enseignants/episodes/${ep.code}`}
+                    className={LIEN_A_L_ENCRE}
+                    data-fiche-de-l-episode={ep.code}
+                  >
+                    La fiche enseignant de l&apos;épisode
+                  </Link>
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
