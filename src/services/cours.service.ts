@@ -11,7 +11,14 @@ import type { ProgressionLue } from "@/pedagogy/cours/suivi";
 import { offreDuCoursDe, plafondDElevesDesComptes, unCompteSousLicence } from "@/services/acces.service";
 import { getTeacherOrgId } from "@/services/auth.service";
 import { chapitresLiberes, parcoursAttribues } from "@/services/attributions.service";
-import { dansLesAttributions, libereALaClasse, parcoursAttribue, type ModeDeLiberation } from "@/services/chapitres-de-la-classe";
+import {
+  dansLesAttributions,
+  libereALaClasse,
+  offreDuCoursDeLEnseignant,
+  parcoursAttribue,
+  parcoursDeLaLicenceClasse,
+  type ModeDeLiberation,
+} from "@/services/chapitres-de-la-classe";
 
 /**
  * LES CLASSES DU COURS PAR LA SIMULATION.
@@ -58,6 +65,24 @@ const entrepriseValide = (e: string | null | undefined) => (e && ENTREPRISES_DU_
  */
 const parcoursValide = (p: string | null | undefined) => (parcoursProposeAChoisir(p) ? p : null);
 
+/**
+ * LE SEUL PARCOURS QU'UNE NOUVELLE CLASSE DE CET ENSEIGNANT PEUT PRENDRE, sous l'offre Classe
+ * (services/chapitres-de-la-classe.ts, `parcoursDeLaLicenceClasse`) ; null quand le choix est libre
+ * (Programme, Campus, sans offre, ou pas encore de parcours fixé sous Classe).
+ */
+export async function parcoursImposeALEnseignant(enseignantId: string): Promise<string | null> {
+  if ((await offreDuCoursDeLEnseignant(enseignantId)) !== "classe") return null;
+  const [attribues, classes] = await Promise.all([
+    parcoursAttribues(enseignantId),
+    db
+      .select({ parcours: coursClasses.parcours })
+      .from(coursClasses)
+      .where(eq(coursClasses.creePar, enseignantId))
+      .orderBy(asc(coursClasses.createdAt), asc(coursClasses.id)),
+  ]);
+  return parcoursDeLaLicenceClasse(attribues, classes.map((c) => c.parcours));
+}
+
 export async function creerClasse(args: {
   enseignantId: string;
   nom: string;
@@ -72,6 +97,9 @@ export async function creerClasse(args: {
   // l'admin a attribué des parcours (migration 0056), il est l'un d'eux.
   const parcours = parcoursValide(args.parcours);
   if (!nom || !parcours || !parcoursAttribue(await parcoursAttribues(args.enseignantId), parcours)) return null;
+  // Sous l'offre Classe, toutes les classes sur un même parcours (décision du 10 novembre 2026).
+  const impose = await parcoursImposeALEnseignant(args.enseignantId);
+  if (impose !== null && impose !== parcours) return null;
   const liberation: ModeDeLiberation = args.liberation === "chapitre" ? "chapitre" : "tout";
   for (let essai = 0; essai < 8; essai += 1) {
     const [cree] = await db
@@ -147,11 +175,14 @@ export async function cloreClasse(args: { enseignantId: string; classeId: string
 /**
  * Donner son parcours à une classe qui n'en a pas (une classe d'avant la migration 0052), par
  * son enseignant seulement. Une fois choisi, il ne change plus : sous l'offre Classe, c'est lui
- * qui ouvre les chapitres, et le changer à volonté ouvrirait tout le cours.
+ * qui ouvre les chapitres, et le changer à volonté ouvrirait tout le cours. Sous l'offre Classe,
+ * c'est le parcours des autres classes de l'enseignant, quand il est fixé (`parcoursImposeALEnseignant`).
  */
 export async function choisirLeParcours(args: { enseignantId: string; classeId: string; parcours: string }): Promise<boolean> {
   const parcours = parcoursValide(args.parcours);
   if (!parcours || !parcoursAttribue(await parcoursAttribues(args.enseignantId), parcours)) return false;
+  const impose = await parcoursImposeALEnseignant(args.enseignantId);
+  if (impose !== null && impose !== parcours) return false;
   const fait = await db
     .update(coursClasses)
     .set({ parcours })

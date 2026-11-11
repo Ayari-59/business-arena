@@ -23,10 +23,12 @@ const inclus = (code: string) => CATALOGUE_PAR_DEFAUT.offres.find((o) => o.code 
 
 describe("l'accès au cours, dit par les offres", () => {
   it("chaque carte dit ce que son offre ouvre du cours", () => {
-    expect(inclus("classe")).toMatch(/Le cours : les chapitres du parcours de la classe/);
+    // Un seul parcours sous Classe (décision du propriétaire, 10 novembre 2026).
+    expect(inclus("classe")).toMatch(/Le cours : les chapitres d'un parcours, le même pour toutes vos classes/);
     expect(inclus("programme")).toMatch(/Le cours : les chapitres des parcours de vos classes/);
     expect(inclus("campus")).toMatch(/Le cours : tous les chapitres de tous les parcours/);
-    expect(inclus("decouverte")).toMatch(/Le premier chapitre du cours et son cas pratique, en libre accès/);
+    // « Un chapitre » : le chapitre libre n'est pas le premier du catalogue (audit du 10 novembre 2026).
+    expect(inclus("decouverte")).toMatch(/Un chapitre du cours et son cas pratique, en libre accès/);
   });
 
   it("le catalogue en base reçoit les mêmes textes (drizzle/0053)", () => {

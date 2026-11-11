@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   COURBE_DES_LIENS,
@@ -50,6 +50,11 @@ import { ENTREPRISES_DE_LA_VALEUR, ficheDe } from "./valeur-d-un-client";
  *   · autonome et expert : ce-qu-il-faut, le-paiement-en-ligne, le-roas, la-source-qui-perd,
  *     le-clic-en-plus, ce-qui-fait-tenir-le-site (référencement, hébergement, communication unifiée),
  *     l-hebergement, qui-peut-se-retracter, la-retractation, le-prochain-euro ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ROAS et les heures de panne sont des grandeurs, au
+ * centième ; les visites et les commandes rétractées sont des quantités, entières, déclarées comme
+ * telles ; les taux, à deux décimales.
  */
 
 /** Le site se lit chez le cabinet du cours, ATLAS CONSEIL. */
@@ -73,10 +78,8 @@ export const LEVIERS_DES_LIENS = {
   conversion: { min: 0.5, max: 2.5, pas: 0.5 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 2) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 const enPct = (x: number) => auCentime(x * 100);
 /** « d'ATLAS CONSEIL », « de NOVA » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -223,8 +226,8 @@ export const LE_SITE_QUI_VEND: Chapitre = {
         const x = siteDuCabinet(c);
         const ventes = auCentime(x.m.places * x.m.prixHt);
         return [
-          { libelle: "Taux de conversion en commande (%)", attendu: enPct(x.t.conversion), calcul: `${qte(x.t.commandes)} ÷ ${qte(x.t.visites)} = ${pct(x.t.conversion)}`, tolerance: 0.01 },
-          { libelle: "Taux de conversion en contact (%)", attendu: enPct(x.t.conversionEnContact), calcul: `${qte(x.t.contacts)} ÷ ${qte(x.t.visites)} = ${pct(x.t.conversionEnContact)}`, tolerance: 0.01 },
+          { libelle: "Taux de conversion en commande (%)", attendu: enPct(x.t.conversion), calcul: `${qte(x.t.commandes)} ÷ ${qte(x.t.visites)} = ${pct(x.t.conversion)}` },
+          { libelle: "Taux de conversion en contact (%)", attendu: enPct(x.t.conversionEnContact), calcul: `${qte(x.t.contacts)} ÷ ${qte(x.t.visites)} = ${pct(x.t.conversionEnContact)}` },
           { libelle: "Panier moyen hors taxes", attendu: x.m.panier, calcul: `${qte(x.m.places)} × ${eur(x.m.prixHt)} ÷ ${qte(x.t.commandes)} = ${eur(ventes)} ÷ ${qte(x.t.commandes)} = ${eur(x.m.panier)}` },
           { libelle: "Chiffre d'affaires du trimestre", attendu: x.t.chiffreDAffaires, calcul: `${qte(x.t.visites)} × ${pct(x.t.conversion)} × ${eur(x.m.panier)} = ${eur(x.t.chiffreDAffaires)}` },
         ];
@@ -255,7 +258,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       explication: (c) => {
         const x = siteDuCabinet(c);
         return [
-          `Une commande coûte ${eur(x.lettre.coutParCommande)} par la lettre d'information, ${eur(x.reseaux.coutParCommande)} par les réseaux sociaux. La visite d'un réseau social n'est pourtant pas chère, ${eur(x.reseaux.coutParVisite)} ; mais on y flâne, et ${pct(x.reseaux.conversion, 1)} seulement des visiteurs achètent.`,
+          `Une commande coûte ${eur(x.lettre.coutParCommande)} par la lettre d'information, ${eur(x.reseaux.coutParCommande)} par les réseaux sociaux. La visite d'un réseau social n'est pourtant pas chère, ${eur(x.reseaux.coutParVisite)} ; mais on y flâne, et ${pct(x.reseaux.conversion)} seulement des visiteurs achètent.`,
           `Le coût d'une visite ne dit rien seul : il se divise par la conversion. Coût d'une commande = coût d'une visite ÷ taux de conversion.`,
         ];
       },
@@ -276,17 +279,17 @@ export const LE_SITE_QUI_VEND: Chapitre = {
           {
             texte: "La garder : c'est la source qui convertit le mieux",
             juste: true,
-            retour: `Oui : ${pct(x.lettre.conversion, 1)} de ses visiteurs achètent, des clients qui connaissent déjà le cabinet, et une commande y coûte ${eur(x.lettre.coutParCommande)}. Aux réseaux sociaux, il en faut ${eur(x.reseaux.coutParCommande)}.`,
+            retour: `Oui : ${pct(x.lettre.conversion)} de ses visiteurs achètent, des clients qui connaissent déjà le cabinet, et une commande y coûte ${eur(x.lettre.coutParCommande)}. Aux réseaux sociaux, il en faut ${eur(x.reseaux.coutParCommande)}.`,
           },
           {
             texte: "L'arrêter : les réseaux sociaux amènent plus de visites par euro",
             juste: false,
-            retour: `Non : une visite y coûte ${eur(x.reseaux.coutParVisite)}, mais ${pct(x.reseaux.conversion, 1)} seulement achètent. On ne vend pas des visites, on vend des places.`,
+            retour: `Non : une visite y coûte ${eur(x.reseaux.coutParVisite)}, mais ${pct(x.reseaux.conversion)} seulement achètent. On ne vend pas des visites, on vend des places.`,
           },
           {
-            texte: `L'arrêter : ses visites ne font que ${pct(x.lettre.visites / x.t.visites, 0)} du trafic du site`,
+            texte: `L'arrêter : ses visites ne font que ${pct(x.lettre.visites / x.t.visites)} du trafic du site`,
             juste: false,
-            retour: `Non : ses ${qte(x.lettre.visites)} visites font ${qte(x.lettre.commandes)} commandes, ${pct(x.lettre.commandes / x.t.commandes, 1)} des ventes du site. Une petite source peut peser lourd.`,
+            retour: `Non : ses ${qte(x.lettre.visites)} visites font ${qte(x.lettre.commandes)} commandes, ${pct(x.lettre.commandes / x.t.commandes)} des ventes du site. Une petite source peut peser lourd.`,
           },
         ];
       },
@@ -299,15 +302,15 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       notions: ["conversion_rate", "revenue"],
       question: (c) => {
         const x = siteDuCabinet(c);
-        return `Avant de calculer, pariez. Le directeur veut ${pct(HAUSSE_VISEE, 0)} de chiffre d'affaires en plus au trimestre suivant, ${eur(x.chiffreVise)}. Si la conversion et le panier ne bougent pas, il faut…`;
+        return `Avant de calculer, pariez. Le directeur veut ${pct(HAUSSE_VISEE)} de chiffre d'affaires en plus au trimestre suivant, ${eur(x.chiffreVise)}. Si la conversion et le panier ne bougent pas, il faut…`;
       },
       options: (c) => {
         const x = siteDuCabinet(c);
         const voir = "Faites varier les visites à l'étape suivante : le curseur montre combien il en faut.";
         return [
-          { texte: `${pct(HAUSSE_VISEE, 0)} de visites en plus`, juste: true, retour: `Bon pari. ${voir}` },
-          { texte: `${pct(HAUSSE_VISEE * 2, 0)} de visites en plus`, juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: `${pct(x.t.conversion, 1)} de visites en plus, comme la conversion`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `${pct(HAUSSE_VISEE)} de visites en plus`, juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `${pct(HAUSSE_VISEE * 2)} de visites en plus`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `${pct(x.t.conversion)} de visites en plus, comme la conversion`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
     },
@@ -319,7 +322,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       notions: ["conversion_rate", "revenue"],
       question: (c) => {
         const x = siteDuCabinet(c);
-        return `Faites varier les visites du trimestre, de ${qte(VISITES_DU_CURSEUR.min)} à ${qte(VISITES_DU_CURSEUR.max)} centaines, la conversion (${pct(x.t.conversion, 1)}) et le panier (${eur(x.m.panier)}) restant ceux du premier trimestre. Placez le curseur sur le plus petit nombre de visites qui atteint ${eur(x.chiffreVise)}, puis validez.`;
+        return `Faites varier les visites du trimestre, de ${qte(VISITES_DU_CURSEUR.min)} à ${qte(VISITES_DU_CURSEUR.max)} centaines, la conversion (${pct(x.t.conversion)}) et le panier (${eur(x.m.panier)}) restant ceux du premier trimestre. Placez le curseur sur le plus petit nombre de visites qui atteint ${eur(x.chiffreVise)}, puis validez.`;
       },
       grandeur: () => ({ libelle: "Visites du trimestre", unite: "centaines de visites" }),
       cible: (c) => ({ attendu: Math.ceil(siteDuCabinet(c).vise.visites / 100 - 1e-9), min: VISITES_DU_CURSEUR.min, max: VISITES_DU_CURSEUR.max }),
@@ -349,7 +352,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       explication: (c) => {
         const x = siteDuCabinet(c);
         return [
-          `Il faut ${qte(x.vise.visites)} visites, ${pct(HAUSSE_VISEE, 0)} de plus : le chiffre d'affaires est proportionnel aux visites, tant que les nouveaux visiteurs convertissent comme les autres. C'est une hypothèse forte : des visiteurs achetés plus loin, sur des mots plus vagues, convertissent souvent moins.`,
+          `Il faut ${qte(x.vise.visites)} visites, ${pct(HAUSSE_VISEE)} de plus : le chiffre d'affaires est proportionnel aux visites, tant que les nouveaux visiteurs convertissent comme les autres. C'est une hypothèse forte : des visiteurs achetés plus loin, sur des mots plus vagues, convertissent souvent moins.`,
           "L'étape suivante refait le chemin par le calcul, pour chacun des trois leviers.",
         ];
       },
@@ -367,15 +370,15 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       champs: (c) => {
         const x = siteDuCabinet(c);
         return [
-          { libelle: "Visites qu'il faut", attendu: x.vise.visites, calcul: `${eur(x.chiffreVise)} ÷ (${pct(x.t.conversion)} × ${eur(x.m.panier)}) = ${qte(x.vise.visites)} visites` },
-          { libelle: "Taux de conversion qu'il faut (%)", attendu: enPct(x.vise.conversion), calcul: `${eur(x.chiffreVise)} ÷ (${qte(x.t.visites)} × ${eur(x.m.panier)}) = ${pct(x.vise.conversion)}`, tolerance: 0.01 },
+          { libelle: "Visites qu'il faut", nature: "quantite", attendu: x.vise.visites, calcul: `${eur(x.chiffreVise)} ÷ (${pct(x.t.conversion)} × ${eur(x.m.panier)}) = ${qte(x.vise.visites)} visites` },
+          { libelle: "Taux de conversion qu'il faut (%)", attendu: enPct(x.vise.conversion), calcul: `${eur(x.chiffreVise)} ÷ (${qte(x.t.visites)} × ${eur(x.m.panier)}) = ${pct(x.vise.conversion)}` },
           { libelle: "Panier moyen qu'il faut", attendu: x.vise.panier, calcul: `${eur(x.chiffreVise)} ÷ (${qte(x.t.visites)} × ${pct(x.t.conversion)}) = ${eur(x.vise.panier)}` },
         ];
       },
       explication: (c) => {
         const x = siteDuCabinet(c);
         return [
-          `Les trois chemins demandent chacun ${pct(HAUSSE_VISEE, 0)} de plus : ${qte(x.vise.visites)} visites, ou ${pct(x.vise.conversion)} de conversion, ou ${eur(x.vise.panier)} de panier (${qte(x.vise.panier / x.m.prixHt)} place${x.vise.panier / x.m.prixHt >= 2 ? "s" : ""} par commande). Ils ne coûtent pas la même chose : des visites s'achètent, une conversion se travaille sur le site (les avis, la page de paiement), un panier se gagne par une offre à plusieurs places.`,
+          `Les trois chemins demandent chacun ${pct(HAUSSE_VISEE)} de plus : ${qte(x.vise.visites)} visites, ou ${pct(x.vise.conversion)} de conversion, ou ${eur(x.vise.panier)} de panier (${qte(x.vise.panier / x.m.prixHt)} place${x.vise.panier / x.m.prixHt >= 2 ? "s" : ""} par commande). Ils ne coûtent pas la même chose : des visites s'achètent, une conversion se travaille sur le site (les avis, la page de paiement), un panier se gagne par une offre à plusieurs places.`,
         ];
       },
     },
@@ -388,14 +391,14 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       question: (c) => {
         const x = siteDuCabinet(c);
         const [p, e] = x.m.acheteurs;
-        return `Le prestataire de paiement prend ${pct(FRAIS_DE_PAIEMENT.taux, 1)} du montant payé toutes taxes comprises, plus ${eur(FRAIS_DE_PAIEMENT.parCommande)} par commande. Un particulier paie ${eur(p!.ttc)}, une entreprise ${eur(e!.ttc)}. Calculez les frais d'une commande de chacun, les frais du trimestre, puis la marge d'une commande moyenne : ${qte(x.m.placesParCommande)} place × (${eur(x.m.prixHt)} − ${eur(x.m.coutVariable)} de supports et de repas), moins ses frais.`;
+        return `Le prestataire de paiement prend ${pct(FRAIS_DE_PAIEMENT.taux)} du montant payé toutes taxes comprises, plus ${eur(FRAIS_DE_PAIEMENT.parCommande)} par commande. Un particulier paie ${eur(p!.ttc)}, une entreprise ${eur(e!.ttc)}. Calculez les frais d'une commande de chacun, les frais du trimestre, puis la marge d'une commande moyenne : ${qte(x.m.placesParCommande)} place × (${eur(x.m.prixHt)} − ${eur(x.m.coutVariable)} de supports et de repas), moins ses frais.`;
       },
       champs: (c) => {
         const x = siteDuCabinet(c);
         const [p, e] = x.m.acheteurs;
         return [
-          { libelle: "Frais d'une commande de particulier", attendu: p!.frais, calcul: `${eur(p!.ttc)} × ${pct(FRAIS_DE_PAIEMENT.taux, 1)} + ${eur(FRAIS_DE_PAIEMENT.parCommande)} = ${eur(p!.frais)}` },
-          { libelle: "Frais d'une commande d'entreprise", attendu: e!.frais, calcul: `${eur(e!.ttc)} × ${pct(FRAIS_DE_PAIEMENT.taux, 1)} + ${eur(FRAIS_DE_PAIEMENT.parCommande)} = ${eur(e!.frais)}` },
+          { libelle: "Frais d'une commande de particulier", attendu: p!.frais, calcul: `${eur(p!.ttc)} × ${pct(FRAIS_DE_PAIEMENT.taux)} + ${eur(FRAIS_DE_PAIEMENT.parCommande)} = ${eur(p!.frais)}` },
+          { libelle: "Frais d'une commande d'entreprise", attendu: e!.frais, calcul: `${eur(e!.ttc)} × ${pct(FRAIS_DE_PAIEMENT.taux)} + ${eur(FRAIS_DE_PAIEMENT.parCommande)} = ${eur(e!.frais)}` },
           { libelle: "Frais de paiement du trimestre", attendu: x.m.fraisDuTrimestre, calcul: `${qte(p!.commandes)} × ${eur(p!.frais)} + ${qte(e!.commandes)} × ${eur(e!.frais)} = ${eur(x.m.fraisDuTrimestre)}` },
           {
             libelle: "Marge d'une commande moyenne",
@@ -407,7 +410,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       explication: (c) => {
         const x = siteDuCabinet(c);
         return [
-          `Les frais pèsent ${pct(x.m.fraisDuTrimestre / x.t.chiffreDAffaires)} des ventes hors taxes : ils se prennent sur le prix payé, TVA comprise, et une part fixe pèse plus sur une petite commande. Une commande moyenne laisse ${eur(x.m.marge)}, ${pct(x.m.tauxDeMarge, 1)} de son panier : c'est ce chiffre, et non le panier, qui dira ce qu'une dépense publicitaire peut coûter.`,
+          `Les frais pèsent ${pct(x.m.fraisDuTrimestre / x.t.chiffreDAffaires)} des ventes hors taxes : ils se prennent sur le prix payé, TVA comprise, et une part fixe pèse plus sur une petite commande. Une commande moyenne laisse ${eur(x.m.marge)}, ${pct(x.m.tauxDeMarge)} de son panier : c'est ce chiffre, et non le panier, qui dira ce qu'une dépense publicitaire peut coûter.`,
         ];
       },
     },
@@ -424,9 +427,9 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       champs: (c) => {
         const x = siteDuCabinet(c);
         return [
-          { libelle: "ROAS des liens sponsorisés", attendu: auCentime(x.payant.roas!), calcul: `${eur(x.payant.chiffreDAffaires)} ÷ ${eur(x.payant.cout)} = ${qte(auCentime(x.payant.roas!))}`, tolerance: 0.01 },
-          { libelle: "ROAS des réseaux sociaux", attendu: auCentime(x.reseaux.roas!), calcul: `${eur(x.reseaux.chiffreDAffaires)} ÷ ${eur(x.reseaux.cout)} = ${qte(auCentime(x.reseaux.roas!))}`, tolerance: 0.01 },
-          { libelle: "ROAS seuil", attendu: auCentime(x.m.roasSeuil), calcul: `${eur(x.m.panier)} ÷ ${eur(x.m.marge)} = ${qte(auCentime(x.m.roasSeuil))}`, tolerance: 0.01 },
+          { libelle: "ROAS des liens sponsorisés", nature: "grandeur", attendu: auCentime(x.payant.roas!), calcul: `${eur(x.payant.chiffreDAffaires)} ÷ ${eur(x.payant.cout)} = ${qte(auCentime(x.payant.roas!))}` },
+          { libelle: "ROAS des réseaux sociaux", nature: "grandeur", attendu: auCentime(x.reseaux.roas!), calcul: `${eur(x.reseaux.chiffreDAffaires)} ÷ ${eur(x.reseaux.cout)} = ${qte(auCentime(x.reseaux.roas!))}` },
+          { libelle: "ROAS seuil", nature: "grandeur", attendu: auCentime(x.m.roasSeuil), calcul: `${eur(x.m.panier)} ÷ ${eur(x.m.marge)} = ${qte(auCentime(x.m.roasSeuil))}` },
           { libelle: "Ce que laissent les réseaux sociaux", attendu: x.reseaux.margeNette, calcul: `${qte(x.reseaux.commandes)} × ${eur(x.m.marge)} − ${eur(x.reseaux.cout)} = ${eur(x.reseaux.margeNette)}` },
         ];
       },
@@ -450,7 +453,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
           {
             texte: `Non : il faut ${qte(auCentime(x.m.roasSeuil))}, les réseaux sociaux perdent`,
             juste: true,
-            retour: `Oui : un euro de ventes ne laisse que ${pct(x.m.tauxDeMarge, 1)} de marge. Pour payer un euro de dépense, il faut ${eur(auCentime(x.m.roasSeuil))} de ventes ; les réseaux sociaux n'en ramènent que ${eur(auCentime(x.reseaux.roas!))}.`,
+            retour: `Oui : un euro de ventes ne laisse que ${pct(x.m.tauxDeMarge)} de marge. Pour payer un euro de dépense, il faut ${eur(auCentime(x.m.roasSeuil))} de ventes ; les réseaux sociaux n'en ramènent que ${eur(auCentime(x.reseaux.roas!))}.`,
           },
           {
             texte: "Oui : un ROAS au-dessus de 1 veut dire que la dépense est payée",
@@ -553,7 +556,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
         const meilleurPour = (conversion: number) => meilleurBudgetDesLiens(conversion / 100).budget;
         return [
           `À ${eur(p.budget!)}, les liens gagnent ${eur(l.gain)} : les derniers euros ont encore rapporté plus qu'ils n'ont coûté, les suivants rapporteraient moins. Le ROAS, ${qte(l.roas)}, ne dit rien de cela : c'est le clic en plus qui décide.`,
-          `À ${pct(x.payant.conversion, 1)} de conversion, le meilleur budget est ${eur(meilleurPour(enPct(x.payant.conversion)))} ; à ${pct(CONVERSION_VARIANTE, 1)}, il passe à ${eur(meilleurPour(CONVERSION_VARIANTE * 100))}, et à ${pct(LEVIERS_DES_LIENS.conversion.min / 100, 1)} il tombe à ${eur(meilleurPour(LEVIERS_DES_LIENS.conversion.min))}. Une page qui convertit mieux rend payant un clic qui ne l'était pas.`,
+          `À ${pct(x.payant.conversion)} de conversion, le meilleur budget est ${eur(meilleurPour(enPct(x.payant.conversion)))} ; à ${pct(CONVERSION_VARIANTE)}, il passe à ${eur(meilleurPour(CONVERSION_VARIANTE * 100))}, et à ${pct(LEVIERS_DES_LIENS.conversion.min / 100)} il tombe à ${eur(meilleurPour(LEVIERS_DES_LIENS.conversion.min))}. Une page qui convertit mieux rend payant un clic qui ne l'était pas.`,
         ];
       },
     },
@@ -567,7 +570,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       question: (c) => {
         const x = siteDuCabinet(c);
         const [a, b] = [x.avantDernier, x.dernier];
-        return `Passer de ${eur(a.de)} à ${eur(a.a)}, puis de ${eur(b.de)} à ${eur(b.a)}, coûte chaque fois ${eur(b.budget)}. Calculez ce que coûte le clic en plus de chacun de ces paliers, ce que rapporte un clic (${pct(x.payant.conversion, 1)} × ${eur(x.m.marge)}), puis le gain du dernier palier, commandes en plus × marge − budget en plus (négatif s'il fait perdre).`;
+        return `Passer de ${eur(a.de)} à ${eur(a.a)}, puis de ${eur(b.de)} à ${eur(b.a)}, coûte chaque fois ${eur(b.budget)}. Calculez ce que coûte le clic en plus de chacun de ces paliers, ce que rapporte un clic (${pct(x.payant.conversion)} × ${eur(x.m.marge)}), puis le gain du dernier palier, commandes en plus × marge − budget en plus (négatif s'il fait perdre).`;
       },
       champs: (c) => {
         const x = siteDuCabinet(c);
@@ -575,8 +578,8 @@ export const LE_SITE_QUI_VEND: Chapitre = {
         return [
           { libelle: `Coût du clic en plus, de ${eur(a.de)} à ${eur(a.a)}`, attendu: a.coutDuClicEnPlus, calcul: `${eur(a.budget)} ÷ ${qte(a.clics)} = ${eur(a.coutDuClicEnPlus)}` },
           { libelle: `Coût du clic en plus, de ${eur(b.de)} à ${eur(b.a)}`, attendu: b.coutDuClicEnPlus, calcul: `${eur(b.budget)} ÷ ${qte(b.clics)} = ${eur(b.coutDuClicEnPlus)}` },
-          { libelle: "Ce que rapporte un clic", attendu: x.valeurDUnClic, calcul: `${pct(x.payant.conversion, 1)} × ${eur(x.m.marge)} = ${eur(x.valeurDUnClic)}`, tolerance: 0.01 },
-          { libelle: "Gain du dernier palier", attendu: b.gain, calcul: `${qte(b.clics)} × ${pct(x.payant.conversion, 1)} × ${eur(x.m.marge)} − ${eur(b.budget)} = ${qte(auCentime(b.commandes))} × ${eur(x.m.marge)} − ${eur(b.budget)} = ${eur(b.gain)}` },
+          { libelle: "Ce que rapporte un clic", attendu: x.valeurDUnClic, calcul: `${pct(x.payant.conversion)} × ${eur(x.m.marge)} = ${eur(x.valeurDUnClic)}` },
+          { libelle: "Gain du dernier palier", attendu: b.gain, calcul: `${qte(b.clics)} × ${pct(x.payant.conversion)} × ${eur(x.m.marge)} − ${eur(b.budget)} = ${qte(auCentime(b.commandes))} × ${eur(x.m.marge)} − ${eur(b.budget)} = ${eur(b.gain)}` },
         ];
       },
       explication: (c) => {
@@ -629,8 +632,8 @@ export const LE_SITE_QUI_VEND: Chapitre = {
         const h = x.hebergement;
         const [mu, de] = h.offres;
         return [
-          { libelle: "Heures de panne, serveur mutualisé", attendu: mu!.indisponibilite, calcul: `${qte(h.heures)} × (1 − ${pct(mu!.disponibilite)}) = ${qte(mu!.indisponibilite)} heures` },
-          { libelle: "Heures de panne, serveur dédié", attendu: de!.indisponibilite, calcul: `${qte(h.heures)} × (1 − ${pct(de!.disponibilite)}) = ${qte(de!.indisponibilite)} heure` },
+          { libelle: "Heures de panne, serveur mutualisé", nature: "grandeur", attendu: mu!.indisponibilite, calcul: `${qte(h.heures)} × (1 − ${pct(mu!.disponibilite)}) = ${qte(mu!.indisponibilite)} heures` },
+          { libelle: "Heures de panne, serveur dédié", nature: "grandeur", attendu: de!.indisponibilite, calcul: `${qte(h.heures)} × (1 − ${pct(de!.disponibilite)}) = ${qte(de!.indisponibilite)} heure` },
           { libelle: "Marge du site en une heure", attendu: h.margeParHeure, calcul: `${qte(x.t.commandes)} × ${eur(x.m.marge)} ÷ ${qte(h.heures)} = ${eur(h.margeParHeure)}` },
           { libelle: "Coût du trimestre, serveur mutualisé", attendu: mu!.total, calcul: `3 × ${eur(mu!.prixParMois)} + ${qte(mu!.indisponibilite)} × ${eur(h.margeParHeure)} = ${eur(mu!.prix)} + ${eur(mu!.margePerdue)} = ${eur(mu!.total)}` },
           { libelle: "Coût du trimestre, serveur dédié", attendu: de!.total, calcul: `3 × ${eur(de!.prixParMois)} + ${qte(de!.indisponibilite)} × ${eur(h.margeParHeure)} = ${eur(de!.prix)} + ${eur(de!.margePerdue)} = ${eur(de!.total)}` },
@@ -677,17 +680,17 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       question: (c) => {
         const x = siteDuCabinet(c);
         const p = x.m.acheteurs[0]!;
-        return `Au premier trimestre, ${pct(RETRACTATION.partDesParticuliers, 0)} des ${qte(p.commandes)} commandes de particuliers ont été rétractées. Calculez les commandes rétractées, le chiffre d'affaires perdu, la marge perdue (la place rendue ne coûte ni supports ni repas, mais ses frais de paiement restent payés), puis la conversion nette du site, en %.`;
+        return `Au premier trimestre, ${pct(RETRACTATION.partDesParticuliers)} des ${qte(p.commandes)} commandes de particuliers ont été rétractées. Calculez les commandes rétractées, le chiffre d'affaires perdu, la marge perdue (la place rendue ne coûte ni supports ni repas, mais ses frais de paiement restent payés), puis la conversion nette du site, en %.`;
       },
       champs: (c) => {
         const x = siteDuCabinet(c);
         const r = x.retractation;
         const p = x.m.acheteurs[0]!;
         return [
-          { libelle: "Commandes rétractées", attendu: r.commandes, calcul: `${qte(p.commandes)} × ${pct(r.part, 0)} = ${qte(r.commandes)}` },
+          { libelle: "Commandes rétractées", nature: "quantite", attendu: r.commandes, calcul: `${qte(p.commandes)} × ${pct(r.part)} = ${qte(r.commandes)}` },
           { libelle: "Chiffre d'affaires perdu", attendu: r.chiffreDAffairesPerdu, calcul: `${qte(r.commandes)} × ${eur(p.ht)} = ${eur(r.chiffreDAffairesPerdu)}` },
           { libelle: "Marge perdue", attendu: r.margePerdue, calcul: `${qte(r.commandes)} × (${eur(x.m.prixHt)} − ${eur(x.m.coutVariable)}) = ${eur(r.margePerdue)}` },
-          { libelle: "Conversion nette (%)", attendu: enPct(r.conversionNette), calcul: `(${qte(x.t.commandes)} − ${qte(r.commandes)}) ÷ ${qte(x.t.visites)} = ${pct(r.conversionNette)}`, tolerance: 0.01 },
+          { libelle: "Conversion nette (%)", attendu: enPct(r.conversionNette), calcul: `(${qte(x.t.commandes)} − ${qte(r.commandes)}) ÷ ${qte(x.t.visites)} = ${pct(r.conversionNette)}` },
         ];
       },
       explication: (c) => {
@@ -751,7 +754,7 @@ export const LE_SITE_QUI_VEND: Chapitre = {
       texte: (c) => {
         const x = siteDuCabinet(c);
         return [
-          `Le chiffre d'affaires d'un site est le produit de ses visites, de son taux de conversion et de son panier : ${qte(x.t.visites)} × ${pct(x.t.conversion, 1)} × ${eur(x.m.panier)} = ${eur(x.t.chiffreDAffaires)} chez ${x.f.entreprise}. Une source se juge sur ce que coûte une commande, pas une visite, et une dépense publicitaire sur son ROAS face au seuil, panier ÷ marge, qui n'est pas 1.`,
+          `Le chiffre d'affaires d'un site est le produit de ses visites, de son taux de conversion et de son panier : ${qte(x.t.visites)} × ${pct(x.t.conversion)} × ${eur(x.m.panier)} = ${eur(x.t.chiffreDAffaires)} chez ${x.f.entreprise}. Une source se juge sur ce que coûte une commande, pas une visite, et une dépense publicitaire sur son ROAS face au seuil, panier ÷ marge, qui n'est pas 1.`,
           `Le budget des liens sponsorisés se fixe là où le clic en plus cesse de rapporter ce qu'il coûte, ${eur(x.meilleur.budget)}, et non sur le ROAS moyen. L'hébergement, la communication unifiée et la rétractation des particuliers se chiffrent eux aussi : en heures de panne, en commandes perdues, en conversion nette.`,
           "Au niveau de l'examen, vous savez calculer un taux de conversion, un panier moyen, un coût par commande et un ROAS, retrouver à rebours ce qu'il faut pour un objectif, et fixer un budget sur le coût marginal d'un clic.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

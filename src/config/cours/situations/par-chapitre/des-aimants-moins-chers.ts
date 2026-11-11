@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_QUALITE_PILOTEE, ficheDe, qualiteDuChapitre } from "../../chapitres/piloter-la-qualite";
 import { T_DE_LA_TABLE, arrondi, lectureDeLaTable } from "../../monde/loi-normale";
@@ -18,6 +18,11 @@ import type { Situation } from "../types";
  * confiance de la moyenne, la part hors tolérance une fois la machine recentrée, et ce qu'elle coûte.
  * La réponse demande un jugement : la moyenne se recentre d'un réglage, la dispersion non ; le surcoût
  * de la non-qualité dépasse l'économie.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part hors tolérance est un coefficient au dix-millième, à
+ * un dix-millième près ; l'écart-type, les bornes et les enceintes hors tolérance (une espérance)
+ * sont des grandeurs au centième ; le coût des défauts attend le centime (à 300 € près, avant).
  */
 
 /** L'économie promise par le nouveau fournisseur, par enceinte (hypothèse du cas). */
@@ -26,13 +31,13 @@ export const ECONOMIE_PAR_ENCEINTE = 0.5;
 /** L'essai : les enceintes pesées, leur poids moyen et l'écart-type de l'essai, en grammes (hypothèse du cas). */
 export const ESSAI_DES_AIMANTS = { n: 40, moyenne: 846, ecartTypeObserve: 11.85 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const pr = (p: number) => (p + 0).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 const tt = (t: number) => (t + 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 3 }).replace(/^-/, "−");
 const g = (x: number) => `${qte(x)} g`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const TOLERANCE_D_UNE_PROBABILITE = 0.002;
+const auCentime = arrondi2;
+/** Une probabilité lue à la table se donne au dix-millième, comme la table (au deux-millième près, avant). */
+const TOLERANCE_D_UNE_PROBABILITE = 0.0001;
 
 /** Les chiffres du cas. */
 export function aimantsMoinsChers(c: Pick<Cas, "code">) {
@@ -110,9 +115,9 @@ export const DES_AIMANTS_MOINS_CHERS: Situation = {
         const n = aimantsMoinsChers(c);
         const t = T_DE_LA_TABLE.centreA95;
         return [
-          { libelle: "Estimation de l'écart-type, en grammes", attendu: n.s, tolerance: 0.03, calcul: `${qte(n.E.ecartTypeObserve)} × √(${qte(n.E.n)} ÷ ${qte(n.E.n - 1)}) = ${g(n.s)}` },
-          { libelle: "Borne basse, en grammes", attendu: arrondi(n.ic.bas, 2), tolerance: 0.05, calcul: `${qte(n.E.moyenne)} − ${tt(t)} × ${qte(n.s)} ÷ √${qte(n.E.n)} = ${g(arrondi(n.ic.bas, 2))}` },
-          { libelle: "Borne haute, en grammes", attendu: arrondi(n.ic.haut, 2), tolerance: 0.05, calcul: `${qte(n.E.moyenne)} + ${tt(t)} × ${qte(n.s)} ÷ √${qte(n.E.n)} = ${g(arrondi(n.ic.haut, 2))}` },
+          { libelle: "Estimation de l'écart-type, en grammes", nature: "grandeur", attendu: n.s, calcul: `${qte(n.E.ecartTypeObserve)} × √(${qte(n.E.n)} ÷ ${qte(n.E.n - 1)}) = ${g(n.s)}` },
+          { libelle: "Borne basse, en grammes", nature: "grandeur", attendu: arrondi(n.ic.bas, 2), calcul: `${qte(n.E.moyenne)} − ${tt(t)} × ${qte(n.s)} ÷ √${qte(n.E.n)} = ${g(arrondi(n.ic.bas, 2))}` },
+          { libelle: "Borne haute, en grammes", nature: "grandeur", attendu: arrondi(n.ic.haut, 2), calcul: `${qte(n.E.moyenne)} + ${tt(t)} × ${qte(n.s)} ÷ √${qte(n.E.n)} = ${g(arrondi(n.ic.haut, 2))}` },
         ];
       },
       explication: (c) => {
@@ -133,9 +138,9 @@ export const DES_AIMANTS_MOINS_CHERS: Situation = {
       champs: (c) => {
         const n = aimantsMoinsChers(c);
         return [
-          { libelle: "Part hors tolérance", attendu: n.hors, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `t = ${qte(n.P.tolerance)} ÷ ${qte(n.s)} = ${tt(n.t)} ; 2 × (1 − Π(${tt(n.t)})) = 2 × (1 − ${pr(lectureDeLaTable(n.t))}) = ${pr(n.hors)}` },
-          { libelle: "Enceintes hors tolérance dans l'année", attendu: n.nombre, tolerance: 6, calcul: `${qte(n.x.volume)} × ${pr(n.hors)} = ${qte(n.nombre)}` },
-          { libelle: "Coût des défauts en plus, par an", attendu: n.surcout, tolerance: 300, calcul: `(${qte(n.nombre)} − ${qte(n.x.regle.nombre)}) × ${eur(n.x.coutTout)} = ${eur(n.surcout)}` },
+          { libelle: "Part hors tolérance", nature: "coefficient", attendu: n.hors, tolerance: TOLERANCE_D_UNE_PROBABILITE, calcul: `t = ${qte(n.P.tolerance)} ÷ ${qte(n.s)} = ${tt(n.t)} ; 2 × (1 − Π(${tt(n.t)})) = 2 × (1 − ${pr(lectureDeLaTable(n.t))}) = ${pr(n.hors)}` },
+          { libelle: "Enceintes hors tolérance dans l'année", nature: "grandeur", attendu: n.nombre, calcul: `${qte(n.x.volume)} × ${pr(n.hors)} = ${qte(n.nombre)}` },
+          { libelle: "Coût des défauts en plus, par an", attendu: n.surcout, calcul: `(${qte(n.nombre)} − ${qte(n.x.regle.nombre)}) × ${eur(n.x.coutTout)} = ${eur(n.surcout)}` },
         ];
       },
       explication: (c) => {

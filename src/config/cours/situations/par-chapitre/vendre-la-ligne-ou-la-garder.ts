@@ -7,7 +7,7 @@ import type { Situation } from "../types";
  * (DCG · Comptabilité approfondie, palier 4).
  *
  * Fin décembre N + 1, un façonnier offre de racheter la première ligne de NOVA (`OFFRE_DE_RACHAT`).
- * Le directeur général hésite : vendre maintenant, ou garder la ligne ? Et que dire au comptable
+ * Le président hésite : vendre maintenant, ou garder la ligne ? Et que dire au comptable
  * pour l'inventaire ? L'élève refait le test du chapitre (`testDeDepreciation`), avec l'offre pour
  * valeur vénale.
  */
@@ -25,19 +25,19 @@ export const VENDRE_LA_LIGNE_OU_LA_GARDER: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["le-test-de-depreciation"],
-  commanditaire: "Le directeur général",
+  commanditaire: "Le président",
   titre: "Vendre la ligne ou la garder",
   accroche: "Un acheteur se présente pour la première ligne de montage : ce qu'elle rapporterait vendue, ce qu'elle rapporte gardée, et ce que l'inventaire en retiendra.",
-  objectifs: ["Comparer la valeur vénale et la valeur d'usage", "Mesurer la moins-value d'une cession", "Répondre au directeur, chiffre à l'appui"],
+  objectifs: ["Comparer la valeur vénale et la valeur d'usage", "Mesurer la moins-value d'une cession", "Répondre au président, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend la première ligne de NOVA, celle du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question du directeur",
+      titre: "La question du président",
       texte: () => [
-        `« Un façonnier nous offre ${eur(OFFRE_DE_RACHAT)} de la première ligne, net de frais. Avec la nouvelle technique, c'est plus que le marché. Dois-je vendre ? Et que doit faire le comptable au 31 décembre si nous la gardons ? » Le directeur général`,
+        `« Un façonnier nous offre ${eur(OFFRE_DE_RACHAT)} de la première ligne, net de frais. Avec la nouvelle technique, c'est plus que le marché. Dois-je vendre ? Et que doit faire le comptable au 31 décembre si nous la gardons ? » Le président`,
         "Pas de cours cette fois : la valeur actuelle, vous savez la calculer.",
       ],
       tableau: () => {
@@ -76,8 +76,8 @@ export const VENDRE_LA_LIGNE_OU_LA_GARDER: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au directeur",
-      question: () => "Que répondez-vous au directeur général ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = vendreOuGarder();
         return [

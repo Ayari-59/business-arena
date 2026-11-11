@@ -1,3 +1,4 @@
+import { taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { panierDuMois } from "./vente-et-caisse";
 import { valoriserLeStock, type FicheDeStock, type MethodeDeStock } from "./stock";
 import type { CodeDeReference, FicheDeLaBoutique } from "./maille-et-co";
@@ -151,6 +152,9 @@ export function demarqueDeJanvier(f: FicheDeLaBoutique) {
   const chiffreDAffaires = auCentime(somme(f.gamme.map((r) => r.ventesDuMois * r.prixHt)));
   const auPrixDeVente = auCentime(somme(references.map((r) => r.auPrixDeVente)));
   const auCoutDAchat = auCentime(somme(references.map((r) => r.auCoutDAchat)));
+  // La marge d'un passage au centime, le quotient à deux décimales, puis à l'unité au-dessus, comme sur la copie.
+  const margeDUnPassage = auCentime(panierDuMois(f).marge);
+  const passagesCalcules = auCentime(auCoutDAchat / margeDUnPassage);
   return {
     references,
     articles: somme(references.map((r) => r.inconnue)),
@@ -164,8 +168,9 @@ export function demarqueDeJanvier(f: FicheDeLaBoutique) {
     /** Ce que la démarque inconnue d'un mois comme janvier coûte sur l'année, au coût d'achat. */
     parAn: auCentime(auCoutDAchat * 12),
     /** Les passages en caisse qu'il faut, à la marge d'un passage de janvier, pour payer la démarque du mois. */
-    passagesPourLaPayer: plafond(auCoutDAchat / panierDuMois(f).marge),
-    margeDUnPassage: panierDuMois(f).marge,
+    passagesCalcules,
+    passagesPourLaPayer: plafond(passagesCalcules),
+    margeDUnPassage,
   };
 }
 
@@ -377,7 +382,8 @@ export function degatDesEaux(f: FicheDeLaBoutique) {
   // La fermeture : le chiffre d'affaires de 2 jours d'un mois comme janvier, et sa marge sur coût variable.
   const chiffreDAffaires = somme(f.gamme.map((r) => r.ventesDuMois * r.prixHt));
   const coutsVariables = somme(f.gamme.map((r) => r.ventesDuMois * (r.coutDAchat + r.autresCoutsVariables)));
-  const tauxDeMarge = (chiffreDAffaires - coutsVariables) / chiffreDAffaires;
+  // Le taux de la copie : arrondi à deux décimales, la marge perdue part de lui.
+  const tauxDeMarge = taux2(chiffreDAffaires - coutsVariables, chiffreDAffaires) / 100;
   const caPerdu = auCentime((chiffreDAffaires / f.joursDuMois) * d.joursDeFermeture);
   const margePerdue = auCentime(caPerdu * tauxDeMarge);
   const fermeturesParAn = somme(RISQUES.filter((r) => r.nom.startsWith("Cambriolage") || r.nom.startsWith("Dégât")).map((r) => r.frequenceParAn));

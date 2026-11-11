@@ -1,3 +1,4 @@
+import { nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_REIMPLANTATION, reimplantationDeLaBoutique, tableauDesTaches } from "../../chapitres/reimplanter-avant-les-soldes";
 import { RETARD_DU_RAYONNAGE, TACHES, heureDe, planningDeGantt, reseauAvecLaDuree } from "../../monde/reimplantation";
@@ -12,9 +13,13 @@ import type { Situation } from "../types";
  * (tâche B) 30 minutes de plus (`RETARD_DU_RAYONNAGE`). L'élève refait le réseau : la nouvelle fin, le
  * retard à l'ouverture, ce que devient la marge de la vitrine ; puis il choisit la réponse. Le piège :
  * renforcer une tâche qui n'est pas critique, ou croire que le retard se rattrape ailleurs.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les minutes du réseau sont des quantités, entières, déclarées
+ * comme telles.
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const mn = (n: number) => `${qte(n)} min`;
 const duree = (code: string) => TACHES.find((t) => t.code === code)!.duree;
 
@@ -73,10 +78,10 @@ export const LE_RAYONNAGE_QUI_RESISTE: Situation = {
         const x = rayonnageQuiResiste(c);
         const i = x.r.lignes.find((l) => l.code === "I")!;
         return [
-          { libelle: "Début au plus tôt du remontage (min)", attendu: x.d.debutAuPlusTot, calcul: `${mn(duree("A"))} (fin de la tâche A) + ${mn(x.duree)} (B) = ${mn(x.d.debutAuPlusTot)}, plus tard que la fin du nettoyage` },
-          { libelle: "Fin de la réimplantation (min)", attendu: x.gantt.fin, calcul: `${mn(x.d.debutAuPlusTot)} + ${mn(duree("D"))} (D) + ${mn(duree("F"))} (F) + ${mn(duree("I"))} (I) = ${mn(x.gantt.fin)}, soit ${heureDe(x.gantt.fin)}` },
-          { libelle: "Retard à l'ouverture (min)", attendu: x.retard, calcul: `${mn(x.gantt.fin)} − ${mn(x.minutesAvantLOuverture)} = ${mn(x.retard)}` },
-          { libelle: "Marge totale de la vitrine (min)", attendu: x.h.margeTotale, calcul: `${mn(i.debutAuPlusTard)} (début au plus tard du contrôle) − ${mn(duree("H"))} − ${mn(x.h.debutAuPlusTot)} = ${mn(x.h.margeTotale)}` },
+          { libelle: "Début au plus tôt du remontage (min)", nature: "quantite", attendu: x.d.debutAuPlusTot, calcul: `${mn(duree("A"))} (fin de la tâche A) + ${mn(x.duree)} (B) = ${mn(x.d.debutAuPlusTot)}, plus tard que la fin du nettoyage` },
+          { libelle: "Fin de la réimplantation (min)", nature: "quantite", attendu: x.gantt.fin, calcul: `${mn(x.d.debutAuPlusTot)} + ${mn(duree("D"))} (D) + ${mn(duree("F"))} (F) + ${mn(duree("I"))} (I) = ${mn(x.gantt.fin)}, soit ${heureDe(x.gantt.fin)}` },
+          { libelle: "Retard à l'ouverture (min)", nature: "quantite", attendu: x.retard, calcul: `${mn(x.gantt.fin)} − ${mn(x.minutesAvantLOuverture)} = ${mn(x.retard)}` },
+          { libelle: "Marge totale de la vitrine (min)", nature: "quantite", attendu: x.h.margeTotale, calcul: `${mn(i.debutAuPlusTard)} (début au plus tard du contrôle) − ${mn(duree("H"))} − ${mn(x.h.debutAuPlusTot)} = ${mn(x.h.margeTotale)}` },
         ];
       },
       explication: (c) => {

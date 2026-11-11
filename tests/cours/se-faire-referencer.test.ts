@@ -22,7 +22,6 @@ import { NOVA, VIDE, attendus, etape, gardeDuCas, gardeDuCurseur, gardesDeTexte,
  */
 
 const centime = (x: number) => Math.round(x * 100) / 100 + 0;
-const dixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const ch = SE_FAIRE_REFERENCER;
 const x = referencement(NOVA);
 
@@ -57,15 +56,15 @@ describe("se faire référencer : le chapitre", () => {
 
   it("le prix public, la marge, le taux de marque et le coefficient du distributeur", () => {
     expect([PRIX_HT, MARGE]).toEqual([70, 11]);
-    expect(attendus(ch, "le-prix-public")).toEqual([70, 11, dixieme((11 / 70) * 100), centime(84 / 59)]);
-    expect(attendus(ch, "le-prix-public")).toEqual([70, 11, 15.7, 1.42]);
+    expect(attendus(ch, "le-prix-public")).toEqual([70, 11, centime((11 / 70) * 100), centime(84 / 59)]);
+    expect(attendus(ch, "le-prix-public")).toEqual([70, 11, 15.71, 1.42]);
     expect(juste(ch, "qui-decide")).toEqual(["Vous le faites valoir à la centrale"]);
   });
 
   it("la rentabilité du linéaire : 220 € par magasin, 440 € le mètre, un indice de 0,73", () => {
     const parMagasin = 20 * MARGE;
-    expect(attendus(ch, "la-rentabilite-du-lineaire")).toEqual([parMagasin, parMagasin / 0.5, 12.5, dixieme((parMagasin / 2_400) * 100), centime(parMagasin / 2_400 / (0.5 / 4))]);
-    expect(attendus(ch, "la-rentabilite-du-lineaire")).toEqual([220, 440, 12.5, 9.2, 0.73]);
+    expect(attendus(ch, "la-rentabilite-du-lineaire")).toEqual([parMagasin, parMagasin / 0.5, 12.5, centime((parMagasin / 2_400) * 100), centime(centime((parMagasin / 2_400) * 100) / 12.5)]);
+    expect(attendus(ch, "la-rentabilite-du-lineaire")).toEqual([220, 440, 12.5, 9.17, 0.73]);
   });
 
   it("la remise au curseur : 4 € par enceinte portent le mètre à 600 € ; la même chose en marge arrière, 15 360 € par an", () => {
@@ -103,7 +102,7 @@ describe("se faire référencer : le chapitre", () => {
     const seuilHt = centime(58 - coop);
     const seuilTtc = centime(seuilHt * 1.2);
     expect([coop, seuilHt, seuilTtc]).toEqual([1.36, 56.64, 67.97]);
-    expect(attendus(ch, "le-seuil-de-revente-a-perte")).toEqual([58, coop, seuilHt, seuilTtc, dixieme(((84 - seuilTtc) / 84) * 100)]);
+    expect(attendus(ch, "le-seuil-de-revente-a-perte")).toEqual([58, coop, seuilHt, seuilTtc, centime(((84 - seuilTtc) / 84) * 100)]);
     expect(juste(ch, "la-promotion-de-la-rentree")[0]).toMatch(/^Non : ce serait revendre sous 67,97/);
   });
 

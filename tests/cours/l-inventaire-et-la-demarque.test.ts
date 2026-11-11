@@ -84,9 +84,11 @@ describe("l'inventaire et la démarque : le chapitre", () => {
     const pv = 9 * 55 + 2 * 135 + 8 * 35 + 5 * 25;
     const cout = 9 * 25 + 2 * 56 + 8 * 14 + 5 * 9.5;
     expect([pv, cout]).toEqual([1_170, 496.5]);
-    expect(attendus(ch, "la-demarque-de-janvier")).toEqual([24, pv, 1.3]);
-    expect(attendus(ch, "ce-que-coute-la-demarque")).toEqual([cout, cout * 12, Math.ceil(cout / 41.44)]);
-    expect(Math.ceil(cout / 41.44)).toBe(12);
+    expect(attendus(ch, "la-demarque-de-janvier")).toEqual([24, pv, centime((pv / 87_450) * 100)]);
+    expect(centime((pv / 87_450) * 100)).toBe(1.34);
+    // Le quotient à deux décimales (11,98), puis à l'unité au-dessus.
+    expect(attendus(ch, "ce-que-coute-la-demarque")).toEqual([cout, cout * 12, Math.ceil(centime(cout / 41.44))]);
+    expect([centime(cout / 41.44), Math.ceil(centime(cout / 41.44))]).toEqual([11.98, 12]);
   });
 
   it("le laboratoire de la prévention : les portiques seuls, et une seule combinaison relève le défi", () => {
@@ -138,8 +140,10 @@ describe("le dégât des eaux dans la réserve : le cas", () => {
     const ca = 87_450;
     const marge = ca - 43_200;
     const perdu = (ca / 30) * 2;
-    expect(attendus(s, "la-fermeture")).toEqual([perdu, centime((perdu * marge) / ca), centime(0.15 * centime((perdu * marge) / ca))]);
-    expect([perdu, centime((perdu * marge) / ca)]).toEqual([5_830, 2_950]);
+    // Le taux de marge de la copie, à deux décimales (50,60 %) : la marge perdue part de lui.
+    const taux = centime((marge / ca) * 100) / 100;
+    expect(attendus(s, "la-fermeture")).toEqual([perdu, centime(perdu * taux), centime(0.15 * centime(perdu * taux))]);
+    expect([perdu, centime(perdu * taux)]).toEqual([5_830, 2_949.98]);
     expect(juste(s, "reponse")).toEqual(["2 370 € remboursés, sans la garantie".replace(" ", " ").replace("€", "€")].map(() => juste(s, "reponse")[0]!));
     expect(juste(s, "reponse")[0]).toMatch(/sans la garantie$/);
   });

@@ -1,11 +1,11 @@
 import { ATELIERS } from "./ateliers";
-import { CHAPITRES } from "./cours/registre";
 import { dureeDuChapitre, dureeEnClair } from "./cours/duree";
-import { SITUATIONS } from "./cours/situations";
+import { CHIFFRES_DU_COURS, SITUATIONS_PROPOSEES } from "./chiffres-du-cours";
+import { CHAPITRES } from "./cours/registre";
+import { coursDeLaFormation } from "./couverture";
+import { CHAPITRES_PROPOSES, FORMATIONS_PROPOSEES } from "./formations-proposees";
 import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "./episodes/familles";
 import { DANS_LE_SUPERIEUR } from "./episodes/public-des-episodes";
-import { coursDeLaFormation } from "./couverture";
-import { FORMATIONS } from "./formations";
 
 /**
  * COURS, CAS PRATIQUES, ARÈNE, ÉPISODES : COMMENT ILS S'ENCHAÎNENT.
@@ -46,6 +46,8 @@ export interface Brique {
 }
 
 export function briques(): readonly Brique[] {
+  // Les nombres et les durées de ce qui est proposé (config/chiffres-du-cours.ts).
+  const n = CHIFFRES_DU_COURS;
   return [
     {
       code: "cours",
@@ -53,8 +55,8 @@ export function briques(): readonly Brique[] {
       nom: "Le cours",
       texte:
         "Une notion à la fois, guidée pas à pas, sur les chiffres d'une entreprise de l'arène : l'élève passe les écritures et fait les calculs, la correction explique chaque étape.",
-      forme: `Seul, ${etendue(CHAPITRES.map(dureeDuChapitre))}`,
-      compte: `${CHAPITRES.length} chapitres`,
+      forme: `Seul, ${etendue(CHAPITRES_PROPOSES.map(dureeDuChapitre))}`,
+      compte: `${n.chapitres} chapitres`,
       lien: { href: "/cours#catalogue", libelle: "Le catalogue par thème" },
       essai: { href: `/cours/${CHAPITRES.find((c) => c.libre)!.code}`, libelle: "Le chapitre libre" },
     },
@@ -64,8 +66,8 @@ export function briques(): readonly Brique[] {
       nom: "Les cas pratiques",
       texte:
         "Une demande, des documents, aucun cours : l'élève enchaîne seul les calculs qu'il a appris, dans un cas neuf, et rend une réponse chiffrée.",
-      forme: `Seul, ${etendue(SITUATIONS.map(dureeDuChapitre))}`,
-      compte: `${SITUATIONS.length} cas pratiques`,
+      forme: `Seul, ${etendue(SITUATIONS_PROPOSEES.map(dureeDuChapitre))}`,
+      compte: `${n.casPratiques} cas pratiques`,
       lien: { href: "/cours#catalogue", libelle: "Dans chaque thème du catalogue" },
     },
     {
@@ -105,17 +107,16 @@ export const ENCHAINEMENT: readonly string[] = [
  * LE COURS EN CHIFFRES, POUR LES PAGES DES PUBLICS (audit produit du 28 octobre 2026, P1-2).
  *
  * Le cours était le plus gros contenu du site et /enseignants, /ecoles, /fonctionnalites n'en
- * disaient pas un mot. Chaque nombre se compte ici dans son registre : les chapitres, ceux qui
- * ont leur laboratoire (une étape `simulation`, leviers et curseurs), les cas pratiques, les
- * formations que le cours sert (une option comptant pour son diplôme), et le chapitre libre.
+ * disaient pas un mot. Les nombres comptent ce qui est proposé (audit du 10 novembre 2026 :
+ * 255 chapitres, 262 cas et 18 formations annoncés pour 235, 242 et 12). Les chapitres, les
+ * laboratoires et les cas viennent de config/chiffres-du-cours.ts ; les formations que le cours
+ * sert (une option comptant pour son diplôme) se comptent ici, et seulement ici.
  */
 export function leCoursEnChiffres() {
   const libre = CHAPITRES.find((c) => c.libre)!;
   return {
-    chapitres: CHAPITRES.length,
-    avecLaboratoire: CHAPITRES.filter((c) => c.etapes.some((e) => e.type === "simulation")).length,
-    casPratiques: SITUATIONS.length,
-    formations: FORMATIONS.filter((f) => !f.optionDe && coursDeLaFormation(f.code).length > 0).length,
+    ...CHIFFRES_DU_COURS,
+    formations: FORMATIONS_PROPOSEES.filter((f) => !f.optionDe && coursDeLaFormation(f.code).length > 0).length,
     libre: { href: `/cours/${libre.code}`, titre: libre.titre },
   };
 }

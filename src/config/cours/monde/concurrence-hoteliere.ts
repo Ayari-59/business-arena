@@ -1,3 +1,4 @@
+import { arrondi2 as auCentime, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { anneeDeLHotel, type AnneeDeLHotel } from "./hotel";
 import type { FicheDeLHotel } from "./l-escale";
 
@@ -7,7 +8,7 @@ import type { FicheDeLHotel } from "./l-escale";
  * Les trois indicateurs que l'hôtelier lit ensemble, pour L'ESCALE et pour les hôtels de la ville
  * que sa fiche pose comme comparaison :
  *
- *   · le taux d'occupation = chambres vendues ÷ chambres disponibles × 100, au dixième ;
+ *   · le taux d'occupation = chambres vendues ÷ chambres disponibles × 100, à deux décimales ;
  *   · le prix moyen par chambre louée = chiffre d'affaires ÷ chambres vendues, au centime ;
  *   · le revenu par chambre disponible (RevPAR) = chiffre d'affaires ÷ chambres disponibles, au centime.
  *
@@ -45,8 +46,6 @@ export interface AnneeDUnHotel {
   annee: IndicateursDHotel;
 }
 
-const auCentime = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** Les trois indicateurs, à partir des chambres disponibles, des chambres vendues et du chiffre d'affaires. */
 export function indicateurs(disponibles: number, vendues: number, chiffreDAffaires: number): IndicateursDHotel {
@@ -54,7 +53,7 @@ export function indicateurs(disponibles: number, vendues: number, chiffreDAffair
     disponibles,
     vendues,
     chiffreDAffaires,
-    occupation: auDixieme((vendues / disponibles) * 100),
+    occupation: taux2(vendues, disponibles),
     prixMoyen: vendues > 0 ? auCentime(chiffreDAffaires / vendues) : 0,
     revpar: auCentime(chiffreDAffaires / disponibles),
   };

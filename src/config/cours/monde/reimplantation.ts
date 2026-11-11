@@ -1,3 +1,4 @@
+import { arrondi2, quotient2, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { assortiment, equipeDuMois, referenceDe, stockDisponible } from "./boutique";
 import type { CodeDeRayon, CodeDeReference, FicheDeLaBoutique } from "./maille-et-co";
 
@@ -23,7 +24,7 @@ import type { CodeDeRayon, CodeDeReference, FicheDeLaBoutique } from "./maille-e
  *    début au plus tard).
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 const plancher = (x: number) => Math.floor(x + 1e-9);
 
@@ -57,6 +58,10 @@ export function marchandisage(f: FicheDeLaBoutique) {
   const references = a.references.map((r) => {
     const lineaire = LINEAIRE[r.code];
     const partDuLineaire = lineaire / lineaireTotal;
+    // Les parts de la copie, à deux décimales, et les indices tirés d'elles, au centième.
+    const partDuLineaireEnPourcent = taux2(lineaire, lineaireTotal);
+    const partDuChiffreEnPourcent = arrondi2(r.partDuChiffreDAffaires * 100);
+    const partDeLaMargeEnPourcent = arrondi2(r.partDeLaMarge * 100);
     return {
       code: r.code,
       nom: r.nom,
@@ -68,8 +73,11 @@ export function marchandisage(f: FicheDeLaBoutique) {
       partDuLineaire,
       partDuChiffreDAffaires: r.partDuChiffreDAffaires,
       partDeLaMarge: r.partDeLaMarge,
-      indiceDeSensibilite: r.partDuChiffreDAffaires / partDuLineaire,
-      indiceDeRentabilite: r.partDeLaMarge / partDuLineaire,
+      partDuLineaireEnPourcent,
+      partDuChiffreEnPourcent,
+      partDeLaMargeEnPourcent,
+      indiceDeSensibilite: quotient2(partDuChiffreEnPourcent, partDuLineaireEnPourcent),
+      indiceDeRentabilite: quotient2(partDeLaMargeEnPourcent, partDuLineaireEnPourcent),
       margeParMetre: auCentime(r.marge / lineaire),
       chiffreParMetre: auCentime(r.chiffreDAffaires / lineaire),
     };

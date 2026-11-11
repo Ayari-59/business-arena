@@ -347,9 +347,10 @@ describe("remises et conditions : le chapitre, chez ATLAS CONSEIL du monde du co
     expect(attendus(ch, "escompte-maximal")).toEqual({
       "Coût du découvert sur 50 jours (%)": 1.25,
       "Escompte le plus fort (%)": 1.23,
-      "Escompte le plus fort sur la facture": centime(nc * t),
+      "Escompte le plus fort sur la facture": centime((nc * centime(t * 100)) / 100),
     });
-    expect(centime(nc * t)).toBe(375.31);
+    // Le montant part du taux de la copie, 1,23 % : un peu sous le plus fort escompte (375,31 € au taux exact).
+    expect([centime((nc * centime(t * 100)) / 100), centime(nc * t)]).toEqual([373.92, 375.31]);
     // À cet escompte, le taux annuel vaut le découvert, et l'escompte vaut le découvert qu'il évite.
     expect((t / (1 - t)) * (360 / avance)).toBeCloseTo(f.tauxDeFinancement, 12);
     expect(nc * t).toBeCloseTo(((nc - nc * t) * f.tauxDeFinancement * avance) / 360, 9);

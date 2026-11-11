@@ -59,13 +59,13 @@ describe("approvisionner au moindre coût : le chapitre", () => {
 });
 
 describe("le modèle de Wilson, refait à la main", () => {
-  it("12 commandes par an : 2 400 € de passation, 26 000 ÷ 24 × 2,60 = 2 816,67 € de possession, 5 216,67 €", () => {
+  it("12 commandes par an de 2 167 jeux (26 000 ÷ 12 = 2 166,67, à l'unité supérieure) : 2 400 € de passation, 1 083,50 × 2,60 = 2 817,10 € de possession, 5 217,10 €", () => {
     expect(consommationDeNPlus1()).toEqual({ trimestres: [5_800, 7_000, 6_200, 7_000], annee: 26_000 });
     expect(coutDePossession()).toBe(2.6);
     const a = coutPourNCommandes(12);
-    expect([a.passation, a.possession, a.total]).toEqual([2_400, 2_816.67, 5_216.67]);
-    expect(Math.round((26_000 / 24) * 2.6 * 100) / 100).toBe(2_816.67);
-    expect(attendus(ch, "le-cout-d-aujourd-hui")).toEqual([2.6, 26_000 / 12, 2_400, 2_816.67, 5_216.67]);
+    expect([a.quantite, a.commandes, a.passation, a.possession, a.total]).toEqual([2_167, 12, 2_400, 2_817.1, 5_217.1]);
+    expect(Math.round((2_167 / 2) * 2.6 * 100) / 100).toBe(2_817.1);
+    expect(attendus(ch, "le-cout-d-aujourd-hui")).toEqual([2.6, 2_167, 2_400, 2_817.1, 5_217.1]);
   });
 
   it("Q* = √(2 × 26 000 × 200 ÷ 2,60) = 2 000 jeux, 13 commandes, une toutes les 4 semaines, 5 200 €", () => {
@@ -82,15 +82,17 @@ describe("le modèle de Wilson, refait à la main", () => {
 });
 
 describe("le tarif dégressif, refait à la main", () => {
-  it("les trois tranches : 577 200 € à 2 000 jeux, 571 631,40 € à 2 600 (la borne), 572 562,75 € à 6 500 (la borne)", () => {
+  it("les trois tranches : 577 200 € à 2 000 jeux, 571 634 € à 2 600 (la borne), 572 572,50 € à 6 500 (la borne), cs au centime", () => {
     const t = tableauDesTranches();
     expect(t.lignes.map((l) => [l.prix, l.dedans, l.retenue, l.achat, l.total, l.totalDApprovisionnement])).toEqual([
       [22, true, 2_000, 572_000, 5_200, 577_200],
-      [21.78, false, 2_600, 566_280, 5_351.4, 571_631.4],
-      [21.67, false, 6_500, 563_420, 9_142.75, 572_562.75],
+      [21.78, false, 2_600, 566_280, 5_354, 571_634],
+      [21.67, false, 6_500, 563_420, 9_152.5, 572_572.5],
     ]);
-    expect(26_000 * 21.78 + 10 * 200 + 1_300 * (0.1 * 21.78 + 0.4)).toBeCloseTo(571_631.4, 6);
-    expect(t.lignes[1]!.qEtoile).toBeCloseTo(Math.sqrt((2 * 26_000 * 200) / 2.578), 9);
+    // cs au centime : 10 % × 21,78 € + 0,40 € = 2,578 €, soit 2,58 €.
+    expect(26_000 * 21.78 + 10 * 200 + 1_300 * 2.58).toBeCloseTo(571_634, 6);
+    expect(t.lignes[1]!.qEtoileExacte).toBe(Math.round(Math.sqrt((2 * 26_000 * 200) / 2.58) * 100) / 100);
+    expect(t.lignes[1]!.qEtoile).toBe(Math.round(Math.sqrt((2 * 26_000 * 200) / 2.58)));
     expect(t.lignes[1]!.qEtoile).toBeLessThan(2_600);
     expect(t.meilleure.retenue).toBe(2_600);
     expect(incoherencesDuTableau(etape(ch, "le-tableau-des-tranches", "a-completer").grille(NOVA))).toEqual([]);
@@ -98,8 +100,8 @@ describe("le tarif dégressif, refait à la main", () => {
   });
 
   it("le laboratoire du tarif : seule la quantité de 2 600 jeux relève le défi, et le départ (2 000 jeux) ne le relève pas", () => {
-    expect(coutTotalDApprovisionnement(2_600).totalDApprovisionnement).toBe(571_631.4);
-    expect(coutTotalDApprovisionnement(2_700).totalDApprovisionnement).toBeGreaterThan(571_631.4);
+    expect(coutTotalDApprovisionnement(2_600).totalDApprovisionnement).toBe(571_634);
+    expect(coutTotalDApprovisionnement(2_700).totalDApprovisionnement).toBeGreaterThan(571_634);
     const e = gardeDuLaboratoire(ch, "le-laboratoire-du-tarif");
     expect(e.defi(NOVA).solution).toEqual({ quantite: 2_600 });
   });
@@ -114,24 +116,24 @@ describe("l'avenir aléatoire, refait à la main", () => {
     expect(juste(ch, "predire-le-risque")).toEqual(["Une commande sur deux"]);
   });
 
-  it("le stock de sécurité : 1,645 × 50 = 82,25, soit 83 jeux ; point de commande 683 ; 83 × 2,578 = 213,97 € par an", () => {
+  it("le stock de sécurité : 1,645 × 50 = 82,25, soit 83 jeux ; point de commande 683 ; 83 × 2,58 = 214,14 € par an", () => {
     expect(securiteAuRisque()).toBe(83);
     expect(risqueDeRupture(82)).toBeGreaterThan(0.05);
     expect(risqueDeRupture(83)).toBeLessThan(0.05);
     const s = securiteParLaTable();
-    expect([s.brut, s.securite, s.pointDeCommande, s.coutAnnuel]).toEqual([82.25, 83, 683, 213.97]);
-    expect(attendus(ch, "la-securite-par-la-table")).toEqual([83, 683, 213.97]);
+    expect([s.brut, s.securite, s.pointDeCommande, s.coutAnnuel]).toEqual([82.25, 83, 683, 214.14]);
+    expect(attendus(ch, "la-securite-par-la-table")).toEqual([83, 683, 214.14]);
     const e = gardeDuLaboratoire(ch, "le-laboratoire-du-stock-de-securite");
     expect(e.defi(NOVA).solution).toEqual({ securite: 83 });
   });
 
-  it("l'expert : les 3 jours (300 jeux, t = 6) coûtent 773,40 € ; à 99 %, 2,33 × 50 = 116,5, soit 117 jeux, 87,66 € de plus, 0,1 rupture par an", () => {
+  it("l'expert : les 3 jours (300 jeux, t = 6) coûtent 774 € ; à 99 %, 2,33 × 50 = 116,5, soit 117 jeux, 87,72 € de plus, 0,1 rupture par an", () => {
     const t = troisJoursFaceALaLoi();
-    expect([t.securite, t.z, t.coutAnnuel]).toEqual([300, 6, 773.4]);
+    expect([t.securite, t.z, t.coutAnnuel]).toEqual([300, 6, 774]);
     expect(t.risque).toBeLessThan(1e-8);
     expect(juste(ch, "trois-jours-ou-la-loi")).toEqual(["Ils ne couvrent pas le même aléa"]);
     const [securite, plus, ruptures] = attendus(ch, "un-service-a-99");
-    expect([securite, plus]).toEqual([117, 87.66]);
+    expect([securite, plus]).toEqual([117, 87.72]);
     expect(ruptures).toBeCloseTo(0.1, 9);
   });
 });
@@ -142,13 +144,13 @@ describe("le cas dédié : deux commandes par an", () => {
     gardeDuCas(DEUX_COMMANDES_PAR_AN, ch);
   });
 
-  it("à 21,56 €, cs = 2,556 € ; 560 560 € d'achat, 2 × 200 + 6 500 × 2,556 = 17 014 € de gestion, 577 574 € : 5 942,60 € de plus", () => {
+  it("à 21,56 €, cs = 2,556 €, soit 2,56 € au centime ; 560 560 € d'achat, 2 × 200 + 6 500 × 2,56 = 17 040 € de gestion, 577 600 € : 5 966 € de plus", () => {
     expect(TARIF_AVEC_L_OFFRE.at(-1)).toEqual({ des: 13_000, prix: 21.56, remise: 0.02 });
     const x = deuxCommandes();
-    expect([x.offre.cs, x.offre.achat, x.offre.total, x.offre.totalDApprovisionnement]).toEqual([2.556, 560_560, 17_014, 577_574]);
-    expect([x.remiseGagnee, x.gestionEnPlus, x.ecart]).toEqual([5_720, 11_662.6, 5_942.6]);
-    expect(5_720 - 11_662.6).toBeCloseTo(-5_942.6, 6);
-    expect(attendus(DEUX_COMMANDES_PAR_AN, "le-cout-de-l-offre")).toEqual([2.556, 560_560, 17_014, 577_574]);
-    expect(juste(DEUX_COMMANDES_PAR_AN, "reponse")[0]!.replace(/\s/g, " ")).toBe("Refuser : l'offre coûte 5 942,60 € de plus par an");
+    expect([x.offre.cs, x.offre.achat, x.offre.total, x.offre.totalDApprovisionnement]).toEqual([2.56, 560_560, 17_040, 577_600]);
+    expect([x.remiseGagnee, x.gestionEnPlus, x.ecart]).toEqual([5_720, 11_686, 5_966]);
+    expect(5_720 - 11_686).toBeCloseTo(-5_966, 6);
+    expect(attendus(DEUX_COMMANDES_PAR_AN, "le-cout-de-l-offre")).toEqual([2.56, 560_560, 17_040, 577_600]);
+    expect(juste(DEUX_COMMANDES_PAR_AN, "reponse")[0]!.replace(/\s/g, " ")).toBe("Refuser : l'offre coûte 5 966 € de plus par an");
   });
 });

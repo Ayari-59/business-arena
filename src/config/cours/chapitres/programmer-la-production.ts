@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import {
   BANC_DE_MESURE,
@@ -43,6 +43,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : les-sommets, la-marge-du-mois, les-dates-au-plus-tard, les-marges-libres ;
  *   · expert : une-heure-de-banc-de-plus (la valeur marginale d'une ressource), le-laboratoire-du-
  *     lancement (deux chemins critiques au moindre coût) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures de banc sont des grandeurs au centième (à 0,05
+ * près, avant) ; les quantités du programme sont des quantités.
  */
 
 /** Le chapitre se joue chez NOVA : sa gamme, son banc et le lancement de sa Go sont ceux du monde du cours. */
@@ -54,8 +58,7 @@ export const LEVIERS_DU_PROGRAMME = {
   studio: { min: 0, max: LA_STUDIO.demandeDuMoisDePointe, pas: 20, depart: LA_STUDIO.demandeDuMoisDePointe },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const semaines = (n: number) => `${qte(n)} ${Math.abs(n) >= 2 ? "semaines" : "semaine"}`;
 const heures = (n: number) => `${qte(n)} ${Math.abs(n) >= 2 ? "heures" : "heure"}`;
 const liste = (xs: readonly string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} et ${xs.at(-1)}`);
@@ -272,8 +275,8 @@ export const PROGRAMMER_LA_PRODUCTION: Chapitre = {
       champs: () => {
         const { fr } = programmation();
         return [
-          { libelle: "Heures de banc demandées", attendu: fr.heuresDuBanc, tolerance: 0.05, calcul: `(${qte(fr.one * 3)} + ${qte(fr.studio * 15)}) minutes ÷ 60 = ${qte(fr.heuresDuBanc)} heures` },
-          { libelle: "Heures qui manquent au banc", attendu: fr.manque, tolerance: 0.05, calcul: `${qte(fr.heuresDuBanc)} − ${qte(BANC_DE_MESURE.heuresParMois)} = ${qte(fr.manque)} heures` },
+          { libelle: "Heures de banc demandées", nature: "grandeur", attendu: fr.heuresDuBanc, calcul: `(${qte(fr.one * 3)} + ${qte(fr.studio * 15)}) minutes ÷ 60 = ${qte(fr.heuresDuBanc)} heures` },
+          { libelle: "Heures qui manquent au banc", nature: "grandeur", attendu: fr.manque, calcul: `${qte(fr.heuresDuBanc)} − ${qte(BANC_DE_MESURE.heuresParMois)} = ${qte(fr.manque)} heures` },
         ];
       },
       explication: () => {
@@ -377,8 +380,8 @@ export const PROGRAMMER_LA_PRODUCTION: Chapitre = {
       champs: () => {
         const { o, hmK, bancK } = programmation();
         return [
-          { libelle: "Studio (y)", attendu: o.optimal.y, calcul: `(${qte(6 * bancK.b)} − ${qte(hmK.b)}) y = ${qte(6 * bancK.c)} − ${qte(hmK.c)}, soit y = ${qte(6 * bancK.c - hmK.c)} ÷ ${qte(6 * bancK.b - hmK.b)} = ${qte(o.optimal.y)}` },
-          { libelle: "One (x)", attendu: o.optimal.x, calcul: `x = (${qte(hmK.c)} − ${qte(hmK.b)} × ${qte(o.optimal.y)}) ÷ ${qte(hmK.a)} = ${qte(o.optimal.x)}` },
+          { libelle: "Studio (y)", nature: "quantite", attendu: o.optimal.y, calcul: `(${qte(6 * bancK.b)} − ${qte(hmK.b)}) y = ${qte(6 * bancK.c)} − ${qte(hmK.c)}, soit y = ${qte(6 * bancK.c - hmK.c)} ÷ ${qte(6 * bancK.b - hmK.b)} = ${qte(o.optimal.y)}` },
+          { libelle: "One (x)", nature: "quantite", attendu: o.optimal.x, calcul: `x = (${qte(hmK.c)} − ${qte(hmK.b)} × ${qte(o.optimal.y)}) ÷ ${qte(hmK.a)} = ${qte(o.optimal.x)}` },
         ];
       },
       explication: () => {
@@ -413,7 +416,7 @@ export const PROGRAMMER_LA_PRODUCTION: Chapitre = {
       notions: ["contribution_margin"],
       question: () => {
         const { f, hmK, bancK } = programmation();
-        return `Les droites ${qte(f.marge.x)} x + ${qte(f.marge.y)} y = k, une par niveau de marge, sont parallèles, de pente ${qte(penteDe(f.marge.x, f.marge.y), 3)}. La droite des heures-machine a une pente de ${qte(penteDe(hmK.a, hmK.b), 3)}, celle du banc de ${qte(penteDe(bancK.a, bancK.b), 3)}. Pourquoi l'optimum est-il au croisement des deux ?`;
+        return `Les droites ${qte(f.marge.x)} x + ${qte(f.marge.y)} y = k, une par niveau de marge, sont parallèles, de pente ${qte(penteDe(f.marge.x, f.marge.y))}. La droite des heures-machine a une pente de ${qte(penteDe(hmK.a, hmK.b))}, celle du banc de ${qte(penteDe(bancK.a, bancK.b))}. Pourquoi l'optimum est-il au croisement des deux ?`;
       },
       options: () => [
         { texte: "La pente de la marge est entre les deux", juste: true, retour: "Oui. En poussant la droite de marge loin de l'origine, elle quitte le domaine par le sommet où ses deux voisines l'encadrent. Une marge de la Studio plus forte la rendrait plus plate que le banc : l'optimum glisserait vers plus de Studio." },
@@ -459,8 +462,8 @@ export const PROGRAMMER_LA_PRODUCTION: Chapitre = {
         const { banc, hmK } = programmation();
         const p = banc.plus.optimal;
         return [
-          { libelle: "Studio (y)", attendu: p.y, calcul: `y = (6 × ${qte(banc.plus.forme.leviers.heuresDuBanc)} − ${qte(hmK.c)}) ÷ (6 × 0,25 − 0,5) = ${qte(p.y)}` },
-          { libelle: "One (x)", attendu: p.x, calcul: `x = (${qte(hmK.c)} − 0,5 × ${qte(p.y)}) ÷ 0,3 = ${qte(p.x)}` },
+          { libelle: "Studio (y)", nature: "quantite", attendu: p.y, calcul: `y = (6 × ${qte(banc.plus.forme.leviers.heuresDuBanc)} − ${qte(hmK.c)}) ÷ (6 × 0,25 − 0,5) = ${qte(p.y)}` },
+          { libelle: "One (x)", nature: "quantite", attendu: p.x, calcul: `x = (${qte(hmK.c)} − 0,5 × ${qte(p.y)}) ÷ 0,3 = ${qte(p.x)}` },
           { libelle: "Marge gagnée", attendu: banc.valeur, calcul: `${eur(p.marge)} − ${eur(banc.base.optimal.marge)} = ${eur(banc.valeur)}` },
         ];
       },

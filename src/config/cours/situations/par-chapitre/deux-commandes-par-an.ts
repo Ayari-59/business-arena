@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_APPROVISIONNEMENT } from "../../chapitres/approvisionner-au-moindre-cout";
 import { COUT_DE_PASSATION, POSSESSION, PRIX_DU_JEU, TARIF_DEGRESSIF, coutTotalDApprovisionnement, tableauDesTranches, type TrancheDuTarif } from "../../monde/approvisionnement-de-nova";
@@ -16,6 +16,10 @@ import type { Situation } from "../types";
  *
  * HYPOTHÈSE DU CAS : l'offre ajoute une tranche au tarif, 2 % de remise dès 13 000 jeux par commande
  * (OFFRE_DU_COMMERCIAL) ; le reste du tarif ne change pas.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le coût de possession d'un jeu, un montant, se donne au
+ * centime (au millième, avant) ; les quantités et les coûts en repartent.
  */
 
 /** L'offre du commercial : 2 % de remise dès 13 000 jeux par commande. */
@@ -24,9 +28,8 @@ export const OFFRE_DU_COMMERCIAL = { des: 13_000, remise: 0.02 } as const;
 /** Le tarif avec l'offre : une tranche de plus. */
 export const TARIF_AVEC_L_OFFRE: readonly TrancheDuTarif[] = [...TARIF_DEGRESSIF, { des: OFFRE_DU_COMMERCIAL.des, prix: Math.round(PRIX_DU_JEU * (1 - OFFRE_DU_COMMERCIAL.remise) * 100) / 100, remise: OFFRE_DU_COMMERCIAL.remise }];
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (p: number) => `${qte(p * 100, 1)} %`;
+const qte = nombreAuCentieme;
+const pct = (p: number) => pourcent(p * 100);
 
 /** Les chiffres du cas. */
 export function deuxCommandes(_c?: Pick<Cas, "code">) {
@@ -93,9 +96,9 @@ export const DEUX_COMMANDES_PAR_AN: Situation = {
       champs: () => {
         const { offre } = deuxCommandes();
         return [
-          { libelle: "Coût de possession d'un jeu par an", attendu: offre.cs, tolerance: 0.001, calcul: `${pct(POSSESSION.taux)} × ${eur(offre.prix)} + ${eur(POSSESSION.physiqueParJeu)} = ${qte(offre.cs, 3)} €` },
+          { libelle: "Coût de possession d'un jeu par an", attendu: offre.cs, calcul: `${pct(POSSESSION.taux)} × ${eur(offre.prix)} + ${eur(POSSESSION.physiqueParJeu)} = ${eur(offre.cs)}` },
           { libelle: "Achat de l'année", attendu: offre.achat, calcul: `${qte(offre.D)} × ${eur(offre.prix)} = ${eur(offre.achat)}` },
-          { libelle: "Gestion du stock", attendu: offre.total, calcul: `${qte(offre.commandes)} × ${eur(COUT_DE_PASSATION)} + ${qte(offre.stockMoyen)} × ${qte(offre.cs, 3)} = ${eur(offre.total)}` },
+          { libelle: "Gestion du stock", attendu: offre.total, calcul: `${qte(offre.commandes)} × ${eur(COUT_DE_PASSATION)} + ${qte(offre.stockMoyen)} × ${eur(offre.cs)} = ${eur(offre.total)}` },
           { libelle: "Coût total d'approvisionnement", attendu: offre.totalDApprovisionnement, calcul: `${eur(offre.achat)} + ${eur(offre.total)} = ${eur(offre.totalDApprovisionnement)}` },
         ];
       },

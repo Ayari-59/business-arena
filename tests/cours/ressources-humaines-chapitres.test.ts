@@ -247,7 +247,7 @@ describe("les cas pratiques du parcours", () => {
     expect([r.coutDeLaSaison, r.masseAvec, r.tauxAvec, r.ventesNecessaires, r.caNecessaire]).toEqual([
       3 * 2_662.5,
       127_800 + 7_987.5,
-      Math.round((135_787.5 / 1_390_276) * 1000) / 10,
+      Math.round((135_787.5 / 1_390_276) * 10_000) / 100,
       Math.ceil(7_987.5 / 21),
       381 * 59,
     ]);

@@ -1,7 +1,6 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_CLIENT_QUI_PAIE_TARD, clientQuiPaieTard } from "../../chapitres/le-client-qui-paie-tard";
-import { auCentime } from "../../monde/amortissement";
 import { JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DU_TRIMESTRE } from "../../monde/delais-et-tva";
 import { coutDuDecouvert, escompterChaqueTrimestre } from "../../monde/delais";
 import type { Situation } from "../types";
@@ -26,11 +25,14 @@ import type { Situation } from "../types";
  * N + 1 sont une hypothèse de la fiche, pas un budget calculé. Ils dépassent le découvert autorisé de
  * NOVA (5 000 €) : décision du propriétaire (novembre 2026), la banque accorde pour ces périodes un
  * crédit de trésorerie au même taux, 12 % ; le cas les compte ensemble, comme du découvert.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les jours de découvert qui valent l'escompte sont une
+ * grandeur au centième (au dixième près, avant).
  */
 
-const eur = (x: number) => montantEcrit(auCentime(x)).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const ordinal = (n: number) => (n === 1 ? "1er" : `${n}e`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -65,8 +67,8 @@ export function escompteChaqueTrimestre(c: Pick<Cas, "code">) {
     t,
     curseur,
     joursOuLeDecouvertCouteMoins,
-    joursARebours: auCentime(joursQuiValentLEscompte(TRIMESTRE_A_REBOURS)),
-    economie: auCentime(x.escompteDeLAnnee - x.auMieux),
+    joursARebours: arrondi2(joursQuiValentLEscompte(TRIMESTRE_A_REBOURS)),
+    economie: arrondi2(x.escompteDeLAnnee - x.auMieux),
     verdict,
   };
 }
@@ -210,7 +212,7 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
         return [
           { libelle: "Escompte des factures qui couvrent le besoin", montant: e.curseur.escompteDuBesoin },
           { libelle: "Découvert de ces jours", montant: decouvert },
-          { libelle: "Ce que l'escompte coûte de plus", montant: auCentime(e.curseur.escompteDuBesoin - decouvert), fort: true },
+          { libelle: "Ce que l'escompte coûte de plus", montant: arrondi2(e.curseur.escompteDuBesoin - decouvert), fort: true },
         ];
       },
       droites: (c) => {
@@ -237,7 +239,7 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
       notions: ["receivables_financing", "net_treasury"],
       question: (c) => {
         const e = escompteChaqueTrimestre(c);
-        return `Au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, il faudrait aussi ${qte(e.t(TRIMESTRE_A_REBOURS).facturesNecessaires)} factures pour couvrir le besoin. Combien de jours de découvert ce trimestre-là coûteraient-ils autant que leur escompte (au dixième) ? Dites alors ce que coûte ce trimestre au mieux, puis l'année au mieux, en choisissant pour chaque trimestre le moins cher de l'escompte et du découvert.`;
+        return `Au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, il faudrait aussi ${qte(e.t(TRIMESTRE_A_REBOURS).facturesNecessaires)} factures pour couvrir le besoin. Combien de jours de découvert ce trimestre-là coûteraient-ils autant que leur escompte (au centième) ? Dites alors ce que coûte ce trimestre au mieux, puis l'année au mieux, en choisissant pour chaque trimestre le moins cher de l'escompte et du découvert.`;
       },
       champs: (c) => {
         const e = escompteChaqueTrimestre(c);
@@ -246,9 +248,9 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
         return [
           {
             libelle: `Jours de découvert qui valent l'escompte, au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre`,
+            nature: "grandeur",
             attendu: e.joursARebours,
             calcul: `${eur(t.escompteDuBesoin)} ÷ (${eur(t.besoin)} × ${pct(e.taux)} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE}) = ${qte(e.joursARebours)} jours`,
-            tolerance: 0.1,
           },
           {
             libelle: `Coût du ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, au mieux`,
@@ -268,7 +270,7 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
       explication: (c) => {
         const e = escompteChaqueTrimestre(c);
         return [
-          `Au mieux, l'année coûte ${eur(e.x.auMieux)} : le découvert au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, court, et l'escompte au ${ordinal(TRIMESTRE_DU_CURSEUR)}, où le découvert dure. C'est ${eur(e.economie)} de moins que l'escompte de chaque facture, et ${eur(auCentime(e.x.decouvertEvite - e.x.auMieux))} de moins que le découvert seul.`,
+          `Au mieux, l'année coûte ${eur(e.x.auMieux)} : le découvert au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, court, et l'escompte au ${ordinal(TRIMESTRE_DU_CURSEUR)}, où le découvert dure. C'est ${eur(e.economie)} de moins que l'escompte de chaque facture, et ${eur(arrondi2(e.x.decouvertEvite - e.x.auMieux))} de moins que le découvert seul.`,
         ];
       },
     },

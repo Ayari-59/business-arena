@@ -10,7 +10,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LA CONCURRENCE : PLUSIEURS VENDEURS POUR LES MÊMES CLIENTS » : DE
  * COMBIEN MONTER LE PRIX ? (Seconde, sciences économiques et sociales, palier 1).
  *
- * La dirigeante de NOVA veut monter son prix, et hésite entre une petite hausse et la hausse du
+ * Le président de NOVA veut monter son prix, et hésite entre une petite hausse et la hausse du
  * chapitre. Le cas lit l'année type du marché à trois (monde/attractivite.ts) aux trois prix : 59 €,
  * 5 % et 10 % plus cher, les concurrents gardant leur offre. L'élève reprend les calculs du chapitre :
  * la part de marché à chaque prix, ce que chaque hausse change au bénéfice, et rend sa réponse. Le
@@ -21,7 +21,7 @@ import type { Situation } from "../types";
  * près (au dixième, à un dixième près, avant) ; les ventes perdues sont une quantité, entière.
  */
 
-/** La petite hausse que la dirigeante envisage : 5 % (hypothèse du cas). */
+/** La petite hausse que le président envisage : 5 % (hypothèse du cas). */
 export const HAUSSE_DOUCE = 0.05;
 
 const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
@@ -85,10 +85,10 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
   palier: 1,
   blocs: [],
   reprend: [LA_CONCURRENCE.code],
-  commanditaire: "La dirigeante de l'entreprise",
+  commanditaire: "Le président de l'entreprise",
   titre: "De combien monter le prix ?",
   accroche:
-    "La dirigeante veut monter son prix, un peu ou beaucoup. Mais ses deux concurrents attendent les clients qu'elle laissera partir. Lire l'année à chaque prix, et dire jusqu'où monter.",
+    "Le président veut monter son prix, un peu ou beaucoup. Mais ses deux concurrents attendent les clients qu'il laissera partir. Lire l'année à chaque prix, et dire jusqu'où monter.",
   objectifs: [
     "Calculer une part de marché à chaque prix",
     "Chiffrer ce qu'une hausse de prix change au bénéfice",
@@ -100,7 +100,7 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
     {
       id: "la-question",
       type: "lecture",
-      titre: "La question de la dirigeante",
+      titre: "La question du président",
       tableau: tableauDesTroisPrix,
       texte: (c) => {
         const k = troisPrix(c);
@@ -178,9 +178,9 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la dirigeante",
+      titre: "Votre réponse au président",
       notions: ["price_elasticity", "demand_market_share"],
-      question: () => "Que répondez-vous à la dirigeante ?",
+      question: () => "Que répondez-vous au président ?",
       options: (c) => {
         const k = troisPrix(c);
         const dit = (x: Choix) =>

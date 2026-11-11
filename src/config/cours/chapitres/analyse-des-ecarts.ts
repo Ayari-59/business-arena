@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { controleBudgetaire, coutPreetabli, coutStandardDeLHeureMachine } from "../monde/ecarts";
 import { USINES_DU_COURS, type FicheDeLUsine } from "../monde/nova-usine";
@@ -48,6 +48,10 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  *     et de l'activité), `qui-doit-agir` et `la-part-de-chacun` (l'imputation aux responsables),
  *     `la-prime` (maîtrisable ou non, l'effet pervers d'une prime sur un seul écart),
  *     `le-tableau-de-bord` (les limites du contrôle budgétaire) ; puis la synthèse, `fin`.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures-machine (réelles, au-delà de l'activité normale ou
+ * du préétabli) sont des grandeurs au centième ; les écarts attendent le centime.
  */
 
 /** Qui doit expliquer un écart, et agir. */
@@ -100,13 +104,11 @@ export const RESPONSABLE_DE_L_ECART: Readonly<Record<string, Responsable>> = {
 /** Les responsables de l'usine et des ventes, dans l'ordre où le chapitre les range. */
 const RESPONSABLES_DU_TRI = ["commercial", "achats", "atelier", "rh", "centre", "direction"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 /** Un effet sur le résultat, avec son signe : « +4 800 € », « −7 400 € ». */
 const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 /** Un montant ajouté ou retranché, entre parenthèses s'il est négatif. */
 const entreParentheses = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 const minuscule = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 const estUneVente = (poste: string) => poste.startsWith("Ventes");
 
@@ -124,8 +126,8 @@ export function syntheseDesEcarts(c: Pick<Cas, "code">) {
   const [nomade, salon] = f.modeles;
   const lignes = e.passage.map((l) => ({ ...l, responsable: RESPONSABLE_DE_L_ECART[l.poste]! }));
   /** L'écart tel que les chapitres précédents l'ont calculé, réel − prévu : l'effet, au signe près pour une charge. */
-  const brut = (l: { poste: string; effet: number }) => (estUneVente(l.poste) ? l.effet : auCentime(-l.effet));
-  const somme = (ls: readonly { effet: number }[]) => auCentime(ls.reduce((t, l) => t + l.effet, 0));
+  const brut = (l: { poste: string; effet: number }) => (estUneVente(l.poste) ? l.effet : arrondi2(-l.effet));
+  const somme = (ls: readonly { effet: number }[]) => arrondi2(ls.reduce((t, l) => t + l.effet, 0));
   const ventes = somme(lignes.filter((l) => estUneVente(l.poste)));
   const distribution = somme(lignes.filter((l) => l.responsable === "distribution"));
   const production = somme(lignes.filter((l) => !estUneVente(l.poste) && l.responsable !== "distribution"));
@@ -134,10 +136,10 @@ export function syntheseDesEcarts(c: Pick<Cas, "code">) {
   ) as Record<Responsable, number>;
   /** Les responsables, du plus lourd effet défavorable au plus favorable. */
   const ordre = (Object.keys(parResponsable) as Responsable[]).sort((a, b) => parResponsable[a] - parResponsable[b]);
-  const partFixe = auCentime(f.centre.chargesFixes / f.centre.activiteNormale);
+  const partFixe = arrondi2(f.centre.chargesFixes / f.centre.activiteNormale);
   const heuresReelles = f.realise.centre.heuresMachine;
-  const heuresPerdues = auCentime(heuresReelles - e.preetabliDuReel.heuresMachine);
-  const boniDesHeuresPerdues = auCentime(heuresPerdues * partFixe);
+  const heuresPerdues = arrondi2(heuresReelles - e.preetabliDuReel.heuresMachine);
+  const boniDesHeuresPerdues = arrondi2(heuresPerdues * partFixe);
   return {
     f,
     e,
@@ -152,26 +154,26 @@ export function syntheseDesEcarts(c: Pick<Cas, "code">) {
     production,
     distribution,
     /** Les onze écarts additionnés tels qu'ils ont été calculés, sans changer le signe des charges : l'erreur classique. */
-    sommeSansSigne: auCentime(lignes.reduce((t, l) => t + brut(l), 0)),
+    sommeSansSigne: arrondi2(lignes.reduce((t, l) => t + brut(l), 0)),
     /** L'erreur inverse : le signe de tous les écarts changé, ventes comprises. */
-    sommeTousInverses: auCentime(-lignes.reduce((t, l) => t + brut(l), 0)),
+    sommeTousInverses: arrondi2(-lignes.reduce((t, l) => t + brut(l), 0)),
     /** Le coût réel face au budget standard de départ : la mauvaise base. */
-    depassementDuBudget: auCentime(e.reelTotal - e.budgetStandard.total),
+    depassementDuBudget: arrondi2(e.reelTotal - e.budgetStandard.total),
     /** La part de ce dépassement qui vient de ce qui a été vendu : préétabli de la production réelle − budget standard. */
-    partDuVolume: auCentime(e.preetabliDuReel.total - e.budgetStandard.total),
+    partDuVolume: arrondi2(e.preetabliDuReel.total - e.budgetStandard.total),
     parResponsable,
     ordre,
     /** La part fixe d'une heure-machine : charges fixes ÷ activité normale. */
     partFixe,
     heuresReelles,
     /** Les heures-machine travaillées au-delà de l'activité normale : celles de l'écart sur activité. */
-    auDessusDeLaNormale: auCentime(heuresReelles - f.centre.activiteNormale),
+    auDessusDeLaNormale: arrondi2(heuresReelles - f.centre.activiteNormale),
     /** Les heures-machine au-delà du préétabli de la production réelle : celles de l'écart sur rendement. */
     heuresPerdues,
     /** La part du boni de suractivité que ces heures perdues ont faite : heures perdues × part fixe. */
     boniDesHeuresPerdues,
     /** Ce que ces heures coûtent vraiment au résultat : l'effet du rendement plus leur boni, soit leur seul coût variable. */
-    coutNetDesHeuresPerdues: auCentime(-e.centre.rendement + boniDesHeuresPerdues),
+    coutNetDesHeuresPerdues: arrondi2(-e.centre.rendement + boniDesHeuresPerdues),
     leviers: leviersDuResultat(f, e),
   };
 }
@@ -191,22 +193,22 @@ export function syntheseDesEcarts(c: Pick<Cas, "code">) {
 function leviersDuResultat(f: FicheDeLUsine, e: ReturnType<typeof controleBudgetaire>) {
   const r = f.realise;
   const [nomade] = f.modeles;
-  const manque = auCentime(e.resultatPrevu - e.resultatReel);
+  const manque = arrondi2(e.resultatPrevu - e.resultatReel);
   const qN = r.ventes.nomade.quantite;
   const pN = r.ventes.nomade.prix;
-  const auPrix = (p: number) => auCentime(e.resultatReel + (p - pN) * qN);
-  const auxKilos = (k: number) => auCentime(e.resultatReel + (r.matiere.kilos - k) * r.matiere.prixDuKilo);
-  const auxHeures = (h: number) => auCentime(e.resultatReel + (r.centre.heuresMachine - h) * f.centre.coutVariableParHeure);
+  const auPrix = (p: number) => arrondi2(e.resultatReel + (p - pN) * qN);
+  const auxKilos = (k: number) => arrondi2(e.resultatReel + (r.matiere.kilos - k) * r.matiere.prixDuKilo);
+  const auxHeures = (h: number) => arrondi2(e.resultatReel + (r.centre.heuresMachine - h) * f.centre.coutVariableParHeure);
   // Les positions entières qui rattrapent tout juste le résultat prévu : le plus petit prix, les plus grands kilos et heures.
   const prixQuiSuffit = Math.ceil(pN + manque / qN - 1e-9);
   const kilosQuiSuffisent = Math.floor(r.matiere.kilos - manque / r.matiere.prixDuKilo + 1e-9);
   const heuresQuiSuffisent = Math.floor(r.centre.heuresMachine - manque / f.centre.coutVariableParHeure + 1e-9);
   const auStandard = {
-    prix: auCentime(auPrix(nomade!.prixPrevu) - e.resultatReel),
-    kilos: auCentime(auxKilos(e.preetabliDuReel.kilos) - e.resultatReel),
-    heures: auCentime(auxHeures(e.preetabliDuReel.heuresMachine) - e.resultatReel),
+    prix: arrondi2(auPrix(nomade!.prixPrevu) - e.resultatReel),
+    kilos: arrondi2(auxKilos(e.preetabliDuReel.kilos) - e.resultatReel),
+    heures: arrondi2(auxHeures(e.preetabliDuReel.heuresMachine) - e.resultatReel),
   };
-  const ensemble = auCentime(auStandard.prix + auStandard.kilos + auStandard.heures);
+  const ensemble = arrondi2(auStandard.prix + auStandard.kilos + auStandard.heures);
   return {
     manque,
     auPrix,
@@ -218,7 +220,7 @@ function leviersDuResultat(f: FicheDeLUsine, e: ReturnType<typeof controleBudget
     auStandard,
     /** Les trois leviers ramenés ensemble à leur standard, et ce qui manquerait encore. */
     ensemble,
-    resteAuStandard: auCentime(manque - ensemble),
+    resteAuStandard: arrondi2(manque - ensemble),
     bornes: {
       prix: { min: Math.floor(pN) - 3, max: prixQuiSuffit + 4 },
       kilos: { min: Math.floor(kilosQuiSuffisent / 1_000) * 1_000, max: Math.ceil(r.matiere.kilos / 1_000) * 1_000 },
@@ -253,24 +255,24 @@ export function passageALaPosition(c: Pick<Cas, "code">, position: PositionDuLab
   const r = f.realise;
   const e = s.e;
   const x = { ...departDuLaboratoire(f), ...position };
-  const coutDuCentre = auCentime(r.centre.cout + (x.heures - r.centre.heuresMachine) * f.centre.coutVariableParHeure);
-  const flexible = auCentime(f.centre.chargesFixes + f.centre.coutVariableParHeure * x.heures);
+  const coutDuCentre = arrondi2(r.centre.cout + (x.heures - r.centre.heuresMachine) * f.centre.coutVariableParHeure);
+  const flexible = arrondi2(f.centre.chargesFixes + f.centre.coutVariableParHeure * x.heures);
   const effet: Record<string, number> = {
-    "Ventes : écart sur prix": auCentime((x.prixNomade - s.nomade.prixPrevu) * r.ventes.nomade.quantite + (r.ventes.salon.prix - s.salon.prixPrevu) * r.ventes.salon.quantite),
+    "Ventes : écart sur prix": arrondi2((x.prixNomade - s.nomade.prixPrevu) * r.ventes.nomade.quantite + (r.ventes.salon.prix - s.salon.prixPrevu) * r.ventes.salon.quantite),
     "Ventes : écart sur quantité globale": e.ventes.quantiteGlobale,
     "Ventes : écart sur composition": e.ventes.composition,
-    "Matière : écart sur prix": auCentime(-(r.matiere.prixDuKilo - f.prixStandardDuKilo) * x.kilos),
-    "Matière : écart sur quantité": auCentime(-(x.kilos - e.preetabliDuReel.kilos) * f.prixStandardDuKilo),
-    "Main-d'œuvre directe : écart sur taux": auCentime(-(x.taux - f.tauxHoraireStandard) * r.mainDOeuvre.heures),
-    "Main-d'œuvre directe : écart sur temps": auCentime(-e.mainDOeuvre.temps),
-    "Centre de montage : écart sur budget": auCentime(-(coutDuCentre - flexible)),
-    "Centre de montage : écart sur activité": auCentime(-(flexible - s.cHm * x.heures)),
-    "Centre de montage : écart sur rendement": auCentime(-(x.heures - e.preetabliDuReel.heuresMachine) * s.cHm),
-    Distribution: auCentime(-e.distribution),
+    "Matière : écart sur prix": arrondi2(-(r.matiere.prixDuKilo - f.prixStandardDuKilo) * x.kilos),
+    "Matière : écart sur quantité": arrondi2(-(x.kilos - e.preetabliDuReel.kilos) * f.prixStandardDuKilo),
+    "Main-d'œuvre directe : écart sur taux": arrondi2(-(x.taux - f.tauxHoraireStandard) * r.mainDOeuvre.heures),
+    "Main-d'œuvre directe : écart sur temps": arrondi2(-e.mainDOeuvre.temps),
+    "Centre de montage : écart sur budget": arrondi2(-(coutDuCentre - flexible)),
+    "Centre de montage : écart sur activité": arrondi2(-(flexible - s.cHm * x.heures)),
+    "Centre de montage : écart sur rendement": arrondi2(-(x.heures - e.preetabliDuReel.heuresMachine) * s.cHm),
+    Distribution: arrondi2(-e.distribution),
   };
   const lignes = s.lignes.map((l) => ({ poste: l.poste, effet: effet[l.poste]! + 0 }));
-  const ecart = auCentime(lignes.reduce((t, l) => t + l.effet, 0));
-  return { lignes, ecart, resultat: auCentime(e.resultatPrevu + ecart), position: x };
+  const ecart = arrondi2(lignes.reduce((t, l) => t + l.effet, 0));
+  return { lignes, ecart, resultat: arrondi2(e.resultatPrevu + ecart), position: x };
 }
 
 /** Le défi : le résultat prévu, sans vendre la Nomade au-dessus de son prix prévu. */
@@ -494,10 +496,10 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         const r = s.f.realise;
         const resultat = s.leviers.auPrix(p);
         return [
-          { libelle: "Écart sur prix de vente", montant: auCentime((p - s.nomade.prixPrevu) * r.ventes.nomade.quantite + (r.ventes.salon.prix - s.salon.prixPrevu) * r.ventes.salon.quantite) },
+          { libelle: "Écart sur prix de vente", montant: arrondi2((p - s.nomade.prixPrevu) * r.ventes.nomade.quantite + (r.ventes.salon.prix - s.salon.prixPrevu) * r.ventes.salon.quantite) },
           { libelle: "Résultat de l'usine", montant: resultat },
           { libelle: "Résultat prévu", montant: s.e.resultatPrevu },
-          { libelle: "Écart de résultat", montant: auCentime(resultat - s.e.resultatPrevu), fort: true },
+          { libelle: "Écart de résultat", montant: arrondi2(resultat - s.e.resultatPrevu), fort: true },
         ];
       },
       droites: (c) => {
@@ -514,7 +516,7 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         const s = syntheseDesEcarts(c);
         const l = s.leviers;
         return [
-          `Au prix prévu, ${eur(s.nomade.prixPrevu)}, le résultat de l'usine serait de ${eur(l.auPrix(s.nomade.prixPrevu))} : il manquerait encore ${eur(auCentime(l.manque - l.auStandard.prix))}. Pour rattraper le budget par ce seul levier, il faudrait vendre la ${s.nomade.nom} ${eur(l.prixQuiSuffit)}, ${eur(auCentime(l.prixQuiSuffit - s.nomade.prixPrevu))} au-dessus de son prix prévu.`,
+          `Au prix prévu, ${eur(s.nomade.prixPrevu)}, le résultat de l'usine serait de ${eur(l.auPrix(s.nomade.prixPrevu))} : il manquerait encore ${eur(arrondi2(l.manque - l.auStandard.prix))}. Pour rattraper le budget par ce seul levier, il faudrait vendre la ${s.nomade.nom} ${eur(l.prixQuiSuffit)}, ${eur(arrondi2(l.prixQuiSuffit - s.nomade.prixPrevu))} au-dessus de son prix prévu.`,
           `Le prix cédé coûte cher, mais il n'explique pas tout l'écart : chaque euro sur la ${s.nomade.nom} vaut ${eur(s.f.realise.ventes.nomade.quantite)} de résultat, et l'écart en fait ${eur(l.manque)}. Le reste est ailleurs.`,
         ];
       },
@@ -539,10 +541,10 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         const s = syntheseDesEcarts(c);
         const resultat = s.leviers.auxKilos(k);
         return [
-          { libelle: "Écart sur prix de la matière", montant: auCentime((s.f.realise.matiere.prixDuKilo - s.f.prixStandardDuKilo) * k) },
-          { libelle: "Écart sur quantité de matière", montant: auCentime((k - s.e.preetabliDuReel.kilos) * s.f.prixStandardDuKilo) },
+          { libelle: "Écart sur prix de la matière", montant: arrondi2((s.f.realise.matiere.prixDuKilo - s.f.prixStandardDuKilo) * k) },
+          { libelle: "Écart sur quantité de matière", montant: arrondi2((k - s.e.preetabliDuReel.kilos) * s.f.prixStandardDuKilo) },
           { libelle: "Résultat de l'usine", montant: resultat },
-          { libelle: "Écart de résultat", montant: auCentime(resultat - s.e.resultatPrevu), fort: true },
+          { libelle: "Écart de résultat", montant: arrondi2(resultat - s.e.resultatPrevu), fort: true },
         ];
       },
       droites: (c) => {
@@ -560,7 +562,7 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         const l = s.leviers;
         const k = s.e.preetabliDuReel.kilos;
         return [
-          `Même sans aucun gaspillage, aux ${qte(k)} kg du préétabli de la production réelle, le résultat serait de ${eur(l.auxKilos(k))} : il manquerait ${eur(auCentime(l.manque - l.auStandard.kilos))}. Pour rattraper seul le budget, l'atelier ne devrait consommer que ${qte(l.kilosQuiSuffisent)} kg, ${qte(auCentime(k - l.kilosQuiSuffisent))} kg sous le standard : aucun atelier ne fabrique les mêmes enceintes avec si peu de matière.`,
+          `Même sans aucun gaspillage, aux ${qte(k)} kg du préétabli de la production réelle, le résultat serait de ${eur(l.auxKilos(k))} : il manquerait ${eur(arrondi2(l.manque - l.auStandard.kilos))}. Pour rattraper seul le budget, l'atelier ne devrait consommer que ${qte(l.kilosQuiSuffisent)} kg, ${qte(arrondi2(k - l.kilosQuiSuffisent))} kg sous le standard : aucun atelier ne fabrique les mêmes enceintes avec si peu de matière.`,
           "Ni le prix de la Nomade ni la matière ne suffisent seuls : l'écart de résultat est fait de beaucoup d'écarts, chacun avec son responsable. Les étapes suivantes les rassemblent.",
         ];
       },
@@ -683,7 +685,7 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
       options: (c) => {
         const s = syntheseDesEcarts(c);
         const v = s.e.ventes;
-        const coutDuVolume = auCentime(v.quantiteSurChiffreDAffaires - v.volume);
+        const coutDuVolume = arrondi2(v.quantiteSurChiffreDAffaires - v.volume);
         return [
           {
             texte: "Parce qu'au résultat, une enceinte vendue de plus n'apporte que sa marge préétablie",
@@ -826,10 +828,10 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         const resultat = s.leviers.auxHeures(h);
         const flexible = s.f.centre.chargesFixes + s.f.centre.coutVariableParHeure * h;
         return [
-          { libelle: "Écart sur rendement", montant: auCentime((h - s.e.preetabliDuReel.heuresMachine) * s.cHm) },
-          { libelle: "Écart sur activité", montant: auCentime(flexible - s.cHm * h) },
+          { libelle: "Écart sur rendement", montant: arrondi2((h - s.e.preetabliDuReel.heuresMachine) * s.cHm) },
+          { libelle: "Écart sur activité", montant: arrondi2(flexible - s.cHm * h) },
           { libelle: "Résultat de l'usine", montant: resultat },
-          { libelle: "Écart de résultat", montant: auCentime(resultat - s.e.resultatPrevu), fort: true },
+          { libelle: "Écart de résultat", montant: arrondi2(resultat - s.e.resultatPrevu), fort: true },
         ];
       },
       droites: (c) => {
@@ -868,6 +870,7 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         return [
           {
             libelle: "Heures-machine réelles",
+            nature: "grandeur",
             attendu: s.heuresReelles,
             calcul: `le préétabli de la production réelle, ${qte(r.ventes.nomade.quantite)} × ${qte(s.nomade.heuresMachineParUnite)} + ${qte(r.ventes.salon.quantite)} × ${qte(s.salon.heuresMachineParUnite)} = ${qte(e.preetabliDuReel.heuresMachine)}, plus les heures de l'écart sur rendement, ${eur(e.centre.rendement)} ÷ ${eur(s.cHm)} = ${qte(s.heuresPerdues)} : ${qte(s.heuresReelles)}`,
           },
@@ -907,11 +910,13 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         return [
           {
             libelle: "Heures-machine au-delà de l'activité normale",
+            nature: "grandeur",
             attendu: s.auDessusDeLaNormale,
             calcul: `${qte(s.heuresReelles)} − ${qte(s.f.centre.activiteNormale)} = ${qte(s.auDessusDeLaNormale)}`,
           },
           {
             libelle: "Heures-machine au-delà du préétabli de la production réelle",
+            nature: "grandeur",
             attendu: s.heuresPerdues,
             calcul: `${qte(s.heuresReelles)} − ${qte(e.preetabliDuReel.heuresMachine)} = ${qte(s.heuresPerdues)}`,
           },
@@ -975,7 +980,7 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
             const p = passageALaPosition(c, position);
             return p.position.prixNomade > s.nomade.prixPrevu
               ? `Dans ce défi, la ${s.nomade.nom} ne se vend pas au-dessus de ${eur(s.nomade.prixPrevu)} : cherchez ailleurs.`
-              : `Il manque encore ${eur(auCentime(s.e.resultatPrevu - p.resultat))}. Avez-vous ramené chaque levier à son standard ? Et si cela ne suffit pas ?`;
+              : `Il manque encore ${eur(arrondi2(s.e.resultatPrevu - p.resultat))}. Avez-vous ramené chaque levier à son standard ? Et si cela ne suffit pas ?`;
           },
           solution: solutionDuLaboratoire(c).solution,
         };
@@ -986,7 +991,7 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         const x = solutionDuLaboratoire(c);
         const ici = passageALaPosition(c, position);
         return [
-          `À votre position, le résultat de l'usine est de ${eur(ici.resultat)}. Ramenés tous les quatre à leur standard (la ${s.nomade.nom} à ${eur(x.auStandard.prixNomade)}, ${qte(x.auStandard.kilos)} kg, ${eur(x.auStandard.taux)} de l'heure, ${qte(x.auStandard.heures)} heures-machine), les leviers ne donnent que ${eur(x.resultatAuStandard)} : il manque encore ${eur(auCentime(s.e.resultatPrevu - x.resultatAuStandard))}.`,
+          `À votre position, le résultat de l'usine est de ${eur(ici.resultat)}. Ramenés tous les quatre à leur standard (la ${s.nomade.nom} à ${eur(x.auStandard.prixNomade)}, ${qte(x.auStandard.kilos)} kg, ${eur(x.auStandard.taux)} de l'heure, ${qte(x.auStandard.heures)} heures-machine), les leviers ne donnent que ${eur(x.resultatAuStandard)} : il manque encore ${eur(arrondi2(s.e.resultatPrevu - x.resultatAuStandard))}.`,
           "Pour rattraper le budget, il faut donc battre un standard quelque part : d'autres écarts restent hors de ces leviers, le prix de la matière, le budget du centre, la distribution, la quantité globale vendue. Le résultat est fait de tous les écarts à la fois, et chaque levier en fait bouger plusieurs : les kilos touchent le prix et la quantité de la matière, les heures le rendement et l'activité.",
         ];
       },
@@ -1158,11 +1163,11 @@ export function ventesALaPosition(c: Pick<Cas, "code">, p: Readonly<Record<strin
   const r = f.realise;
   const nomade = { quantite: p.quantite ?? r.ventes.nomade.quantite, prix: p.prix ?? r.ventes.nomade.prix };
   const v = controleBudgetaire({ ...f, realise: { ...r, ventes: { ...r.ventes, nomade } } }).ventes;
-  const ventes = auCentime(v.prix + v.volume);
+  const ventes = arrondi2(v.prix + v.volume);
   /** Les autres lignes du passage, production et distribution : celles du trimestre. */
-  const autres = auCentime(s.lignes.filter((l) => !estUneVente(l.poste)).reduce((t, l) => t + l.effet, 0));
-  const ecart = auCentime(ventes + autres);
-  return { s, nomade, v, ventes, autres, ecart, resultat: auCentime(s.e.resultatPrevu + ecart), reussi: nomade.prix <= r.ventes.nomade.prix && ventes >= 0 };
+  const autres = arrondi2(s.lignes.filter((l) => !estUneVente(l.poste)).reduce((t, l) => t + l.effet, 0));
+  const ecart = arrondi2(ventes + autres);
+  return { s, nomade, v, ventes, autres, ecart, resultat: arrondi2(s.e.resultatPrevu + ecart), reussi: nomade.prix <= r.ventes.nomade.prix && ventes >= 0 };
 }
 
 /** La plus petite quantité de Nomade, sur le pas du levier, où les ventes ne coûtent plus rien au résultat, à un prix donné. */
@@ -1226,11 +1231,11 @@ const LABORATOIRE_DES_VENTES: EtapeSimulation = {
     const x = ventesALaPosition(c, p);
     const s = x.s;
     const r = s.f.realise;
-    const parNomade = auCentime(x.nomade.prix - s.cNomade.total);
-    const auPrixReel = auCentime(r.ventes.nomade.prix - s.cNomade.total);
+    const parNomade = arrondi2(x.nomade.prix - s.cNomade.total);
+    const auPrixReel = arrondi2(r.ventes.nomade.prix - s.cNomade.total);
     const manque = -ventesALaPosition(c, {}).ventes;
     return [
-      `À ${eur(x.nomade.prix)}, ${qte(x.nomade.quantite)} ${s.nomade.nom} : l'écart sur prix de vente, ${eur(x.v.prix)}, est compensé par l'écart sur volume, ${signe(x.v.volume)}, et les ventes rapportent ${signe(x.ventes)} au résultat. Chaque ${s.nomade.nom} de plus n'apporte pas son prix, mais sa marge préétablie (${eur(s.cNomade.marge)}) moins les ${eur(auCentime(s.nomade.prixPrevu - x.nomade.prix))} cédés sur le prix prévu : ${eur(parNomade)}.`,
+      `À ${eur(x.nomade.prix)}, ${qte(x.nomade.quantite)} ${s.nomade.nom} : l'écart sur prix de vente, ${eur(x.v.prix)}, est compensé par l'écart sur volume, ${signe(x.v.volume)}, et les ventes rapportent ${signe(x.ventes)} au résultat. Chaque ${s.nomade.nom} de plus n'apporte pas son prix, mais sa marge préétablie (${eur(s.cNomade.marge)}) moins les ${eur(arrondi2(s.nomade.prixPrevu - x.nomade.prix))} cédés sur le prix prévu : ${eur(parNomade)}.`,
       `Pour effacer les ${eur(manque)} que les ventes coûtaient au trimestre, il fallait donc ${qte(Math.ceil(manque / auPrixReel - 1e-9))} ${s.nomade.nom} de plus à ${eur(r.ventes.nomade.prix)}, et non ${qte(Math.ceil(manque / r.ventes.nomade.prix - 1e-9))} comme si chacune rapportait son prix.`,
       `Les ventes compensées, le résultat de l'usine reste de ${eur(x.resultat)}, sous les ${eur(s.e.resultatPrevu)} prévus : la production et la distribution lui retirent encore ${eur(-x.autres)}, et les ventes n'y peuvent rien. Des ventes qui se compensent cachent deux écarts de sens contraire, et ne disent rien du reste du tableau de passage.`,
     ];

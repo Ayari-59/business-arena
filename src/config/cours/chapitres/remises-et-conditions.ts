@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime as auCentimeDeLArene } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
@@ -59,6 +59,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     l-option-pour-les-debits (une variante chiffrée : la TVA avancée), le-laboratoire-des-conditions
  *     (remise, escompte, délai et journées à la fois, avec le graphique du taux annuel de l'escompte
  *     selon le délai : accorder 10 % sans rien perdre) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les commandes, les journées et les jours d'avance sont des
+ * quantités, entières, déclarées comme telles ; le plus fort escompte se donne au centième, et son
+ * montant sur la facture part de ce taux arrondi, au centime (à deux euros près, avant, sur le taux au
+ * dix-millième). L'export de l'arène (`affaire`), que lit encore un cas d'un autre lot, ne change pas.
  */
 
 /** Le chapitre se joue chez le cabinet du cours, qui vend des prestations de services à des clients professionnels. */
@@ -90,8 +96,7 @@ export const LEVIERS_DU_LABORATOIRE = {
   journees: { min: JOURNEES_DU_CURSEUR.min, max: JOURNEES_DU_CURSEUR.max, pas: 1 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Un pourcentage, la part étant donnée en fraction (0,146939 → « 14,69 % »). */
 const pct = (part: number) => `${qte(Math.round(part * 10_000) / 100)} %`;
 /** Une part en pourcentage, au centième : ce que l'élève tape (0,146939 → 14,69). */
@@ -174,7 +179,9 @@ export function conditionsDeKerval(c: Pick<Cas, "code">) {
     // À rebours : le découvert de ces jours, rapporté au net financier, et l'escompte qui le vaut.
     decouvertSurLAvance: (r * joursDAvance) / JOURS_DE_L_ANNEE_BANCAIRE,
     escompteMaximal: x.escompteMaximal!,
-    escompteMaximalEnEuros: auCentime(x.facture.netCommercial * x.escompteMaximal!),
+    // Le montant part du taux de la copie, au centième : arrondi vers le bas, il reste sous le découvert.
+    escompteMaximalEnPourcent: enPourcent(x.escompteMaximal!),
+    escompteMaximalEnEuros: auCentime((x.facture.netCommercial * enPourcent(x.escompteMaximal!)) / 100),
     // La contrepartie de la remise.
     prixRemise: x.prixRemise,
     margeParJourneeRemisee: x.margeParJourneeRemisee,
@@ -338,7 +345,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
         return [
           { libelle: "Marge au prix catalogue (HT)", attendu: k.margeCatalogue, calcul: `${qte(k.journees)} × (${eur(k.prix)} − ${eur(k.coutVariable)}) = ${eur(k.margeCatalogue)}` },
           { libelle: "Marge après remise (HT)", attendu: k.marge, calcul: `${eur(k.netCommercial)} − ${qte(k.journees)} × ${eur(k.coutVariable)} = ${eur(k.marge)}` },
-          { libelle: "Part de la marge cédée (%)", attendu: enPourcent(k.partDeLaMargeCedee), tolerance: 0.01, calcul: `${eur(k.margeCedee)} ÷ ${eur(k.margeCatalogue)} × 100 = ${pct(k.partDeLaMargeCedee)}` },
+          { libelle: "Part de la marge cédée (%)", attendu: enPourcent(k.partDeLaMargeCedee), calcul: `${eur(k.margeCedee)} ÷ ${eur(k.margeCatalogue)} × 100 = ${pct(k.partDeLaMargeCedee)}` },
         ];
       },
       explication: (c) => {
@@ -434,10 +441,11 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
           { libelle: "Marge d'une journée remisée (HT)", attendu: k.margeParJourneeRemisee, calcul: `${eur(k.prixRemise)} − ${eur(k.coutVariable)} = ${eur(k.margeParJourneeRemisee)}` },
           {
             libelle: "Commande qui paie la remise",
+            nature: "quantite",
             attendu: k.journeesPourLaMemeMarge,
             calcul: `${eur(k.margeCatalogue)} ÷ ${eur(k.margeParJourneeRemisee)} = ${qte(auCentime(k.margeCatalogue / k.margeParJourneeRemisee))}, soit ${qte(k.journeesPourLaMemeMarge)} journées à la journée supérieure`,
           },
-          { libelle: "Journées à obtenir en plus", attendu: k.journeesEnPlus, calcul: `${qte(k.journeesPourLaMemeMarge)} − ${qte(k.journees)} = ${qte(k.journeesEnPlus)}` },
+          { libelle: "Journées à obtenir en plus", nature: "quantite", attendu: k.journeesEnPlus, calcul: `${qte(k.journeesPourLaMemeMarge)} − ${qte(k.journees)} = ${qte(k.journeesEnPlus)}` },
         ];
       },
       explication: (c) => {
@@ -707,11 +715,10 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
       champs: (c) => {
         const k = conditionsDeKerval(c);
         return [
-          { libelle: "Jours d'avance", attendu: k.joursDAvance, calcul: `${qte(k.delai)} − ${qte(k.joursDEscompte)} = ${qte(k.joursDAvance)}` },
+          { libelle: "Jours d'avance", nature: "quantite", attendu: k.joursDAvance, calcul: `${qte(k.delai)} − ${qte(k.joursDEscompte)} = ${qte(k.joursDAvance)}` },
           {
             libelle: "Taux annuel de l'escompte (%)",
             attendu: enPourcent(k.tauxAnnuelDeLEscompte),
-            tolerance: 0.01,
             calcul: `${pct(k.tauxDEscompte)} ÷ ${pct(1 - k.tauxDEscompte)} × 360 ÷ ${qte(k.joursDAvance)} = ${pct(k.tauxAnnuelDeLEscompte)}`,
           },
           { libelle: "Découvert évité", attendu: k.decouvertEvite, calcul: `${eur(k.netFinancier)} × ${pct(k.taux)} × ${qte(k.joursDAvance)} ÷ 360 = ${eur(k.decouvertEvite)}` },
@@ -781,20 +788,17 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
           {
             libelle: `Coût du découvert sur ${qte(k.joursDAvance)} jours (%)`,
             attendu: enPourcent(k.decouvertSurLAvance),
-            tolerance: 0.01,
             calcul: `${pct(k.taux)} × ${qte(k.joursDAvance)} ÷ 360 = ${pct(k.decouvertSurLAvance)}`,
           },
           {
             libelle: "Escompte le plus fort (%)",
-            attendu: enPourcent(k.escompteMaximal),
-            tolerance: 0.01,
-            calcul: `L'escompte vaut le découvert quand taux ÷ (1 − taux) = ${pct(k.decouvertSurLAvance)}, soit taux = ${pct(k.decouvertSurLAvance)} ÷ (1 + ${pct(k.decouvertSurLAvance)}) = ${precis}`,
+            attendu: k.escompteMaximalEnPourcent,
+            calcul: `L'escompte vaut le découvert quand taux ÷ (1 − taux) = ${pct(k.decouvertSurLAvance)}, soit taux = ${pct(k.decouvertSurLAvance)} ÷ (1 + ${pct(k.decouvertSurLAvance)}) = ${precis}, ${pct(k.escompteMaximal)} au centième`,
           },
           {
             libelle: "Escompte le plus fort sur la facture",
             attendu: k.escompteMaximalEnEuros,
-            tolerance: 2,
-            calcul: `${eur(k.netCommercial)} × ${precis} = ${eur(k.escompteMaximalEnEuros)}`,
+            calcul: `${eur(k.netCommercial)} × ${pct(k.escompteMaximal)} = ${eur(k.escompteMaximalEnEuros)}, sur le taux au centième, comme sur la copie`,
           },
         ];
       },
@@ -804,7 +808,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
         const sous = Math.floor(k.escompteMaximal / pas + 1e-9) * pas;
         const dessus = sous + pas;
         return [
-          `À ${pct(k.escompteMaximal)}, l'escompte vaut exactement le découvert qu'il évite sur le net financier : son taux annuel est de ${pct(k.taux)}. Le ${pct(k.tauxDEscompte)} du commercial en est loin ; il faudrait un découvert à ${pct(k.tauxAnnuelDeLEscompte)} pour le justifier.`,
+          `À ${pct(k.escompteMaximal)}, au centième près, l'escompte vaut le découvert qu'il évite sur le net financier : son taux annuel est celui du découvert, ${pct(k.taux)}. Le ${pct(k.tauxDEscompte)} du commercial en est loin ; il faudrait un découvert à ${pct(k.tauxAnnuelDeLEscompte)} pour le justifier.`,
           `La marge est étroite : à ${pct(sous)}, l'escompte coûte ${pct(tauxAnnuelDeLEscompte(sous, k.joursDAvance))} l'an ; à ${pct(dessus)}, déjà ${pct(tauxAnnuelDeLEscompte(dessus, k.joursDAvance))}. Un escompte se fixe à partir du coût du financement et des jours d'avance qu'il achète, pas par habitude.`,
         ];
       },

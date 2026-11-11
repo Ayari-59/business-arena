@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_SEUIL, seuilDuMois } from "../../chapitres/seuil-de-rentabilite";
 import { donneesDuMois, seuilDeRentabilite } from "../../monde/couts-et-budgets";
 import type { Situation } from "../types";
@@ -18,10 +18,9 @@ export const BAISSE_DU_CAS = 0.05;
 /** LA HAUSSE DES VENTES QUE PROMET LE COMMERCIAL (hypothèse du cas) : autant que la baisse de prix. */
 export const HAUSSE_PROMISE = 0.05;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
+const auCentime = arrondi2;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 export function baisseDePrixPromise() {
@@ -70,8 +69,8 @@ export const LA_BAISSE_DE_PRIX_PROMISE: Situation = {
         const s = k.x.s;
         return [
           { libelle: "Marge sur coût variable unitaire", attendu: k.marge, calcul: `${eur(k.prix)} − ${eur(s.coutVariableUnitaire)} = ${eur(k.marge)}` },
-          { libelle: "Seuil de rentabilité en quantité", attendu: k.seuil, calcul: `${eur(s.chargesFixes)} ÷ ${eur(k.marge)}, arrondi au-dessus : ${qte(k.seuil)}` },
-          { libelle: "Ventes qui gardent le résultat", attendu: k.ventesPourLeResultat, calcul: `(${eur(s.chargesFixes)} + ${eur(s.resultat)}) ÷ ${eur(k.marge)}, arrondi au-dessus : ${qte(k.ventesPourLeResultat)}` },
+          { libelle: "Seuil de rentabilité en quantité", nature: "quantite", attendu: k.seuil, calcul: `${eur(s.chargesFixes)} ÷ ${eur(k.marge)} = ${qte(s.chargesFixes / k.marge)}, arrondi au-dessus : ${qte(k.seuil)} (une enceinte de moins laisserait une perte)` },
+          { libelle: "Ventes qui gardent le résultat", nature: "quantite", attendu: k.ventesPourLeResultat, calcul: `(${eur(s.chargesFixes)} + ${eur(s.resultat)}) ÷ ${eur(k.marge)} = ${qte((s.chargesFixes + s.resultat) / k.marge)}, arrondi au-dessus : ${qte(k.ventesPourLeResultat)} (une enceinte de moins ferait un peu moins que le résultat de janvier)` },
         ];
       },
       explication: () => {

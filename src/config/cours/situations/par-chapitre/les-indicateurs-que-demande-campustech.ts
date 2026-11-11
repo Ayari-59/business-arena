@@ -1,3 +1,4 @@
+import { nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_DURABILITE, durabiliteDuChapitre } from "../../chapitres/les-indicateurs-de-durabilite";
@@ -11,10 +12,15 @@ import type { Situation } from "../types";
  * et les émissions par enceinte, la part des déchets valorisés, le taux de fréquence des accidents.
  * L'élève les calcule sur les totaux du semestre (`tableauDeBordDurable`, monde/tableau-de-bord-durable.ts)
  * et choisit ce qu'il envoie : le semestre entier avec ses bases, plutôt que le meilleur mois.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'énergie par enceinte et le taux de fréquence des accidents
+ * sont des grandeurs au centième (au dixième, avant) ; les émissions par enceinte se donnent en
+ * grammes, au centième (en kilos au millième, avant).
  */
 
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number, d = 1) => `${(Math.round(t * 10 ** (d + 2)) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const arrondi = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d + 0;
 
 /** Les chiffres du cas : le semestre, et le meilleur mois pour l'énergie. */
@@ -77,19 +83,19 @@ export const LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH: Situation = {
       titre: "Les indicateurs du semestre",
       notions: ["csr_index"],
       question: () =>
-        "Calculez sur les totaux du semestre : l'énergie par enceinte au centième, les émissions par enceinte en kg au millième, la part des déchets valorisés en pour cent au centième. Puis le taux de fréquence des accidents (accidents × 1 000 000 ÷ heures travaillées), au dixième.",
+        "Calculez sur les totaux du semestre : l'énergie par enceinte au centième, les émissions par enceinte en grammes, au centième, la part des déchets valorisés en pour cent au centième. Puis le taux de fréquence des accidents (accidents × 1 000 000 ÷ heures travaillées), au dixième.",
       champs: (c) => {
         const { s } = indicateursPourCampustech(c);
         return [
-          { libelle: "Énergie par enceinte (kWh)", attendu: arrondi(s.kwhParEnceinte, 2), tolerance: 0.01, calcul: `${qte(s.kwh)} ÷ ${qte(s.quantite)} = ${qte(s.kwhParEnceinte, 4)} kWh` },
-          { libelle: "Émissions par enceinte (kg)", attendu: arrondi(s.co2ParEnceinte, 3), tolerance: 0.001, calcul: `${qte(s.co2)} ÷ ${qte(s.quantite)} = ${qte(s.co2ParEnceinte, 4)} kg` },
-          { libelle: "Part des déchets valorisés (%)", attendu: arrondi(s.partValorisee * 100, 2), tolerance: 0.01, calcul: `${qte(s.valorises)} ÷ ${qte(s.dechets)} = ${pct(s.partValorisee, 2)}` },
-          { libelle: "Taux de fréquence des accidents", attendu: arrondi(s.tauxDeFrequence, 1), tolerance: 0.1, calcul: `${qte(s.accidents)} × 1 000 000 ÷ ${qte(s.heuresTravaillees)} = ${qte(s.tauxDeFrequence, 1)}` },
+          { libelle: "Énergie par enceinte (kWh)", nature: "grandeur", attendu: arrondi(s.kwhParEnceinte, 2), calcul: `${qte(s.kwh)} ÷ ${qte(s.quantite)} = ${qte(s.kwhParEnceinte)} kWh` },
+          { libelle: "Émissions par enceinte (g)", nature: "grandeur", attendu: arrondi(s.co2ParEnceinte * 1000, 2), calcul: `${qte(s.co2)} kg ÷ ${qte(s.quantite)} × 1 000 = ${qte(s.co2ParEnceinte * 1000)} g` },
+          { libelle: "Part des déchets valorisés (%)", attendu: arrondi(s.partValorisee * 100, 2), tolerance: 0.01, calcul: `${qte(s.valorises)} ÷ ${qte(s.dechets)} = ${pct(s.partValorisee)}` },
+          { libelle: "Taux de fréquence des accidents", nature: "grandeur", attendu: arrondi(s.tauxDeFrequence, 2), calcul: `${qte(s.accidents)} × 1 000 000 ÷ ${qte(s.heuresTravaillees)} = ${qte(s.tauxDeFrequence)}` },
         ];
       },
       explication: (c) => {
         const { s } = indicateursPourCampustech(c);
-        return [`Chaque intensité se calcule sur les totaux du semestre. Le taux de fréquence, ${qte(s.tauxDeFrequence, 1)}, repose sur ${qte(s.accidents)} accident en ${qte(s.heuresTravaillees)} heures : CampusTech doit le savoir pour le lire.`];
+        return [`Chaque intensité se calcule sur les totaux du semestre. Le taux de fréquence, ${qte(s.tauxDeFrequence)}, repose sur ${qte(s.accidents)} accident en ${qte(s.heuresTravaillees)} heures : CampusTech doit le savoir pour le lire.`];
       },
     },
     {
@@ -104,7 +110,7 @@ export const LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH: Situation = {
           {
             texte: "Le semestre entier, avec ses bases de calcul",
             juste: true,
-            retour: `Oui. ${qte(s.kwhParEnceinte)} kWh et ${qte(s.co2ParEnceinte, 3)} kg par enceinte, ${pct(s.partValorisee)} de déchets valorisés, un taux de fréquence de ${qte(s.tauxDeFrequence, 1)} pour ${qte(s.accidents)} accident en ${qte(s.heuresTravaillees)} heures. Une information de durabilité vaut par sa période, son périmètre et sa méthode, dits avec elle.`,
+            retour: `Oui. ${qte(s.kwhParEnceinte)} kWh et ${qte(s.co2ParEnceinte * 1000)} g par enceinte, ${pct(s.partValorisee)} de déchets valorisés, un taux de fréquence de ${qte(s.tauxDeFrequence)} pour ${qte(s.accidents)} accident en ${qte(s.heuresTravaillees)} heures. Une information de durabilité vaut par sa période, son périmètre et sa méthode, dits avec elle.`,
           },
           {
             texte: `Les chiffres de ${meilleur.nom}, le meilleur mois : ${qte(meilleur.valeurs.kwhParEnceinte)} kWh par enceinte`,

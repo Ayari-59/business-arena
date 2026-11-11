@@ -78,11 +78,11 @@ describe("le monde : le réseau, le programme, les budgets par centre et par act
     expect(r.resultat).toBe(40_941);
   });
 
-  it("le programme : 2 714,75 heures de montage pour 3 600 disponibles, 75,4 % ; le budget du personnel, 63 900 €", () => {
+  it("le programme : 2 714,75 heures de montage pour 3 600 disponibles, 75,41 % ; le budget du personnel, 63 900 €", () => {
     const p = programmeEtBudget(NOVA_GESTION);
     expect(p.heuresDeMontage).toBe(10_859 * 0.25);
     expect(p.heuresDisponibles).toBe(4 * 150 * 6);
-    expect(attendus(ch, "programme-et-budget")).toEqual([2_714.75, 3_600, 75.4, 6 * 10_650]);
+    expect(attendus(ch, "programme-et-budget")).toEqual([2_714.75, 3_600, 75.41, 6 * 10_650]);
   });
 
   it("les budgets par centre : 140 808,90 € et 46 289,10 €, soit six mois de charges fixes de NOVA", () => {

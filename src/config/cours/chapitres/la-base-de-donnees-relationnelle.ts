@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   CLIENTS,
   COLONNES,
@@ -25,10 +25,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * « Des données à l'information » fait à la main ce que fait une requête.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/base-de-donnees-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les lignes, les cases, les enceintes et les agrégats entiers
+ * sont des quantités ; une moyenne est une grandeur au centième (au dixième près, avant).
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 export const tableClient = (): TableauDeDonnees => ({
   titre: "La table Client",
@@ -182,8 +184,8 @@ export const LA_BASE_DE_DONNEES_RELATIONNELLE: Chapitre = {
       question: () =>
         `Une table unique garderait, sur chaque commande, le nom et la ville du client : ${qte(COLONNES.tableUnique)} colonnes. Le modèle relationnel garde ${qte(COLONNES.client)} colonnes pour chacun des ${qte(CLIENTS.length)} clients, et ${qte(COLONNES.commande)} pour chacune des ${qte(COMMANDES.length)} commandes. Combien de cases chaque façon écrit-elle ?`,
       champs: () => [
-        { libelle: "Cases de la table unique", attendu: casesDeLaTableUnique(COMMANDES.length), calcul: `${qte(COMMANDES.length)} × ${qte(COLONNES.tableUnique)} = ${qte(casesDeLaTableUnique(COMMANDES.length))}` },
-        { libelle: "Cases des 2 tables", attendu: casesDesDeuxTables(COMMANDES.length), calcul: `${qte(CLIENTS.length)} × ${qte(COLONNES.client)} + ${qte(COMMANDES.length)} × ${qte(COLONNES.commande)} = ${qte(casesDesDeuxTables(COMMANDES.length))}` },
+        { libelle: "Cases de la table unique", nature: "quantite", attendu: casesDeLaTableUnique(COMMANDES.length), calcul: `${qte(COMMANDES.length)} × ${qte(COLONNES.tableUnique)} = ${qte(casesDeLaTableUnique(COMMANDES.length))}` },
+        { libelle: "Cases des 2 tables", nature: "quantite", attendu: casesDesDeuxTables(COMMANDES.length), calcul: `${qte(CLIENTS.length)} × ${qte(COLONNES.client)} + ${qte(COMMANDES.length)} × ${qte(COLONNES.commande)} = ${qte(casesDesDeuxTables(COMMANDES.length))}` },
       ],
       explication: () => ["Dans la table unique, « Grenoble » et « Moreau » s'écrivent à chaque commande de Mme Moreau. Le modèle relationnel les écrit une fois : c'est la redondance qu'il évite."],
     },

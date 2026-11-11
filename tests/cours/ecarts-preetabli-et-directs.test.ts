@@ -40,7 +40,8 @@ const f = L_USINE_DE_NOVA;
 const [nomade, salon] = f.modeles;
 const r = f.realise;
 const centime = (x: number) => Math.round(x * 100) / 100;
-const dixieme = (x: number) => Math.round(x * 10) / 10;
+/** Deux décimales (10 novembre 2026) : les parts d'écart se donnent au centième de point. */
+const centieme = (x: number) => Math.round(x * 100) / 100;
 const n = (x: number) => x.toLocaleString("fr-FR");
 const eur = (x: number) => `${n(x)} €`;
 
@@ -318,11 +319,11 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
 
   it("le seuil de significativité : la matière et le centre au-dessus de 3 %, la main-d'œuvre en dessous, qui cache ses deux écarts", () => {
     expect(attendus(LE_BUDGET_FLEXIBLE, "seuil")).toEqual({
-      "Part de l'écart, matière (%)": dixieme((14_900 / 270_000) * 100),
-      "Part de l'écart, main-d'œuvre directe (%)": dixieme((3_800 / 225_000) * 100),
-      "Part de l'écart, centre de montage (%)": dixieme((11_000 / 202_000) * 100),
+      "Part de l'écart, matière (%)": centieme((14_900 / 270_000) * 100),
+      "Part de l'écart, main-d'œuvre directe (%)": centieme((3_800 / 225_000) * 100),
+      "Part de l'écart, centre de montage (%)": centieme((11_000 / 202_000) * 100),
     });
-    expect([dixieme((14_900 / 270_000) * 100), dixieme((3_800 / 225_000) * 100), dixieme((11_000 / 202_000) * 100)]).toEqual([5.5, 1.7, 5.4]);
+    expect([centieme((14_900 / 270_000) * 100), centieme((3_800 / 225_000) * 100), centieme((11_000 / 202_000) * 100)]).toEqual([5.52, 1.69, 5.45]);
     // L'écart sur taux dépasse à lui seul le seuil que le global ne passe pas.
     expect(8_800).toBeGreaterThan(0.03 * 225_000);
     expect(juste(LE_BUDGET_FLEXIBLE, "gestion-par-exception")).toBe("Pas sur son seul écart global : deux écarts de sens contraire peuvent s'y compenser");
@@ -629,8 +630,8 @@ describe("le cas : le fournisseur ou l'atelier", () => {
 
   it("refait la décomposition, l'écart mixte et le prix à rebours", () => {
     expect(attendus(s, "global")).toEqual({ "Kilos préétablis de la production réelle": 18_000, "Coût préétabli de la matière": 270_000, "Écart global sur matière": 14_900 });
-    expect(attendus(s, "decomposition")).toEqual({ "Écart sur prix de la matière": 7_400, "Écart sur quantité de matière": 7_500, "Part de l'écart sur prix (%)": dixieme((7_400 / 14_900) * 100) });
-    expect(dixieme((7_400 / 14_900) * 100)).toBe(49.7);
+    expect(attendus(s, "decomposition")).toEqual({ "Écart sur prix de la matière": 7_400, "Écart sur quantité de matière": 7_500, "Part de l'écart sur prix (%)": centieme((7_400 / 14_900) * 100) });
+    expect(centieme((7_400 / 14_900) * 100)).toBe(49.66);
     expect(attendus(s, "mixte")).toEqual({ "Écart sur prix pur": 7_200, "Écart mixte": 200, "Surcoût matière si l'atelier avait tenu son standard": 18_000 * 15.4 - 270_000 });
     const prix = centime(270_000 / 18_500);
     expect(attendus(s, "a-rebours")).toEqual({ "Prix du kilo qui effacerait l'écart global": prix, "Baisse à obtenir sur le prix payé": centime(15.4 - prix) });

@@ -47,7 +47,10 @@ const Q = [1_590, 1_450, 1_738, 1_900, 2_030, 2_151];
 const PARTICULIERS = [1_270, 1_130, 1_418, 1_580, 1_710, 1_831];
 const MARCHE = [6_000, 5_600, 6_500, 7_400, 8_300, 9_200];
 const NOMS = ["janvier", "février", "mars", "avril", "mai", "juin"];
-const SEUIL = c((FIXES * PRIX) / (PRIX - CV));
+/** Le taux à deux décimales, et le seuil sur ce taux, comme l'élève (deux décimales, 10 novembre 2026). */
+const tauxPct = (marge: number, ca: number) => c((marge / ca) * 100);
+const seuilAuTaux = (fixes: number, marge: number, ca: number) => c((fixes * 100) / tauxPct(marge, ca));
+const SEUIL = seuilAuTaux(FIXES, PRIX - CV, PRIX);
 const ALERTE = { indice: 0.05, resultat: 0, tresorerie: 10_000, part: 0.25 };
 
 /** La trésorerie de fin de chaque mois, refaite en clair (le budget du chapitre précédent). */
@@ -77,7 +80,7 @@ const TRESORERIE = tresorerieALaMain();
 const MOIS = Q.map((q, k) => {
   const ca = q * PRIX;
   const resultat = q * (PRIX - CV) - FIXES;
-  const indice = (ca - SEUIL) / ca;
+  const indice = c(((ca - SEUIL) / ca) * 100) / 100;
   const part = q / MARCHE[k]!;
   return { nom: NOMS[k]!, q, ca, resultat, indice, part, tresorerie: TRESORERIE[k]!, voyants: { indice: indice < ALERTE.indice, resultat: resultat < 0, tresorerie: TRESORERIE[k]! < ALERTE.tresorerie, part: part < ALERTE.part } };
 });
@@ -87,11 +90,11 @@ function semestreALaMain(p: { prix: number; publicite: number; campustech: numbe
   const ca = Q.reduce((t, q) => t + q * p.prix, 0);
   const fixes = 6 * FIXES + 6 * p.publicite + (p.banc > 0 ? (6 - p.banc) * 500 : 0);
   const marge = Q.reduce((t, q) => t + q * (p.prix - CV), 0);
-  const seuil = c((fixes * ca) / marge);
+  const seuil = seuilAuTaux(fixes, marge, ca);
   const tresorerie = tresorerieALaMain({ prix: p.prix, publicite: p.publicite, delaiCampusTech: p.campustech, banc: p.banc > 0 ? p.banc : null });
   const plusBas = Math.min(...tresorerie);
   const resultat = c(marge - fixes);
-  const indice = (ca - seuil) / ca;
+  const indice = c(((ca - seuil) / ca) * 100) / 100;
   const part = Q.reduce((t, q) => t + q, 0) / MARCHE.reduce((t, x) => t + x, 0);
   const voyants = [indice < ALERTE.indice, resultat < 0, plusBas < ALERTE.tresorerie, part < ALERTE.part];
   return { ca, resultat, indice, part, plusBas, voyants: voyants.filter(Boolean).length, tresorerieAllumee: voyants[2], resultatAllume: voyants[1] };
@@ -282,7 +285,8 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     expect(f.seuilsDAlerte).toEqual({ indiceDeSecurite: ALERTE.indice, resultat: ALERTE.resultat, tresorerie: ALERTE.tresorerie, partDeMarche: ALERTE.part });
     expect(MOIS.map((m) => m.resultat)).toEqual([2_207, -733, 5_315, 8_717, 11_447, 13_988]);
     expect(TRESORERIE).toEqual([58_838, 31_998, 19_302.8, 33_810, 50_068, 63_641.6]);
-    expect(SEUIL).toBe(87_609.38);
+    // 31 183 € ÷ 35,59 % ; sur le taux exact, 87 609,38 €.
+    expect(SEUIL).toBe(87_617.31);
     // Les voyants : le résultat et l'indice en février ; la part de marché en mai et en juin.
     expect(MOIS.map((m) => Object.entries(m.voyants).filter(([, v]) => v).map(([k]) => k))).toEqual([[], ["indice", "resultat"], [], [], ["part"], ["part"]]);
     // De février à mars, le résultat monte de 6 048 € quand la trésorerie baisse de 12 695,20 €.
@@ -293,12 +297,12 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     expect(MOIS_GUIDE).toBe(1);
     const m = MOIS[1]!;
     expect(attendus(ch, "les-indicateurs-de-fevrier")).toEqual({
-      "Taux de marge sur coût variable (%)": dixieme(((PRIX - CV) / PRIX) * 100),
+      "Taux de marge sur coût variable (%)": tauxPct(PRIX - CV, PRIX),
       "Seuil de rentabilité du mois": SEUIL,
-      "Indice de sécurité (%)": dixieme(m.indice * 100),
+      "Indice de sécurité (%)": c(m.indice * 100),
       "Résultat du mois": m.resultat,
     });
-    expect(Object.values(attendus(ch, "les-indicateurs-de-fevrier"))).toEqual([35.6, 87_609.38, -2.4, -733]);
+    expect(Object.values(attendus(ch, "les-indicateurs-de-fevrier"))).toEqual([35.59, 87_617.31, -2.42, -733]);
   });
 
   it("les étapes autonomes : le premier voyant d'un mois gagnant, la part de marché, le résultat et la trésorerie", () => {
@@ -311,7 +315,7 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     expect(juste(ch, "resultat-et-tresorerie")).toBe("Le résultat compte les ventes et les charges quand elles naissent, la trésorerie quand elles se paient : délais, TVA et emprunt les séparent.");
     expect(juste(ch, "choisir")).toBe("Le nombre d'écritures passées dans le journal ce mois-ci.");
     const t = ch.etapes.find((e) => e.id === "les-voyants")!.tableau!(cas);
-    expect(t.lignes.find((l) => l.libelle === "Indice de sécurité")!.valeurs).toEqual(MOIS.map((m) => `${dixieme(m.indice * 100).toLocaleString("fr-FR", { minimumFractionDigits: 1 }).replace("-", "−")} %`));
+    expect(t.lignes.find((l) => l.libelle === "Indice de sécurité")!.valeurs).toEqual(MOIS.map((m) => `${c(m.indice * 100).toLocaleString("fr-FR", { minimumFractionDigits: 2 }).replace("-", "−")} %`));
     // Le tableau de la question ne donne pas les voyants : c'est à l'élève de les lire.
     expect(t.lignes.some((l) => l.libelle === "Voyants allumés")).toBe(false);
   });
@@ -319,7 +323,7 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
   it("le pari et le curseur du voyant de l'indice : il s'allume sous 1 564 enceintes, avant la perte", () => {
     expect(juste(ch, "predire-l-alerte")).toBe("Avant celui du résultat, quand NOVA gagne encore de l'argent");
     const seuilQ = Math.ceil(FIXES / (PRIX - CV));
-    const alerteQ = Math.ceil(SEUIL / (1 - 0.05) / PRIX);
+    const alerteQ = Math.ceil(c(SEUIL / (1 - 0.05)) / PRIX);
     expect([seuilQ, alerteQ]).toEqual([1_485, 1_564]);
     expect(VENTES_DU_CURSEUR).toEqual({ min: 1_400, max: 1_700 });
     expect(curseur(ch, "l-alerte-au-curseur")).toEqual({
@@ -333,17 +337,17 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
         "Résultat du mois": 1_564 * 21 - FIXES,
       },
     });
-    expect([c(1_564 * PRIX - SEUIL), c(0.05 * 1_564 * PRIX), 1_564 * 21 - FIXES]).toEqual([4_666.62, 4_613.8, 1_661]);
+    expect([c(1_564 * PRIX - SEUIL), c(0.05 * 1_564 * PRIX), 1_564 * 21 - FIXES]).toEqual([4_658.69, 4_613.8, 1_661]);
   });
 
   it("construire un indicateur, à rebours : la cible et le seuil d'alerte en enceintes", () => {
     expect(CIBLE_DE_L_INDICE).toBe(0.2);
     expect(attendus(ch, "construire-un-indicateur")).toEqual({
       "Chiffre d'affaires du mois au seuil d'alerte": c(SEUIL / 0.95),
-      "Ventes du mois au seuil d'alerte": Math.ceil(SEUIL / 0.95 / PRIX),
-      "Ventes du mois de la cible": Math.ceil(SEUIL / 0.8 / PRIX),
+      "Ventes du mois au seuil d'alerte": Math.ceil(c(SEUIL / 0.95) / PRIX),
+      "Ventes du mois de la cible": Math.ceil(c(SEUIL / 0.8) / PRIX),
     });
-    expect(Object.values(attendus(ch, "construire-un-indicateur"))).toEqual([92_220.4, 1_564, 1_857]);
+    expect(Object.values(attendus(ch, "construire-un-indicateur"))).toEqual([92_228.75, 1_564, 1_857]);
     // À la cible : avril, mai et juin ; sous l'alerte : février ; sous la cible de l'indice : janvier à mars.
     expect(MOIS.filter((m) => m.q >= 1_857).map((m) => m.nom)).toEqual(["avril", "mai", "juin"]);
     expect(MOIS.filter((m) => m.q < 1_564).map((m) => m.nom)).toEqual(["février"]);
@@ -363,8 +367,8 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
       const s = semestreALaMain(p);
       return {
         "Chiffre d'affaires du semestre": s.ca,
-        "Indice de sécurité du semestre": dixieme(s.indice * 100),
-        "Part de marché du semestre": dixieme(s.part * 100),
+        "Indice de sécurité du semestre": c(s.indice * 100),
+        "Part de marché du semestre": c(s.part * 100),
         "Trésorerie la plus basse du semestre": s.plusBas,
         "Résultat du semestre, face à son seuil d'alerte": s.resultat,
         "Trésorerie la plus basse, face à son seuil d'alerte": c(s.plusBas - 10_000),
@@ -373,8 +377,8 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     };
     expect(l.auDepart).toEqual(lire({ prix: 59, publicite: 0, campustech: 80, banc: 0 }));
     expect(l.aLaSolution).toEqual(lire({ prix: 59, publicite: 0, campustech: 80, banc: 3 }));
-    expect(Object.values(l.auDepart)).toEqual([640_681, 18, 25.3, 19_302.8, 40_941, 9_302.8, 0]);
-    expect(Object.values(l.aLaSolution)).toEqual([640_681, 17.3, 25.3, -2_190, 39_441, -12_190, 1]);
+    expect(Object.values(l.auDepart)).toEqual([640_681, 17.95, 25.25, 19_302.8, 40_941, 9_302.8, 0]);
+    expect(Object.values(l.aLaSolution)).toEqual([640_681, 17.29, 25.25, -2_190, 39_441, -12_190, 1]);
     // Les autres solutions : CampusTech à 140 jours, ou une publicité de 3 000 € par mois ; une baisse de prix allume aussi le résultat.
     for (const [p, ok] of [
       [{ campustech: 140 }, true],
@@ -435,7 +439,7 @@ describe("le cas : régler le voyant de sécurité", () => {
   const ca = Q.reduce((t, q) => t + q * PRIX, 0);
   const marge = Q.reduce((t, q) => t + q * (PRIX - CV), 0);
   const fixes = 6 * FIXES;
-  const seuil = c((fixes * ca) / marge);
+  const seuil = seuilAuTaux(fixes, marge, ca);
   const cible = c(seuil / (1 - 0.15));
 
   it("est le cas dédié du chapitre, chez NOVA", () => {
@@ -445,22 +449,22 @@ describe("le cas : régler le voyant de sécurité", () => {
   });
 
   it("les indicateurs du semestre, refaits à la main", () => {
-    expect([ca, marge, fixes, seuil]).toEqual([640_681, 228_039, 187_098, 525_656.29]);
+    expect([ca, marge, fixes, seuil]).toEqual([640_681, 228_039, 187_098, 525_703.85]);
     expect(attendus(s, "le-semestre")).toEqual({
       "Chiffre d'affaires du semestre": ca,
-      "Taux de marge sur coût variable du semestre (%)": dixieme((marge / ca) * 100),
+      "Taux de marge sur coût variable du semestre (%)": tauxPct(marge, ca),
       "Seuil de rentabilité du semestre": seuil,
-      "Indice de sécurité du semestre (%)": dixieme(((ca - seuil) / ca) * 100),
+      "Indice de sécurité du semestre (%)": c(((ca - seuil) / ca) * 100),
     });
-    expect(dixieme(((ca - seuil) / ca) * 100)).toBe(18);
+    expect([tauxPct(marge, ca), c(((ca - seuil) / ca) * 100)]).toEqual([35.59, 17.95]);
     // L'indice du semestre n'est pas la moyenne des six indices.
-    expect(dixieme((MOIS.reduce((t, m) => t + m.indice, 0) / 6) * 100)).toBe(16.4);
+    expect(c(MOIS.reduce((t, m) => t + c(m.indice * 100), 0) / 6)).toBe(16.4);
   });
 
-  it("le curseur du voyant : 10 482 enceintes sur le semestre", () => {
+  it("le curseur du voyant : 10 483 enceintes sur le semestre", () => {
     expect(VENTES_DU_SEMESTRE_AU_CURSEUR).toEqual({ min: 10_000, max: 11_000 });
-    const q = Math.ceil(seuil / 0.85 / PRIX);
-    expect(q).toBe(10_482);
+    const q = Math.ceil(cible / PRIX);
+    expect(q).toBe(10_483);
     expect(curseur(s, "le-voyant-au-curseur")).toEqual({
       attendu: q,
       bornes: [10_000, 11_000],
@@ -475,15 +479,15 @@ describe("le cas : régler le voyant de sécurité", () => {
       "Par mois, en moyenne": c(cible / 6),
       "Marge de sécurité à ce chiffre d'affaires": c(cible - seuil),
     });
-    expect([cible, c(cible / 6), c(cible - seuil)]).toEqual([618_419.16, 103_069.86, 92_762.87]);
+    expect([cible, c(cible / 6), c(cible - seuil)]).toEqual([618_475.12, 103_079.19, 92_771.27]);
   });
 
   it("le jugement : le voyant ne voit pas le découvert du banc", () => {
     const banc = semestreALaMain({ prix: 59, publicite: 0, campustech: 80, banc: 3 });
-    expect([dixieme(banc.indice * 100), banc.plusBas]).toEqual([17.3, -2_190]);
+    expect([c(banc.indice * 100), banc.plusBas]).toEqual([17.29, -2_190]);
     expect(banc.indice).toBeGreaterThan(0.15);
-    expect(juste(s, "ce-que-le-voyant-ne-voit-pas")).toBe("Non : l'indice reste à 17,3 %, mais avril finit à découvert");
-    expect(juste(s, "reponse")).toBe("Sous 618 419,16 € par semestre ; et gardez à côté le voyant de trésorerie");
+    expect(juste(s, "ce-que-le-voyant-ne-voit-pas")).toBe("Non : l'indice reste à 17,29 %, mais avril finit à découvert");
+    expect(juste(s, "reponse")).toBe("Sous 618 475,12 € par semestre ; et gardez à côté le voyant de trésorerie");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

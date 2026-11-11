@@ -128,10 +128,13 @@ describe("l'accès au cours selon l'offre", () => {
     const ferme = reserves.find((x) => x.parcours === "mco" && !gea.includes(x.code))!;
     expect(await coursOuvert({ eleve }, ferme)).toBe(false);
     expect(await coursOuvert({ enseignant: prof }, ferme)).toBe(false);
-    // Le parcours de formation se choisit aussi pour une classe héritée.
-    const h = (await creerClasse({ enseignantId: prof, nom: "Ancienne GEA", parcours: "mco" }))!;
+    // Le parcours de formation se choisit aussi pour une classe héritée. Sous l'offre Classe, c'est
+    // celui de la licence, celui de la première classe (décision du propriétaire, 10 novembre 2026) :
+    // le BUT TC est refusé, le BUT GEA accepté.
+    const h = (await creerClasse({ enseignantId: prof, nom: "Ancienne GEA", parcours: "but-gea" }))!;
     await db.update(coursClasses).set({ parcours: null, heritee: true }).where(eq(coursClasses.id, h.id));
-    expect(await choisirLeParcours({ enseignantId: prof, classeId: h.id, parcours: "but-tc" })).toBe(true);
+    expect(await choisirLeParcours({ enseignantId: prof, classeId: h.id, parcours: "but-tc" })).toBe(false);
+    expect(await choisirLeParcours({ enseignantId: prof, classeId: h.id, parcours: "but-gea" })).toBe(true);
   });
 
   it("Campus : tout est ouvert", async () => {

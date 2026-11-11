@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { CROITRE_EN_INVESTISSANT, ENTREPRISES_DE_LA_CROISSANCE, croissance, tableauDesMachines } from "../../chapitres/croitre-en-investissant";
 import { machineEnPlus } from "../../monde/capacite";
@@ -25,13 +25,18 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de `croissance` et de `machineEnPlus`.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les capacités et les ventes sont des quantités, celles qui
+ * annulent le résultat ou égalisent les VAN à l'enceinte supérieure ; les flux et les VAN attendent
+ * le centime (à 50 centimes et 1 € près, avant), sur le facteur d'actualisation au dix-millième
+ * écrit (4,6229) ; la hausse de la demande se donne à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const pct = (x: number, d = 2) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const pct = (x: number) => pourcent(x * 100);
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** À l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
@@ -125,7 +130,7 @@ function tableauDesVan(c: Pick<Cas, "code">): TableauDeDonnees {
     titre: `La VAN des deux machines, avec leur opérateur, selon la demande gardée ${qte(v.petite.machine.dureeEnAnnees)} ans`,
     colonnes: [v.petite.machine.nom, v.grande.machine.nom],
     lignes: v.vanParHausse.map((l) => ({
-      libelle: l.hausse === 0 ? "Demande prévue de N + 1" : `Demande de N + 1 haussée de ${pct(l.hausse, 1)}`,
+      libelle: l.hausse === 0 ? "Demande prévue de N + 1" : `Demande de N + 1 haussée de ${pct(l.hausse)}`,
       valeurs: [eur(l.petite), eur(l.grande)],
     })),
   };
@@ -187,24 +192,24 @@ export const VOIR_PLUS_GRAND: Situation = {
         const equipe = v.x.sans.trimestres[0]!.capaciteEquipe;
         const gains = g.trimestres.filter((t) => t.ventesGagnees !== 0);
         return [
-          { libelle: "Capacité de l'outil avec la ligne", attendu: g.capaciteOutil, calcul: `${qte(f.ligne.capaciteParTrimestre)} + ${qte(g.machine.capaciteEnPlus)} = ${qte(g.capaciteOutil)}`, tolerance: 0 },
+          { libelle: "Capacité de l'outil avec la ligne", nature: "quantite", attendu: g.capaciteOutil, calcul: `${qte(f.ligne.capaciteParTrimestre)} + ${qte(g.machine.capaciteEnPlus)} = ${qte(g.capaciteOutil)}` },
           {
             libelle: "Capacité de l'équipe avec son opérateur",
+            nature: "quantite",
             attendu: g.capaciteEquipe,
             calcul: `${qte(f.operateurs.heuresParMois)} heures ÷ ${qte(g.machine.heuresParEnceinte)} × 3 mois = ${qte(g.equipeEnPlus)} ; ${qte(equipe)} + ${qte(g.equipeEnPlus)} = ${qte(g.capaciteEquipe)}`,
-            tolerance: 0,
           },
           {
             libelle: "Ventes gagnées sur l'année",
+            nature: "quantite",
             attendu: g.ventesGagnees,
             calcul: `${gains.map((t) => `(${qte(t.ventesAvec)} − ${qte(t.ventesSans)}) au T${t.trimestre}`).join(" + ")} = ${qte(g.ventesGagnees)} : la demande borne`,
-            tolerance: 0,
           },
           {
             libelle: "Ventes de plus que le poste",
+            nature: "quantite",
             attendu: g.ventesGagnees - v.petite.ventesGagnees,
             calcul: `${qte(g.ventesGagnees)} − ${qte(v.petite.ventesGagnees)} = ${qte(g.ventesGagnees - v.petite.ventesGagnees)}`,
-            tolerance: 0,
           },
         ];
       },
@@ -239,15 +244,14 @@ export const VOIR_PLUS_GRAND: Situation = {
           },
           {
             libelle: "Ventes gagnées qui rendent l'année nulle",
+            nature: "quantite",
             attendu: g.ventesNecessaires,
-            calcul: `${eur(g.charges)} ÷ ${eur(x.m)} = ${qte(auCentime(g.charges / x.m))}, soit ${qte(g.ventesNecessaires)}`,
-            tolerance: 0,
+            calcul: `${eur(g.charges)} ÷ ${eur(x.m)} = ${qte(g.charges / x.m)}, arrondi à l'enceinte supérieure : ${qte(g.ventesNecessaires)} (une de moins laisserait une perte)`,
           },
           {
             libelle: "VAN de la ligne sur la demande prévue",
             attendu: g.van,
             calcul: `Flux : (${eur(g.margeGagnee)} − ${eur(g.salaires)} − ${eur(g.entretien)} − ${eur(g.amortissement)}) × ${qte(1 - x.impot)} + ${eur(g.amortissement)} = ${eur(g.fluxAnnuel)} ; VAN : −${eur(g.investissement)} + ${entre(g.fluxAnnuel)} × ${facteurEcrit(g.facteurDActualisation)} = ${eur(g.van)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -269,7 +273,7 @@ export const VOIR_PLUS_GRAND: Situation = {
         return `La ligne et le poste ont le même opérateur. La ligne coûte ${eur(v.investissementEnPlus)} de plus au départ, ${eur(v.entretienEnPlus)} d'entretien et ${eur(v.amortissementEnPlus)} d'amortissement de plus par an. Faites varier les ventes qu'elle fait gagner chaque année de plus que le poste : placez le curseur sur le plus petit nombre où ses flux actualisés en plus couvrent son investissement en plus, puis validez.`;
       },
       grandeur: (c) => ({ libelle: "Ventes de plus que le poste, par an", unite: voirPlusGrand(c).f.unites }),
-      cible: (c) => ({ attendu: voirPlusGrand(c).ventesQuiEgalisent, min: VENTES_EN_PLUS_DU_CURSEUR.min, max: VENTES_EN_PLUS_DU_CURSEUR.max }),
+      cible: (c) => ({ nature: "quantite", attendu: voirPlusGrand(c).ventesQuiEgalisent, min: VENTES_EN_PLUS_DU_CURSEUR.min, max: VENTES_EN_PLUS_DU_CURSEUR.max }),
       zones: ["La ligne passe devant", "Le poste reste devant"],
       rates: () => ({
         dessous: "À cette position, les flux en plus de la ligne ne couvrent pas ce qu'elle coûte de plus : le poste reste devant.",
@@ -314,25 +318,24 @@ export const VOIR_PLUS_GRAND: Situation = {
         const v = voirPlusGrand(c);
         const k = v.bornes.length;
         return [
-          { libelle: "Flux de chaque année en plus qui égalise les VAN", attendu: v.fluxQuiEgalise, calcul: `${eur(v.investissementEnPlus)} ÷ ${facteurEcrit(v.F)} = ${eur(v.fluxQuiEgalise)}`, tolerance: 0.5 },
+          { libelle: "Flux de chaque année en plus qui égalise les VAN", attendu: v.fluxQuiEgalise, calcul: `${eur(v.investissementEnPlus)} ÷ ${facteurEcrit(v.F)} = ${eur(v.fluxQuiEgalise)}` },
           {
             libelle: "Ventes de plus que le poste qui égalisent les VAN",
+            nature: "quantite",
             attendu: v.ventesQuiEgalisent,
-            calcul: `(${eur(v.fluxQuiEgalise)} − ${eur(v.amortissementEnPlus)}) ÷ ${qte(1 - v.x.impot)} = ${eur(v.resultatQuiEgalise)} ; (${eur(v.resultatQuiEgalise)} + ${eur(v.entretienEnPlus)} + ${eur(v.amortissementEnPlus)}) ÷ ${eur(v.x.m)} = ${qte(auCentime((v.resultatQuiEgalise + v.salairesEnPlus + v.entretienEnPlus + v.amortissementEnPlus) / v.x.m))}, soit ${qte(v.ventesQuiEgalisent)}`,
-            tolerance: 0,
+            calcul: `(${eur(v.fluxQuiEgalise)} − ${eur(v.amortissementEnPlus)}) ÷ ${qte(1 - v.x.impot)} = ${eur(v.resultatQuiEgalise)} ; (${eur(v.resultatQuiEgalise)} + ${eur(v.entretienEnPlus)} + ${eur(v.amortissementEnPlus)}) ÷ ${eur(v.x.m)} = ${qte((v.resultatQuiEgalise + v.salairesEnPlus + v.entretienEnPlus + v.amortissementEnPlus) / v.x.m)}, arrondi à l'enceinte supérieure : ${qte(v.ventesQuiEgalisent)}`,
           },
           {
             libelle: "Hausse de la demande où la ligne passe devant (%)",
             attendu: v.hausseARebours,
             calcul: `Aux T${v.bornes.map((t) => t.trimestre).join(" et T")}, la ligne vend la demande au-delà des ${qte(v.petite.capaciteOutil)} du poste : (${qte(v.ventesQuiEgalisent)} + ${k} × ${qte(v.petite.capaciteOutil)}) ÷ (${v.bornes.map((t) => qte(v.x.sans.trimestres[t.trimestre - 1]!.demande)).join(" + ")}) = ${(1 + v.hausseARebours / 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })}, soit ${qte(v.hausseARebours)} % de demande en plus`,
-            tolerance: 0.05,
           },
         ];
       },
       explication: (c) => {
         const v = voirPlusGrand(c);
         return [
-          `En dessous de ${qte(v.hausseARebours)} % de demande en plus, la ligne ne fait que coûter plus que le poste ; au-delà, l'outil du poste borne aux T${v.bornes.map((t) => t.trimestre).join(" et T")}, et la ligne vend ce qu'il refuse. À ${pct(v.plusHaute.hausse, 1)}, sa VAN vaut ${eur(v.plusHaute.grande)}, contre ${eur(v.plusHaute.petite)} pour le poste.`,
+          `En dessous de ${qte(v.hausseARebours)} % de demande en plus, la ligne ne fait que coûter plus que le poste ; au-delà, l'outil du poste borne aux T${v.bornes.map((t) => t.trimestre).join(" et T")}, et la ligne vend ce qu'il refuse. À ${pct(v.plusHaute.hausse)}, sa VAN vaut ${eur(v.plusHaute.grande)}, contre ${eur(v.plusHaute.petite)} pour le poste.`,
           "Le rebours demande de savoir d'où viennent les ventes : ce n'est pas la capacité de la ligne qui compte, c'est la demande qui dépasse celle du poste.",
         ];
       },
@@ -348,10 +351,10 @@ export const VOIR_PLUS_GRAND: Situation = {
         const f = v.f;
         const p = v.petite;
         const g = v.grande;
-        const chiffres = `Sur la demande prévue, VAN ${eur(p.van)} pour le poste, ${eur(g.van)} pour la ligne ; la ligne ne passe devant qu'à ${pct(v.devant ?? 0, 1)} de demande en plus.`;
+        const chiffres = `Sur la demande prévue, VAN ${eur(p.van)} pour le poste, ${eur(g.van)} pour la ligne ; la ligne ne passe devant qu'à ${pct(v.devant ?? 0)} de demande en plus.`;
         return [
           {
-            texte: `Aucune des deux sur la demande prévue ; la ligne ne passe devant qu'à ${pct(v.devant ?? 0, 1)} de demande en plus`,
+            texte: `Aucune des deux sur la demande prévue ; la ligne ne passe devant qu'à ${pct(v.devant ?? 0)} de demande en plus`,
             juste: v.verdict === "aucune",
             retour:
               v.verdict === "aucune"
@@ -364,12 +367,12 @@ export const VOIR_PLUS_GRAND: Situation = {
             retour: `Non : c'est juger une capacité, pas des ventes. Sur la demande prévue, la ligne vend ${qte(g.ventesGagnees)} ${f.unites} de plus, exactement autant que le poste : la capacité en plus ne trouve pas de clients. ${chiffres}`,
           },
           {
-            texte: `Prenons la ligne : à ${pct(v.plusHaute.hausse, 1)} de demande en plus, sa VAN dépasse celle du poste de ${eur(auCentime(v.plusHaute.grande - v.plusHaute.petite))}`,
+            texte: `Prenons la ligne : à ${pct(v.plusHaute.hausse)} de demande en plus, sa VAN dépasse celle du poste de ${eur(auCentime(v.plusHaute.grande - v.plusHaute.petite))}`,
             juste: v.verdict === "la-grande",
             retour:
               v.verdict === "la-grande"
                 ? `Oui. ${chiffres}`
-                : `Non : c'est vrai à ${pct(v.plusHaute.hausse, 1)}, mais c'est un pari, pas la prévision. Sur la demande prévue, la ligne vaut ${eur(-v.ecartDeVan)} de moins que le poste ; il faudrait croire à ${pct(v.devant ?? 0, 1)} de demande en plus, gardée ${qte(g.machine.dureeEnAnnees)} ans.`,
+                : `Non : c'est vrai à ${pct(v.plusHaute.hausse)}, mais c'est un pari, pas la prévision. Sur la demande prévue, la ligne vaut ${eur(-v.ecartDeVan)} de moins que le poste ; il faudrait croire à ${pct(v.devant ?? 0)} de demande en plus, gardée ${qte(g.machine.dureeEnAnnees)} ans.`,
           },
           {
             texte: `Prenons le poste : sa VAN vaut ${eur(p.van)}, ${eur(Math.abs(v.ecartDeVan))} de mieux que la ligne`,
@@ -377,7 +380,7 @@ export const VOIR_PLUS_GRAND: Situation = {
             retour:
               v.verdict === "le-poste"
                 ? `Oui. ${chiffres}`
-                : `Non : moins mauvaise n'est pas bonne. Une VAN de ${eur(p.van)} détruit de la valeur : le poste et son opérateur ne se paient qu'à ${pct(v.x.hausseNulle ?? 0, 1)} de demande en plus.`,
+                : `Non : moins mauvaise n'est pas bonne. Une VAN de ${eur(p.van)} détruit de la valeur : le poste et son opérateur ne se paient qu'à ${pct(v.x.hausseNulle ?? 0)} de demande en plus.`,
           },
         ];
       },

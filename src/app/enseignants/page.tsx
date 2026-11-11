@@ -4,6 +4,7 @@ import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE, OFFRES } from "@/config/
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import { publicDeLAtelier } from "@/config/formations";
 import { formationsAvecUnePage } from "@/config/couverture";
+import { leCoursEnChiffres } from "@/config/articulation";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
@@ -60,7 +61,9 @@ const HERO_STATS = [
     // Les deux nombres se lisent dans les registres, et le second dit ce que le premier couvre.
     value: `${FORMATIONS_SERVIES.length}`,
     label: "formations servies",
-    detail: `Du bac STMG au DSCG, chacune avec sa page de référentiel ; ${FORMATIONS_A_ATELIER.length} avec un atelier clé en main`,
+    // Le cours en sert une partie : le même nombre que l'encart du cours, plus bas (audit du
+    // 10 novembre 2026 : « 13 formations servies » au-dessus de « 18 formations »).
+    detail: `Du bac STMG au DSCG, chacune avec sa page de référentiel ; ${FORMATIONS_A_ATELIER.length} avec un atelier clé en main, ${leCoursEnChiffres().formations} avec les chapitres du cours`,
   },
 ];
 

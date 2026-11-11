@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { CUISINES, coutMatiere } from "../../chapitres/le-cout-matiere";
 import { MARGE_DE_PREPARATION, trimestreDeCuisine, type TrimestreDeCuisine } from "../../monde/cuisine";
@@ -31,18 +31,20 @@ import type { Situation } from "../types";
  * couverts qu'elle sert, puis remonte à rebours de la marge du trimestre joué aux clients qu'elle peut
  * perdre (la marge qu'un couvert servi y laisse, couverts préparés en plus compris). Il les compare
  * ensuite aux clients que la simulation lui fait perdre : le jugement porte sur cet écart.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ratios coût matière se donnent à deux décimales, à un
+ * centième près (au dixième, avant) ; les écarts de marge au centime, à un centime près (à un euro,
+ * avant) ; les couverts et les clients sont des quantités : le corrigé écrit le quotient à deux
+ * décimales, puis l'arrondit à l'unité au-dessus, et dit pourquoi.
  */
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 /** Un écart : le signe plus devant un gain. */
 const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 /** Retranché, un négatif va entre parenthèses. */
 const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const coef = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const auCentime = (x: number) => Math.round(x * 100) / 100;
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -67,7 +69,9 @@ export function carteOuCuisine(c: Pick<Cas, "code">) {
   // que la carte montée peut donc perdre.
   const denreesParCouvertServi = auCentime(joue.coutDuCouvert * (1 + MARGE_DE_PREPARATION));
   const margeParCouvertServi = auCentime(prixMonte - f.autresCoutsParCouvert - denreesParCouvertServi);
-  const couvertsAGarder = Math.ceil(joue.margeSurCoutsVariables / margeParCouvertServi - 1e-9);
+  // Le quotient à deux décimales, puis à l'unité au-dessus : un couvert de moins ne referait pas la marge.
+  const couvertsCalcules = auCentime(joue.margeSurCoutsVariables / margeParCouvertServi);
+  const couvertsAGarder = Math.ceil(couvertsCalcules - 1e-9);
   return {
     m,
     f,
@@ -82,6 +86,7 @@ export function carteOuCuisine(c: Pick<Cas, "code">) {
     meilleure,
     denreesParCouvertServi,
     margeParCouvertServi,
+    couvertsCalcules,
     couvertsAGarder,
     clientsQueLaCartePeutPerdre: joue.servis - couvertsAGarder,
     /** Les bornes du curseur : de 60 % des couverts du trimestre joué, à la centaine, jusqu'à eux tous. */
@@ -149,12 +154,12 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
       type: "montants",
       titre: "Le ratio de chaque façon",
       notions: ["margin_rates", "variable_costs"],
-      question: () => "Calculez le ratio coût matière de chaque façon rejouée : le coût matière consommé divisé par le chiffre d'affaires HT, en pourcentage, au dixième.",
+      question: () => "Calculez le ratio coût matière de chaque façon rejouée : le coût matière consommé divisé par le chiffre d'affaires HT, en pourcentage, à deux décimales.",
       champs: (c) => {
         const k = carteOuCuisine(c);
         return [
-          { libelle: "Ratio, carte montée (%)", attendu: k.carte.ratio, calcul: `${eur(k.carte.denrees)} ÷ ${eur(k.carte.chiffreDAffaires)} × 100 = ${pct(k.carte.ratio)}`, tolerance: 0.1 },
-          { libelle: "Ratio, préparer juste (%)", attendu: k.juste.ratio, calcul: `${eur(k.juste.denrees)} ÷ ${eur(k.juste.chiffreDAffaires)} × 100 = ${pct(k.juste.ratio)}`, tolerance: 0.1 },
+          { libelle: "Ratio, carte montée (%)", attendu: k.carte.ratio, calcul: `${eur(k.carte.denrees)} ÷ ${eur(k.carte.chiffreDAffaires)} × 100 = ${pct(k.carte.ratio)}` },
+          { libelle: "Ratio, préparer juste (%)", attendu: k.juste.ratio, calcul: `${eur(k.juste.denrees)} ÷ ${eur(k.juste.chiffreDAffaires)} × 100 = ${pct(k.juste.ratio)}` },
         ];
       },
       explication: (c) => {
@@ -226,15 +231,15 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
           },
           {
             libelle: "Couverts à servir pour garder la marge",
+            nature: "quantite",
             attendu: k.couvertsAGarder,
-            calcul: `${eur(k.joue.margeSurCoutsVariables)} ÷ ${eur(k.margeParCouvertServi)} = ${qte(k.couvertsAGarder)}`,
-            tolerance: 1,
+            calcul: `${eur(k.joue.margeSurCoutsVariables)} ÷ ${eur(k.margeParCouvertServi)} = ${nombreAuCentieme(k.couvertsCalcules)}, soit ${qte(k.couvertsAGarder)} couverts à l'unité au-dessus : un de moins ne referait pas la marge`,
           },
           {
             libelle: "Clients que la carte peut perdre",
+            nature: "quantite",
             attendu: k.clientsQueLaCartePeutPerdre,
             calcul: `${qte(k.joue.servis)} − ${qte(k.couvertsAGarder)} = ${qte(k.clientsQueLaCartePeutPerdre)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -255,18 +260,16 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
       champs: (c) => {
         const k = carteOuCuisine(c);
         return [
-          { libelle: "Clients perdus en montant la carte", attendu: k.clientsPerdus, calcul: `${qte(k.joue.servis)} − ${qte(k.carte.servis)} = ${qte(k.clientsPerdus)}` },
+          { libelle: "Clients perdus en montant la carte", nature: "quantite", attendu: k.clientsPerdus, calcul: `${qte(k.joue.servis)} − ${qte(k.carte.servis)} = ${qte(k.clientsPerdus)}` },
           {
             libelle: "Écart de marge, carte montée",
             attendu: k.ecartCarte,
             calcul: `${eur(k.carte.margeSurCoutsVariables)} − ${retranche(k.joue.margeSurCoutsVariables)} = ${ecart(k.ecartCarte)}`,
-            tolerance: 1,
           },
           {
             libelle: "Écart de marge, préparer juste",
             attendu: k.ecartJuste,
             calcul: `${eur(k.juste.margeSurCoutsVariables)} − ${retranche(k.joue.margeSurCoutsVariables)} = ${ecart(k.ecartJuste)}`,
-            tolerance: 1,
           },
         ];
       },

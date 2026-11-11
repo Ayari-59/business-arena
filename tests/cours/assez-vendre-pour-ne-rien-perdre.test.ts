@@ -29,16 +29,16 @@ describe("le seuil de janvier", () => {
     expect(triSgn(CH, "variables-ou-fixes")["Loyer du local"]).toBe("fixe");
   });
 
-  it("le seuil : 35,59 %, 1 485 enceintes, 87 609,38 €", () => {
-    expect(attendusSgn(CH, "le-seuil")).toEqual([35.59, 1_485, 87_609.38]);
+  it("le seuil : 35,59 %, 1 485 enceintes, 87 617,31 € (sur le taux à deux décimales)", () => {
+    expect(attendusSgn(CH, "le-seuil")).toEqual([35.59, 1_485, 87_617.31]);
   });
 
   it("le curseur : 1 485 enceintes", () => {
     gardeDuCurseurSgn(CH, "le-curseur-du-seuil", 1_485);
   });
 
-  it("le point mort le 29 janvier, 6 200,62 € de marge de sécurité", () => {
-    expect(attendusSgn(CH, "point-mort-et-securite")).toEqual([6_200.62, 6.6, 29]);
+  it("le point mort le 29 janvier, 6 192,69 € de marge de sécurité", () => {
+    expect(attendusSgn(CH, "point-mort-et-securite")).toEqual([6_192.69, 6.6, 29]);
     expect(seuilDeJanvier().jours).toBe(31);
     expect(justeSgn(CH, "lire-le-seuil")[0]).toMatch(/sous le seuil/);
   });

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { HOTELS, duNom, occupation, trimestre } from "../../chapitres/occupation-et-revenu-par-chambre";
 import { anneeAuPrixUnique, anneeAuTarif, concurrentsDe, lHotelEnIndicateurs, type IndicateursDHotel } from "../../monde/concurrence-hoteliere";
@@ -30,13 +30,14 @@ import type { Situation } from "../types";
  * garder le RevPAR de l'année ; puis, à rebours, celles qu'il faudrait pour garder la marge sur coûts
  * variables de l'année, et celles qui manquent à l'année rejouée. Le RevPAR et la marge ne demandent
  * pas les mêmes chambres : le jugement croise les deux.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation se donne à deux décimales, à un centième
+ * près (au dixième, avant) ; les nuitées sont des quantités : le corrigé écrit le quotient à deux
+ * décimales, puis l'arrondit à l'unité au-dessus, et dit pourquoi (à une nuitée près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 /** « a », « a et b », « a, b et c ». */
@@ -69,8 +70,11 @@ export function alignement(c: Pick<Cas, "code">) {
   // puis sa marge sur coûts variables (chaque nuitée vendue coûte le coût variable de la fiche).
   const margeAuTarif = auCentime(tarif.annee.chiffreDAffaires - tarif.annee.vendues * f.coutVariableParNuitee);
   const margeParNuitee = auCentime(prixDuConcurrent - f.coutVariableParNuitee);
-  const pourLeRevpar = Math.ceil(tarif.annee.chiffreDAffaires / prixDuConcurrent - 1e-9);
-  const pourLaMarge = Math.ceil(margeAuTarif / margeParNuitee - 1e-9);
+  // Les quotients à deux décimales, puis à l'unité au-dessus : un seuil qui manque d'une nuitée n'est pas atteint.
+  const quotientDuRevpar = auCentime(tarif.annee.chiffreDAffaires / prixDuConcurrent);
+  const quotientDeLaMarge = auCentime(margeAuTarif / margeParNuitee);
+  const pourLeRevpar = Math.ceil(quotientDuRevpar - 1e-9);
+  const pourLaMarge = Math.ceil(quotientDeLaMarge - 1e-9);
   return {
     o,
     f,
@@ -78,6 +82,8 @@ export function alignement(c: Pick<Cas, "code">) {
     leRival: rival.annee,
     prixAuTarif: f.prixDeLAnnee,
     prixDuConcurrent,
+    quotientDuRevpar,
+    quotientDeLaMarge,
     tarif,
     aligne,
     resultatAuTarif: auTarif.resultat,
@@ -162,16 +168,16 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       titre: "Occupation et RevPAR de chaque prix",
       notions: ["occupancy_revpar"],
       question: () =>
-        "Calculez, pour chaque prix, le taux d'occupation de l'année (au dixième) et son RevPAR (au centime) : les chambres vendues, puis le chiffre d'affaires, divisés par les chambres disponibles de l'année.",
+        "Calculez, pour chaque prix, le taux d'occupation de l'année (à deux décimales) et son RevPAR (au centime) : les chambres vendues, puis le chiffre d'affaires, divisés par les chambres disponibles de l'année.",
       champs: (c) => {
         const a = alignement(c);
         const t = a.tarif.annee;
         const p = a.aligne.annee;
         const auPrix = `au prix ${duNom(a.rival)}`;
         return [
-          { libelle: "Taux d'occupation, au tarif (%)", attendu: t.occupation, calcul: `${qte(t.vendues)} ÷ ${qte(t.disponibles)} × 100 = ${pct(t.occupation)}`, tolerance: 0.1 },
+          { libelle: "Taux d'occupation, au tarif (%)", attendu: t.occupation, calcul: `${qte(t.vendues)} ÷ ${qte(t.disponibles)} × 100 = ${pct(t.occupation)}` },
           { libelle: "RevPAR, au tarif", attendu: t.revpar, calcul: `${eur(t.chiffreDAffaires)} ÷ ${qte(t.disponibles)} = ${eur(t.revpar)}` },
-          { libelle: `Taux d'occupation, ${auPrix} (%)`, attendu: p.occupation, calcul: `${qte(p.vendues)} ÷ ${qte(p.disponibles)} × 100 = ${pct(p.occupation)}`, tolerance: 0.1 },
+          { libelle: `Taux d'occupation, ${auPrix} (%)`, attendu: p.occupation, calcul: `${qte(p.vendues)} ÷ ${qte(p.disponibles)} × 100 = ${pct(p.occupation)}` },
           { libelle: `RevPAR, ${auPrix}`, attendu: p.revpar, calcul: `${eur(p.chiffreDAffaires)} ÷ ${qte(p.disponibles)} = ${eur(p.revpar)}` },
         ];
       },
@@ -230,7 +236,7 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       explication: (c) => {
         const a = alignement(c);
         return [
-          `Au prix ${duNom(a.rival)}, il faudrait vendre ${qte(a.pourLeRevpar)} nuitées sur l'année pour garder le RevPAR, ${pct(auCentime((a.pourLeRevpar / a.tarif.annee.disponibles) * 1000) / 10)} d'occupation. La simulation en vend ${qte(a.aligne.annee.vendues)}. Regardez la marge dans le tableau : elle ne se garde pas au même nombre de nuitées.`,
+          `Au prix ${duNom(a.rival)}, il faudrait vendre ${qte(a.pourLeRevpar)} nuitées sur l'année pour garder le RevPAR, ${pct(taux2(a.pourLeRevpar, a.tarif.annee.disponibles))} d'occupation. La simulation en vend ${qte(a.aligne.annee.vendues)}. Regardez la marge dans le tableau : elle ne se garde pas au même nombre de nuitées.`,
         ];
       },
     },
@@ -247,24 +253,24 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
         const a = alignement(c);
         const t = a.tarif.annee;
         return [
-          { libelle: "Nuitées qui gardent le RevPAR", attendu: a.pourLeRevpar, calcul: `${eur(t.chiffreDAffaires)} ÷ ${eur(a.prixDuConcurrent)} = ${qte(a.pourLeRevpar)}`, tolerance: 1 },
+          { libelle: "Nuitées qui gardent le RevPAR", nature: "quantite", attendu: a.pourLeRevpar, calcul: `${eur(t.chiffreDAffaires)} ÷ ${eur(a.prixDuConcurrent)} = ${nombreAuCentieme(a.quotientDuRevpar)}, soit ${qte(a.pourLeRevpar)} nuitées à l'unité au-dessus : une de moins ne garderait pas le chiffre d'affaires` },
           {
             libelle: "Nuitées qui gardent la marge",
+            nature: "quantite",
             attendu: a.pourLaMarge,
-            calcul: `(${eur(t.chiffreDAffaires)} − ${qte(t.vendues)} × ${eur(a.f.coutVariableParNuitee)}) ÷ (${eur(a.prixDuConcurrent)} − ${eur(a.f.coutVariableParNuitee)}) = ${eur(a.margeAuTarif)} ÷ ${eur(a.margeParNuitee)} = ${qte(a.pourLaMarge)}`,
-            tolerance: 1,
+            calcul: `(${eur(t.chiffreDAffaires)} − ${qte(t.vendues)} × ${eur(a.f.coutVariableParNuitee)}) ÷ (${eur(a.prixDuConcurrent)} − ${eur(a.f.coutVariableParNuitee)}) = ${eur(a.margeAuTarif)} ÷ ${eur(a.margeParNuitee)} = ${nombreAuCentieme(a.quotientDeLaMarge)}, soit ${qte(a.pourLaMarge)} nuitées à l'unité au-dessus : une de moins ne garderait pas la marge`,
           },
           {
             libelle: "Nuitées qui manquent pour garder la marge",
+            nature: "quantite",
             attendu: a.manquent,
             calcul: `${qte(a.pourLaMarge)} − ${qte(a.aligne.annee.vendues)} = ${qte(a.manquent)}`,
-            tolerance: 1,
           },
         ];
       },
       explication: (c) => {
         const a = alignement(c);
-        const occupation = Math.round((a.pourLaMarge / a.tarif.annee.disponibles) * 1000) / 10;
+        const occupation = taux2(a.pourLaMarge, a.tarif.annee.disponibles);
         return [
           `Garder la marge demande ${qte(a.pourLaMarge - a.pourLeRevpar)} nuitées de plus que garder le RevPAR : chaque nuitée louée en plus coûte ${eur(a.f.coutVariableParNuitee)}. Il faudrait remplir ${pct(occupation)} des chambres de l'année, quand l'hôtel est déjà ${a.refuseesAuPrixBas.some((x) => x > 0) ? "complet à ce prix une partie de l'année" : "presque plein"} : il en manque ${qte(a.manquent)}.`,
         ];
@@ -282,7 +288,7 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       champs: (c) => {
         const a = alignement(c);
         return [
-          { libelle: "Chambres vendues en plus", attendu: a.vendueEnPlus, calcul: `${qte(a.aligne.annee.vendues)} − ${qte(a.tarif.annee.vendues)} = ${qte(a.vendueEnPlus)}` },
+          { libelle: "Chambres vendues en plus", nature: "quantite", attendu: a.vendueEnPlus, calcul: `${qte(a.aligne.annee.vendues)} − ${qte(a.tarif.annee.vendues)} = ${qte(a.vendueEnPlus)}` },
           {
             libelle: "Écart de chiffre d'affaires",
             attendu: a.ecartDeChiffre,

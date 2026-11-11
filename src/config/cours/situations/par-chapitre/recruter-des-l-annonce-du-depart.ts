@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { LE_DEPART_D_UN_SALARIE, departDUnOperateur } from "../../chapitres/le-depart-d-un-salarie";
 import type { Situation } from "../types";
@@ -19,11 +19,13 @@ import type { Situation } from "../types";
  * Ce qui a changé depuis l'arène : le cas comparait deux trimestres de recrutement dans l'année
  * rejouée par le moteur (le remplaçant arrivait au trimestre suivant) ; il compare deux mois sur la
  * simulation du cours, et chez NOVA seule.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les équipes, les ventes perdues, les ventes à sauver (à
+ * l'enceinte supérieure) et la demande qui fait rapporter le recrutement sont des quantités.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] as const;
 const nomDuMois = (m: number) => MOIS[m - 1]!;
 
@@ -37,14 +39,14 @@ export function recruterDesLAnnonce(c: Pick<Cas, "code">) {
   const tot = x.desLAnnonce;
   const equipeTard = tard.equipe.trimestres[k]!;
   const equipeTot = tot.equipe.trimestres[k]!;
-  const gain = auCentime(tard.coutDuDepart - tot.coutDuDepart);
+  const gain = arrondi2(tard.coutDuDepart - tot.coutDuDepart);
   // Recruter dès l'annonce fait payer les mois de salaire que le poste vide aurait économisés.
-  const salaireEnPlus = auCentime(tard.salairesNonVerses - tot.salairesNonVerses);
+  const salaireEnPlus = arrondi2(tard.salairesNonVerses - tot.salairesNonVerses);
   // Tant que la demande du trimestre reste sous l'équipe d'un recrutement tardif, rien ne se perd ;
   // au-delà, chaque enceinte demandée de plus est une vente que seul le recrutement dès l'annonce sauve.
   const ventesASauver = Math.ceil(salaireEnPlus / x.marge - 1e-9);
   const demandeQuiFaitPencher = equipeTard + ventesASauver;
-  const surN = { tard: x.surN, tot: x.surNDesLAnnonce, gain: auCentime(x.surN.coutDuDepart - x.surNDesLAnnonce.coutDuDepart) };
+  const surN = { tard: x.surN, tot: x.surNDesLAnnonce, gain: arrondi2(x.surN.coutDuDepart - x.surNDesLAnnonce.coutDuDepart) };
   const verdict: Verdict = gain > 0 ? "recruter-des-l-annonce" : "attendre-le-depart";
   return { x, k, tard, tot, equipeTard, equipeTot, gain, salaireEnPlus, ventesASauver, demandeQuiFaitPencher, surN, verdict };
 }
@@ -116,10 +118,10 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
         const x = r.x;
         const mois = (d: typeof r.tard) => d.equipe.mois.slice(r.k * 3, r.k * 3 + 3).map((m) => qte(m.capacite)).join(" + ");
         return [
-          { libelle: "Équipe du trimestre, lancé au départ", attendu: r.equipeTard, calcul: `${mois(r.tard)} = ${qte(r.equipeTard)} (arrivée le 1er ${nomDuMois(r.tard.arrivee!)})` },
-          { libelle: "Équipe du trimestre, lancé dès l'annonce", attendu: r.equipeTot, calcul: `${mois(r.tot)} = ${qte(r.equipeTot)} (arrivée le 1er ${nomDuMois(r.tot.arrivee!)})` },
-          { libelle: "Ventes perdues, lancé au départ", attendu: r.tard.ventesPerdues, calcul: `${qte(x.ventesDuPlan)} au plan − ${qte(r.equipeTard)} = ${qte(r.tard.ventesPerdues)}` },
-          { libelle: "Ventes perdues, lancé dès l'annonce", attendu: r.tot.ventesPerdues, calcul: `${qte(x.ventesDuPlan)} au plan − ${qte(r.equipeTot)} = ${qte(r.tot.ventesPerdues)}` },
+          { libelle: "Équipe du trimestre, lancé au départ", nature: "quantite", attendu: r.equipeTard, calcul: `${mois(r.tard)} = ${qte(r.equipeTard)} (arrivée le 1er ${nomDuMois(r.tard.arrivee!)})` },
+          { libelle: "Équipe du trimestre, lancé dès l'annonce", nature: "quantite", attendu: r.equipeTot, calcul: `${mois(r.tot)} = ${qte(r.equipeTot)} (arrivée le 1er ${nomDuMois(r.tot.arrivee!)})` },
+          { libelle: "Ventes perdues, lancé au départ", nature: "quantite", attendu: r.tard.ventesPerdues, calcul: `${qte(x.ventesDuPlan)} au plan − ${qte(r.equipeTard)} = ${qte(r.tard.ventesPerdues)}` },
+          { libelle: "Ventes perdues, lancé dès l'annonce", nature: "quantite", attendu: r.tot.ventesPerdues, calcul: `${qte(x.ventesDuPlan)} au plan − ${qte(r.equipeTot)} = ${qte(r.tot.ventesPerdues)}` },
         ];
       },
       explication: (c) => {
@@ -148,7 +150,7 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
       explication: (c) => {
         const r = recruterDesLAnnonce(c);
         return [
-          `Recruter dès l'annonce coûte le même recrutement et ${eur(r.salaireEnPlus)} de salaire de plus ; il sauve ${qte(r.tard.ventesPerdues - r.tot.ventesPerdues)} ventes, ${eur(auCentime((r.tard.ventesPerdues - r.tot.ventesPerdues) * r.x.marge))} de marge. Le départ coûte ${eur(r.gain)} de moins. Reste à savoir si cela tient quand la demande est moins forte.`,
+          `Recruter dès l'annonce coûte le même recrutement et ${eur(r.salaireEnPlus)} de salaire de plus ; il sauve ${qte(r.tard.ventesPerdues - r.tot.ventesPerdues)} ventes, ${eur(arrondi2((r.tard.ventesPerdues - r.tot.ventesPerdues) * r.x.marge))} de marge. Le départ coûte ${eur(r.gain)} de moins. Reste à savoir si cela tient quand la demande est moins forte.`,
         ];
       },
     },
@@ -174,11 +176,11 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
       montrer: "Montrer la demande qui fait pencher",
       lecture: (c, d) => {
         const r = recruterDesLAnnonce(c);
-        const sauvee = auCentime((d - r.equipeTard) * r.x.marge);
+        const sauvee = arrondi2((d - r.equipeTard) * r.x.marge);
         return [
           { libelle: "Marge sauvée par le recrutement dès l'annonce", montant: sauvee },
           { libelle: "Salaire payé de plus", montant: r.salaireEnPlus },
-          { libelle: "Gain du recrutement dès l'annonce", montant: auCentime(sauvee - r.salaireEnPlus), fort: true },
+          { libelle: "Gain du recrutement dès l'annonce", montant: arrondi2(sauvee - r.salaireEnPlus), fort: true },
         ];
       },
       droites: (c) => {
@@ -207,11 +209,13 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
         return [
           {
             libelle: "Ventes à sauver pour payer le salaire de plus",
+            nature: "quantite",
             attendu: r.ventesASauver,
-            calcul: `${eur(r.salaireEnPlus)} ÷ ${eur(x.marge)} = ${qte(auCentime(r.salaireEnPlus / x.marge))}, soit ${qte(r.ventesASauver)}`,
+            calcul: `${eur(r.salaireEnPlus)} ÷ ${eur(x.marge)} = ${qte(r.salaireEnPlus / x.marge)}, arrondi à l'enceinte supérieure : ${qte(r.ventesASauver)} (une de moins ne paierait pas tout le salaire)`,
           },
           {
             libelle: "Demande à partir de laquelle recruter dès l'annonce rapporte",
+            nature: "quantite",
             attendu: r.demandeQuiFaitPencher,
             calcul: `${qte(r.equipeTard)} + ${qte(r.ventesASauver)} = ${qte(r.demandeQuiFaitPencher)}`,
           },
@@ -244,7 +248,7 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
             texte: `Lançons-le dès aujourd'hui : un mois de salaire en plus sauve ${qte(sauvees)} ventes`,
             juste: tot,
             retour: tot
-              ? `Oui : ${eur(r.salaireEnPlus)} de salaire de plus pour ${eur(auCentime(sauvees * r.x.marge))} de marge sauvée ; le départ coûte ${eur(r.gain)} de moins. Il suffirait d'une demande de ${qte(r.demandeQuiFaitPencher)} ${r.x.f.unites} au trimestre pour que ce soit vrai ; ${r.x.f.entreprise} en attend ${qte(r.x.demandeDuTrimestre)}.`
+              ? `Oui : ${eur(r.salaireEnPlus)} de salaire de plus pour ${eur(arrondi2(sauvees * r.x.marge))} de marge sauvée ; le départ coûte ${eur(r.gain)} de moins. Il suffirait d'une demande de ${qte(r.demandeQuiFaitPencher)} ${r.x.f.unites} au trimestre pour que ce soit vrai ; ${r.x.f.entreprise} en attend ${qte(r.x.demandeDuTrimestre)}.`
               : `Non : ici, la marge sauvée ne paie pas le salaire de plus.`,
           },
           {
@@ -252,7 +256,7 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
             juste: !tot,
             retour: !tot
               ? "Oui : ici, la marge sauvée ne paie pas le salaire de plus."
-              : `Non : le salaire de plus (${eur(r.salaireEnPlus)}) est bien réel, mais il sauve ${eur(auCentime(sauvees * r.x.marge))} de marge. En attendant, le départ coûterait ${eur(r.gain)} de plus.`,
+              : `Non : le salaire de plus (${eur(r.salaireEnPlus)}) est bien réel, mais il sauve ${eur(arrondi2(sauvees * r.x.marge))} de marge. En attendant, le départ coûterait ${eur(r.gain)} de plus.`,
           },
           {
             texte: "Lançons-le dès aujourd'hui : le remplaçant sera là le jour de son départ",

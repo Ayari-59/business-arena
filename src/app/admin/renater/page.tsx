@@ -112,6 +112,11 @@ async function AdminRenaterPage({
         {c ? (
           <dl className="grid gap-2">
             <Ligne libelle="Fédération" valeur={c.federation === "production" ? "production" : "test (mise au point)"} />
+            {/* Le bouton public ne paraît que sur la fédération de production (audit du 10 novembre 2026). */}
+            <Ligne
+              libelle="Bouton « Se connecter avec mon établissement »"
+              valeur={c.federation === "production" ? "proposé sur /join et /teacher/login" : "masqué tant que la fédération n'est pas celle de production"}
+            />
             <Ligne libelle="entityID" valeur={c.entityId} />
             <Ligne libelle="Métadonnées à déclarer" valeur={c.metadonnees} />
             <Ligne libelle="ACS (HTTP-POST)" valeur={c.acs} />

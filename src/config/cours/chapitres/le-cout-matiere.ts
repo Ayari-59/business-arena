@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { MARGE_DE_PREPARATION, anneeDeCuisine, couvertsServables, coutDuCouvert, trimestreDeCuisine, type TrimestreDeCuisine } from "../monde/cuisine";
 import { BISTROTS_DU_COURS, type FicheDuBistrot } from "../monde/la-table-d-augustin";
@@ -43,6 +43,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     le ratio dans la fourchette sans perdre de marge demande les deux leviers, et le meilleur ticket
  *     n'est pas celui du meilleur ratio), la-prime-au-ratio (une critique de la méthode), le-plat-du-jour
  *     (un calcul à rebours, du prix TTC au coût d'une portion préparée) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ratios coût matière se donnent à deux décimales, à un
+ * centième près (au dixième, avant) ; le coefficient multiplicateur est une grandeur, au centième, et
+ * le prix de la carte part de lui ; les prix et les denrées perdues au centime, à un centime près ;
+ * les couverts non servis sont une quantité, entière, déclarée comme telle.
  */
 
 /**
@@ -75,14 +81,9 @@ export const PLAT_DU_JOUR_TTC = 19.8;
 export const CUISINES = ["bistrot"] as const;
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 /** Un écart entre deux ratios : des points, pas des pour cent. */
-const points = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} ${Math.abs(t) >= 2 ? "points" : "point"}`;
+const points = (t: number) => `${nombreAuCentieme(t)} ${Math.abs(t) >= 2 ? "points" : "point"}`;
 const coef = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const auCentime = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** « 1er », « 3e » : le rang d'un trimestre, compté à partir de 1. */
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
@@ -100,7 +101,7 @@ export function coutMatiere(c: Pick<Cas, "code">) {
   const matiere = f.coutMatiereParCouvert;
   const prix = f.prixDeLAnnee;
   const tauxTva = f.tauxTva;
-  const ratio = auDixieme((matiere / prix) * 100);
+  const ratio = auCentime((matiere / prix) * 100);
   const coefficient = auCentime(100 / ratio);
   const annee = anneeDeCuisine(f);
   const t = annee.trimestres;
@@ -145,10 +146,10 @@ export function coutMatiere(c: Pick<Cas, "code">) {
     hausse: {
       trimestres: touches,
       premier,
-      taux: auDixieme(f.hausseDesDenrees.taux * 100),
+      taux: auCentime(f.hausseDesDenrees.taux * 100),
       motif: f.cuisine.motifDeLaHausse,
       cout: coutHausse,
-      ratio: auDixieme((coutHausse / prix) * 100),
+      ratio: auCentime((coutHausse / prix) * 100),
       prixHt: prixQuiGarde,
       prixTtc: auCentime(prixQuiGarde * (1 + tauxTva)),
     },
@@ -160,10 +161,10 @@ export function coutMatiere(c: Pick<Cas, "code">) {
     pire,
     perdus: p.perdus,
     coutDesPerdus,
-    ratioSansPerte: auDixieme(((p.denrees - coutDesPerdus) / p.chiffreDAffaires) * 100),
+    ratioSansPerte: auCentime(((p.denrees - coutDesPerdus) / p.chiffreDAffaires) * 100),
     prixAuCurseur,
     /** Le ratio d'un couvert à un prix donné, après la hausse : les denrées ÷ le prix. */
-    ratioAuPrix: (x: number) => auDixieme((coutHausse / x) * 100),
+    ratioAuPrix: (x: number) => auCentime((coutHausse / x) * 100),
     permisParCouvert,
     /** Les denrées d'un couvert servi, les couverts préparés en plus compris, avant la hausse. */
     servi,
@@ -322,13 +323,13 @@ export const LE_COUT_MATIERE: Chapitre = {
       notions: ["markup_coefficient", "margin_rates"],
       question: (c) => {
         const m = coutMatiere(c);
-        return `Le couvert coûte ${eur(m.matiere)} de denrées et se vend ${eur(m.prix)} HT. Calculez son ratio coût matière, en pourcentage, au dixième. Puis le coefficient multiplicateur qui en découle : 100 divisé par le ratio, au centième.`;
+        return `Le couvert coûte ${eur(m.matiere)} de denrées et se vend ${eur(m.prix)} HT. Calculez son ratio coût matière, en pourcentage, à deux décimales. Puis le coefficient multiplicateur qui en découle : 100 divisé par le ratio, au centième.`;
       },
       champs: (c) => {
         const m = coutMatiere(c);
         return [
-          { libelle: "Ratio coût matière (%)", attendu: m.ratio, calcul: `${eur(m.matiere)} ÷ ${eur(m.prix)} × 100 = ${pct(m.ratio)}`, tolerance: 0.1 },
-          { libelle: "Coefficient multiplicateur", attendu: m.coefficient, calcul: `100 ÷ ${pct(m.ratio).replace(" %", "")} = ${coef(m.coefficient)}`, tolerance: 0.01 },
+          { libelle: "Ratio coût matière (%)", attendu: m.ratio, calcul: `${eur(m.matiere)} ÷ ${eur(m.prix)} × 100 = ${pct(m.ratio)}` },
+          { libelle: "Coefficient multiplicateur", nature: "grandeur", attendu: m.coefficient, calcul: `100 ÷ ${pct(m.ratio).replace(" %", "")} = ${coef(m.coefficient)}` },
         ];
       },
       explication: (c) => {
@@ -352,21 +353,21 @@ export const LE_COUT_MATIERE: Chapitre = {
         const h = m.hausse;
         const dernier = h.trimestres[h.trimestres.length - 1]!;
         const duree = dernier > h.premier ? `Elle dure jusqu'au ${trimestre(dernier)} compris.` : "Elle ne dure que ce trimestre.";
-        return `Au ${trimestre(h.premier)}, les denrées augmentent de ${pct(h.taux)}, sur toute la fiche technique : ${h.motif}. ${duree} Calculez le nouveau coût matière d'un couvert, puis son ratio si le ticket reste à ${eur(m.prix)} HT, au dixième.`;
+        return `Au ${trimestre(h.premier)}, les denrées augmentent de ${pct(h.taux)}, sur toute la fiche technique : ${h.motif}. ${duree} Calculez le nouveau coût matière d'un couvert, puis son ratio si le ticket reste à ${eur(m.prix)} HT, à deux décimales.`;
       },
       champs: (c) => {
         const m = coutMatiere(c);
         const h = m.hausse;
         return [
           { libelle: "Nouveau coût matière", attendu: h.cout, calcul: `${eur(m.matiere)} × ${coef(1 + h.taux / 100)} = ${eur(h.cout)}` },
-          { libelle: "Ratio au même ticket (%)", attendu: h.ratio, calcul: `${eur(h.cout)} ÷ ${eur(m.prix)} × 100 = ${pct(h.ratio)}`, tolerance: 0.1 },
+          { libelle: "Ratio au même ticket (%)", attendu: h.ratio, calcul: `${eur(h.cout)} ÷ ${eur(m.prix)} × 100 = ${pct(h.ratio)}` },
         ];
       },
       explication: (c) => {
         const m = coutMatiere(c);
         const h = m.hausse;
         return [
-          `Au même prix, le ratio passe de ${pct(m.ratio)} à ${pct(h.ratio)} : ${points(auDixieme(h.ratio - m.ratio))} de plus. Chaque couvert laisse ${eur(auCentime(h.cout - m.matiere))} de moins pour payer la brigade, la salle et le loyer.`,
+          `Au même prix, le ratio passe de ${pct(m.ratio)} à ${pct(h.ratio)} : ${points(auCentime(h.ratio - m.ratio))} de plus. Chaque couvert laisse ${eur(auCentime(h.cout - m.matiere))} de moins pour payer la brigade, la salle et le loyer.`,
         ];
       },
     },
@@ -389,7 +390,7 @@ export const LE_COUT_MATIERE: Chapitre = {
         return [
           { texte: `De ${pct(h.taux)}, comme les denrées`, juste: true, retour: `Bon pari. ${voir}` },
           { texte: `De ${eur(auCentime(h.cout - m.matiere))}, le montant de la hausse`, juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: `De ${pct(auDixieme(h.ratio - m.ratio))}, les points de ratio perdus`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `De ${pct(auCentime(h.ratio - m.ratio))}, les points de ratio perdus`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
     },
@@ -459,9 +460,9 @@ export const LE_COUT_MATIERE: Chapitre = {
         const m = coutMatiere(c);
         const h = m.hausse;
         return [
-          // Le coefficient arrondi au centième que l'élève a gardé déplace le prix d'un centime.
-          { libelle: "Prix de vente HT", attendu: h.prixHt, calcul: `${eur(h.cout)} × ${coef(m.coefficient)} = ${eur(h.prixHt)}`, tolerance: 0.05 },
-          { libelle: "Prix de vente TTC", attendu: h.prixTtc, calcul: `${eur(h.prixHt)} × ${coef(1 + m.tauxTva)} = ${eur(h.prixTtc)}`, tolerance: 0.06 },
+          // Le prix part du coefficient arrondi au centième, comme sur la copie.
+          { libelle: "Prix de vente HT", attendu: h.prixHt, calcul: `${eur(h.cout)} × ${coef(m.coefficient)} = ${eur(h.prixHt)}` },
+          { libelle: "Prix de vente TTC", attendu: h.prixTtc, calcul: `${eur(h.prixHt)} × ${coef(1 + m.tauxTva)} = ${eur(h.prixTtc)}` },
         ];
       },
       explication: (c) => {
@@ -552,7 +553,7 @@ export const LE_COUT_MATIERE: Chapitre = {
       tableau: tableauDeLaCuisine,
       question: (c) => {
         const m = coutMatiere(c);
-        return `Le tableau donne l'année de la simulation : la cuisine a préparé la demande plus ${pct(MARGE_DE_PREPARATION * 100)}, dans la limite des ${qte(m.servables)} couverts servables, et ses denrées sont celles de tous les couverts préparés. Calculez le coût matière consommé de l'année et son ratio, puis le ratio du trimestre le plus élevé, au dixième.`;
+        return `Le tableau donne l'année de la simulation : la cuisine a préparé la demande plus ${pct(MARGE_DE_PREPARATION * 100)}, dans la limite des ${qte(m.servables)} couverts servables, et ses denrées sont celles de tous les couverts préparés. Calculez le coût matière consommé de l'année et son ratio, puis le ratio du trimestre le plus élevé, à deux décimales.`;
       },
       champs: (c) => {
         const m = coutMatiere(c);
@@ -567,13 +568,11 @@ export const LE_COUT_MATIERE: Chapitre = {
             libelle: "Ratio de l'année (%)",
             attendu: m.ratioDeLAnnee,
             calcul: `${eur(m.denreesDeLAnnee)} ÷ ${eur(m.chiffreDeLAnnee)} × 100 = ${pct(m.ratioDeLAnnee)}`,
-            tolerance: 0.1,
           },
           {
             libelle: `Ratio du ${trimestre(m.pire)} (%)`,
             attendu: p.ratio,
             calcul: `${eur(p.denrees)} ÷ ${eur(p.chiffreDAffaires)} × 100 = ${pct(p.ratio)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -597,27 +596,26 @@ export const LE_COUT_MATIERE: Chapitre = {
       question: (c) => {
         const m = coutMatiere(c);
         const p = m.trimestres[m.pire - 1]!;
-        return `Au ${trimestre(m.pire)}, la cuisine a préparé ${qte(p.prepares)} couverts et en a servi ${qte(p.servis)}. Ce qui n'est pas servi part à la poubelle, et ses denrées sont payées. Calculez les couverts préparés et non servis, le coût de leurs denrées à ${eur(p.coutDuCouvert)} le couvert, puis le ratio du trimestre sans ces pertes, au dixième.`;
+        return `Au ${trimestre(m.pire)}, la cuisine a préparé ${qte(p.prepares)} couverts et en a servi ${qte(p.servis)}. Ce qui n'est pas servi part à la poubelle, et ses denrées sont payées. Calculez les couverts préparés et non servis, le coût de leurs denrées à ${eur(p.coutDuCouvert)} le couvert, puis le ratio du trimestre sans ces pertes, à deux décimales.`;
       },
       champs: (c) => {
         const m = coutMatiere(c);
         const p = m.trimestres[m.pire - 1]!;
         return [
-          { libelle: "Couverts préparés et non servis", attendu: m.perdus, calcul: `${qte(p.prepares)} − ${qte(p.servis)} = ${qte(m.perdus)}` },
-          { libelle: "Coût des denrées perdues", attendu: m.coutDesPerdus, calcul: `${qte(m.perdus)} × ${eur(p.coutDuCouvert)} = ${eur(m.coutDesPerdus)}`, tolerance: 1 },
+          { libelle: "Couverts préparés et non servis", nature: "quantite", attendu: m.perdus, calcul: `${qte(p.prepares)} − ${qte(p.servis)} = ${qte(m.perdus)}` },
+          { libelle: "Coût des denrées perdues", attendu: m.coutDesPerdus, calcul: `${qte(m.perdus)} × ${eur(p.coutDuCouvert)} = ${eur(m.coutDesPerdus)}` },
           {
             libelle: "Ratio sans les pertes (%)",
             attendu: m.ratioSansPerte,
             calcul: `(${eur(p.denrees)} − ${eur(m.coutDesPerdus)}) ÷ ${eur(p.chiffreDAffaires)} × 100 = ${pct(m.ratioSansPerte)}`,
-            tolerance: 0.1,
           },
         ];
       },
       explication: (c) => {
         const m = coutMatiere(c);
         const p = m.trimestres[m.pire - 1]!;
-        const pertes = auDixieme(p.ratio - m.ratioSansPerte);
-        const prixDesDenrees = auDixieme(m.ratioSansPerte - m.ratio);
+        const pertes = auCentime(p.ratio - m.ratioSansPerte);
+        const prixDesDenrees = auCentime(m.ratioSansPerte - m.ratio);
         return [
           prixDesDenrees > 0
             ? `Le ratio de ${pct(p.ratio)} se lit en trois morceaux : ${pct(m.ratio)} pour la carte telle qu'elle est calculée, ${points(prixDesDenrees)} de plus pour le prix des denrées, et ${points(pertes)} de plus pour les plats préparés et non servis.`
@@ -775,7 +773,7 @@ export const LE_COUT_MATIERE: Chapitre = {
           {
             texte: "Inutile : le ratio ne dépend que du prix des denrées",
             juste: false,
-            retour: `Non : au ${trimestre(m.pire)}, les couverts jetés ont ajouté ${points(auDixieme(p.ratio - m.ratioSansPerte))} au ratio, et ce que la cuisine prépare dépend du chef.`,
+            retour: `Non : au ${trimestre(m.pire)}, les couverts jetés ont ajouté ${points(auCentime(p.ratio - m.ratioSansPerte))} au ratio, et ce que la cuisine prépare dépend du chef.`,
           },
         ];
       },

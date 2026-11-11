@@ -1,6 +1,5 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
-import { auCentime } from "../monde/amortissement";
 import { CHARGES_DE_GESTION, type ChargeDeGestion } from "../monde/comptabilite-de-gestion";
 import { COMMANDES_DE_JANVIER, methodeABC, venteAuxCoutsDeJanvier, type CodeDeProduit } from "../monde/couts-par-activites";
 import { OPERATEURS } from "../monde/nova-capacite";
@@ -28,6 +27,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · expert : le-subventionnement (lire la comparaison), la-livraison-chaque-jour (une variante
  *     chiffrée aux coûts d'inducteurs du mois), les-limites (ce qu'un coût d'inducteur ne dit pas) ;
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les volumes des inducteurs sont des grandeurs au centième ;
+ * le résultat par les centres d'analyse attend le centime (à 1 € près, avant), et le tableau donne
+ * le coût de revient de chaque vente par les centres, que l'élève retranche du chiffre d'affaires ;
+ * les parts s'écrivent à deux décimales.
  */
 
 /** La méthode ABC se calcule sur le mois de janvier de NOVA, dans le monde du cours. */
@@ -48,9 +53,8 @@ export const ENVOIS_QUOTIDIENS = 20;
 /** Les commandes en ligne que l'étape des limites suppose perdues. */
 export const COMMANDES_PERDUES = 100;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t * 100, 0)} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 
 const LIBELLES_DES_CHARGES: Readonly<Record<ChargeDeGestion, string>> = {
   loyer: "Loyer",
@@ -79,7 +83,7 @@ export function janvierABC() {
 /** Le laboratoire : le résultat de la vente en ligne de janvier selon la méthode et les frais de port. */
 export function laboratoireDesFraisDePort(methode: number, fraisDePort: number) {
   const p = methodeABC({ fraisDePort }).produits["en-ligne"];
-  return { abc: p, resultat: methode === 1 ? p.resultat : p.centres.resultat, unitaire: auCentime(methode === 1 ? p.unitaire : p.centres.unitaire) };
+  return { abc: p, resultat: methode === 1 ? p.resultat : p.centres.resultat, unitaire: arrondi2(methode === 1 ? p.unitaire : p.centres.unitaire) };
 }
 
 /** Les plus petits frais de port, au cran du laboratoire, qui laissent la vente en ligne sans perte selon la méthode. */
@@ -105,7 +109,8 @@ function tableauDesVentes(): TableauDeDonnees {
       { libelle: "Commandes reçues", valeurs: PRODUITS.map((p) => qte(COMMANDES_DE_JANVIER[p].commandes)) },
       { libelle: "Envois expédiés", valeurs: PRODUITS.map((p) => qte(COMMANDES_DE_JANVIER[p].envois)) },
       { libelle: "Heures de montage d'une enceinte", valeurs: PRODUITS.map(() => qte(OPERATEURS.heuresParEnceinte)) },
-      { libelle: "Coût de revient d'une enceinte, par les centres d'analyse", valeurs: PRODUITS.map((p) => eur(auCentime(m.produits[p].centres.unitaire))) },
+      { libelle: "Coût de revient d'une enceinte, par les centres d'analyse", valeurs: PRODUITS.map((p) => eur(arrondi2(m.produits[p].centres.unitaire))) },
+      { libelle: "Coût de revient de la vente, par les centres d'analyse", valeurs: PRODUITS.map((p) => eur(m.produits[p].centres.coutDeRevient)) },
     ],
   };
 }
@@ -183,7 +188,7 @@ function grilleDesProduits(): TableauACompleter {
       { libelle: "Coût de revient", fort: true, totalDe: { plus: [n, n + 1] }, cellules: PRODUITS.map((p) => aSaisir(m.produits[p].coutDeRevient, `${eur(m.produits[p].indirectes)} + ${eur(m.produits[p].directes)} = ${eur(m.produits[p].coutDeRevient)}`)) },
       {
         libelle: "Coût de revient d'une enceinte",
-        cellules: PRODUITS.map((p) => aSaisir(auCentime(m.produits[p].unitaire), `${eur(m.produits[p].coutDeRevient)} ÷ ${qte(m.produits[p].vente.enceintes)} = ${eur(auCentime(m.produits[p].unitaire))}`, { horsTotal: true })),
+        cellules: PRODUITS.map((p) => aSaisir(arrondi2(m.produits[p].unitaire), `${eur(m.produits[p].coutDeRevient)} ÷ ${qte(m.produits[p].vente.enceintes)} = ${eur(arrondi2(m.produits[p].unitaire))}`, { horsTotal: true })),
       },
     ],
   };
@@ -227,7 +232,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
         const { m, centres } = janvierABC();
         return [
           `Ce chapitre se joue dans la simulation du cours, chez NOVA, en janvier N : un mois sans stock, tout ce qui est monté est livré. Ses charges indirectes, ${eur(m.total)}, sont celles des centres d'analyse, travail du président compris.`,
-          `NOVA vend la même enceinte de deux façons : en ligne, à des particuliers qui commandent une enceinte à la fois, et à CampusTech, qui passe ${qte(COMMANDES_DE_JANVIER.campustech.commandes)} commande par mois livrée en ${qte(COMMANDES_DE_JANVIER.campustech.envois)} palettes. Par les centres d'analyse, une enceinte revient à ${eur(auCentime(centres))}, qu'elle parte dans un colis ou sur une palette.`,
+          `NOVA vend la même enceinte de deux façons : en ligne, à des particuliers qui commandent une enceinte à la fois, et à CampusTech, qui passe ${qte(COMMANDES_DE_JANVIER.campustech.commandes)} commande par mois livrée en ${qte(COMMANDES_DE_JANVIER.campustech.envois)} palettes. Par les centres d'analyse, une enceinte revient à ${eur(arrondi2(centres))}, qu'elle parte dans un colis ou sur une palette.`,
           "Les unités d'œuvre des centres comptent des euros d'achat, des enceintes, des euros de chiffre d'affaires : rien qui distingue un colis d'une palette. La méthode ABC part de ce que l'entreprise fait, ses activités, et de ce qui déclenche chacune, son inducteur.",
         ];
       },
@@ -260,7 +265,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
         const { m } = janvierABC();
         const [envois, commandes] = [m.activites.find((a) => a.code === "expedier")!, m.activites.find((a) => a.code === "commandes")!];
         return [
-          `Les ${eur(m.total)} sont tous rangés, comme dans les centres d'analyse ; ils le sont autrement. ${eur(auCentime(envois.cout + commandes.cout))} vont aux envois et aux commandes, que les centres mêlaient à la distribution et à l'administration.`,
+          `Les ${eur(m.total)} sont tous rangés, comme dans les centres d'analyse ; ils le sont autrement. ${eur(arrondi2(envois.cout + commandes.cout))} vont aux envois et aux commandes, que les centres mêlaient à la distribution et à l'administration.`,
         ];
       },
     },
@@ -320,7 +325,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
       explication: () => {
         const { enLigne, campustech, m } = janvierABC();
         return [
-          `Une enceinte en ligne revient à ${eur(auCentime(enLigne.unitaire))}, une enceinte de CampusTech à ${eur(auCentime(campustech.unitaire))}. Les produits ont reçu ${eur(m.imputees)} sur ${eur(m.total)} : l'écart, ${eur(Math.abs(m.arrondi))}, vient des coûts d'inducteur arrondis au centime.`,
+          `Une enceinte en ligne revient à ${eur(arrondi2(enLigne.unitaire))}, une enceinte de CampusTech à ${eur(arrondi2(campustech.unitaire))}. Les produits ont reçu ${eur(m.imputees)} sur ${eur(m.total)} : l'écart, ${eur(Math.abs(m.arrondi))}, vient des coûts d'inducteur arrondis au centime.`,
         ];
       },
     },
@@ -332,20 +337,20 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
       notions: ["full_unit_cost"],
       tableau: () => tableauDesVentes(),
       question: () =>
-        "Calculez le résultat de janvier de chaque produit, par la méthode ABC, puis par les centres d'analyse (le coût de revient d'une enceinte par les centres est au tableau).",
+        "Calculez le résultat de janvier de chaque produit, par la méthode ABC, puis par les centres d'analyse (le coût de revient de chaque vente par les centres est au tableau).",
       champs: () => {
         const { enLigne, campustech } = janvierABC();
         return [
           { libelle: "Résultat de la vente en ligne, méthode ABC", attendu: enLigne.resultat, calcul: `${eur(enLigne.chiffreDAffaires)} − ${eur(enLigne.coutDeRevient)} = ${eur(enLigne.resultat)}` },
           { libelle: "Résultat de CampusTech, méthode ABC", attendu: campustech.resultat, calcul: `${eur(campustech.chiffreDAffaires)} − ${eur(campustech.coutDeRevient)} = ${eur(campustech.resultat)}` },
-          { libelle: "Résultat de la vente en ligne, centres d'analyse", attendu: enLigne.centres.resultat, tolerance: 1, calcul: `${eur(enLigne.chiffreDAffaires)} − ${eur(enLigne.centres.coutDeRevient)} = ${eur(enLigne.centres.resultat)}` },
-          { libelle: "Résultat de CampusTech, centres d'analyse", attendu: campustech.centres.resultat, tolerance: 1, calcul: `${eur(campustech.chiffreDAffaires)} − ${eur(campustech.centres.coutDeRevient)} = ${eur(campustech.centres.resultat)}` },
+          { libelle: "Résultat de la vente en ligne, centres d'analyse", attendu: enLigne.centres.resultat, calcul: `${eur(enLigne.chiffreDAffaires)} − ${eur(enLigne.centres.coutDeRevient)} = ${eur(enLigne.centres.resultat)}` },
+          { libelle: "Résultat de CampusTech, centres d'analyse", attendu: campustech.centres.resultat, calcul: `${eur(campustech.chiffreDAffaires)} − ${eur(campustech.centres.coutDeRevient)} = ${eur(campustech.centres.resultat)}` },
         ];
       },
       explication: () => {
         const { enLigne, campustech } = janvierABC();
         return [
-          `Par les centres, les deux produits perdent, chacun ${eur(auCentime(enLigne.centres.unitaire - enLigne.vente.prix))} par enceinte. Par la méthode ABC, la vente en ligne perd ${eur(auCentime(enLigne.unitaire - enLigne.vente.prix))} par enceinte et CampusTech en gagne ${eur(auCentime(campustech.vente.prix - campustech.unitaire))}. Le mois perd presque autant dans les deux cas : la méthode ne change pas le total, elle change qui le fait.`,
+          `Par les centres, les deux produits perdent, chacun ${eur(arrondi2(enLigne.centres.unitaire - enLigne.vente.prix))} par enceinte. Par la méthode ABC, la vente en ligne perd ${eur(arrondi2(enLigne.unitaire - enLigne.vente.prix))} par enceinte et CampusTech en gagne ${eur(arrondi2(campustech.vente.prix - campustech.unitaire))}. Le mois perd presque autant dans les deux cas : la méthode ne change pas le total, elle change qui le fait.`,
         ];
       },
     },
@@ -358,7 +363,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
       question: () => "Les centres d'analyse donnaient aux deux produits le même coût. Que faisaient-ils, sans le dire ?",
       options: () => {
         const { campustech } = janvierABC();
-        const subvention = auCentime(campustech.centres.coutDeRevient - campustech.coutDeRevient);
+        const subvention = arrondi2(campustech.centres.coutDeRevient - campustech.coutDeRevient);
         return [
           { texte: "CampusTech portait des coûts de la vente en ligne", juste: true, retour: `Oui : un subventionnement. Par les centres, CampusTech portait ${eur(subvention)} de plus que ce qu'elle consomme, que la vente en ligne ne portait pas. Un client à ${qte(campustech.vente.enceintes)} enceintes la commande paraissait perdre de l'argent ; c'est la vente en ligne qui en perd.` },
           { texte: "La vente en ligne portait des coûts de CampusTech, qui paie en retard", juste: false, retour: "Non : c'est l'inverse. Le retard de paiement de CampusTech ne passe pas dans le coût de revient ; ses commandes et ses palettes, très peu nombreuses, coûtent peu." },
@@ -447,14 +452,14 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
         return [
           { libelle: "Charges indirectes de CampusTech", attendu: v.indirectes, calcul: `${eur(campustech.indirectes)} + (${ENVOIS_QUOTIDIENS} − ${qte(campustech.vente.envois)}) × ${eur(e.coutDeLInducteur)} = ${eur(v.indirectes)}` },
           { libelle: "Coût de revient de CampusTech", attendu: v.coutDeRevient, calcul: `${eur(v.indirectes)} + ${eur(v.directes)} = ${eur(v.coutDeRevient)}` },
-          { libelle: "Coût de revient d'une enceinte", attendu: auCentime(v.unitaire), calcul: `${eur(v.coutDeRevient)} ÷ ${qte(v.vente.enceintes)} = ${eur(auCentime(v.unitaire))}` },
+          { libelle: "Coût de revient d'une enceinte", attendu: arrondi2(v.unitaire), calcul: `${eur(v.coutDeRevient)} ÷ ${qte(v.vente.enceintes)} = ${eur(arrondi2(v.unitaire))}` },
         ];
       },
       explication: () => {
         const { campustech, enLigne } = janvierABC();
         const v = venteAuxCoutsDeJanvier({ ...campustech.vente, envois: ENVOIS_QUOTIDIENS });
         return [
-          `Même livrée chaque jour, une enceinte de CampusTech revient à ${eur(auCentime(v.unitaire))}, bien sous les ${eur(auCentime(enLigne.unitaire))} d'une enceinte en ligne : ${ENVOIS_QUOTIDIENS} palettes pèsent peu face à ${qte(enLigne.vente.envois)} colis. Par les centres d'analyse, la demande ne coûterait rien : leurs unités d'œuvre ne comptent pas les envois.`,
+          `Même livrée chaque jour, une enceinte de CampusTech revient à ${eur(arrondi2(v.unitaire))}, bien sous les ${eur(arrondi2(enLigne.unitaire))} d'une enceinte en ligne : ${ENVOIS_QUOTIDIENS} palettes pèsent peu face à ${qte(enLigne.vente.envois)} colis. Par les centres d'analyse, la demande ne coûterait rien : leurs unités d'œuvre ne comptent pas les envois.`,
         ];
       },
     },
@@ -467,7 +472,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
       question: () => {
         const { m } = janvierABC();
         const [envois, commandes] = [m.activites.find((a) => a.code === "expedier")!, m.activites.find((a) => a.code === "commandes")!];
-        return `Une commande en ligne coûte ${eur(commandes.coutDeLInducteur)} et son colis ${eur(envois.coutDeLInducteur)}. Si NOVA perdait ${COMMANDES_PERDUES} commandes en ligne en février, ses charges baisseraient-elles de ${COMMANDES_PERDUES} × ${eur(auCentime(envois.coutDeLInducteur + commandes.coutDeLInducteur))} ?`;
+        return `Une commande en ligne coûte ${eur(commandes.coutDeLInducteur)} et son colis ${eur(envois.coutDeLInducteur)}. Si NOVA perdait ${COMMANDES_PERDUES} commandes en ligne en février, ses charges baisseraient-elles de ${COMMANDES_PERDUES} × ${eur(arrondi2(envois.coutDeLInducteur + commandes.coutDeLInducteur))} ?`;
       },
       options: () => [
         { texte: "Non : le loyer et la paie restent", juste: true, retour: "Oui. Le coût d'un inducteur est une moyenne de charges fixes : le loyer, la paie, le travail du président ne baissent pas avec une commande de moins. La méthode ABC dit ce que chaque produit consomme des ressources ; pour décider d'une commande de plus ou de moins, c'est le coût variable qui compte." },
@@ -483,7 +488,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
       texte: () => {
         const { enLigne, campustech, centres } = janvierABC();
         return [
-          `En janvier, les centres d'analyse donnaient ${eur(auCentime(centres))} à toute enceinte. La méthode ABC donne ${eur(auCentime(enLigne.unitaire))} à l'enceinte vendue en ligne et ${eur(auCentime(campustech.unitaire))} à celle de CampusTech : les mêmes charges, rangées selon ce qui les déclenche.`,
+          `En janvier, les centres d'analyse donnaient ${eur(arrondi2(centres))} à toute enceinte. La méthode ABC donne ${eur(arrondi2(enLigne.unitaire))} à l'enceinte vendue en ligne et ${eur(arrondi2(campustech.unitaire))} à celle de CampusTech : les mêmes charges, rangées selon ce qui les déclenche.`,
           "La démarche : les charges indirectes vont aux activités, chaque activité a son inducteur, le coût d'un inducteur est le coût de l'activité divisé par son volume, et chaque produit paie les inducteurs qu'il consomme.",
           "Ce qu'elle révèle : un subventionnement, quand une unité d'œuvre de volume fait payer aux grosses commandes ce que coûtent les petites. Ce qu'elle ne dit pas : ce qu'une commande de plus ou de moins coûterait, car ses coûts restent des coûts complets.",
           "Dans l'arène, les charges de votre entreprise ne sont pas découpées en activités : la méthode, elle, est la même.",

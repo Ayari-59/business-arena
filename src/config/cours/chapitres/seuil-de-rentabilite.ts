@@ -1,7 +1,7 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
-import { coutsDeLaGamme, donneesDuMois, seuilDeRentabilite } from "../monde/couts-et-budgets";
+import { coutsDeLaGamme, donneesDuMois, seuilAuTauxArrondi, seuilDeRentabilite } from "../monde/couts-et-budgets";
 import { GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
 import type { Chapitre, EtapeSimulation, TableauDeDonnees } from "../types";
 import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
@@ -40,6 +40,14 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  *     sensibilité du résultat, et ce qu'elle dit), seuil-de-la-gamme et la-composition-de-la-gamme
  *     (le seuil multi-produits, et ce que la composition lui fait), charges-fixes-par-paliers et
  *     franchir-le-palier (deux seuils, et un jugement) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge se donne à deux décimales (35,59 %), et le
+ * seuil en valeur se calcule sur ce taux, au centime, comme l'élève sur sa copie (87 617,31 € ; 87
+ * 609,38 € sur le taux exact, avec une tolérance de 438 €, avant) ; la marge et l'indice de
+ * sécurité en repartent. Les seuils en quantité, les ventes qui gardent le résultat et le point
+ * mort sont des quantités, à l'unité supérieure, et le corrigé dit pourquoi ; le levier
+ * opérationnel est une grandeur au centième.
  */
 
 /** La baisse de prix qu'envisage le dirigeant, face à un concurrent qui casse les siens. */
@@ -72,10 +80,8 @@ export const LEVIERS_DU_LABORATOIRE = {
 /** Le seuil se calcule sur le mois de janvier de NOVA, la fiche de gestion du monde du cours. */
 export const ENTREPRISES_DU_SEUIL: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number, d = 2) => `${qte(t * 100, d)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 /** Arrondi à l'unité supérieure, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 const majuscule = (t: string) => `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
@@ -89,8 +95,8 @@ export function seuilDuMois(c: Pick<Cas, "code">) {
   const m = f.moisDeReference;
   const s = seuilDeRentabilite(donneesDuMois(f));
   const ch = m.chargesFixes;
-  const achats = auCentime(m.quantite * m.coutVariable.composants);
-  const autres = auCentime(m.quantite * m.coutVariable.autres);
+  const achats = arrondi2(m.quantite * m.coutVariable.composants);
+  const autres = arrondi2(m.quantite * m.coutVariable.autres);
   // L'erreur classique : le prix moins le coût complet, comme si une vente de plus portait des fixes.
   const coutCompletUnitaire = (s.chargesVariables + s.chargesFixes) / m.quantite;
   const seuilQuantite = s.seuilQuantite!;
@@ -101,7 +107,7 @@ export function seuilDuMois(c: Pick<Cas, "code">) {
   const fixesTenables = s.marge;
   const hausseTenable = (fixesTenables - s.chargesFixes) / s.chargesFixes;
   // La baisse de prix : la nouvelle marge, le nouveau seuil, et les ventes qui gardent le résultat.
-  const prixBaisse = auCentime(m.prix * (1 - BAISSE_DE_PRIX));
+  const prixBaisse = arrondi2(m.prix * (1 - BAISSE_DE_PRIX));
   const b = seuilDeRentabilite(donneesDuMois(f, { prix: prixBaisse }));
   const ventesPourLeResultat = plafond((s.chargesFixes + s.resultat) / b.margeUnitaire);
   // Le défi du laboratoire : le coût variable (au dixième) ou les charges fixes (à l'euro) qui gardent le seuil de janvier.
@@ -109,8 +115,8 @@ export function seuilDuMois(c: Pick<Cas, "code">) {
   const fixesPlafond = Math.floor(seuilQuantite * b.margeUnitaire + 1e-9);
   // Le levier opérationnel, et ce qu'il annonce pour 5 % de ventes en moins.
   const levier = s.levierOperationnel!;
-  const margeApresBaisse = auCentime(s.marge * (1 - BAISSE_DES_VENTES_DU_LEVIER));
-  const resultatApresBaisse = auCentime(margeApresBaisse - s.chargesFixes);
+  const margeApresBaisse = arrondi2(s.marge * (1 - BAISSE_DES_VENTES_DU_LEVIER));
+  const resultatApresBaisse = arrondi2(margeApresBaisse - s.chargesFixes);
   const variationDuResultat = (resultatApresBaisse - s.resultat) / s.resultat;
   // La gamme : les charges communes et la publicité des trois références, sur leur taux de marge moyen.
   const g = coutsDeLaGamme(f);
@@ -130,13 +136,15 @@ export function seuilDuMois(c: Pick<Cas, "code">) {
     chiffreDAffaires: g.seuil.chiffreDAffaires,
     marge: g.seuil.marge,
     taux: g.seuil.tauxDeMarge,
+    tauxPct: g.seuil.tauxDeMargePct,
     seuilValeur: g.seuil.seuilValeur,
     indice: g.seuil.indiceDeSecurite,
+    indicePct: g.seuil.indiceDeSecuritePct,
   };
   // Les charges fixes par paliers : au-delà de l'activité normale, un second atelier et deux salariés.
   const limite = f.centres.activiteNormale;
   const fixesDuPalier = s.chargesFixes + SUPPLEMENT_DU_PALIER;
-  const resultatA = (q: number) => auCentime(q * s.margeUnitaire - (q > limite ? fixesDuPalier : s.chargesFixes));
+  const resultatA = (q: number) => arrondi2(q * s.margeUnitaire - (q > limite ? fixesDuPalier : s.chargesFixes));
   const palier = {
     limite,
     fixes: fixesDuPalier,
@@ -191,17 +199,17 @@ export interface PositionDuSeuil {
 
 /** Le seuil pour un prix, un coût variable, des charges fixes et des ventes quelconques : le laboratoire. */
 export function laboratoireDuSeuil(x: SeuilDuMois, p: PositionDuSeuil) {
-  const marge = auCentime(p.prix - p.coutVariable);
-  const chiffreDAffaires = auCentime(p.ventes * p.prix);
+  const marge = arrondi2(p.prix - p.coutVariable);
+  const chiffreDAffaires = arrondi2(p.ventes * p.prix);
   const seuilExact = p.chargesFixes / marge;
-  const seuilValeur = auCentime((p.chargesFixes * p.prix) / marge);
+  const seuilValeur = seuilAuTauxArrondi(p.chargesFixes, marge / p.prix).seuilValeur ?? 0;
   return {
     marge,
     seuilExact,
     seuilQuantite: plafond(seuilExact),
     seuilValeur,
-    indice: auCentime(((chiffreDAffaires - seuilValeur) / chiffreDAffaires) * 100),
-    resultat: auCentime(p.ventes * marge - p.chargesFixes),
+    indice: taux2(arrondi2(chiffreDAffaires - seuilValeur), chiffreDAffaires),
+    resultat: arrondi2(p.ventes * marge - p.chargesFixes),
     /** Le défi : un prix baissé de 10 % au moins, et un seuil qui ne dépasse pas celui de janvier. */
     reussi: p.prix <= x.prixBaisse + 1e-9 && plafond(seuilExact) <= x.seuilQuantite,
   };
@@ -330,14 +338,14 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       notions: ["contribution_margin", "margin_rates"],
       question: (c) => {
         const { f, m } = seuilDuMois(c);
-        return `Chaque ${f.unite} se vend ${eur(m.prix)} hors taxes et coûte ${eur(m.coutVariable.composants)} de composants et ${eur(m.coutVariable.autres)} d'autres coûts variables. Calculez le coût variable d'une ${f.unite}, sa marge sur coût variable (le prix moins le coût variable), puis le taux de marge (la marge rapportée au prix), en pourcentage.`;
+        return `Chaque ${f.unite} se vend ${eur(m.prix)} hors taxes et coûte ${eur(m.coutVariable.composants)} de composants et ${eur(m.coutVariable.autres)} d'autres coûts variables. Calculez le coût variable d'une ${f.unite}, sa marge sur coût variable (le prix moins le coût variable), puis le taux de marge (la marge rapportée au prix), en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const { m, s } = seuilDuMois(c);
         return [
           { libelle: "Coût variable unitaire", attendu: s.coutVariableUnitaire, calcul: `${eur(m.coutVariable.composants)} + ${eur(m.coutVariable.autres)} = ${eur(s.coutVariableUnitaire)}` },
           { libelle: "Marge sur coût variable unitaire", attendu: s.margeUnitaire, calcul: `${eur(m.prix)} − ${eur(s.coutVariableUnitaire)} = ${eur(s.margeUnitaire)}` },
-          { libelle: "Taux de marge sur coût variable, en %", attendu: auCentime(s.tauxDeMarge * 100), tolerance: 0.1, calcul: `${eur(s.margeUnitaire)} ÷ ${eur(m.prix)} = ${pct(s.tauxDeMarge)}` },
+          { libelle: "Taux de marge sur coût variable, en %", attendu: s.tauxDeMargePct, calcul: `${eur(s.margeUnitaire)} ÷ ${eur(m.prix)} × 100 = ${pourcent(s.tauxDeMargePct)}` },
         ];
       },
       explication: (c) => {
@@ -394,7 +402,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           { texte: `De ${eur(m.prix)} : le prix de vente.`, juste: false, retour: `Il faut aussi payer ses coûts variables, ${eur(s.coutVariableUnitaire)}.` },
           { texte: `De ${eur(s.margeUnitaire)} : la marge sur coût variable unitaire.`, juste: true, retour: "Les charges fixes sont déjà là : une vente de plus n'apporte que sa marge, mais toute sa marge." },
           {
-            texte: `De ${eur(auCentime(m.prix - coutCompletUnitaire))} : le prix moins le coût complet par ${f.unite}.`,
+            texte: `De ${eur(arrondi2(m.prix - coutCompletUnitaire))} : le prix moins le coût complet par ${f.unite}.`,
             juste: false,
             retour: "Le coût complet répartit les charges fixes sur les ventes ; or une vente de plus ne les augmente pas. Raisonner au coût complet fait refuser des ventes rentables.",
           },
@@ -440,14 +448,14 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       },
       lecture: (c, q) => {
         const { s } = seuilDuMois(c);
-        const ca = auCentime(q * s.prix);
-        const cv = auCentime(q * s.coutVariableUnitaire);
+        const ca = arrondi2(q * s.prix);
+        const cv = arrondi2(q * s.coutVariableUnitaire);
         return [
           { libelle: "Chiffre d'affaires", montant: ca },
           { libelle: "Charges variables", montant: cv },
-          { libelle: "Marge sur coût variable", montant: auCentime(ca - cv) },
+          { libelle: "Marge sur coût variable", montant: arrondi2(ca - cv) },
           { libelle: "Charges fixes", montant: s.chargesFixes },
-          { libelle: "Résultat", montant: auCentime(ca - cv - s.chargesFixes), fort: true },
+          { libelle: "Résultat", montant: arrondi2(ca - cv - s.chargesFixes), fort: true },
         ];
       },
       droites: (c) => {
@@ -474,31 +482,29 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       notions: ["breakeven"],
       question: (c) => {
         const { f, s } = seuilDuMois(c);
-        return `Le seuil de rentabilité est le niveau de ventes où la marge couvre tout juste les charges fixes : le résultat est nul. En quantité, divisez les charges fixes (${eur(s.chargesFixes)}) par la marge d'une ${f.unite} (${eur(s.margeUnitaire)}), à l'unité supérieure. En valeur, divisez-les par le taux de marge (${eur(s.margeUnitaire)} ÷ ${eur(s.prix)}, sans l'arrondir).`;
+        return `Le seuil de rentabilité est le niveau de ventes où la marge couvre tout juste les charges fixes : le résultat est nul. En quantité, divisez les charges fixes (${eur(s.chargesFixes)}) par la marge d'une ${f.unite} (${eur(s.margeUnitaire)}), à l'unité supérieure. En valeur, divisez-les par le taux de marge à deux décimales (${pourcent(s.tauxDeMargePct)}), et donnez le seuil au centime.`;
       },
       champs: (c) => {
         const { f, s, seuilQuantite, seuilValeur } = seuilDuMois(c);
         return [
           {
             libelle: `En quantité (${f.unites}, arrondi à l'unité supérieure)`,
+            nature: "quantite",
             attendu: seuilQuantite,
-            tolerance: 1,
-            calcul: `${eur(s.chargesFixes)} ÷ ${eur(s.margeUnitaire)} = ${qte(s.seuilExact!)}, arrondi à ${qte(seuilQuantite)} ${f.unites}`,
+            calcul: `${eur(s.chargesFixes)} ÷ ${eur(s.margeUnitaire)} = ${qte(s.seuilExact!)}, arrondi à l'unité supérieure : ${qte(seuilQuantite)} ${f.unites}, car ${qte(seuilQuantite - 1)} laisseraient une perte`,
           },
           {
             libelle: "En valeur (chiffre d'affaires)",
             attendu: seuilValeur,
-            tolerance: auCentime(seuilValeur * 0.005),
-            calcul: `${eur(s.chargesFixes)} ÷ (${eur(s.margeUnitaire)} ÷ ${eur(s.prix)}) = ${eur(s.chargesFixes)} × ${eur(s.prix)} ÷ ${eur(s.margeUnitaire)} = ${eur(seuilValeur)}`,
+            calcul: `${eur(s.chargesFixes)} ÷ ${pourcent(s.tauxDeMargePct)} = ${eur(seuilValeur)}`,
           },
         ];
       },
       explication: (c) => {
-        const { f, m, s, seuilQuantite, seuilValeur } = seuilDuMois(c);
-        const tauxArrondi = Math.round(s.tauxDeMarge * 1000) / 1000;
+        const { f, s, seuilQuantite, seuilValeur } = seuilDuMois(c);
         return [
           `En dessous de ${qte(seuilQuantite)} ${f.unites} par mois, ${f.entreprise} perd de l'argent ; au-dessus, chaque ${f.unite} ajoute ${eur(s.margeUnitaire)} au bénéfice.`,
-          `Le seuil en valeur se calcule sur le taux exact. Avec un taux arrondi à ${pct(tauxArrondi, 1)}, on trouverait ${eur(auCentime(s.chargesFixes / tauxArrondi))} : la correction l'accepte, mais le seuil exact est ${eur(seuilValeur)}, soit ${qte(s.seuilExact!)} ${f.unites} à ${eur(m.prix)}.`,
+          `Le seuil en valeur part du taux à deux décimales, ${pourcent(s.tauxDeMargePct)}, comme votre calcul : ${f.entreprise} doit faire ${eur(seuilValeur)} de chiffre d'affaires dans le mois pour couvrir ses charges fixes.`,
         ];
       },
     },
@@ -513,14 +519,15 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         return `Sans formule cette fois. De combien le chiffre d'affaires de janvier pourrait-il baisser avant la perte, en euros, puis en pourcentage de ce chiffre d'affaires ? Et quel jour de janvier le seuil est-il atteint, les ventes étant régulières sur les ${qte(m.jours)} jours du mois ?`;
       },
       champs: (c) => {
-        const { m, s, seuilValeur, margeDeSecurite, indiceDeSecurite } = seuilDuMois(c);
+        const { m, s, seuilValeur, margeDeSecurite } = seuilDuMois(c);
         return [
-          { libelle: "Marge de sécurité", attendu: margeDeSecurite, tolerance: auCentime(seuilValeur * 0.005), calcul: `${eur(s.chiffreDAffaires)} − ${eur(seuilValeur)} = ${eur(margeDeSecurite)}` },
-          { libelle: "Indice de sécurité, en %", attendu: auCentime(indiceDeSecurite * 100), tolerance: 0.5, calcul: `${eur(margeDeSecurite)} ÷ ${eur(s.chiffreDAffaires)} = ${pct(indiceDeSecurite)}` },
+          { libelle: "Marge de sécurité", attendu: margeDeSecurite, calcul: `${eur(s.chiffreDAffaires)} − ${eur(seuilValeur)} = ${eur(margeDeSecurite)}` },
+          { libelle: "Indice de sécurité, en %", attendu: s.indiceDeSecuritePct!, calcul: `${eur(margeDeSecurite)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pourcent(s.indiceDeSecuritePct!)}` },
           {
             libelle: "Point mort, le jour du mois",
+            nature: "quantite",
             attendu: s.pointMort ?? 0,
-            calcul: `${eur(seuilValeur)} ÷ ${eur(s.chiffreDAffaires)} × ${qte(m.jours)} jours = ${qte((seuilValeur / s.chiffreDAffaires) * m.jours)}, donc le ${qte(s.pointMort ?? 0)} ${m.nom}`,
+            calcul: `${eur(seuilValeur)} ÷ ${eur(s.chiffreDAffaires)} × ${qte(m.jours)} jours = ${qte(s.pointMortExact ?? 0)} : le seuil est franchi pendant le jour suivant, le ${qte(s.pointMort ?? 0)} ${m.nom}`,
           },
         ];
       },
@@ -528,7 +535,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         const { f, m, s, indiceDeSecurite } = seuilDuMois(c);
         return s.pointMort !== null
           ? [
-              `Les ventes pourraient baisser de ${pct(indiceDeSecurite, 1)} avant que ${f.entreprise} ne perde de l'argent : c'est peu. Le seuil est atteint le ${qte(s.pointMort)} ${m.nom} ; les jours de vente qui suivent font tout le bénéfice du mois.`,
+              `Les ventes pourraient baisser de ${pct(indiceDeSecurite)} avant que ${f.entreprise} ne perde de l'argent : c'est peu. Le seuil est atteint le ${qte(s.pointMort)} ${m.nom} ; les jours de vente qui suivent font tout le bénéfice du mois.`,
               "Le point mort suppose des ventes régulières sur le mois. Une entreprise qui vend surtout en fin de mois l'atteint plus tard, pour le même seuil.",
             ]
           : [`La marge de sécurité est négative : le seuil n'est pas atteint en ${m.nom}.`];
@@ -550,7 +557,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         return [
           { texte: `De ${eur(s.resultat)}, le résultat de janvier`, juste: true, retour: `Bon pari. ${voir}` },
           { texte: `De ${eur(margeDeSecurite)}, la marge de sécurité`, juste: false, retour: `Pari à vérifier : la marge de sécurité se compte en chiffre d'affaires, pas en charges. ${voir}` },
-          { texte: `De ${eur(auCentime(s.chargesFixes * indiceDeSecurite))}, l'indice de sécurité appliqué aux charges fixes`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `De ${eur(arrondi2(s.chargesFixes * indiceDeSecurite))}, l'indice de sécurité appliqué aux charges fixes`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
     },
@@ -578,8 +585,8 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         return [
           { libelle: "Marge sur coût variable de janvier", montant: s.marge },
           { libelle: "Charges fixes du mois", montant: x },
-          { libelle: "Seuil en chiffre d'affaires", montant: auCentime((x * s.prix) / s.margeUnitaire) },
-          { libelle: "Résultat du mois", montant: auCentime(s.marge - x), fort: true },
+          { libelle: "Seuil en chiffre d'affaires", montant: arrondi2((x * s.prix) / s.margeUnitaire) },
+          { libelle: "Résultat du mois", montant: arrondi2(s.marge - x), fort: true },
         ];
       },
       droites: (c) => {
@@ -610,12 +617,12 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           { libelle: "Charges fixes tenables", attendu: fixesTenables, calcul: `la marge sur coût variable de janvier : ${eur(s.chiffreDAffaires)} − ${eur(s.chargesVariables)} = ${eur(fixesTenables)}` },
           {
             libelle: "Hausse tenable des charges fixes, en %",
-            attendu: auCentime(hausseTenable * 100),
-            tolerance: 0.05,
+            attendu: arrondi2(hausseTenable * 100),
             calcul: `(${eur(fixesTenables)} − ${eur(s.chargesFixes)}) ÷ ${eur(s.chargesFixes)} = ${eur(s.resultat)} ÷ ${eur(s.chargesFixes)} = ${pct(hausseTenable)}`,
           },
           {
             libelle: "Seuil en quantité à ce plafond",
+            nature: "quantite",
             attendu: seuilAuPlafond,
             calcul: `${eur(fixesTenables)} ÷ ${eur(s.margeUnitaire)} = ${qte(fixesTenables / s.margeUnitaire)} ${f.unites} : les ventes de janvier`,
           },
@@ -624,7 +631,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       explication: (c) => {
         const { f, hausseTenable, indiceDeSecurite } = seuilDuMois(c);
         return [
-          `Au plafond, le seuil rejoint les ventes de janvier : toute la marge part dans les charges fixes. ${f.entreprise} ne peut laisser monter ses charges fixes que de ${pct(hausseTenable)}, avec un indice de sécurité de ${pct(indiceDeSecurite, 1)} : elle travaille près de son seuil, et une hausse de loyer se discute à l'euro près.`,
+          `Au plafond, le seuil rejoint les ventes de janvier : toute la marge part dans les charges fixes. ${f.entreprise} ne peut laisser monter ses charges fixes que de ${pct(hausseTenable)}, avec un indice de sécurité de ${pct(indiceDeSecurite)} : elle travaille près de son seuil, et une hausse de loyer se discute à l'euro près.`,
         ];
       },
     },
@@ -636,7 +643,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       notions: ["breakeven", "operating_leverage", "price_elasticity"],
       question: (c) => {
         const { f } = seuilDuMois(c);
-        return `Un concurrent casse ses prix. ${f.entreprise} envisage de baisser le sien de ${pct(BAISSE_DE_PRIX, 0)}, sans que ses coûts ne bougent. Calculez la nouvelle marge d'une ${f.unite}, le nouveau seuil en quantité, puis les ventes qu'il faudrait pour garder le résultat de janvier.`;
+        return `Un concurrent casse ses prix. ${f.entreprise} envisage de baisser le sien de ${pct(BAISSE_DE_PRIX)}, sans que ses coûts ne bougent. Calculez la nouvelle marge d'une ${f.unite}, le nouveau seuil en quantité, puis les ventes qu'il faudrait pour garder le résultat de janvier.`;
       },
       champs: (c) => {
         const { f, s, prixBaisse, margeBaisse, seuilBaisse, ventesPourLeResultat } = seuilDuMois(c);
@@ -644,27 +651,27 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           {
             libelle: "Nouvelle marge sur coût variable unitaire",
             attendu: margeBaisse,
-            calcul: `${eur(s.prix)} × ${pct(1 - BAISSE_DE_PRIX, 0)} = ${eur(prixBaisse)}, puis ${eur(prixBaisse)} − ${eur(s.coutVariableUnitaire)} = ${eur(margeBaisse)}`,
+            calcul: `${eur(s.prix)} × ${pct(1 - BAISSE_DE_PRIX)} = ${eur(prixBaisse)}, puis ${eur(prixBaisse)} − ${eur(s.coutVariableUnitaire)} = ${eur(margeBaisse)}`,
           },
           {
             libelle: `Nouveau seuil en quantité (${f.unites})`,
+            nature: "quantite",
             attendu: seuilBaisse,
-            tolerance: 1,
-            calcul: `${eur(s.chargesFixes)} ÷ ${eur(margeBaisse)} = ${qte(s.chargesFixes / margeBaisse)}, arrondi à ${qte(seuilBaisse)}`,
+            calcul: `${eur(s.chargesFixes)} ÷ ${eur(margeBaisse)} = ${qte(s.chargesFixes / margeBaisse)}, arrondi à l'unité supérieure : ${qte(seuilBaisse)} ${f.unites} (${qte(seuilBaisse - 1)} ne couvriraient pas les charges fixes)`,
           },
           {
             libelle: "Ventes pour garder le résultat de janvier",
+            nature: "quantite",
             attendu: ventesPourLeResultat,
-            tolerance: 1,
-            calcul: `(${eur(s.chargesFixes)} + ${eur(s.resultat)}) ÷ ${eur(margeBaisse)} = ${qte((s.chargesFixes + s.resultat) / margeBaisse)}, arrondi à ${qte(ventesPourLeResultat)}`,
+            calcul: `(${eur(s.chargesFixes)} + ${eur(s.resultat)}) ÷ ${eur(margeBaisse)} = ${qte((s.chargesFixes + s.resultat) / margeBaisse)}, arrondi à l'unité supérieure : ${qte(ventesPourLeResultat)} ${f.unites} (${qte(ventesPourLeResultat - 1)} feraient un peu moins que le résultat de janvier)`,
           },
         ];
       },
       explication: (c) => {
         const { f, m, s, margeBaisse, seuilBaisse, ventesPourLeResultat } = seuilDuMois(c);
         return [
-          `Le prix baisse de ${pct(BAISSE_DE_PRIX, 0)}, mais la marge d'une ${f.unite} baisse de ${pct(1 - margeBaisse / s.margeUnitaire, 0)} : les coûts variables, eux, n'ont pas bougé. Le seuil passe de ${qte(s.seuilQuantite!)} à ${qte(seuilBaisse)} ${f.unites}.`,
-          `Pour garder le résultat de janvier, il faudrait vendre ${qte(ventesPourLeResultat)} ${f.unites}, ${pct(ventesPourLeResultat / m.quantite - 1, 0)} de plus ; or la ligne et l'équipe ne tournent normalement que ${qte(f.centres.activiteNormale)} ${f.unites} par mois. Une baisse de prix ne se décide qu'en sachant combien de ventes elle doit gagner, et si l'entreprise peut les servir.`,
+          `Le prix baisse de ${pct(BAISSE_DE_PRIX)}, mais la marge d'une ${f.unite} baisse de ${pct(1 - margeBaisse / s.margeUnitaire)} : les coûts variables, eux, n'ont pas bougé. Le seuil passe de ${qte(s.seuilQuantite!)} à ${qte(seuilBaisse)} ${f.unites}.`,
+          `Pour garder le résultat de janvier, il faudrait vendre ${qte(ventesPourLeResultat)} ${f.unites}, ${pct(ventesPourLeResultat / m.quantite - 1)} de plus ; or la ligne et l'équipe ne tournent normalement que ${qte(f.centres.activiteNormale)} ${f.unites} par mois. Une baisse de prix ne se décide qu'en sachant combien de ventes elle doit gagner, et si l'entreprise peut les servir.`,
         ];
       },
     },
@@ -707,7 +714,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           levier: "prix",
           unite: x.f.unites,
           courbes: [
-            { libelle: "Seuil de rentabilité", valeur: (p) => auCentime(p.chargesFixes! / (p.prix! - p.coutVariable!)) },
+            { libelle: "Seuil de rentabilité", valeur: (p) => arrondi2(p.chargesFixes! / (p.prix! - p.coutVariable!)) },
             { libelle: "Ventes du mois", valeur: (p) => p.ventes! },
           ],
         };
@@ -715,7 +722,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       defi: (c) => {
         const x = seuilDuMois(c);
         return {
-          consigne: `Baissez le prix de ${pct(BAISSE_DE_PRIX, 0)}, à ${eur(x.prixBaisse)} ou moins, sans que le seuil de rentabilité ne dépasse celui de janvier, ${qte(x.seuilQuantite)} ${x.f.unites}.`,
+          consigne: `Baissez le prix de ${pct(BAISSE_DE_PRIX)}, à ${eur(x.prixBaisse)} ou moins, sans que le seuil de rentabilité ne dépasse celui de janvier, ${qte(x.seuilQuantite)} ${x.f.unites}.`,
           atteint: (p) => laboratoireDuSeuil(x, position(p)).reussi,
           indice: (p) => {
             const l = laboratoireDuSeuil(x, position(p));
@@ -729,7 +736,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         const x = seuilDuMois(c);
         const l = laboratoireDuSeuil(x, position(p));
         return [
-          `À ${eur(p.prix!)}, le seuil reste à ${qte(l.seuilQuantite)} ${x.f.unites}. Avec les charges fixes de janvier, il faut pour cela un coût variable d'au plus ${eur(x.coutVariablePlafond)}, ${pct(1 - x.coutVariablePlafond / x.s.coutVariableUnitaire, 0)} de moins ; avec le coût variable de janvier, des charges fixes d'au plus ${eur(x.fixesPlafond)}, ${pct(1 - x.fixesPlafond / x.s.chargesFixes, 0)} de moins.`,
+          `À ${eur(p.prix!)}, le seuil reste à ${qte(l.seuilQuantite)} ${x.f.unites}. Avec les charges fixes de janvier, il faut pour cela un coût variable d'au plus ${eur(x.coutVariablePlafond)}, ${pct(1 - x.coutVariablePlafond / x.s.coutVariableUnitaire)} de moins ; avec le coût variable de janvier, des charges fixes d'au plus ${eur(x.fixesPlafond)}, ${pct(1 - x.fixesPlafond / x.s.chargesFixes)} de moins.`,
           "Les ventes, elles, ne déplacent pas le seuil : elles en éloignent ou en rapprochent, et changent le résultat et l'indice de sécurité. Sur le graphique, le seuil n'est pas une droite : il monte de plus en plus vite quand le prix se rapproche du coût variable.",
         ];
       },
@@ -759,30 +766,29 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       notions: ["operating_leverage", "safety_margin"],
       question: (c) => {
         const { f } = seuilDuMois(c);
-        return `Le levier opérationnel dit de combien de pour cent le résultat varie quand le chiffre d'affaires varie de 1 %. Sans formule : calculez celui de ${f.entreprise} en janvier, au centième, puis le résultat du mois si les ventes avaient été inférieures de ${pct(BAISSE_DES_VENTES_DU_LEVIER, 0)}, et la variation du résultat, en pourcentage.`;
+        return `Le levier opérationnel dit de combien de pour cent le résultat varie quand le chiffre d'affaires varie de 1 %. Sans formule : calculez celui de ${f.entreprise} en janvier, au centième, puis le résultat du mois si les ventes avaient été inférieures de ${pct(BAISSE_DES_VENTES_DU_LEVIER)}, et la variation du résultat, en pourcentage.`;
       },
       champs: (c) => {
         const { s, levier, margeApresBaisse, resultatApresBaisse, variationDuResultat } = seuilDuMois(c);
         return [
-          { libelle: "Levier opérationnel", attendu: auCentime(levier), tolerance: 0.01, calcul: `marge sur coût variable ÷ résultat : ${eur(s.marge)} ÷ ${eur(s.resultat)} = ${qte(levier)}` },
+          { libelle: "Levier opérationnel", nature: "grandeur", attendu: arrondi2(levier), calcul: `marge sur coût variable ÷ résultat : ${eur(s.marge)} ÷ ${eur(s.resultat)} = ${qte(levier)}` },
           {
-            libelle: `Résultat avec ${pct(BAISSE_DES_VENTES_DU_LEVIER, 0)} de ventes en moins`,
+            libelle: `Résultat avec ${pct(BAISSE_DES_VENTES_DU_LEVIER)} de ventes en moins`,
             attendu: resultatApresBaisse,
-            calcul: `la marge baisse de ${pct(BAISSE_DES_VENTES_DU_LEVIER, 0)}, les charges fixes non : ${eur(s.marge)} × ${pct(1 - BAISSE_DES_VENTES_DU_LEVIER, 0)} − ${eur(s.chargesFixes)} = ${eur(margeApresBaisse)} − ${eur(s.chargesFixes)} = ${eur(resultatApresBaisse)}`,
+            calcul: `la marge baisse de ${pct(BAISSE_DES_VENTES_DU_LEVIER)}, les charges fixes non : ${eur(s.marge)} × ${pct(1 - BAISSE_DES_VENTES_DU_LEVIER)} − ${eur(s.chargesFixes)} = ${eur(margeApresBaisse)} − ${eur(s.chargesFixes)} = ${eur(resultatApresBaisse)}`,
           },
           {
             libelle: "Variation du résultat, en %",
-            attendu: auCentime(variationDuResultat * 100),
-            tolerance: 0.1,
-            calcul: `(${eur(resultatApresBaisse)} − ${eur(s.resultat)}) ÷ ${eur(s.resultat)} = ${pct(variationDuResultat)}, soit −${pct(BAISSE_DES_VENTES_DU_LEVIER, 0)} × ${qte(levier)}`,
+            attendu: arrondi2(variationDuResultat * 100),
+            calcul: `(${eur(resultatApresBaisse)} − ${eur(s.resultat)}) ÷ ${eur(s.resultat)} = ${pct(variationDuResultat)}, soit −${pct(BAISSE_DES_VENTES_DU_LEVIER)} × ${qte(levier)}`,
           },
         ];
       },
       explication: (c) => {
         const { f, levier, indiceDeSecurite, variationDuResultat } = seuilDuMois(c);
         return [
-          `Une baisse de ${pct(BAISSE_DES_VENTES_DU_LEVIER, 0)} des ventes fait perdre ${pct(-variationDuResultat)} du résultat : le levier, ${qte(levier)}, multiplie la variation des ventes. Les charges fixes ne baissent pas avec les ventes : tout le recul de la marge tombe sur le résultat.`,
-          `Le levier opérationnel est l'inverse de l'indice de sécurité : 1 ÷ ${pct(indiceDeSecurite)} = ${qte(1 / indiceDeSecurite)}. Plus ${f.entreprise} est près de son seuil, plus son résultat est sensible aux ventes.`,
+          `Une baisse de ${pct(BAISSE_DES_VENTES_DU_LEVIER)} des ventes fait perdre ${pct(-variationDuResultat)} du résultat : le levier, ${qte(levier)}, multiplie la variation des ventes. Les charges fixes ne baissent pas avec les ventes : tout le recul de la marge tombe sur le résultat.`,
+          `Le levier opérationnel est l'inverse de l'indice de sécurité : 1 ÷ ${qte(levier)} = ${pct(1 / levier)}, l'indice trouvé plus haut (${pct(indiceDeSecurite)}) à l'arrondi du taux de marge près. Plus ${f.entreprise} est près de son seuil, plus son résultat est sensible aux ventes.`,
         ];
       },
     },
@@ -802,7 +808,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           {
             texte: "C'est un signe de fragilité : l'entreprise travaille près de son seuil",
             juste: true,
-            retour: `Oui. Un levier élevé veut dire que le résultat est petit devant la marge (${eur(s.resultat)} pour ${eur(s.marge)}) : ${pct(BAISSE_DES_VENTES_DU_LEVIER, 0)} de ventes en moins effacent ${pct(-variationDuResultat, 0)} du résultat. À la hausse, il joue dans l'autre sens ; c'est un risque, pas une rentabilité.`,
+            retour: `Oui. Un levier élevé veut dire que le résultat est petit devant la marge (${eur(s.resultat)} pour ${eur(s.marge)}) : ${pct(BAISSE_DES_VENTES_DU_LEVIER)} de ventes en moins effacent ${pct(-variationDuResultat)} du résultat. À la hausse, il joue dans l'autre sens ; c'est un risque, pas une rentabilité.`,
           },
           {
             texte: "C'est une force : un levier élevé veut dire une rentabilité élevée",
@@ -830,32 +836,29 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       },
       champs: (c) => {
         const { gamme } = seuilDuMois(c);
-        const variables = auCentime(gamme.chiffreDAffaires - gamme.marge);
+        const variables = arrondi2(gamme.chiffreDAffaires - gamme.marge);
         return [
           {
             libelle: "Taux de marge moyen de la gamme, en %",
-            attendu: auCentime(gamme.taux * 100),
-            tolerance: 0.1,
-            calcul: `chiffre d'affaires ${gamme.references.map((r) => `${qte(r.quantite)} × ${eur(r.prix)}`).join(" + ")} = ${eur(gamme.chiffreDAffaires)} ; coûts variables ${gamme.references.map((r) => `${qte(r.quantite)} × ${eur(r.coutVariable)}`).join(" + ")} = ${eur(variables)} ; taux ${eur(gamme.marge)} ÷ ${eur(gamme.chiffreDAffaires)} = ${pct(gamme.taux)}`,
+            attendu: gamme.tauxPct,
+            calcul: `chiffre d'affaires ${gamme.references.map((r) => `${qte(r.quantite)} × ${eur(r.prix)}`).join(" + ")} = ${eur(gamme.chiffreDAffaires)} ; coûts variables ${gamme.references.map((r) => `${qte(r.quantite)} × ${eur(r.coutVariable)}`).join(" + ")} = ${eur(variables)} ; taux ${eur(gamme.marge)} ÷ ${eur(gamme.chiffreDAffaires)} × 100 = ${pourcent(gamme.tauxPct)}`,
           },
           {
             libelle: "Seuil de rentabilité de la gamme",
             attendu: gamme.seuilValeur,
-            tolerance: auCentime(gamme.seuilValeur * 0.005),
-            calcul: `(${eur(gamme.communes)} + ${eur(gamme.publicite)} de publicité) ÷ ${pct(gamme.taux)} = ${eur(gamme.chargesFixes)} × ${eur(gamme.chiffreDAffaires)} ÷ ${eur(gamme.marge)} = ${eur(gamme.seuilValeur)}`,
+            calcul: `(${eur(gamme.communes)} + ${eur(gamme.publicite)} de publicité) ÷ ${pourcent(gamme.tauxPct)} = ${eur(gamme.chargesFixes)} ÷ ${pourcent(gamme.tauxPct)} = ${eur(gamme.seuilValeur)}`,
           },
           {
             libelle: "Indice de sécurité de la gamme, en %",
-            attendu: auCentime(gamme.indice * 100),
-            tolerance: 0.2,
-            calcul: `(${eur(gamme.chiffreDAffaires)} − ${eur(gamme.seuilValeur)}) ÷ ${eur(gamme.chiffreDAffaires)} = ${pct(gamme.indice)}`,
+            attendu: gamme.indicePct,
+            calcul: `(${eur(gamme.chiffreDAffaires)} − ${eur(gamme.seuilValeur)}) ÷ ${eur(gamme.chiffreDAffaires)} × 100 = ${pourcent(gamme.indicePct)}`,
           },
         ];
       },
       explication: (c) => {
         const { gamme } = seuilDuMois(c);
         return [
-          `Avec plusieurs références, le seuil se dit en chiffre d'affaires, à une composition des ventes donnée : ${eur(gamme.seuilValeur)}. Le taux moyen, ${pct(gamme.taux)}, pondère les taux de chaque référence par leur chiffre d'affaires : ${gamme.references.map((r) => `${r.nom} ${pct(r.taux, 1)}`).join(", ")}.`,
+          `Avec plusieurs références, le seuil se dit en chiffre d'affaires, à une composition des ventes donnée : ${eur(gamme.seuilValeur)}. Le taux moyen, ${pct(gamme.taux)}, pondère les taux de chaque référence par leur chiffre d'affaires : ${gamme.references.map((r) => `${r.nom} ${pct(r.taux)}`).join(", ")}.`,
           `La publicité est propre à chaque référence, mais elle est fixe : elle entre dans les charges à couvrir. L'indice de sécurité de la gamme, ${pct(gamme.indice)}, est plus large que celui de janvier : les références les plus rentables tirent le taux vers le haut.`,
         ];
       },
@@ -876,9 +879,9 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         const plusFaible = x.gamme.references.every((r) => r.taux >= one.taux);
         return [
           {
-            texte: `Il monte : ${one.nom} a le plus faible taux de marge, ${pct(one.taux, 1)}`,
+            texte: `Il monte : ${one.nom} a le plus faible taux de marge, ${pct(one.taux)}`,
             juste: plusFaible,
-            retour: `Oui. Le taux moyen se rapproche de celui de ${one.nom}, ${pct(one.taux, 1)} contre ${pct(x.gamme.taux, 1)} aujourd'hui : chaque euro vendu couvre moins de charges fixes, et le seuil en chiffre d'affaires monte. Un seuil de gamme ne vaut que pour la composition sur laquelle on l'a calculé.`,
+            retour: `Oui. Le taux moyen se rapproche de celui de ${one.nom}, ${pct(one.taux)} contre ${pct(x.gamme.taux)} aujourd'hui : chaque euro vendu couvre moins de charges fixes, et le seuil en chiffre d'affaires monte. Un seuil de gamme ne vaut que pour la composition sur laquelle on l'a calculé.`,
           },
           {
             texte: `Il baisse : ${one.nom} est la référence la plus vendue`,
@@ -914,9 +917,9 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           },
           {
             libelle: "Second seuil de rentabilité",
+            nature: "quantite",
             attendu: palier.secondSeuil,
-            tolerance: 1,
-            calcul: `${eur(palier.fixes)} ÷ ${eur(s.margeUnitaire)} = ${qte(palier.fixes / s.margeUnitaire)}, arrondi à ${qte(palier.secondSeuil)} ${f.unites}`,
+            calcul: `${eur(palier.fixes)} ÷ ${eur(s.margeUnitaire)} = ${qte(palier.fixes / s.margeUnitaire)}, arrondi à l'unité supérieure : ${qte(palier.secondSeuil)} ${f.unites}`,
           },
         ];
       },
@@ -969,7 +972,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       texte: (c) => {
         const { f, s, seuilQuantite, seuilValeur, indiceDeSecurite, levier, gamme, palier } = seuilDuMois(c);
         return [
-          `En janvier, ${f.entreprise} couvre ses charges fixes à partir de ${qte(seuilQuantite)} ${f.unites}, ${eur(seuilValeur)} de chiffre d'affaires ; avec ${qte(s.quantite)} ${f.unites}, son indice de sécurité est de ${pct(indiceDeSecurite, 1)} et son levier opérationnel de ${qte(levier)}.`,
+          `En janvier, ${f.entreprise} couvre ses charges fixes à partir de ${qte(seuilQuantite)} ${f.unites}, ${eur(seuilValeur)} de chiffre d'affaires ; avec ${qte(s.quantite)} ${f.unites}, son indice de sécurité est de ${pct(indiceDeSecurite)} et son levier opérationnel de ${qte(levier)}.`,
           `Trois pièges. Le seuil se divise par la marge, pas par le prix. Vendre plus ne déplace pas le seuil, et une baisse de prix le fait monter bien plus vite qu'elle ne baisse le prix. Enfin, un seuil ne vaut que dans ses hypothèses : à une composition des ventes donnée pour une gamme (${eur(gamme.seuilValeur)}), et sous le palier de ${qte(palier.limite)} ${f.unites} pour les charges fixes.`,
           "Au niveau de l'examen, vous savez bâtir un compte de résultat différentiel, calculer le seuil en quantité et en valeur, le point mort, la marge et l'indice de sécurité, le levier opérationnel, le seuil d'une gamme et celui de charges fixes par paliers, et en tirer une décision chiffrée.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
@@ -1003,13 +1006,22 @@ export function securiteALaPosition(x: SeuilDuMois, p: Readonly<Record<string, n
   return {
     s,
     /** L'indice de sécurité, en pour cent au centième, tel que la lecture le montre. */
-    indicePct: auCentime(indice * 100),
+    indicePct: arrondi2(indice * 100),
     reussi: s.quantite <= x.m.quantite && indice >= INDICE_DE_SECURITE_VISE - 1e-9,
   };
 }
 
-/** Les charges fixes les plus hautes, à l'euro, qui donnent l'indice visé à des ventes données : (1 − indice) × marge. */
-const fixesPourLIndice = (x: SeuilDuMois, ventes: number) => Math.floor((1 - INDICE_DE_SECURITE_VISE) * ventes * x.s.margeUnitaire + 1e-9);
+/**
+ * Les charges fixes les plus hautes, à l'euro, qui donnent l'indice visé à des ventes données. Le seuil
+ * se calcule sur le taux de marge à deux décimales, et l'indice se lit à deux décimales : on part de
+ * (1 − indice) × chiffre d'affaires × taux, et l'on cherche autour l'euro qui tient encore l'indice.
+ */
+function fixesPourLIndice(x: SeuilDuMois, ventes: number) {
+  const tient = (fixes: number) => securiteALaPosition(x, { ventes, chargesFixes: fixes }).reussi;
+  let fixes = Math.floor((1 - INDICE_DE_SECURITE_VISE) * ventes * x.s.prix * x.s.tauxDeMarge + 1e-9) + 5;
+  while (!tient(fixes)) fixes -= 1;
+  return fixes;
+}
 
 const LABORATOIRE_DE_LA_SECURITE: EtapeSimulation = {
   id: "le-laboratoire-de-la-securite",
@@ -1040,7 +1052,7 @@ const LABORATOIRE_DE_LA_SECURITE: EtapeSimulation = {
       ligne("Seuil de rentabilité", l.seuilQuantite ?? 0, d.seuilQuantite ?? 0, { unite: x.f.unites }),
       ligne("Seuil en chiffre d'affaires", l.seuilValeur ?? 0, d.seuilValeur ?? 0),
       ligne("Marge de sécurité", l.margeDeSecurite ?? 0, d.margeDeSecurite ?? 0),
-      ligne("Indice de sécurité", ici.indicePct, auCentime((d.indiceDeSecurite ?? 0) * 100), { unite: "%", fort: true }),
+      ligne("Indice de sécurité", ici.indicePct, arrondi2((d.indiceDeSecurite ?? 0) * 100), { unite: "%", fort: true }),
       ligne("Résultat du mois", l.resultat, d.resultat, { effet: true, fort: true }),
     ];
   },
@@ -1058,7 +1070,7 @@ const LABORATOIRE_DE_LA_SECURITE: EtapeSimulation = {
   defi: (c) => {
     const x = seuilDuMois(c);
     return {
-      consigne: `Défi : portez l'indice de sécurité à ${pct(INDICE_DE_SECURITE_VISE, 0)} au moins, sans vendre plus qu'en janvier (${qte(x.m.quantite)} ${x.f.unites}).`,
+      consigne: `Défi : portez l'indice de sécurité à ${pct(INDICE_DE_SECURITE_VISE)} au moins, sans vendre plus qu'en janvier (${qte(x.m.quantite)} ${x.f.unites}).`,
       atteint: (p) => securiteALaPosition(x, p).reussi,
       indice: (p) => {
         const v = p.ventes ?? x.m.quantite;
@@ -1075,7 +1087,7 @@ const LABORATOIRE_DE_LA_SECURITE: EtapeSimulation = {
     const plafond = fixesPourLIndice(x, x.m.quantite);
     return [
       `À ${qte(s.quantite)} ${x.f.unites} et ${eur(s.chargesFixes)} de charges fixes, le seuil tombe à ${qte(s.seuilQuantite ?? 0)} ${x.f.unites} : la marge de sécurité est de ${eur(s.margeDeSecurite ?? 0)}, ${pct(indicePct / 100)} du chiffre d'affaires. C'est aussi le résultat divisé par la marge sur coût variable : ${eur(s.resultat)} ÷ ${eur(s.marge)}.`,
-      `Avec les ventes de janvier, la marge du mois reste de ${eur(x.s.marge)} : l'indice ne monte à ${pct(INDICE_DE_SECURITE_VISE, 0)} que si les charges fixes descendent à ${eur(plafond)} au plus, ${eur(auCentime(x.s.chargesFixes - plafond))} de moins qu'en janvier. Vendre moins demande de couper davantage ; vendre plus éloignerait aussi du seuil, mais c'est la seule chose que l'entreprise ne décide pas seule.`,
+      `Avec les ventes de janvier, la marge du mois reste de ${eur(x.s.marge)} : l'indice ne monte à ${pct(INDICE_DE_SECURITE_VISE)} que si les charges fixes descendent à ${eur(plafond)} au plus, ${eur(arrondi2(x.s.chargesFixes - plafond))} de moins qu'en janvier. Vendre moins demande de couper davantage ; vendre plus éloignerait aussi du seuil, mais c'est la seule chose que l'entreprise ne décide pas seule.`,
     ];
   },
 };
@@ -1093,7 +1105,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = partieDuChapitre(SEUIL_DE_RENTABIL
     texte: (c) => {
       const { f, s, seuilQuantite, seuilValeur, indiceDeSecurite } = seuilDuMois(c);
       return [
-        `En janvier, ${f.entreprise} couvre ses charges fixes à partir de ${qte(seuilQuantite)} ${f.unites}, ${eur(seuilValeur)} de chiffre d'affaires ; avec ${qte(s.quantite)} ${f.unites}, son indice de sécurité est de ${pct(indiceDeSecurite, 1)}.`,
+        `En janvier, ${f.entreprise} couvre ses charges fixes à partir de ${qte(seuilQuantite)} ${f.unites}, ${eur(seuilValeur)} de chiffre d'affaires ; avec ${qte(s.quantite)} ${f.unites}, son indice de sécurité est de ${pct(indiceDeSecurite)}.`,
         `Le seuil se divise par la marge sur coût variable, pas par le prix, et vendre plus ne le déplace pas : il s'atteint plus tôt. La suite, « ${TITRE_DE_LA_SUITE} », fait jouer le prix, le levier opérationnel, la gamme et les charges fixes par paliers.`,
         "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
       ];

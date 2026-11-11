@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_ASSORTIMENT, PART_REPORTEE, assortimentDuPointDeVente, retrait } from "../../chapitres/assortiment";
 import type { Situation } from "../types";
@@ -21,13 +21,15 @@ import type { Situation } from "../types";
  *
  * Les pièges : compter le chiffre d'affaires de la référence, ou toute sa marge, comme perdus ; croire
  * qu'une référence qui marge peu par article se retire forcément avec profit.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la marge récupérée, l'effet net et la part qui compense partent
+ * de la marge d'un article des autres au centime ; les montants à un centime près (à 50 centimes,
+ * avant), la part à deux décimales (au dixième, avant) ; les articles reportés sont une quantité,
+ * entière, déclarée comme telle.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 /** Les chiffres de la réponse, calculés une fois sur la fiche. */
 export function retirerUneReference(c: Pick<Cas, "code">) {
@@ -106,7 +108,6 @@ export const RETIRER_UNE_REFERENCE: Situation = {
           {
             libelle: "Marge moyenne d'un article des autres références",
             attendu: x.margeUnitaireDesAutres,
-            tolerance: 0.01,
             calcul: `${eur(x.r.margeDesAutres)} ÷ ${qte(x.r.ventesDesAutres)} articles = ${eur(x.margeUnitaireDesAutres)}`,
           },
         ];
@@ -131,9 +132,9 @@ export const RETIRER_UNE_REFERENCE: Situation = {
         const x = retirerUneReference(c);
         const r = x.r;
         return [
-          { libelle: "Articles reportés", attendu: r.unitesReportees, calcul: `${qte(r.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(r.unitesReportees)}` },
-          { libelle: "Marge récupérée par le report", attendu: r.margeRecuperee, tolerance: 0.5, calcul: `${qte(r.unitesReportees)} × (${eur(r.margeDesAutres)} ÷ ${qte(r.ventesDesAutres)}) = ${eur(r.margeRecuperee)}` },
-          { libelle: "Effet net sur la marge du mois", attendu: r.effetNet, tolerance: 0.5, calcul: `${eur(r.margeRecuperee)} − ${eur(r.visee.marge)} = ${eur(r.effetNet)}` },
+          { libelle: "Articles reportés", nature: "quantite", attendu: r.unitesReportees, calcul: `${qte(r.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(r.unitesReportees)}` },
+          { libelle: "Marge récupérée par le report", attendu: r.margeRecuperee, calcul: `${qte(r.unitesReportees)} × ${eur(r.margeUnitaireDesAutres)} = ${eur(r.margeRecuperee)}` },
+          { libelle: "Effet net sur la marge du mois", attendu: r.effetNet, calcul: `${eur(r.margeRecuperee)} − ${eur(r.visee.marge)} = ${eur(r.effetNet)}` },
         ];
       },
       explication: (c) => {
@@ -181,7 +182,7 @@ export const RETIRER_UNE_REFERENCE: Situation = {
       explication: (c) => {
         const x = retirerUneReference(c);
         return [
-          `Il faudrait ${pct(x.partEntiereQuiCompense)} de report (${pct(auDixieme(x.r.partQuiCompense))} au dixième) : la marge d'un ${x.r.nom}, ${eur(x.derniere.margeUnitaire)}, divisée par celle d'un article des autres, ${eur(x.margeUnitaireDesAutres)}. Les études en annoncent ${pct(PART_REPORTEE * 100)}.`,
+          `Il faudrait ${pct(x.partEntiereQuiCompense)} de report (${pct(x.r.partQuiCompense)} à deux décimales) : la marge d'un ${x.r.nom}, ${eur(x.derniere.margeUnitaire)}, divisée par celle d'un article des autres, ${eur(x.margeUnitaireDesAutres)}. Les études en annoncent ${pct(PART_REPORTEE * 100)}.`,
         ];
       },
     },
@@ -193,7 +194,7 @@ export const RETIRER_UNE_REFERENCE: Situation = {
       question: (c) => {
         const x = retirerUneReference(c);
         const a = x.autre;
-        return `Un membre de la direction propose de retirer plutôt l'${a.nom}, qui ne laisse que ${eur(a.visee.margeUnitaire)} par article. Avec le même report, ${pct(PART_REPORTEE * 100)}, calculez la marge moyenne d'un article des autres références (au centime), l'effet net de ce retrait sur la marge du mois (négatif s'il en fait perdre), puis la part reportée qui le compenserait, en pourcentage, au dixième.`;
+        return `Un membre de la direction propose de retirer plutôt l'${a.nom}, qui ne laisse que ${eur(a.visee.margeUnitaire)} par article. Avec le même report, ${pct(PART_REPORTEE * 100)}, calculez la marge moyenne d'un article des autres références (au centime), l'effet net de ce retrait sur la marge du mois (négatif s'il en fait perdre), puis la part reportée qui le compenserait, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = retirerUneReference(c);
@@ -201,21 +202,18 @@ export const RETIRER_UNE_REFERENCE: Situation = {
         return [
           {
             libelle: "Marge moyenne d'un article des autres références",
-            attendu: auCentime(a.margeUnitaireDesAutres),
-            tolerance: 0.01,
-            calcul: `(${eur(x.margeDuMois)} − ${eur(a.visee.marge)}) ÷ (${qte(x.ventes)} − ${qte(a.visee.ventes)}) = ${eur(auCentime(a.margeUnitaireDesAutres))}`,
+            attendu: a.margeUnitaireDesAutres,
+            calcul: `(${eur(x.margeDuMois)} − ${eur(a.visee.marge)}) ÷ (${qte(x.ventes)} − ${qte(a.visee.ventes)}) = ${eur(a.margeUnitaireDesAutres)}`,
           },
           {
             libelle: "Effet net du retrait sur la marge du mois",
             attendu: a.effetNet,
-            tolerance: 0.5,
-            calcul: `${qte(a.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(a.unitesReportees)} articles ; ${qte(a.unitesReportees)} × ${eur(auCentime(a.margeUnitaireDesAutres))} − ${eur(a.visee.marge)} = ${eur(a.effetNet)}`,
+            calcul: `${qte(a.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(a.unitesReportees)} articles ; ${qte(a.unitesReportees)} × ${eur(a.margeUnitaireDesAutres)} − ${eur(a.visee.marge)} = ${eur(a.effetNet)}`,
           },
           {
             libelle: "Part reportée qui compense le retrait (%)",
-            attendu: auDixieme(a.partQuiCompense),
-            tolerance: 0.1,
-            calcul: `${eur(a.visee.margeUnitaire)} ÷ ${eur(auCentime(a.margeUnitaireDesAutres))} × 100 = ${pct(auDixieme(a.partQuiCompense))}`,
+            attendu: a.partQuiCompense,
+            calcul: `${eur(a.visee.margeUnitaire)} ÷ ${eur(a.margeUnitaireDesAutres)} × 100 = ${pct(a.partQuiCompense)}`,
           },
         ];
       },
@@ -223,7 +221,7 @@ export const RETIRER_UNE_REFERENCE: Situation = {
         const x = retirerUneReference(c);
         const a = x.autre;
         return [
-          `Retirer l'${a.nom} coûterait ${eur(-a.effetNet)} par mois, ${qte(auDixieme(a.effetNet / x.r.effetNet))} fois le retrait du ${x.r.nom}, et il faudrait ${pct(auDixieme(a.partQuiCompense))} de report. Elle vend ${qte(a.visee.ventes)} articles et laisse ${eur(a.visee.marge)} : plus de clients à perdre, et plus de marge avec eux.`,
+          `Retirer l'${a.nom} coûterait ${eur(-a.effetNet)} par mois, ${qte(auCentime(a.effetNet / x.r.effetNet))} fois le retrait du ${x.r.nom}, et il faudrait ${pct(auCentime(a.partQuiCompense))} de report. Elle vend ${qte(a.visee.ventes)} articles et laisse ${eur(a.visee.marge)} : plus de clients à perdre, et plus de marge avec eux.`,
         ];
       },
     },

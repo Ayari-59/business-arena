@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
@@ -52,6 +52,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : les-indices-de-valeur et le-tableau-des-couts-caches sont des tableaux à compléter,
  *     ranger-les-couts-caches un tri ;
  *   · expert : lire-les-couts-caches et ce-que-cache-une-economie, puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la baisse à obtenir se donne à deux décimales (au dixième,
+ * avant) ; l'indice de valeur, une grandeur au centième, se calcule sur la part du coût à deux
+ * décimales, comme l'élève.
  */
 
 /** Le chapitre se calcule sur NOVA. */
@@ -67,10 +72,11 @@ export const LEVIERS_DE_LA_VALEUR = {
   connexion: { min: 1, max: 4.5, pas: 0.1 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number, d = 1) => `${(Math.round(t * 10 ** (d + 2)) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−")} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
+const auCentieme = arrondi2;
+/** L'indice de valeur sur la part du coût à deux décimales, comme l'élève : poids ÷ part. */
+const indiceALaCopie = (f: { poids: number; part: number }) => auCentieme((f.poids * 100) / auCentieme(f.part * 100));
 const par = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const fonction = (code: string) => FONCTIONS_DE_LA_GO.find((x) => x.code === code)!;
 
@@ -112,8 +118,8 @@ export function tableauDesFonctions(c: Pick<Cas, "code">): TableauDeDonnees {
     titre: `Les fonctions de la ${LA_GO.nom}, premier projet du bureau d'études`,
     colonnes: ["Poids pour les clients", "Coût estimé"],
     lignes: [
-      ...FONCTIONS_DE_LA_GO.map((f) => ({ libelle: f.libelle, valeurs: [pct(f.poids, 0), eur(f.coutEstime)] })),
-      { libelle: `La ${LA_GO.nom} entière`, valeurs: [pct(1, 0), eur(x.cible.coutEstime)] },
+      ...FONCTIONS_DE_LA_GO.map((f) => ({ libelle: f.libelle, valeurs: [pct(f.poids), eur(f.coutEstime)] })),
+      { libelle: `La ${LA_GO.nom} entière`, valeurs: [pct(1), eur(x.cible.coutEstime)] },
     ],
   };
 }
@@ -124,7 +130,7 @@ export function tableauDeLEnquete(c: Pick<Cas, "code">): TableauDeDonnees {
   return {
     titre: `L'enquête de prix de la ${LA_GO.nom} (${qte(ENQUETE_DE_PRIX.repondants)} clients)`,
     colonnes: ["Trop chère à ce prix", "Trop peu chère pour y croire", "Taux d'acceptabilité"],
-    lignes: x.enquete.lignes.map((l) => ({ libelle: eur(l.prix), valeurs: [pct(l.tropCher, 0), pct(l.tropBas, 0), pct(l.acceptabilite, 0)] })),
+    lignes: x.enquete.lignes.map((l) => ({ libelle: eur(l.prix), valeurs: [pct(l.tropCher), pct(l.tropBas), pct(l.acceptabilite)] })),
   };
 }
 
@@ -135,7 +141,7 @@ export function tableauDesDysfonctionnements(c: Pick<Cas, "code">): TableauDeDon
     titre: "Les dysfonctionnements de N + 1 chez NOVA",
     colonnes: ["Ce qui s'est passé"],
     lignes: [
-      { libelle: "Absentéisme", valeurs: [`${qte(HEURES_D_ABSENCE)} heures d'absence ; la moitié rattrapée en heures supplémentaires majorées de ${pct(MAJORATION_DES_HEURES_SUPPLEMENTAIRES, 0)}, l'autre perdue`] },
+      { libelle: "Absentéisme", valeurs: [`${qte(HEURES_D_ABSENCE)} heures d'absence ; la moitié rattrapée en heures supplémentaires majorées de ${pct(MAJORATION_DES_HEURES_SUPPLEMENTAIRES)}, l'autre perdue`] },
       { libelle: "Accidents du travail", valeurs: ["Aucun"] },
       { libelle: "Rotation du personnel", valeurs: [`Un opérateur part fin mars : recrutement ${eur(k.depart.recrutement)}, ${qte(k.depart.ventesPerdues)} enceintes perdues, ${eur(k.depart.salairesNonVerses)} de salaires non versés`] },
       { libelle: "Non-qualité", valeurs: [`${qte(k.qualite.defauts)} défauts : ${qte(k.qualite.detectes)} retouchés au contrôle, ${qte(k.qualite.livres)} revenus sous garantie, ${qte(k.qualite.ventesPerdues)} ventes perdues`] },
@@ -200,7 +206,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
       tableau: tableauDeLEnquete,
       question: (c) => {
         const x = valeurDuChapitre(c);
-        return `Le service commercial a interrogé ${qte(ENQUETE_DE_PRIX.repondants)} clients. Chacun a dit à quel prix la Go serait trop chère, et à quel prix si peu chère qu'il douterait de sa qualité. À ${eur(x.enquete.lignes[1]!.prix)}, ${pct(x.enquete.lignes[1]!.tropBas, 0)} des clients la trouvent trop peu chère. Quel prix retenir pour lancer la Go ?`;
+        return `Le service commercial a interrogé ${qte(ENQUETE_DE_PRIX.repondants)} clients. Chacun a dit à quel prix la Go serait trop chère, et à quel prix si peu chère qu'il douterait de sa qualité. À ${eur(x.enquete.lignes[1]!.prix)}, ${pct(x.enquete.lignes[1]!.tropBas)} des clients la trouvent trop peu chère. Quel prix retenir pour lancer la Go ?`;
       },
       options: (c) => {
         const x = valeurDuChapitre(c);
@@ -211,17 +217,17 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
           {
             texte: `${eur(e.prix)}, le prix le plus accepté`,
             juste: true,
-            retour: `Oui. À ${eur(e.prix)}, ${pct(e.acceptabilite, 0)} des clients pourraient acheter : c'est le prix qui maximise les ventes. Il ne se calcule pas sur le coût, il se lit chez les clients. Le coût de la Go devra s'y plier.`,
+            retour: `Oui. À ${eur(e.prix)}, ${pct(e.acceptabilite)} des clients pourraient acheter : c'est le prix qui maximise les ventes. Il ne se calcule pas sur le coût, il se lit chez les clients. Le coût de la Go devra s'y plier.`,
           },
           {
             texte: `${eur(bas.prix)} : moins cher, la Go se vendra forcément mieux`,
             juste: false,
-            retour: `Non : à ${eur(bas.prix)}, ${pct(bas.tropBas, 0)} des clients douteraient de sa qualité, et seuls ${pct(bas.acceptabilite, 0)} l'achèteraient. Un prix trop bas fait fuir autant qu'un prix trop haut.`,
+            retour: `Non : à ${eur(bas.prix)}, ${pct(bas.tropBas)} des clients douteraient de sa qualité, et seuls ${pct(bas.acceptabilite)} l'achèteraient. Un prix trop bas fait fuir autant qu'un prix trop haut.`,
           },
           {
             texte: `${eur(haut.prix)} : la marge sera plus confortable`,
             juste: false,
-            retour: `Non : à ${eur(haut.prix)}, ${pct(haut.tropCher, 0)} des clients la trouvent trop chère. La marge par Go serait plus grande, sur beaucoup moins de Go.`,
+            retour: `Non : à ${eur(haut.prix)}, ${pct(haut.tropCher)} des clients la trouvent trop chère. La marge par Go serait plus grande, sur beaucoup moins de Go.`,
           },
         ];
       },
@@ -280,7 +286,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
         const x = valeurDuChapitre(c);
         const a = x.enquete.lignes.find((l) => l.prix >= x.prixDuCurseur) ?? x.enquete.lignes.at(-1)!;
         return [
-          `Il faudrait ${eur(x.prixCoutPlus)}, soit ${eur(x.prixDuCurseur)} à l'euro. À ${eur(a.prix)}, l'enquête ne trouve que ${pct(a.acceptabilite, 0)} d'acheteurs, contre ${pct(x.enquete.acceptabilite, 0)} à ${eur(x.enquete.prix)}.`,
+          `Il faudrait ${eur(x.prixCoutPlus)}, soit ${eur(x.prixDuCurseur)} à l'euro. À ${eur(a.prix)}, l'enquête ne trouve que ${pct(a.acceptabilite)} d'acheteurs, contre ${pct(x.enquete.acceptabilite)} à ${eur(x.enquete.prix)}.`,
           "Le raisonnement de l'ingénieur part du coût ; celui du coût cible part du client. Comme le prix est imposé, c'est le coût qui devient la variable : il doit tenir dans le prix moins la marge.",
         ];
       },
@@ -293,7 +299,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
       notions: ["price_floor", "variable_costs"],
       question: (c) => {
         const x = valeurDuChapitre(c);
-        return `Le prix est de ${eur(x.cible.prix)}, la marge visée de ${eur(x.cible.marge)}. Calculez le coût cible de la Go, l'écart entre le coût estimé du premier projet (${eur(x.cible.coutEstime)}) et ce coût cible, puis la baisse à obtenir, en pour cent du coût estimé, au dixième.`;
+        return `Le prix est de ${eur(x.cible.prix)}, la marge visée de ${eur(x.cible.marge)}. Calculez le coût cible de la Go, l'écart entre le coût estimé du premier projet (${eur(x.cible.coutEstime)}) et ce coût cible, puis la baisse à obtenir, en pour cent du coût estimé, à deux décimales.`;
       },
       champs: (c) => {
         const k = valeurDuChapitre(c).cible;
@@ -301,7 +307,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
         return [
           { libelle: "Coût cible d'une Go", attendu: k.coutCible, calcul: `${eur(k.prix)} − ${eur(k.marge)} = ${eur(k.coutCible)}` },
           { libelle: "Écart au coût estimé", attendu: k.ecart, calcul: `${eur(k.coutEstime)} − ${eur(k.coutCible)} = ${eur(k.ecart)}` },
-          { libelle: "Baisse à obtenir (%)", attendu: Math.round(r * 1000) / 10, tolerance: 0.1, calcul: `${eur(k.ecart)} ÷ ${eur(k.coutEstime)} = ${pct(r)}` },
+          { libelle: "Baisse à obtenir (%)", attendu: auCentieme(r * 100), calcul: `${eur(k.ecart)} ÷ ${eur(k.coutEstime)} × 100 = ${pct(r)}` },
         ];
       },
       explication: (c) => {
@@ -332,8 +338,8 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
               cellules: [
                 donnee(auCentieme(f.poids * 100), { unite: "%" }),
                 donnee(f.cout),
-                aSaisir(auCentieme(f.part * 100), `${eur(f.cout)} ÷ ${eur(v.total)} = ${pct(f.part, 2)}`, { unite: "%", horsTotal: true, tolerance: 0.01, indice: "le coût de la fonction ÷ le coût de la Go" }),
-                aSaisir(auCentieme(f.indice), `${pct(f.poids, 0)} ÷ ${pct(f.part, 2)} = ${qte(f.indice, 2)}`, { unite: "", horsTotal: true, tolerance: 0.01, indice: "le poids de la fonction ÷ sa part du coût" }),
+                aSaisir(auCentieme(f.part * 100), `${eur(f.cout)} ÷ ${eur(v.total)} × 100 = ${pct(f.part)}`, { unite: "%", horsTotal: true, indice: "le coût de la fonction ÷ le coût de la Go" }),
+                aSaisir(indiceALaCopie(f), `${pct(f.poids)} ÷ ${pct(f.part)} = ${qte(indiceALaCopie(f))}`, { unite: "", nature: "grandeur", horsTotal: true, indice: "le poids de la fonction ÷ sa part du coût" }),
               ],
             })),
             {
@@ -351,7 +357,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
         const bas = tri[0]!;
         const haut = tri.at(-1)!;
         return [
-          `« ${bas.libelle} » a l'indice le plus bas, ${qte(bas.indice, 2)} : elle pèse ${pct(bas.part)} du coût pour ${pct(bas.poids, 0)} de la valeur. « ${haut.libelle} » a le plus haut, ${qte(haut.indice, 2)} : les clients y voient plus que ce qu'elle coûte.`,
+          `« ${bas.libelle} » a l'indice le plus bas, ${qte(bas.indice)} : elle pèse ${pct(bas.part)} du coût pour ${pct(bas.poids)} de la valeur. « ${haut.libelle} » a le plus haut, ${qte(haut.indice)} : les clients y voient plus que ce qu'elle coûte.`,
           "La valeur d'un produit, c'est la satisfaction qu'il donne rapportée à ce qu'il coûte. L'analyse de la valeur cherche l'économie là où l'indice est bas, sans toucher à ce qui fait la satisfaction du client.",
         ];
       },
@@ -364,7 +370,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
       notions: ["variable_costs"],
       question: (c) => {
         const k = valeurDuChapitre(c).projet.parFonction.find((f) => f.code === "connexion")!;
-        return `La fonction « ${k.libelle} » a un indice de ${qte(k.indice, 2)}. Que propose le contrôleur au bureau d'études ?`;
+        return `La fonction « ${k.libelle} » a un indice de ${qte(k.indice)}. Que propose le contrôleur au bureau d'études ?`;
       },
       options: (c) => {
         const k = valeurDuChapitre(c).projet.parFonction.find((f) => f.code === "connexion")!;
@@ -372,7 +378,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
           {
             texte: "Un module plus simple, qui garde la connexion",
             juste: true,
-            retour: `Oui. La fonction coûte ${pct(k.part)} de la Go pour ${pct(k.poids, 0)} de la valeur : le client veut que la Go se connecte, pas un module haut de gamme. Un module standard rend le même service, moins cher. C'est ce qu'a fait NOVA : ${eur(fonction("connexion").coutRetenu)} au lieu de ${eur(fonction("connexion").coutEstime)}.`,
+            retour: `Oui. La fonction coûte ${pct(k.part)} de la Go pour ${pct(k.poids)} de la valeur : le client veut que la Go se connecte, pas un module haut de gamme. Un module standard rend le même service, moins cher. C'est ce qu'a fait NOVA : ${eur(fonction("connexion").coutRetenu)} au lieu de ${eur(fonction("connexion").coutEstime)}.`,
           },
           {
             texte: "Supprimer la connexion sans fil, la fonction la moins utile",
@@ -382,7 +388,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
           {
             texte: "Rien : un indice sous 1 est normal pour une fonction technique",
             juste: false,
-            retour: `Non : à ${qte(k.indice, 2)}, la fonction coûte bien plus que ce que les clients y voient. C'est le premier endroit où chercher l'économie.`,
+            retour: `Non : à ${qte(k.indice)}, la fonction coûte bien plus que ce que les clients y voient. C'est le premier endroit où chercher l'économie.`,
           },
         ];
       },
@@ -455,8 +461,8 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
             if (r.total > r.coutCible + 1e-9) return `La Go coûte ${eur(r.total)}, ${eur(r.ecart)} au-dessus de son coût cible.`;
             const hors = r.parFonction.find((f) => f.indice < BANDE_DE_L_INDICE.min - 1e-9 || f.indice > BANDE_DE_L_INDICE.max + 1e-9)!;
             return hors.indice < 1
-              ? `« ${hors.libelle} » coûte trop pour ce que les clients y voient : indice ${qte(hors.indice, 2)}.`
-              : `« ${hors.libelle} » est trop peu servie pour ce que les clients y voient : indice ${qte(hors.indice, 2)}.`;
+              ? `« ${hors.libelle} » coûte trop pour ce que les clients y voient : indice ${qte(hors.indice)}.`
+              : `« ${hors.libelle} » est trop peu servie pour ce que les clients y voient : indice ${qte(hors.indice)}.`;
           },
           solution: { son: fonction("son").coutRetenu, autonomie: fonction("autonomie").coutRetenu, connexion: fonction("connexion").coutRetenu },
         };
@@ -502,8 +508,8 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
         const k = x.caches;
         return [
           { libelle: "Marge sur coût variable de N + 1", attendu: h.marge, calcul: `${qte(h.production)} × ${eur(h.margeUnitaire)} = ${eur(h.marge)}` },
-          { libelle: "CHMCV", attendu: h.valeur, calcul: `${eur(h.marge)} ÷ ${qte(h.heures)} = ${qte(h.marge / h.heures, 4)} €, au centime ${eur(h.valeur)} de l'heure` },
-          { libelle: "Non-production de l'absentéisme", attendu: k.lignes.absenteisme.nonProduction, calcul: `${qte(HEURES_D_ABSENCE)} × ${pct(1 - PART_DES_ABSENCES_RATTRAPEES, 0)} = ${qte(k.perdues)} heures × ${eur(h.valeur)} = ${eur(k.lignes.absenteisme.nonProduction)}` },
+          { libelle: "CHMCV", attendu: h.valeur, calcul: `${eur(h.marge)} ÷ ${qte(h.heures)} = ${qte(h.marge / h.heures)} €, au centime ${eur(h.valeur)} de l'heure` },
+          { libelle: "Non-production de l'absentéisme", attendu: k.lignes.absenteisme.nonProduction, calcul: `${qte(HEURES_D_ABSENCE)} × ${pct(1 - PART_DES_ABSENCES_RATTRAPEES)} = ${qte(k.perdues)} heures × ${eur(h.valeur)} = ${eur(k.lignes.absenteisme.nonProduction)}` },
           { libelle: "Surtemps de la recherche du stock", attendu: k.lignes.productivite.surtemps, calcul: `${qte(HEURES_DE_RECHERCHE_DU_STOCK)} heures × ${eur(h.valeur)} = ${eur(k.lignes.productivite.surtemps)}` },
         ];
       },

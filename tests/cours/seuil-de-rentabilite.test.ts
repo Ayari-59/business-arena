@@ -48,7 +48,9 @@ const mu = p - cv;
 const ca = q * p;
 const mcv = q * mu;
 const resultat = mcv - cf;
-const seuilValeur = c((cf * p) / mu);
+/** Le seuil en valeur sur le taux de marge à deux décimales, comme l'élève (deux décimales, 10 novembre 2026). */
+const seuilAuTaux = (fixes: number, marge: number, prix: number) => c((fixes * 100) / c((marge / prix) * 100));
+const seuilValeur = seuilAuTaux(cf, mu, p);
 
 function textesDe(e: Etape, x: Cas, etat: EtatDuCours): string[] {
   const t = e.tableau?.(x);
@@ -252,7 +254,8 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
   it("la fiche donne les chiffres de janvier", () => {
     expect([q, p, cv, cf, mu]).toEqual([1_590, 59, 38, 31_183, 21]);
     expect([ca, q * cv, mcv, resultat]).toEqual([93_810, 60_420, 33_390, 2_207]);
-    expect(seuilValeur).toBe(87_609.38);
+    // 31 183 € ÷ 35,59 % ; sur le taux exact, 87 609,38 €.
+    expect(seuilValeur).toBe(87_617.31);
   });
 
   it("le tri : les charges variables et fixes de janvier", () => {
@@ -282,11 +285,11 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     });
     expect(attendus(ch, "seuil")).toEqual({ "En quantité (enceintes, arrondi à l'unité supérieure)": Math.ceil(cf / mu), "En valeur (chiffre d'affaires)": seuilValeur });
     expect(Math.ceil(cf / mu)).toBe(1_485);
-    // Le défaut de l'audit : le calcul n'écrit plus « ÷ 35,6 % », qui donnerait 87 592,70 €.
+    // Le seuil part du taux à deux décimales, comme l'élève, au centime près ; le seuil en quantité dit pourquoi il monte à l'unité.
     const e = ch.etapes.find((x) => x.id === "seuil") as EtapeMontants;
-    expect(e.champs(cas, etatVide)[1]!.calcul).toBe("31 183 € ÷ (21 € ÷ 59 €) = 31 183 € × 59 € ÷ 21 € = 87 609,38 €");
-    expect(c(cf / 0.356)).toBe(87_592.7);
-    expect(Math.abs(87_592.7 - seuilValeur)).toBeLessThanOrEqual(e.champs(cas, etatVide)[1]!.tolerance!);
+    expect(e.champs(cas, etatVide)[1]!.calcul.replace(/\u202f/g, " ")).toBe("31 183 € ÷ 35,59 % = 87 617,31 €");
+    expect(e.champs(cas, etatVide)[1]!.tolerance).toBeUndefined();
+    expect(e.champs(cas, etatVide)[0]!.calcul.replace(/\u202f/g, " ")).toBe("31 183 € ÷ 21 € = 1 484,90, arrondi à l'unité supérieure : 1 485 enceintes, car 1 484 laisseraient une perte");
   });
 
   it("les étapes autonomes : la marge de sécurité, le point mort, les charges fixes tenables", () => {
@@ -294,9 +297,9 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect(attendus(ch, "securite")).toEqual({
       "Marge de sécurité": marge,
       "Indice de sécurité, en %": c((marge / ca) * 100),
-      "Point mort, le jour du mois": Math.ceil((seuilValeur / ca) * 31),
+      "Point mort, le jour du mois": Math.ceil(c((seuilValeur / ca) * 31)),
     });
-    expect([marge, c((marge / ca) * 100), Math.ceil((seuilValeur / ca) * 31)]).toEqual([6_200.62, 6.61, 29]);
+    expect([marge, c((marge / ca) * 100), c((seuilValeur / ca) * 31), Math.ceil(c((seuilValeur / ca) * 31))]).toEqual([6_192.69, 6.6, 28.95, 29]);
     expect(attendus(ch, "les-fixes-tenables")).toEqual({
       "Charges fixes tenables": mcv,
       "Hausse tenable des charges fixes, en %": c(((mcv - cf) / cf) * 100),
@@ -325,7 +328,8 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     });
     expect([c(mcv / resultat), apres, c(((apres - resultat) / resultat) * 100)]).toEqual([15.13, 537.5, -75.65]);
     // Le levier, c'est l'inverse de l'indice de sécurité, et la variation du résultat, celle des ventes multipliée par le levier.
-    expect((mcv / resultat) * ((ca - seuilValeur) / ca)).toBeCloseTo(1, 4);
+    // À l'arrondi du taux de marge près : le seuil part de 35,59 %.
+    expect((mcv / resultat) * ((ca - seuilValeur) / ca)).toBeCloseTo(1, 2);
     expect(-0.05 * (mcv / resultat)).toBeCloseTo((apres - resultat) / resultat, 9);
   });
 
@@ -337,16 +341,16 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     const communes = g.communes.loyer + g.communes.personnel + g.communes.entretien + g.communes.usure;
     expect([caG, cvG, pub, communes]).toEqual([195 * 34 + 1_160 * 59 + 217 * 129, 195 * 19 + 1_160 * 38 + 217 * 70, 373 + 1_233 + 393, 33_578]);
     expect([caG, cvG, pub]).toEqual([103_063, 62_975, 1_999]);
-    const taux = (caG - cvG) / caG;
-    const seuilG = c((communes + pub) / taux);
+    const taux = c(((caG - cvG) / caG) * 100) / 100;
+    const seuilG = c(((communes + pub) * 100) / c(taux * 100));
     expect(attendus(LES_LEVIERS_DU_SEUIL, "seuil-de-la-gamme")).toEqual({
       "Taux de marge moyen de la gamme, en %": c(taux * 100),
       "Seuil de rentabilité de la gamme": seuilG,
       "Indice de sécurité de la gamme, en %": c(((caG - seuilG) / caG) * 100),
     });
-    expect([c(taux * 100), seuilG, c(((caG - seuilG) / caG) * 100)]).toEqual([38.9, 91_465.58, 11.25]);
+    expect([c(taux * 100), seuilG, c(((caG - seuilG) / caG) * 100)]).toEqual([38.9, 91_457.58, 11.26]);
     // One, la plus vendue, a le plus faible taux : la pousser fait monter le seuil.
-    expect(juste(LES_LEVIERS_DU_SEUIL, "la-composition-de-la-gamme")).toBe("Il monte : NOVA One a le plus faible taux de marge, 35,6 %");
+    expect(juste(LES_LEVIERS_DU_SEUIL, "la-composition-de-la-gamme")).toBe("Il monte : NOVA One a le plus faible taux de marge, 35,59 %");
   });
 
   it("les étapes d'expert : les charges fixes par paliers, et le verdict du palier", () => {
@@ -400,7 +404,7 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect(l.reussi).toEqual([false, true]);
     const lire = (prix: number, cvu: number, fixes: number, ventes: number) => {
       const m = c(prix - cvu);
-      const sv = c((fixes * prix) / m);
+      const sv = seuilAuTaux(fixes, m, prix);
       return {
         "Marge sur coût variable d'une enceinte": m,
         "Seuil de rentabilité": Math.ceil(fixes / m - 1e-9),
@@ -410,9 +414,10 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
       };
     };
     expect(l.auDepart).toEqual(lire(59, 38, cf, q));
-    expect(Object.values(l.auDepart)).toEqual([21, 1_485, 87_609.38, 6.61, 2_207]);
+    expect(Object.values(l.auDepart)).toEqual([21, 1_485, 87_617.31, 6.6, 2_207]);
     expect(l.aLaSolution).toEqual(lire(53.1, 32.1, cf, q));
-    expect(Object.values(l.aLaSolution)).toEqual([21, 1_485, 78_848.44, 6.61, 2_207]);
+    expect(Object.values(l.aLaSolution)).toEqual([21, 1_485, seuilAuTaux(cf, 21, 53.1), c(((q * 53.1 - seuilAuTaux(cf, 21, 53.1)) / (q * 53.1)) * 100), 2_207]);
+    expect(seuilAuTaux(cf, 21, 53.1)).toBe(c((31_183 * 100) / 39.55));
     // Les deux chemins du défi : un coût variable d'au plus 32,10 €, ou des charges fixes d'au plus 22 423 €
     // (1 485 × 15,10 €, le seuil lu à l'unité supérieure ; 22 422,06 € pour le seuil exact).
     expect(Math.floor(1_485 * 15.1)).toBe(22_423);
@@ -425,14 +430,17 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
 
   it("le laboratoire de la sécurité : 10 % d'indice sans vendre plus qu'en janvier, par les seules charges fixes", () => {
     const l = laboratoire(ch, "le-laboratoire-de-la-securite");
-    // Les ventes de janvier : l'indice vaut résultat ÷ marge, il faut des fixes d'au plus 90 % de 33 390 €.
-    const plafond = Math.floor(0.9 * mcv);
-    expect(plafond).toBe(30_051);
+    // Les ventes de janvier : sur le taux exact, l'indice vaudrait résultat ÷ marge, et 90 % de 33 390 €
+    // suffiraient (30 051 €). Le seuil sur le taux à deux décimales et l'indice lu à deux décimales
+    // demandent des fixes d'au plus 30 049 € : à 30 050 €, l'indice tombe à 9,99 %.
+    const indice = (ventes: number, fixes: number) => c(((ventes * p - seuilAuTaux(fixes, mu, p)) / (ventes * p)) * 100);
+    const plafond = 30_049;
+    expect([indice(q, plafond), indice(q, plafond + 1)]).toEqual([10, 9.99]);
     expect(l.depart).toEqual({ ventes: q, chargesFixes: cf });
     expect(l.solution).toEqual({ ventes: q, chargesFixes: plafond });
     expect(l.reussi).toEqual([false, true]);
     const lire = (ventes: number, fixes: number) => {
-      const sv = c((fixes * p) / mu);
+      const sv = seuilAuTaux(fixes, mu, p);
       return {
         "Chiffre d'affaires du mois": ventes * p,
         "Seuil de rentabilité": Math.ceil(fixes / mu - 1e-9),
@@ -443,16 +451,17 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
       };
     };
     expect(l.auDepart).toEqual(lire(q, cf));
-    expect(Object.values(l.auDepart)).toEqual([93_810, 1_485, 87_609.38, 6_200.62, 6.61, 2_207]);
+    expect(Object.values(l.auDepart)).toEqual([93_810, 1_485, 87_617.31, 6_192.69, 6.6, 2_207]);
     expect(l.aLaSolution).toEqual(lire(q, plafond));
-    expect(Object.values(l.aLaSolution)).toEqual([93_810, 1_431, 84_429, 9_381, 10, 3_339]);
+    expect(Object.values(l.aLaSolution)).toEqual([93_810, 1_431, 84_431.02, 9_378.98, 10, 3_341]);
     // Un euro de charges fixes de plus, et l'indice retombe sous 10 % ; vendre plus qu'en janvier ne compte pas.
     expect(l.d.atteint({ ventes: q, chargesFixes: plafond + 1 })).toBe(false);
     expect(l.d.atteint({ ventes: 2_500, chargesFixes: cf })).toBe(false);
     expect(l.d.atteint({ ventes: q + 10, chargesFixes: plafond })).toBe(false);
-    // Vendre moins demande de couper davantage : à 1 500 enceintes, 28 350 € au plus.
-    expect(l.d.atteint({ ventes: 1_500, chargesFixes: 0.9 * 1_500 * mu })).toBe(true);
-    expect(l.d.atteint({ ventes: 1_500, chargesFixes: 0.9 * 1_500 * mu + 1 })).toBe(false);
+    // Vendre moins demande de couper davantage : à 1 500 enceintes, 28 349 € au plus.
+    expect([indice(1_500, 28_349), indice(1_500, 28_350)]).toEqual([10, 9.99]);
+    expect(l.d.atteint({ ventes: 1_500, chargesFixes: 28_349 })).toBe(true);
+    expect(l.d.atteint({ ventes: 1_500, chargesFixes: 28_350 })).toBe(false);
     // Le graphique : le résultat et la marge de sécurité selon les ventes, nuls ensemble au seuil.
     const g = l.e.graphique!(cas);
     expect(g.levier).toBe("ventes");
@@ -492,7 +501,8 @@ describe("le cas : le loyer qui augmente", () => {
   // La hausse ne touche que le loyer (le défaut de l'audit : elle s'appliquait aux 31 183 €).
   const loyer = c(mois.chargesFixes.loyer * 1.12);
   const cfn = loyer + mois.chargesFixes.personnel + mois.chargesFixes.amortissement;
-  const svn = c((cfn * p) / mu);
+  // Le seuil sur le taux de marge à deux décimales, 35,59 % (94 251,10 € sur le taux exact).
+  const svn = seuilAuTaux(cfn, mu, p);
 
   it("tient la forme d'un cas dédié", () => {
     casDedie(s, ch);
@@ -511,13 +521,13 @@ describe("le cas : le loyer qui augmente", () => {
       "Seuil de rentabilité (enceintes)": Math.ceil(cfn / mu),
       "Seuil de rentabilité (chiffre d'affaires)": svn,
     });
-    expect([Math.ceil(cfn / mu), svn]).toEqual([1_598, 94_251.1]);
+    expect([Math.ceil(cfn / mu), svn]).toEqual([1_598, 94_259.62]);
     expect(attendus(s, "securite")).toEqual({
       "Résultat de janvier avec le nouveau loyer": mcv - cfn,
       "Marge de sécurité": c(ca - svn),
       "Indice de sécurité (%)": c(((ca - svn) / ca) * 100),
     });
-    expect([mcv - cfn, c(ca - svn), c(((ca - svn) / ca) * 100)]).toEqual([-157, -441.1, -0.47]);
+    expect([mcv - cfn, c(ca - svn), c(((ca - svn) / ca) * 100)]).toEqual([-157, -449.62, -0.48]);
   });
 
   it("le curseur du loyer et le calcul à rebours", () => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_BUDGET, budgetAuDecalage, delaiLePlusLong, ficheDe } from "../../chapitres/budget-de-tresorerie";
 import { budgetDeTresorerie, investissementDeLaFiche, moisDeDecalage, tableauDeBord } from "../../monde/couts-et-budgets";
@@ -28,9 +28,8 @@ export const COMMANDE_EN_PLUS = 300;
 /** Le premier mois de la commande : avril (0 pour janvier), le début du deuxième trimestre. */
 export const MOIS_DE_LA_COMMANDE = 3;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const auCentime = arrondi2;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const enBanque = (t: number) => (t >= 0 ? `${eur(t)} en banque` : `un découvert de ${eur(-t)}`);
@@ -282,6 +281,7 @@ export const UN_TRIMESTRE_DE_CROISSANCE: Situation = {
           },
           {
             libelle: "Délai le plus long de CampusTech, en jours",
+            nature: "quantite",
             attendu: x.delaiMax,
             calcul: `une facture de plus doit rentrer avant la fin ${dE(n0)} (${eur(x.factureAvancee)} pour ${eur(-avril)} de découvert) : un paiement ${x.decalageMax} mois après la facture, ${x.ct.jourDeFacturation} + d ≤ ${x.decalageMax + 1} × ${x.s.joursDuMoisCommercial}, d ≤ ${x.delaiMax}`,
           },

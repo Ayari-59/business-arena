@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   BANQUE_DE_LA_BOUTIQUE,
@@ -48,6 +48,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : les-penalites, l-escompte-chiffre, financer-la-creance ;
  *   · expert : le-taux-de-l-escompte (le taux annuel), ce-que-le-calcul-oublie (une critique), le
  *     mode-de-reglement ; puis la décision et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux annuel de l'escompte se donne à deux décimales, à un
+ * centième près (au dixième, avant).
  */
 
 /** Le chapitre se joue dans la boutique du cours : MAILLE & CO, seule. */
@@ -66,11 +70,7 @@ export const SOLUTION_DU_LABORATOIRE = { escompte: 1, delai: 45 } as const;
 /** Le défi : un escompte d'au moins 1 % qui ne coûte pas plus que le découvert. */
 export const ESCOMPTE_MINIMAL_DU_DEFI = 1;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 2) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 export const ficheDeLaFacture = (c: Pick<Cas, "code">): FicheDeLaBoutique => {
   const f = BOUTIQUES_DU_COURS[c.code];
@@ -109,7 +109,7 @@ export function facturationDuComite(c: Pick<Cas, "code">) {
     affacturage: financements[2]!,
     moinsCher,
     decouvertHt,
-    tauxAnnuel: auDixieme(e.tauxAnnuelDeLEscompte * 100),
+    tauxAnnuel: auCentime(e.tauxAnnuelDeLEscompte * 100),
     // L'escompte qui coûte autant que le découvert au délai de la fiche, en %.
     escompteQuiEgale: (e.financement.cout / facture.netCommercial) * 100,
   };
@@ -408,7 +408,7 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
         const x = facturationDuComite(c);
         const lire = (t: number, d: number) => {
           const e = escompteOuCredit(x.f, { escompte: t / 100, jours: d });
-          return { escompte: e.coutDeLEscompte, decouvert: e.financement.cout, taux: auDixieme(e.tauxAnnuelDeLEscompte * 100), ecart: auCentime(e.financement.cout - e.coutDeLEscompte) };
+          return { escompte: e.coutDeLEscompte, decouvert: e.financement.cout, taux: auCentime(e.tauxAnnuelDeLEscompte * 100), ecart: auCentime(e.financement.cout - e.coutDeLEscompte) };
         };
         const l = lire(p.escompte!, p.delai!);
         const d = lire(DEPART_DU_LABORATOIRE.escompte, DEPART_DU_LABORATOIRE.delai);
@@ -449,7 +449,7 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
         const x = facturationDuComite(c);
         const e = escompteOuCredit(x.f, { escompte: p.escompte! / 100, jours: p.delai! });
         return [
-          `Un escompte de ${pct(p.escompte!)} contre ${qte(p.delai!)} jours de crédit coûte ${eur(e.coutDeLEscompte)}, pour ${eur(e.financement.cout)} de découvert : c'est un crédit à ${pct(auDixieme(e.tauxAnnuelDeLEscompte * 100), 1)} l'an. Plus le délai remplacé est long, plus l'escompte peut être fort ; à ${qte(x.delai)} jours, l'escompte qui égale le découvert est de ${pct(auCentime(x.escompteQuiEgale))}.`,
+          `Un escompte de ${pct(p.escompte!)} contre ${qte(p.delai!)} jours de crédit coûte ${eur(e.coutDeLEscompte)}, pour ${eur(e.financement.cout)} de découvert : c'est un crédit à ${pct(auCentime(e.tauxAnnuelDeLEscompte * 100))} l'an. Plus le délai remplacé est long, plus l'escompte peut être fort ; à ${qte(x.delai)} jours, l'escompte qui égale le découvert est de ${pct(auCentime(x.escompteQuiEgale))}.`,
         ];
       },
     },
@@ -461,7 +461,7 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
       notions: ["payment_terms", "receivables_financing"],
       question: (c) => {
         const x = facturationDuComite(c);
-        return `Exprimez l'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} en taux annuel : son coût divisé par le net financier, multiplié par ${qte(JOURS_DE_LA_BANQUE)} et divisé par les ${qte(x.delai)} jours gagnés. Donnez-le en pourcentage, au dixième.`;
+        return `Exprimez l'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} en taux annuel : son coût divisé par le net financier, multiplié par ${qte(JOURS_DE_LA_BANQUE)} et divisé par les ${qte(x.delai)} jours gagnés. Donnez-le en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = facturationDuComite(c);
@@ -469,15 +469,14 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
           {
             libelle: "Taux annuel de l'escompte (%)",
             attendu: x.tauxAnnuel,
-            tolerance: 0.1,
-            calcul: `${eur(x.comptant.escompte)} ÷ ${eur(x.comptant.netFinancier)} × ${qte(JOURS_DE_LA_BANQUE)} ÷ ${qte(x.delai)} × 100 = ${pct(x.tauxAnnuel, 1)}`,
+            calcul: `${eur(x.comptant.escompte)} ÷ ${eur(x.comptant.netFinancier)} × ${qte(JOURS_DE_LA_BANQUE)} ÷ ${qte(x.delai)} × 100 = ${pct(x.tauxAnnuel)}`,
           },
         ];
       },
       explication: (c) => {
         const x = facturationDuComite(c);
         return [
-          `L'escompte revient à emprunter à ${pct(x.tauxAnnuel, 1)} l'an, quand le découvert coûte ${pct(BANQUE_DE_LA_BOUTIQUE.decouvert.taux * 100)}. C'est pourquoi tant d'entreprises le refusent : il n'intéresse que celle qui ne trouve pas de banque.`,
+          `L'escompte revient à emprunter à ${pct(x.tauxAnnuel)} l'an, quand le découvert coûte ${pct(BANQUE_DE_LA_BOUTIQUE.decouvert.taux * 100)}. C'est pourquoi tant d'entreprises le refusent : il n'intéresse que celle qui ne trouve pas de banque.`,
         ];
       },
     },
@@ -562,9 +561,9 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
           {
             texte: `Garder les ${qte(x.delai)} jours et financer au découvert : ${eur(x.decouvert.cout)} contre ${eur(x.comptant.escompte)}`,
             juste: true,
-            retour: `Oui. L'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} coûte un crédit à ${pct(x.tauxAnnuel, 1)} l'an ; le découvert finance les mêmes jours pour ${eur(x.decouvert.cout)}. Il faudrait un escompte d'au plus ${pct(auCentime(x.escompteQuiEgale))} pour qu'il ne coûte pas plus. Avec une LCR, la boutique garde la main sur l'échéance.`,
+            retour: `Oui. L'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} coûte un crédit à ${pct(x.tauxAnnuel)} l'an ; le découvert finance les mêmes jours pour ${eur(x.decouvert.cout)}. Il faudrait un escompte d'au plus ${pct(auCentime(x.escompteQuiEgale))} pour qu'il ne coûte pas plus. Avec une LCR, la boutique garde la main sur l'échéance.`,
           },
-          { texte: `Pousser l'escompte : ${pct(CONDITIONS_DE_VENTE.escompte * 100)} est moins cher que ${pct(BANQUE_DE_LA_BOUTIQUE.decouvert.taux * 100)}`, juste: false, retour: `Non : c'est comparer un taux sur ${qte(x.delai)} jours à un taux sur un an. Rapporté à l'année, l'escompte coûte ${pct(x.tauxAnnuel, 1)}.` },
+          { texte: `Pousser l'escompte : ${pct(CONDITIONS_DE_VENTE.escompte * 100)} est moins cher que ${pct(BANQUE_DE_LA_BOUTIQUE.decouvert.taux * 100)}`, juste: false, retour: `Non : c'est comparer un taux sur ${qte(x.delai)} jours à un taux sur un an. Rapporté à l'année, l'escompte coûte ${pct(x.tauxAnnuel)}.` },
           { texte: "Passer à l'affacturage pour toutes les factures des comités", juste: false, retour: `Non : il coûte ${eur(x.affacturage.cout)} par facture comme celle-ci, pour une garantie dont la boutique a peu besoin avec quelques comités fidèles.` },
           { texte: `Allonger le crédit à ${qte(DELAIS_LEGAUX.dateDeFacture)} jours pour fidéliser les comités`, juste: false, retour: "Ce n'est pas la question posée, et chaque jour de plus coûte du découvert : la boutique financerait davantage la trésorerie de ses clients." },
         ];
@@ -593,7 +592,7 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
         const x = facturationDuComite(c);
         return [
           `Une facture va du brut au net à payer : la remise donne le net commercial, l'escompte le net financier, et la TVA se calcule sur ce net. Entre professionnels, elle annonce l'échéance, le taux des pénalités et l'indemnité de ${eur(INDEMNITE_FORFAITAIRE)} ; l'échéance ne dépasse pas ${qte(DELAIS_LEGAUX.dateDeFacture)} jours date de facture, ou ${qte(DELAIS_LEGAUX.finDeMois)} jours fin de mois.`,
-          `Accorder un délai, c'est financer la trésorerie du client, toutes taxes comprises. L'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} contre ${qte(x.delai)} jours est un crédit à ${pct(x.tauxAnnuel, 1)} l'an : le découvert (${eur(x.decouvert.cout)}) ou l'escompte d'une LCR (${eur(x.lcr.cout)}) coûtent moins ; l'affacturage coûte plus, mais garantit l'impayé.`,
+          `Accorder un délai, c'est financer la trésorerie du client, toutes taxes comprises. L'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} contre ${qte(x.delai)} jours est un crédit à ${pct(x.tauxAnnuel)} l'an : le découvert (${eur(x.decouvert.cout)}) ou l'escompte d'une LCR (${eur(x.lcr.cout)}) coûtent moins ; l'affacturage coûte plus, mais garantit l'impayé.`,
           "Au niveau de l'examen, vous savez établir une facture, en vérifier les mentions et l'échéance, chiffrer un retard, traduire un escompte en taux annuel, comparer les financements d'une créance et choisir un mode de règlement.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

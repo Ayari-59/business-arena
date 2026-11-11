@@ -28,7 +28,6 @@ const code = "boutique";
 const cas = casDeLEntreprise(code);
 const f = MAILLE_ET_CO;
 const centime = (x: number) => Math.round(x * 100) / 100;
-const dixieme = (x: number) => Math.round(x * 10) / 10;
 
 // Le mois de janvier, refait à la main sur la fiche, clientèle par clientèle.
 const CA = 600 * 55 + 360 * 75 + 90 * 135 + 330 * 35 + 150 * 25;
@@ -227,8 +226,8 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
 
   it("la fiche donne les chiffres de la consigne", () => {
     expect([CA, COMITES, CA_EN_CAISSE, ENTREES, PASSAGES, ARTICLES, ARTICLES_EN_CAISSE]).toEqual([87_450, 10_200, 77_250, 3_848, 940, 1_530, 1_330]);
-    expect([centime(PANIER), centime(ARTICLES_EN_CAISSE / PASSAGES), centime(PRIX_MOYEN), dixieme((PASSAGES / ENTREES) * 100)]).toEqual([82.18, 1.41, 58.08, 24.4]);
-    expect([CA / 120, dixieme((1_530 / 1_554) * 100)]).toEqual([728.75, 98.5]);
+    expect([centime(PANIER), centime(ARTICLES_EN_CAISSE / PASSAGES), centime(PRIX_MOYEN), centime((PASSAGES / ENTREES) * 100)]).toEqual([82.18, 1.41, 58.08, 24.43]);
+    expect([CA / 120, centime((1_530 / 1_554) * 100)]).toEqual([728.75, 98.46]);
   });
 
   it("les étapes guidées : le mois en quatre chiffres, le panier, l'indice de vente, le prix moyen", () => {
@@ -238,19 +237,19 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
 
   it("les étapes autonomes : la transformation (passages ÷ entrées), le taux de service, le rayon vide", () => {
     expect(attendus(ch, "la-transformation")).toEqual({
-      "Taux de transformation de la boutique (%)": dixieme((PASSAGES / ENTREES) * 100),
-      "Taux de transformation des passants (%)": dixieme((600 / 3_160) * 100),
+      "Taux de transformation de la boutique (%)": centime((PASSAGES / ENTREES) * 100),
+      "Taux de transformation des passants (%)": centime((600 / 3_160) * 100),
       "Taux de transformation des clientes fidèles (%)": (340 / 680) * 100,
     });
-    expect(dixieme((600 / 3_160) * 100)).toBe(19);
+    expect(centime((600 / 3_160) * 100)).toBe(18.99);
     const demande = 600 + 384 + 90 + 330 + 150;
     expect(attendus(ch, "le-taux-de-service")).toEqual({
       "Articles demandés": demande,
-      "Taux de service (%)": dixieme((ARTICLES / demande) * 100),
+      "Taux de service (%)": centime((ARTICLES / demande) * 100),
       "Ventes manquées": 384 - 360,
       "Chiffre d'affaires manqué": 24 * 75,
     });
-    expect(juste(ch, "deux-taux")).toBe("98,5 % est le taux de service ; la transformation vaut 24,4 %");
+    expect(juste(ch, "deux-taux")).toBe("98,46 % est le taux de service ; la transformation vaut 24,43 %");
     expect(juste(ch, "pourquoi-manquees")).toBe("Commander plus de cardigans : le rayon en a eu moins que la demande");
   });
 
@@ -285,7 +284,7 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
     expect(l.reussi).toEqual([false, true]);
     expect(l.auDepart).toEqual({
       Entrées: ENTREES,
-      "Taux de transformation": 24.4,
+      "Taux de transformation": 24.43,
       "Passages en caisse": PASSAGES,
       "Indice de vente": 1.41,
       "Prix moyen d'un article": 58.08,
@@ -295,7 +294,7 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
     });
     expect(l.aLaSolution).toEqual({
       Entrées: ENTREES,
-      "Taux de transformation": 24.4,
+      "Taux de transformation": 24.43,
       "Passages en caisse": PASSAGES,
       "Indice de vente": centime((ARTICLES_EN_CAISSE / PASSAGES) * 1.1),
       "Prix moyen d'un article": 58.08,
@@ -312,12 +311,16 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
     expect(l.d.atteint({ entrees: 10, transformation: -10, indice: 10, prix: 1 })).toBe(false);
     expect(l.d.atteint({ entrees: 10, transformation: -10, indice: 10, prix: 2 })).toBe(true);
     expect(HAUSSE_DU_PRIX_MOYEN).toBe(0.04);
+    // Chaque ligne de la copie : la hausse à deux décimales, l'indice de 1,41 relevé d'elle, le prix moyen de 58,08 € relevé de 4 % au centime.
+    const hausse = centime((1.1 / 1.04 - 1) * 100);
+    const indiceVise = centime(centime(ARTICLES_EN_CAISSE / PASSAGES) * (1 + hausse / 100));
+    const articles = plafond(centime(VISE / centime(centime(PRIX_MOYEN) * 1.04)));
     expect(attendus(ch, "la-decomposition")).toEqual({
-      "Hausse de l'indice de vente (%)": dixieme((1.1 / 1.04 - 1) * 100),
-      "Indice de vente visé": centime((ARTICLES_EN_CAISSE / PASSAGES) * (1.1 / 1.04)),
-      "Articles à vendre dans le mois": plafond(VISE / (PRIX_MOYEN * 1.04)),
+      "Hausse de l'indice de vente (%)": hausse,
+      "Indice de vente visé": indiceVise,
+      "Articles à vendre dans le mois": articles,
     });
-    expect([dixieme((1.1 / 1.04 - 1) * 100), centime((ARTICLES_EN_CAISSE / PASSAGES) * (1.1 / 1.04)), plafond(VISE / (PRIX_MOYEN * 1.04))]).toEqual([5.8, 1.5, 1_407]);
+    expect([hausse, indiceVise, articles]).toEqual([5.77, 1.49, 1_407]);
   });
 
   it("l'expert : le panier qu'on aurait en comptant les comités, et le panier que l'on vise", () => {
@@ -330,7 +333,7 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
     });
     expect([COMITES / 8, centime(CA / (PASSAGES + 8))]).toEqual([1_275, 92.25]);
     expect(juste(ch, "quel-panier-viser")).toBe("82,18 €, celui de la caisse");
-    expect(indicateursDuPointDeVente(cas).deuxFoisCinq).toBe(10.3);
+    expect(indicateursDuPointDeVente(cas).deuxFoisCinq).toBe(10.25);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

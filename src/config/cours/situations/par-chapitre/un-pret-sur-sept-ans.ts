@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_RENOVATION, renovationDeLaBoutique } from "../../chapitres/renover-la-boutique";
 import { PROJET_DE_RENOVATION, empruntDeLaRenovation, projetDeRenovation } from "../../monde/comptes-de-la-boutique";
@@ -17,6 +17,11 @@ import type { Situation } from "../types";
  *
  * Les pièges : confondre une annuité plus faible et un crédit moins cher ; croire que le taux exigé ne
  * change rien à la décision.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la valeur actuelle des flux et la VAN se donnent au centime, à
+ * un centime près (à cinq centimes, avant) : chaque flux actualisé s'arrondit au centime avant la
+ * somme.
  */
 
 /** LES NOUVELLES DONNÉES (hypothèses du cours) : 10 % exigés par l'associé ; un prêt sur 7 ans à 4,9 %. */
@@ -26,9 +31,7 @@ export const PRET_SUR_SEPT_ANS = { taux: 0.049, duree: 7 } as const;
 /** Les bornes du curseur des articles en plus, par an. */
 export const ARTICLES_DU_CURSEUR = { min: 300, max: 700 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
+const qte = nombreAuCentieme;
 
 /** Les chiffres de la réponse. */
 export function pretSurSeptAns(c: Pick<Cas, "code">) {
@@ -80,7 +83,7 @@ export const UN_PRET_SUR_SEPT_ANS: Situation = {
       titre: "La demande du gérant",
       tableau: tableauDuProjet,
       texte: () => [
-        `« Un associé veut désormais ${pct(TAUX_EXIGE * 100, 0)} de rentabilité, et non plus ${pct(PROJET_DE_RENOVATION.tauxDActualisation * 100, 0)}. Et la banque me propose d'étaler le prêt sur ${qte(PRET_SUR_SEPT_ANS.duree)} ans, à ${pct(PRET_SUR_SEPT_ANS.taux * 100)} : l'annuité serait plus petite. La rénovation tient-elle encore, combien de ventes en plus faut-il à ce taux, et le prêt long est-il une meilleure affaire ? »`,
+        `« Un associé veut désormais ${pct(TAUX_EXIGE * 100)} de rentabilité, et non plus ${pct(PROJET_DE_RENOVATION.tauxDActualisation * 100)}. Et la banque me propose d'étaler le prêt sur ${qte(PRET_SUR_SEPT_ANS.duree)} ans, à ${pct(PRET_SUR_SEPT_ANS.taux * 100)} : l'annuité serait plus petite. La rénovation tient-elle encore, combien de ventes en plus faut-il à ce taux, et le prêt long est-il une meilleure affaire ? »`,
         "Pas de cours cette fois : les flux sont ceux du chapitre, la méthode aussi.",
       ],
       repere: () => "À rendre : la VAN au taux exigé, l'annuité et le coût des deux prêts, les ventes qui gardent la VAN positive, et votre réponse.",
@@ -91,18 +94,18 @@ export const UN_PRET_SUR_SEPT_ANS: Situation = {
       titre: "La VAN au taux exigé",
       notions: ["discounting"],
       tableau: tableauDuProjet,
-      question: () => `Actualisez les flux à ${pct(TAUX_EXIGE * 100, 0)} : calculez la valeur actuelle des flux, puis la VAN du projet.`,
+      question: () => `Actualisez les flux à ${pct(TAUX_EXIGE * 100)} : calculez la valeur actuelle des flux, puis la VAN du projet.`,
       champs: (c) => {
         const x = pretSurSeptAns(c);
-        const somme = Math.round((x.aDix.van + x.aDix.investissement) * 100) / 100;
+        const somme = arrondi2(x.aDix.van + x.aDix.investissement);
         return [
-          { libelle: "Valeur actuelle des flux", attendu: somme, tolerance: 0.05, calcul: `${x.aDix.annees.map((a) => `${eur(a.flux)} × 1,1^−${a.annee}`).join(" + ")} = ${eur(somme)}` },
-          { libelle: "Valeur actuelle nette", attendu: x.aDix.van, tolerance: 0.05, calcul: `${eur(somme)} − ${eur(x.aDix.investissement)} = ${eur(x.aDix.van)}` },
+          { libelle: "Valeur actuelle des flux", attendu: somme, calcul: `${x.aDix.annees.map((a) => `${eur(a.flux)} × 1,1^−${a.annee}`).join(" + ")} = ${eur(somme)}` },
+          { libelle: "Valeur actuelle nette", attendu: x.aDix.van, calcul: `${eur(somme)} − ${eur(x.aDix.investissement)} = ${eur(x.aDix.van)}` },
         ];
       },
       explication: (c) => {
         const x = pretSurSeptAns(c);
-        return [`À ${pct(TAUX_EXIGE * 100, 0)}, la VAN baisse à ${eur(x.aDix.van)}, mais reste positive : le taux qui l'annule, autour de ${pct(x.tri, 0)}, est au-dessus de ce que l'associé exige.`];
+        return [`À ${pct(TAUX_EXIGE * 100)}, la VAN baisse à ${eur(x.aDix.van)}, mais reste positive : le taux qui l'annule, autour de ${pct(x.tri)}, est au-dessus de ce que l'associé exige.`];
       },
     },
     {
@@ -129,7 +132,7 @@ export const UN_PRET_SUR_SEPT_ANS: Situation = {
       type: "curseur",
       titre: "Les ventes qu'il faut à 10 %",
       notions: ["discounting", "irr_payback"],
-      question: () => `Faites varier les articles vendus en plus chaque année, de ${qte(ARTICLES_DU_CURSEUR.min)} à ${qte(ARTICLES_DU_CURSEUR.max)}, au taux de ${pct(TAUX_EXIGE * 100, 0)}. Une droite donne la valeur actuelle des flux, l'autre l'investissement. Placez le curseur sur le plus petit nombre d'articles où la VAN reste positive ou nulle, puis validez.`,
+      question: () => `Faites varier les articles vendus en plus chaque année, de ${qte(ARTICLES_DU_CURSEUR.min)} à ${qte(ARTICLES_DU_CURSEUR.max)}, au taux de ${pct(TAUX_EXIGE * 100)}. Une droite donne la valeur actuelle des flux, l'autre l'investissement. Placez le curseur sur le plus petit nombre d'articles où la VAN reste positive ou nulle, puis validez.`,
       grandeur: () => ({ libelle: "Articles en plus, par an", unite: "articles" }),
       cible: (c) => ({ attendu: pretSurSeptAns(c).articlesAuSeuil, min: ARTICLES_DU_CURSEUR.min, max: ARTICLES_DU_CURSEUR.max }),
       zones: ["La VAN est positive", "La VAN est négative"],
@@ -153,7 +156,7 @@ export const UN_PRET_SUR_SEPT_ANS: Situation = {
       },
       explication: (c) => {
         const x = pretSurSeptAns(c);
-        return [`À ${pct(TAUX_EXIGE * 100, 0)}, il faut au moins ${qte(x.articlesAuSeuil)} articles en plus par an, contre ${qte(x.p.articlesEnPlus)} prévus : le projet garde une marge, plus étroite qu'à 8 %.`];
+        return [`À ${pct(TAUX_EXIGE * 100)}, il faut au moins ${qte(x.articlesAuSeuil)} articles en plus par an, contre ${qte(x.p.articlesEnPlus)} prévus : le projet garde une marge, plus étroite qu'à 8 %.`];
       },
     },
     {
@@ -164,8 +167,8 @@ export const UN_PRET_SUR_SEPT_ANS: Situation = {
       options: (c) => {
         const x = pretSurSeptAns(c);
         return [
-          { texte: `Rénover, avec le prêt sur ${qte(x.cinq.duree)} ans : le long coûte ${eur(Math.round((x.sept.coutDuCredit - x.cinq.coutDuCredit) * 100) / 100)} de plus`, juste: true, retour: `Oui. À ${pct(TAUX_EXIGE * 100, 0)}, la VAN reste positive (${eur(x.aDix.van)}) tant que la borne vend au moins ${qte(x.articlesAuSeuil)} articles de plus par an. Le prêt sur ${qte(PRET_SUR_SEPT_ANS.duree)} ans allège l'annuité, mais coûte plus et dure plus que les équipements.` },
-          { texte: `Renoncer : à ${pct(TAUX_EXIGE * 100, 0)}, le projet ne rapporte plus assez`, juste: false, retour: `Non : la VAN à ${pct(TAUX_EXIGE * 100, 0)} est de ${eur(x.aDix.van)}, encore positive.` },
+          { texte: `Rénover, avec le prêt sur ${qte(x.cinq.duree)} ans : le long coûte ${eur(Math.round((x.sept.coutDuCredit - x.cinq.coutDuCredit) * 100) / 100)} de plus`, juste: true, retour: `Oui. À ${pct(TAUX_EXIGE * 100)}, la VAN reste positive (${eur(x.aDix.van)}) tant que la borne vend au moins ${qte(x.articlesAuSeuil)} articles de plus par an. Le prêt sur ${qte(PRET_SUR_SEPT_ANS.duree)} ans allège l'annuité, mais coûte plus et dure plus que les équipements.` },
+          { texte: `Renoncer : à ${pct(TAUX_EXIGE * 100)}, le projet ne rapporte plus assez`, juste: false, retour: `Non : la VAN à ${pct(TAUX_EXIGE * 100)} est de ${eur(x.aDix.van)}, encore positive.` },
           { texte: `Rénover, avec le prêt sur 7 ans : son annuité est la plus petite`, juste: false, retour: `Une annuité plus petite n'est pas un crédit moins cher : ${eur(x.sept.coutDuCredit)} d'intérêts contre ${eur(x.cinq.coutDuCredit)}, sur plus longtemps que la vie du rayonnage.` },
           { texte: "Rénover, et ne plus se soucier du taux exigé", juste: false, retour: "Le taux exigé fait la VAN : à un taux plus haut encore, au-delà de celui qui l'annule, le même projet détruirait de la valeur." },
         ];

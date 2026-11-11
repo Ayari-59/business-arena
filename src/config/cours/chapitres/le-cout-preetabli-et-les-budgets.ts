@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { controleBudgetaire, coutPreetabli } from "../monde/ecarts";
 import { USINES_DU_COURS, type FicheDeLUsine, type ModeleDeNova } from "../monde/nova-usine";
@@ -45,6 +45,10 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  * Les petits calculs propres au chapitre (la variante d'activité, le standard courant, la part de
  * chaque écart dans son coût préétabli) se font ici, documentés, à partir de la fiche, sans la
  * modifier.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts d'écart se donnent à deux décimales (au dixième,
+ * avant) ; les kilos préétablis sont des grandeurs au centième.
  */
 
 /**
@@ -71,11 +75,7 @@ export const SURCONSOMMATION_DU_STANDARD_COURANT = 0.025;
 /** L'usine seule : les coûts préétablis se calculent sur une production. */
 export const ENTREPRISES_DES_ECARTS: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 3 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const qte = nombreAuCentieme;
 /** Le sens d'un écart sur charge : positif défavorable, négatif favorable. */
 export const sens = (x: number) => (x > 0 ? "défavorable" : x < 0 ? "favorable" : "sans écart");
 /** Un écart sur charge écrit avec son sens : « 29 700 € défavorable ». */
@@ -92,27 +92,27 @@ export function budgetsDeLUsine(c: Pick<Cas, "code">) {
   const reelle = (m: ModeleDeNova) => r.ventes[m.code].quantite;
   const modeles = f.modeles.map((m) => ({ m, cout: coutPreetabli(f, m), prevue: m.quantitePrevue, reelle: reelle(m) }));
   const cHm = e.coutStandardDeLHeureMachine;
-  const fixesParHeure = auCentime(f.centre.chargesFixes / f.centre.activiteNormale);
+  const fixesParHeure = arrondi2(f.centre.chargesFixes / f.centre.activiteNormale);
   const heuresMachine = r.centre.heuresMachine;
   /** Le coût préétabli de l'activité réelle : les heures-machine réelles au coût standard, fixes imputés. */
-  const preetabliDeLActiviteReelle = auCentime(cHm * heuresMachine);
+  const preetabliDeLActiviteReelle = arrondi2(cHm * heuresMachine);
 
   // La variante d'activité : mêmes fixes, même coût variable, une autre activité réelle.
   const hV = ACTIVITE_DE_LA_VARIANTE;
   const variante = {
     heures: hV,
-    budgetFlexible: auCentime(f.centre.chargesFixes + f.centre.coutVariableParHeure * hV),
-    preetabli: auCentime(cHm * hV),
-    coefficient: auCentime(hV / f.centre.activiteNormale),
+    budgetFlexible: arrondi2(f.centre.chargesFixes + f.centre.coutVariableParHeure * hV),
+    preetabli: arrondi2(cHm * hV),
+    coefficient: arrondi2(hV / f.centre.activiteNormale),
   };
 
   // Le standard courant : plus de matière par enceinte, au même prix standard du kilo.
-  const kilosCourants = auCentime(e.preetabliDuReel.kilos * (1 + SURCONSOMMATION_DU_STANDARD_COURANT));
+  const kilosCourants = arrondi2(e.preetabliDuReel.kilos * (1 + SURCONSOMMATION_DU_STANDARD_COURANT));
   const courant = {
-    parModele: modeles.map((x) => ({ nom: x.m.nom, kilos: auCentime(x.m.matiereParUnite * (1 + SURCONSOMMATION_DU_STANDARD_COURANT)) })),
+    parModele: modeles.map((x) => ({ nom: x.m.nom, kilos: arrondi2(x.m.matiereParUnite * (1 + SURCONSOMMATION_DU_STANDARD_COURANT)) })),
     kilos: kilosCourants,
-    quantite: auCentime((r.matiere.kilos - kilosCourants) * f.prixStandardDuKilo),
-    preetabliDuReel: auCentime(e.preetabliDuReel.total + (kilosCourants - e.preetabliDuReel.kilos) * f.prixStandardDuKilo),
+    quantite: arrondi2((r.matiere.kilos - kilosCourants) * f.prixStandardDuKilo),
+    preetabliDuReel: arrondi2(e.preetabliDuReel.total + (kilosCourants - e.preetabliDuReel.kilos) * f.prixStandardDuKilo),
   };
 
   // Le seuil de significativité : chaque écart global rapporté au coût préétabli de son poste.
@@ -120,7 +120,7 @@ export function budgetsDeLUsine(c: Pick<Cas, "code">) {
     { code: "matiere", nom: "Matière", ecart: e.matiere.global, preetabli: e.preetabliDuReel.matiere },
     { code: "mainDOeuvre", nom: "Main-d'œuvre directe", ecart: e.mainDOeuvre.global, preetabli: e.preetabliDuReel.mainDOeuvre },
     { code: "centre", nom: `Centre de ${f.centre.nom.toLowerCase()}`, ecart: e.centre.global, preetabli: e.preetabliDuReel.centre },
-  ].map((p) => ({ ...p, part: auDixieme((p.ecart / p.preetabli) * 100), aAnalyser: Math.abs(p.ecart) > SEUIL_DE_SIGNIFICATIVITE * p.preetabli }));
+  ].map((p) => ({ ...p, part: arrondi2((p.ecart / p.preetabli) * 100), aAnalyser: Math.abs(p.ecart) > SEUIL_DE_SIGNIFICATIVITE * p.preetabli }));
 
   return {
     f,
@@ -131,17 +131,17 @@ export function budgetsDeLUsine(c: Pick<Cas, "code">) {
     heuresMachine,
     preetabliDeLActiviteReelle,
     /** Budget flexible du centre moins coût préétabli de l'activité réelle : l'écart sur activité. */
-    ecartFlexibleMoinsPreetabli: auCentime(e.centre.budgetFlexible - preetabliDeLActiviteReelle),
-    effetDeLaProduction: auCentime(e.preetabliDuReel.total - e.budgetStandard.total),
-    reelMoinsBudget: auCentime(e.reelTotal - e.budgetStandard.total),
+    ecartFlexibleMoinsPreetabli: arrondi2(e.centre.budgetFlexible - preetabliDeLActiviteReelle),
+    effetDeLaProduction: arrondi2(e.preetabliDuReel.total - e.budgetStandard.total),
+    reelMoinsBudget: arrondi2(e.reelTotal - e.budgetStandard.total),
     qTotalePrevue: modeles.reduce((t, x) => t + x.prevue, 0),
     qTotaleReelle: modeles.reduce((t, x) => t + x.reelle, 0),
     variante,
-    ecartDeLaVariante: auCentime(variante.budgetFlexible - variante.preetabli),
+    ecartDeLaVariante: arrondi2(variante.budgetFlexible - variante.preetabli),
     courant,
-    ecartGlobalCourant: auCentime(e.reelTotal - courant.preetabliDuReel),
+    ecartGlobalCourant: arrondi2(e.reelTotal - courant.preetabliDuReel),
     postes,
-    seuilPct: auDixieme(SEUIL_DE_SIGNIFICATIVITE * 100),
+    seuilPct: arrondi2(SEUIL_DE_SIGNIFICATIVITE * 100),
   };
 }
 
@@ -195,7 +195,7 @@ function tableauDesPostes(c: Cas): TableauDeDonnees {
   return {
     titre: "Les postes de la production réelle",
     colonnes: ["Coût préétabli", "Réel", "Écart global"],
-    lignes: b.postes.map((p) => ({ libelle: p.nom, valeurs: [eur(p.preetabli), eur(auCentime(p.preetabli + p.ecart)), eur(p.ecart)] })),
+    lignes: b.postes.map((p) => ({ libelle: p.nom, valeurs: [eur(p.preetabli), eur(arrondi2(p.preetabli + p.ecart)), eur(p.ecart)] })),
   };
 }
 
@@ -208,8 +208,8 @@ export function experienceDeLaProduction(c: Pick<Cas, "code">) {
   const b = budgetsDeLUsine(c);
   const variable = [...b.modeles].sort((x, y) => y.cout.total - x.cout.total)[0]!;
   const autres = b.modeles.filter((x) => x !== variable);
-  const fixe = auCentime(autres.reduce((t, x) => t + x.reelle * x.cout.total, 0));
-  const preetabli = (q: number) => auCentime(fixe + q * variable.cout.total);
+  const fixe = arrondi2(autres.reduce((t, x) => t + x.reelle * x.cout.total, 0));
+  const preetabli = (q: number) => arrondi2(fixe + q * variable.cout.total);
   // La plus petite quantité de Salon où le préétabli de la production atteint le budget standard.
   const seuil = Math.ceil((b.e.budgetStandard.total - fixe) / variable.cout.total - 1e-9);
   return { b, variable, autres, fixe, preetabli, seuil, min: variable.prevue - 1_000, max: variable.prevue + 1_000 };
@@ -223,8 +223,8 @@ export function experienceDeLaProduction(c: Pick<Cas, "code">) {
 export function experienceDeLActivite(c: Pick<Cas, "code">) {
   const b = budgetsDeLUsine(c);
   const f = b.f;
-  const flexible = (h: number) => auCentime(f.centre.chargesFixes + f.centre.coutVariableParHeure * h);
-  const preetabli = (h: number) => auCentime(b.cHm * h);
+  const flexible = (h: number) => arrondi2(f.centre.chargesFixes + f.centre.coutVariableParHeure * h);
+  const preetabli = (h: number) => arrondi2(b.cHm * h);
   const seuil = Math.ceil(f.centre.chargesFixes / (b.cHm - f.centre.coutVariableParHeure) - 1e-9);
   return { b, flexible, preetabli, seuil, min: f.centre.activiteNormale - 1_000, max: f.centre.activiteNormale + 1_000 };
 }
@@ -260,7 +260,7 @@ export const ETAPE_DE_LA_PRODUCTION: EtapeCurseur = {
     return [
       { libelle: "Coût préétabli de la production", montant: p },
       { libelle: "Budget standard", montant: x.b.e.budgetStandard.total },
-      { libelle: "Effet des quantités produites", montant: auCentime(p - x.b.e.budgetStandard.total), fort: true },
+      { libelle: "Effet des quantités produites", montant: arrondi2(p - x.b.e.budgetStandard.total), fort: true },
     ];
   },
   droites: (c) => {
@@ -277,7 +277,7 @@ export const ETAPE_DE_LA_PRODUCTION: EtapeCurseur = {
     const x = experienceDeLaProduction(c);
     const v = x.variable;
     return [
-      `Chaque ${v.m.nom} de plus ajoute ${eur(v.cout.total)} au coût préétabli. ${x.autres.map((a) => `Avec ${qte(a.prevue - a.reelle)} ${a.m.nom} de moins que prévu (${eur(auCentime((a.prevue - a.reelle) * a.cout.total))})`).join(", ")}, la production réelle rejoint le budget standard dès ${qte(x.seuil)} ${v.m.nom}. L'usine en a fabriqué ${qte(v.reelle)} : sa production vaut ${eur(x.b.effetDeLaProduction)} de plus que le budget, avec moins d'enceintes au total.`,
+      `Chaque ${v.m.nom} de plus ajoute ${eur(v.cout.total)} au coût préétabli. ${x.autres.map((a) => `Avec ${qte(a.prevue - a.reelle)} ${a.m.nom} de moins que prévu (${eur(arrondi2((a.prevue - a.reelle) * a.cout.total))})`).join(", ")}, la production réelle rejoint le budget standard dès ${qte(x.seuil)} ${v.m.nom}. L'usine en a fabriqué ${qte(v.reelle)} : sa production vaut ${eur(x.b.effetDeLaProduction)} de plus que le budget, avec moins d'enceintes au total.`,
       "Ce que vous venez de voir porte un nom : le coût préétabli de la production réelle. C'est lui, et non le budget standard, que le réel doit affronter.",
     ];
   },
@@ -344,8 +344,8 @@ const ETAPE_DE_L_ACTIVITE: EtapeCurseur = {
     return [
       { libelle: "Coût préétabli des heures", montant: x.preetabli(h) },
       { libelle: "Budget flexible", montant: x.flexible(h) },
-      { libelle: "Charges fixes imputées", montant: auCentime(x.b.fixesParHeure * h) },
-      { libelle: "Budget flexible moins coût préétabli", montant: auCentime(x.flexible(h) - x.preetabli(h)), fort: true },
+      { libelle: "Charges fixes imputées", montant: arrondi2(x.b.fixesParHeure * h) },
+      { libelle: "Budget flexible moins coût préétabli", montant: arrondi2(x.flexible(h) - x.preetabli(h)), fort: true },
     ];
   },
   droites: (c) => {
@@ -389,9 +389,9 @@ export function laboratoireDeLaProduction(c: Pick<Cas, "code">) {
     depart: x.reelle,
   }));
   const quantite = (p: Readonly<Record<string, number>>, x: (typeof b.modeles)[number]) => p[x.m.code] ?? x.reelle;
-  const somme = (p: Readonly<Record<string, number>>, g: (x: (typeof b.modeles)[number]) => number) => auCentime(b.modeles.reduce((t, x) => t + quantite(p, x) * g(x), 0));
+  const somme = (p: Readonly<Record<string, number>>, g: (x: (typeof b.modeles)[number]) => number) => arrondi2(b.modeles.reduce((t, x) => t + quantite(p, x) * g(x), 0));
   const preetabli = (p: Readonly<Record<string, number>>) => somme(p, (x) => x.cout.total);
-  const ecart = (p: Readonly<Record<string, number>>) => auCentime(preetabli(p) - b.e.budgetStandard.total);
+  const ecart = (p: Readonly<Record<string, number>>) => arrondi2(preetabli(p) - b.e.budgetStandard.total);
   const auBudget = (p: Readonly<Record<string, number>>) => b.modeles.every((x) => quantite(p, x) === x.prevue);
   // Une solution sur le pas : 10 600 Nomade et 4 600 Salon valent 684 200 €, à 200 € du budget.
   const solution: Record<string, number> = Object.fromEntries(b.modeles.map((x) => [x.m.code, x.reelle]));
@@ -718,9 +718,9 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
       explication: (c) => {
         const b = budgetsDeLUsine(c);
         const f = b.f;
-        const ecartDHeures = auCentime(b.heuresMachine - f.centre.activiteNormale);
+        const ecartDHeures = arrondi2(b.heuresMachine - f.centre.activiteNormale);
         return [
-          `À ${qte(b.heuresMachine)} heures-machine, le budget flexible compte les charges fixes pour ce qu'elles sont, ${eur(f.centre.chargesFixes)} ; le coût préétabli en impute ${eur(b.fixesParHeure)} par heure, soit ${eur(auCentime(b.fixesParHeure * b.heuresMachine))}. La différence, ${eur(b.ecartFlexibleMoinsPreetabli)}, vaut ${qte(Math.abs(ecartDHeures))} heures de ${ecartDHeures > 0 ? "plus" : "moins"} que l'activité normale × ${eur(b.fixesParHeure)} : c'est l'écart sur activité, que le chapitre sur les charges indirectes étudie.`,
+          `À ${qte(b.heuresMachine)} heures-machine, le budget flexible compte les charges fixes pour ce qu'elles sont, ${eur(f.centre.chargesFixes)} ; le coût préétabli en impute ${eur(b.fixesParHeure)} par heure, soit ${eur(arrondi2(b.fixesParHeure * b.heuresMachine))}. La différence, ${eur(b.ecartFlexibleMoinsPreetabli)}, vaut ${qte(Math.abs(ecartDHeures))} heures de ${ecartDHeures > 0 ? "plus" : "moins"} que l'activité normale × ${eur(b.fixesParHeure)} : c'est l'écart sur activité, que le chapitre sur les charges indirectes étudie.`,
         ];
       },
     },
@@ -737,8 +737,8 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
       options: (c) => {
         const b = budgetsDeLUsine(c);
         const f = b.f;
-        const fixesImputes = auCentime(b.fixesParHeure * b.heuresMachine);
-        const fond = `Le budget flexible garde ${eur(f.centre.chargesFixes)} de charges fixes ; le coût préétabli en impute ${eur(fixesImputes)}, soit ${eur(Math.abs(auCentime(fixesImputes - f.centre.chargesFixes)))} de ${fixesImputes > f.centre.chargesFixes ? "plus, parce que le centre a tourné au-dessus" : "moins, parce que le centre a tourné en dessous"} de son activité normale.`;
+        const fixesImputes = arrondi2(b.fixesParHeure * b.heuresMachine);
+        const fond = `Le budget flexible garde ${eur(f.centre.chargesFixes)} de charges fixes ; le coût préétabli en impute ${eur(fixesImputes)}, soit ${eur(Math.abs(arrondi2(fixesImputes - f.centre.chargesFixes)))} de ${fixesImputes > f.centre.chargesFixes ? "plus, parce que le centre a tourné au-dessus" : "moins, parce que le centre a tourné en dessous"} de son activité normale.`;
         const hPre = b.e.preetabliDuReel.heuresMachine;
         return [
           {
@@ -757,7 +757,7 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
             retour: `Non : personne n'a dépensé moins. ${fond} Le responsable du centre se juge sur l'écart sur budget, réel moins budget flexible.`,
           },
           {
-            texte: `Le budget flexible se calcule sur les ${qte(hPre)} heures préétablies de la production : ${eur(auCentime(f.centre.chargesFixes + f.centre.coutVariableParHeure * hPre))}`,
+            texte: `Le budget flexible se calcule sur les ${qte(hPre)} heures préétablies de la production : ${eur(arrondi2(f.centre.chargesFixes + f.centre.coutVariableParHeure * hPre))}`,
             juste: false,
             retour: `Non : le budget flexible se calcule sur l'activité réelle, les heures-machine réellement passées. Les heures préétablies de la production réelle servent à l'écart sur rendement. ${fond}`,
           },
@@ -797,7 +797,7 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
         const f = b.f;
         const v = b.variante;
         return [
-          `Sous l'activité normale, le sens s'inverse : le budget flexible garde ${eur(f.centre.chargesFixes)} de charges fixes, mais le coût préétabli n'en impute que ${eur(auCentime(b.fixesParHeure * v.heures))} (coefficient d'imputation rationnelle ${qte(v.coefficient)}). Les ${eur(b.ecartDeLaVariante)} sont le coût de la sous-activité, un écart ${sens(b.ecartDeLaVariante)} : des charges fixes payées pour une capacité restée inemployée.`,
+          `Sous l'activité normale, le sens s'inverse : le budget flexible garde ${eur(f.centre.chargesFixes)} de charges fixes, mais le coût préétabli n'en impute que ${eur(arrondi2(b.fixesParHeure * v.heures))} (coefficient d'imputation rationnelle ${qte(v.coefficient)}). Les ${eur(b.ecartDeLaVariante)} sont le coût de la sous-activité, un écart ${sens(b.ecartDeLaVariante)} : des charges fixes payées pour une capacité restée inemployée.`,
           `Dans le trimestre réel, à ${qte(b.heuresMachine)} heures-machine, le même calcul donne ${eur(b.ecartFlexibleMoinsPreetabli)} : un boni de suractivité. La recette est la même, le raisonnement doit suivre le sens.`,
         ];
       },
@@ -820,6 +820,7 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
         return [
           {
             libelle: "Kilos préétablis au standard courant",
+            nature: "grandeur",
             attendu: co.kilos,
             calcul: `${b.modeles.map((x, i) => `${qte(x.reelle)} × ${qte(co.parModele[i]!.kilos)}`).join(" + ")} = ${qte(co.kilos)} kg`,
           },
@@ -827,7 +828,7 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
           {
             libelle: "Écart global sur coûts au standard courant",
             attendu: b.ecartGlobalCourant,
-            calcul: `${eur(b.e.reelTotal)} − (${eur(b.e.preetabliDuReel.total)} + ${qte(auCentime(co.kilos - b.e.preetabliDuReel.kilos))} × ${eur(f.prixStandardDuKilo)}) = ${eur(b.e.reelTotal)} − ${eur(co.preetabliDuReel)} = ${eur(b.ecartGlobalCourant)}`,
+            calcul: `${eur(b.e.reelTotal)} − (${eur(b.e.preetabliDuReel.total)} + ${qte(arrondi2(co.kilos - b.e.preetabliDuReel.kilos))} × ${eur(f.prixStandardDuKilo)}) = ${eur(b.e.reelTotal)} − ${eur(co.preetabliDuReel)} = ${eur(b.ecartGlobalCourant)}`,
           },
         ];
       },
@@ -881,7 +882,7 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
       tableau: tableauDesPostes,
       question: (c) => {
         const b = budgetsDeLUsine(c);
-        return `L'usine n'analyse un écart que s'il dépasse ${pct(b.seuilPct)} du coût préétabli de son poste : c'est la gestion par exception. Calculez, au dixième, la part de chaque écart global dans le coût préétabli de son poste.`;
+        return `L'usine n'analyse un écart que s'il dépasse ${pct(b.seuilPct)} du coût préétabli de son poste : c'est la gestion par exception. Calculez, à deux décimales, la part de chaque écart global dans le coût préétabli de son poste.`;
       },
       champs: (c) => {
         const b = budgetsDeLUsine(c);
@@ -889,7 +890,6 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
           libelle: `Part de l'écart, ${p.nom.charAt(0).toLowerCase()}${p.nom.slice(1)} (%)`,
           attendu: p.part,
           calcul: `${eur(p.ecart)} ÷ ${eur(p.preetabli)} × 100 = ${pct(p.part)}`,
-          tolerance: 0.1,
         }));
       },
       explication: (c) => {
@@ -915,7 +915,7 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
         const b = budgetsDeLUsine(c);
         const e = b.e;
         const base = e.preetabliDuReel.mainDOeuvre;
-        const partDuTaux = auDixieme((Math.abs(e.mainDOeuvre.taux) / base) * 100);
+        const partDuTaux = arrondi2((Math.abs(e.mainDOeuvre.taux) / base) * 100);
         // Le global passe sous le seuil, mais l'un de ses deux écarts le dépasse à lui seul.
         const cache = Math.abs(e.mainDOeuvre.taux) > SEUIL_DE_SIGNIFICATIVITE * base;
         const detail = `Décomposé (chapitre suivant), l'écart de ${eur(e.mainDOeuvre.global)} réunit un écart sur taux de ${ecartDit(e.mainDOeuvre.taux)}, ${pct(partDuTaux)} de ${eur(base)} à lui seul, et un écart sur temps de ${ecartDit(e.mainDOeuvre.temps)}.`;
@@ -1012,7 +1012,7 @@ export function centreALaPosition(c: Pick<Cas, "code">, p: Readonly<Record<strin
   const r = f.realise;
   const heures = p.heures ?? r.centre.heuresMachine;
   const reference = p.standard ?? f.centre.activiteNormale;
-  const cout = auCentime(r.centre.cout + (heures - r.centre.heuresMachine) * f.centre.coutVariableParHeure);
+  const cout = arrondi2(r.centre.cout + (heures - r.centre.heuresMachine) * f.centre.coutVariableParHeure);
   const e = controleBudgetaire({ ...f, centre: { ...f.centre, activiteNormale: reference }, realise: { ...r, centre: { heuresMachine: heures, cout } } });
   return {
     heures,
@@ -1023,7 +1023,7 @@ export function centreALaPosition(c: Pick<Cas, "code">, p: Readonly<Record<strin
     budget: e.centre.budget,
     activite: e.centre.activite,
     fixesImputes: e.centre.fixesImputes,
-    impute: auCentime(e.coutStandardDeLHeureMachine * heures),
+    impute: arrondi2(e.coutStandardDeLHeureMachine * heures),
   };
 }
 

@@ -143,9 +143,9 @@ describe("le plateau de téléacteurs, chez ATLAS CONSEIL", () => {
       "DMT de Léa (minutes)": lea!.minutesDeTraitement / lea!.appelsDecroches,
       "Taux d'occupation de Bruno (%)": centime((bruno!.minutesDeTraitement / (80 * 60)) * 100),
       "Taux d'honoration de Léa (%)": (lea!.rendezVousHonores / lea!.rendezVousPris) * 100,
-      "Taux d'honoration du plateau (%)": Math.round((10 / 12) * 1000) / 10,
+      "Taux d'honoration du plateau (%)": centime((10 / 12) * 100),
     });
-    expect(Object.values(attendus(ch, "le-tableau-des-teleacteurs"))).toEqual([5, 57.5, 50, 83.3]);
+    expect(Object.values(attendus(ch, "le-tableau-des-teleacteurs"))).toEqual([5, 57.5, 50, 83.33]);
     const surPris = TELEACTEURS.filter((t) => t.rendezVousPris >= PRIME_DU_MOIS.rendezVous).map((t) => t.prenom);
     const surHonores = TELEACTEURS.filter((t) => t.rendezVousHonores >= PRIME_DU_MOIS.rendezVous && t.noteDeQualite >= PRIME_DU_MOIS.noteMinimale).map((t) => t.prenom);
     expect(surPris).toEqual([lea!.prenom, samir!.prenom, ines!.prenom]);
@@ -190,7 +190,7 @@ describe("le plateau de téléacteurs, chez ATLAS CONSEIL", () => {
     expect(juste(ch, "la-cible-d-occupation")).toBe("Non : l'attente monte, et la pause est due");
   });
 
-  it("le cas : la ligne de la rentrée prend les 12 créneaux ; à 90 %, 3 rendez-vous ; un 5e téléacteur en rend 9 et rapporte 4 995 €", () => {
+  it("le cas : la ligne de la rentrée prend les 12 créneaux ; à 90 %, 3 rendez-vous ; un 5e téléacteur en rend 9 et rapporte 4 994,73 €", () => {
     const s = LA_LIGNE_DE_LA_RENTREE;
     casDedie(s, ch);
     expect(s.commanditaire).toBe("Le directeur du cabinet");
@@ -207,25 +207,25 @@ describe("le plateau de téléacteurs, chez ATLAS CONSEIL", () => {
     expect(effectif(rentree)).toEqual([3, 4, 3, 2]);
     expect(effectif(rentree, 6, 0.9)).toEqual([3, 4, 2, 2]);
     expect(attendus(s, "a-90-pourcent")).toEqual({ "Créneaux de ligne par jour, à 90 %": 11, "Créneaux de prospection, à 90 %": 1, "Rendez-vous pris dans le mois, à 90 %": rdv(1) });
-    // Un rendez-vous pris vaut 10/12 × 1 050 € = 875 €.
-    const valeur = (10 / 12) * 1_050;
-    expect(valeur).toBe(875);
+    // Un rendez-vous pris vaut 83,33 % (10/12, à deux décimales, comme le tableau le donne) × 1 050 € = 874,97 €.
+    const valeur = 874.97;
+    expect(centime(0.8333 * 1_050)).toBe(valeur);
     expect(attendus(s, "le-cinquieme")).toEqual({
       "Créneaux de prospection, avec un téléacteur de plus": 3,
       "Rendez-vous pris dans le mois, avec un téléacteur de plus": rdv(3),
-      "Marge de ces rendez-vous, la première année": rdv(3) * valeur,
-      "Ce que rapporte le téléacteur de plus": rdv(3) * valeur - 2_880,
+      "Marge de ces rendez-vous, la première année": centime(rdv(3) * valeur),
+      "Ce que rapporte le téléacteur de plus": centime(rdv(3) * valeur - 2_880),
     });
-    expect([rdv(3), rdv(3) * valeur - 2_880]).toEqual([9, 4_995]);
-    // À rebours : 2 880 ÷ 875 = 3,29, soit 4 rendez-vous.
+    expect([rdv(3), centime(rdv(3) * valeur - 2_880)]).toEqual([9, 4_994.73]);
+    // À rebours : 2 880 ÷ 874,97 = 3,29, soit 4 rendez-vous.
     expect(curseur(s, "les-rendez-vous-qui-paient")).toEqual({
       attendu: 4,
       bornes: [0, 10],
-      droites: [0, 2_880, 8_750, 2_880],
-      lecture: { "Marge des rendez-vous, la première année": 3_500, "Coût du téléacteur de plus": 2_880, "Ce que rapporte le téléacteur de plus": 620 },
+      droites: [0, 2_880, centime(10 * valeur), 2_880],
+      lecture: { "Marge des rendez-vous, la première année": centime(4 * valeur), "Coût du téléacteur de plus": 2_880, "Ce que rapporte le téléacteur de plus": centime(4 * valeur - 2_880) },
     });
     expect(rentreeDuPlateau(cas).rendezVousQuiPaient).toBe(4);
-    expect(juste(s, "reponse")).toBe("Un téléacteur de plus : il rapporte 4 995 € par mois");
+    expect(juste(s, "reponse")).toBe("Un téléacteur de plus : il rapporte 4 994,73 € par mois");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_BASE, PRIX_HT, villeEnTete } from "../../monde/base-de-donnees-de-nova";
 import { tableCommande } from "../../chapitres/la-base-de-donnees-relationnelle";
 import type { Situation } from "../types";
@@ -10,10 +10,12 @@ import type { Situation } from "../types";
  * Le chapitre apprenait à sélectionner, joindre et regrouper ; le cas fait choisir la requête qui répond
  * à la question du président, lire son résultat, et dire ce qu'il vaut. Hypothèses :
  * monde/base-de-donnees-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les lignes, les cases, les enceintes et les agrégats entiers
+ * sont des quantités ; une moyenne est une grandeur au centième (au dixième près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const OU_OUVRIR_UN_POINT_DE_RETRAIT: Situation = {
   code: "ou-ouvrir-un-point-de-retrait",
@@ -58,7 +60,7 @@ export const OU_OUVRIR_UN_POINT_DE_RETRAIT: Situation = {
       champs: () => {
         const t = villeEnTete();
         return [
-          { libelle: `Enceintes de la ville en tête`, attendu: t.enceintes, calcul: `${t.ville} : ${qte(t.enceintes)} enceintes` },
+          { libelle: `Enceintes de la ville en tête`, nature: "quantite", attendu: t.enceintes, calcul: `${t.ville} : ${qte(t.enceintes)} enceintes` },
           { libelle: "Chiffre d'affaires de la ville en tête", attendu: t.chiffre, calcul: `${qte(t.enceintes)} × ${eur(PRIX_HT)} = ${eur(t.chiffre)}` },
         ];
       },

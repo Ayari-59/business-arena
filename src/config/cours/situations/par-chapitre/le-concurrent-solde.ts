@@ -1,4 +1,5 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_POINT_DE_VENTE, margesDuRayon } from "../../chapitres/taux-de-marque";
 import type { Situation } from "../types";
 
@@ -16,15 +17,23 @@ import type { Situation } from "../types";
 export const PRIX_SOLDE_DU_CONCURRENT = 57;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Un taux (0,5455) écrit en pourcentage, à deux décimales. */
+const pct = (t: number) => pourcent(arrondi2(t * 100));
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
+/**
+ * LE TAUX DE MARQUE AFFICHÉ À DEUX DÉCIMALES, ET LE CALCUL QUI PART DE LUI (audit du 10 novembre 2026,
+ * contenu P1-1). Le taux, 6 ÷ 11, s'affichait 54,5 % : l'élève qui calculait 47,50 € × (1 − 54,5 %)
+ * trouvait 21,61 € et la correction attendait 21,59 €. Il s'écrit 54,55 %, et le prix d'achat se
+ * calcule sur ce taux, comme sur la copie.
+ */
 export function concurrentSolde() {
   const m = margesDuRayon({ code: "boutique" });
+  const tauxDeMarque = arrondi(m.tauxDeMarqueExact, 4);
   const prixHt = auCentime(PRIX_SOLDE_DU_CONCURRENT / (1 + m.r.tauxTva));
-  const prixDAchat = auCentime(prixHt * (1 - m.tauxDeMarqueExact));
+  const prixDAchat = auCentime(prixHt * (1 - tauxDeMarque));
   const marge = auCentime(prixHt - prixDAchat);
-  return { m, prixHt, prixDAchat, marge, baisseDuPrixDAchat: auCentime(m.r.coutDAchat - prixDAchat) };
+  return { m, tauxDeMarque, prixHt, prixDAchat, marge, baisseDuPrixDAchat: auCentime(m.r.coutDAchat - prixDAchat) };
 }
 
 export const LE_CONCURRENT_SOLDE: Situation = {
@@ -47,7 +56,7 @@ export const LE_CONCURRENT_SOLDE: Situation = {
       texte: () => {
         const k = concurrentSolde();
         return [
-          `« La boutique de la rue solde son col rond à ${eur(PRIX_SOLDE_DU_CONCURRENT)}. Je veux m'aligner sans perdre mon taux de marque de ${pct(k.m.tauxDeMarqueExact)}. Quel prix dois-je obtenir du façonnier, qui me le vend ${eur(k.m.r.coutDAchat)} hors taxes ? » La responsable`,
+          `« La boutique de la rue solde son col rond à ${eur(PRIX_SOLDE_DU_CONCURRENT)}. Je veux m'aligner sans perdre mon taux de marque de ${pct(k.tauxDeMarque)}. Quel prix dois-je obtenir du façonnier, qui me le vend ${eur(k.m.r.coutDAchat)} hors taxes ? » La responsable`,
           `Pas de cours cette fois : l'étiquette est toutes taxes comprises, à ${pct(k.m.r.tauxTva)} de TVA, et le taux de marque se calcule sur le prix de vente hors taxes.`,
         ];
       },
@@ -63,13 +72,13 @@ export const LE_CONCURRENT_SOLDE: Situation = {
         const k = concurrentSolde();
         return [
           { libelle: "Prix de vente hors taxes", attendu: k.prixHt, calcul: `${eur(PRIX_SOLDE_DU_CONCURRENT)} ÷ (1 + ${pct(k.m.r.tauxTva)}) = ${eur(k.prixHt)}` },
-          { libelle: "Prix d'achat qui garde le taux de marque", attendu: k.prixDAchat, calcul: `${eur(k.prixHt)} × (1 − ${pct(k.m.tauxDeMarqueExact)}) = ${eur(k.prixDAchat)}`, tolerance: 0.01 },
+          { libelle: "Prix d'achat qui garde le taux de marque", attendu: k.prixDAchat, calcul: `${eur(k.prixHt)} × (1 − ${pct(k.tauxDeMarque)}) = ${eur(k.prixDAchat)}`, tolerance: 0.01 },
           { libelle: "Marge commerciale d'un article", attendu: k.marge, calcul: `${eur(k.prixHt)} − ${eur(k.prixDAchat)} = ${eur(k.marge)}`, tolerance: 0.01 },
         ];
       },
       explication: () => {
         const k = concurrentSolde();
-        return [`Pour garder ${pct(k.m.tauxDeMarqueExact)} de marque à ${eur(k.prixHt)} hors taxes, il faut acheter ${eur(k.prixDAchat)}, ${eur(k.baisseDuPrixDAchat)} de moins qu'aujourd'hui. Le taux est gardé, la marge d'un article, elle, baisse.`];
+        return [`Pour garder ${pct(k.tauxDeMarque)} de marque à ${eur(k.prixHt)} hors taxes, il faut acheter ${eur(k.prixDAchat)}, ${eur(k.baisseDuPrixDAchat)} de moins qu'aujourd'hui. Le taux est gardé, la marge d'un article, elle, baisse.`];
       },
     },
     {

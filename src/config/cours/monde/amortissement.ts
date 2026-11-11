@@ -99,9 +99,17 @@ export interface LigneDuPlan {
   valeurNette: number;
 }
 
-/** Le plan d'amortissement complet, jusqu'à une valeur nette nulle. */
-export function planDAmortissement(immo: Immobilisation, mode: ModeDAmortissement = "lineaire"): LigneDuPlan[] {
-  return mode === "lineaire" ? planLineaire(immo) : planDegressif(immo);
+/**
+ * Le plan d'amortissement complet, jusqu'à une valeur nette nulle. `tauxDegressif` remplace, pour le
+ * dégressif, le taux coefficient ÷ durée : un chapitre qui affiche ce taux arrondi (29,17 % pour
+ * 1,75 ÷ 6) calcule ainsi le plan sur le taux que l'élève lit (deux-decimales.ts).
+ */
+export function planDAmortissement(
+  immo: Immobilisation,
+  mode: ModeDAmortissement = "lineaire",
+  options: { tauxDegressif?: number } = {},
+): LigneDuPlan[] {
+  return mode === "lineaire" ? planLineaire(immo) : planDegressif(immo, options.tauxDegressif);
 }
 
 function planLineaire(immo: Immobilisation): LigneDuPlan[] {
@@ -120,10 +128,10 @@ function planLineaire(immo: Immobilisation): LigneDuPlan[] {
   return lignes;
 }
 
-function planDegressif(immo: Immobilisation): LigneDuPlan[] {
+function planDegressif(immo: Immobilisation, tauxDonne?: number): LigneDuPlan[] {
   const coefficient = coefficientDegressif(immo.dureeAns);
   if (coefficient === 0) throw new Error("Le dégressif demande une durée d'au moins 3 ans.");
-  const tauxDegressif = coefficient / immo.dureeAns;
+  const tauxDegressif = tauxDonne ?? coefficient / immo.dureeAns;
   const exercice0 = immo.miseEnService.exercice ?? 0;
   const mois = 12 - immo.miseEnService.mois + 1;
   const lignes: LigneDuPlan[] = [];

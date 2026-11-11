@@ -151,6 +151,11 @@ const TEXTES_ENCORE_EN_BASE: Record<string, string> = {
   "Essai gratuit": "Découverte",
   "Les ateliers clés en main écrits pour cette entreprise et ce niveau, ou à un niveau près, avec déroulé, corrigés et dossier enseignant. Certaines combinaisons n'en ont aucun : le formulaire de devis dit lesquels votre choix comprend.":
     "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
+  // L'offre Classe ouvre un seul parcours (décision du propriétaire, 10 novembre 2026).
+  "Le cours : les chapitres d'un parcours, le même pour toutes vos classes, et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.":
+    "Le cours : les chapitres du parcours de la classe et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
+  // Le chapitre libre n'est pas le premier du catalogue (audit du 10 novembre 2026, P0-1).
+  "Un chapitre du cours et son cas pratique, en libre accès.": "Le premier chapitre du cours et son cas pratique, en libre accès.",
 };
 const telleQueMigree = (o: OffreDuCatalogue): OffreDuCatalogue => ({
   ...o,

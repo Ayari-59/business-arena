@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SITE } from "../../chapitres/le-site-qui-vend";
 import { contenusDuCabinet } from "../../chapitres/contenus-communaute-et-e-reputation";
@@ -23,6 +23,11 @@ import type { Situation } from "../types";
  * LE JUGEMENT : l'avis fait perdre un dixième de note et 2 077,44 € de marge par trimestre ; acheter
  * des avis positifs est une pratique commerciale trompeuse et coûte 2 100 € ; demander un avis à chaque
  * participant ramène la note à 4,5 sans rien coûter.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les notes moyennes sont des grandeurs, au centième, et la note
+ * affichée part de la moyenne écrite au centième ; les avis amenés sont une quantité, entière,
+ * déclarée comme telle.
  */
 
 /** L'avis du cas : un seul avis à une étoile. */
@@ -42,10 +47,8 @@ export const CODES_DE_REMISE = { participants: 30, remise: 0.2 } as const;
 /** Les bornes du curseur des avis à 5 étoiles. */
 export const AVIS_DU_CURSEUR_DU_CAS = { min: 0, max: 20 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 2) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 const note = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 
 /** La note et la conversion après l'avis, les avis à 5 étoiles qu'il faudrait, la demande d'avis et les codes. */
@@ -91,7 +94,7 @@ export const L_AVIS_A_UNE_ETOILE: Situation = {
       texte: (c) => {
         const r = avisAUneEtoile(c);
         return [
-          `« Un participant dont la session a été annulée la veille nous a mis 1 étoile, et la note est tombée à ${note(r.apres.affichee)}. J'ai une idée : offrir à ${qte(CODES_DE_REMISE.participants)} anciens participants contents un code de ${pct(CODES_DE_REMISE.remise, 0)} sur leur prochaine place, s'ils publient un avis à 5 étoiles. Dites-moi ce que l'avis nous coûte, et si mon idée tient. »`,
+          `« Un participant dont la session a été annulée la veille nous a mis 1 étoile, et la note est tombée à ${note(r.apres.affichee)}. J'ai une idée : offrir à ${qte(CODES_DE_REMISE.participants)} anciens participants contents un code de ${pct(CODES_DE_REMISE.remise)} sur leur prochaine place, s'ils publient un avis à 5 étoiles. Dites-moi ce que l'avis nous coûte, et si mon idée tient. »`,
           "Pas de cours cette fois : vous avez les avis, la conversion du site et la marge d'une commande. À vous d'enchaîner.",
         ];
       },
@@ -126,9 +129,9 @@ export const L_AVIS_A_UNE_ETOILE: Situation = {
         const r = avisAUneEtoile(c);
         const k = r.conversion;
         return [
-          { libelle: "Note moyenne après l'avis", attendu: auCentime(r.apres.moyenne), tolerance: 0.01, calcul: `(${qte(r.avant.points)} + 1) ÷ (${qte(r.avant.avis)} + 1) = ${note(auCentime(r.apres.moyenne))}` },
-          { libelle: "Note affichée", attendu: r.apres.affichee, tolerance: 0.01, calcul: `${note(auCentime(r.apres.moyenne))} arrondi au dixième = ${note(r.apres.affichee)}` },
-          { libelle: "Conversion à cette note (%)", attendu: auCentime(k.conversion * 100), tolerance: 0.01, calcul: `${pct(r.x.t.conversion)} − ${qte(-k.dixiemes)} × ${pct(CONVERSION_ET_NOTE.parDixieme)} = ${pct(k.conversion)}` },
+          { libelle: "Note moyenne après l'avis", nature: "grandeur", attendu: auCentime(r.apres.moyenne), calcul: `(${qte(r.avant.points)} + 1) ÷ (${qte(r.avant.avis)} + 1) = ${qte(auCentime(r.apres.moyenne))}` },
+          { libelle: "Note affichée", nature: "grandeur", attendu: r.apres.affichee, calcul: `${qte(auCentime(r.apres.moyenne))} arrondi au dixième = ${qte(r.apres.affichee)} : la note que le site affiche` },
+          { libelle: "Conversion à cette note (%)", attendu: auCentime(k.conversion * 100), calcul: `${pct(r.x.t.conversion)} − ${qte(-k.dixiemes)} × ${pct(CONVERSION_ET_NOTE.parDixieme)} = ${pct(k.conversion)}` },
           { libelle: "Marge perdue par trimestre", attendu: k.margeEnPlus, calcul: `${qte(r.x.t.visites)} × (${pct(k.conversion)} − ${pct(r.x.t.conversion)}) × ${eur(r.x.t.m.marge)} = ${eur(k.margeEnPlus)}` },
         ];
       },
@@ -188,19 +191,19 @@ export const L_AVIS_A_UNE_ETOILE: Situation = {
       notions: ["brand_capital", "customer_acquisition_cost"],
       question: (c) => {
         const r = avisAUneEtoile(c);
-        return `Au lieu des codes, le cabinet peut demander un avis, sans contrepartie, à chacun des ${qte(r.participants)} participants du trimestre : ${pct(DEMANDE_D_AVIS.tauxDeReponse, 0)} répondent, avec une note moyenne de ${note(DEMANDE_D_AVIS.noteMoyenne)}. Calculez les avis que la demande amène, la note moyenne de la fiche ensuite (au centième), puis ce que coûteraient les codes de la responsable (${qte(CODES_DE_REMISE.participants)} codes de ${pct(CODES_DE_REMISE.remise, 0)} sur une place à ${eur(r.x.t.m.prixHt)}).`;
+        return `Au lieu des codes, le cabinet peut demander un avis, sans contrepartie, à chacun des ${qte(r.participants)} participants du trimestre : ${pct(DEMANDE_D_AVIS.tauxDeReponse)} répondent, avec une note moyenne de ${note(DEMANDE_D_AVIS.noteMoyenne)}. Calculez les avis que la demande amène, la note moyenne de la fiche ensuite (au centième), puis ce que coûteraient les codes de la responsable (${qte(CODES_DE_REMISE.participants)} codes de ${pct(CODES_DE_REMISE.remise)} sur une place à ${eur(r.x.t.m.prixHt)}).`;
       },
       champs: (c) => {
         const r = avisAUneEtoile(c);
         return [
-          { libelle: "Avis amenés par la demande", attendu: r.avisDemandes, calcul: `${qte(r.participants)} × ${pct(DEMANDE_D_AVIS.tauxDeReponse, 0)} = ${qte(r.avisDemandes)}` },
+          { libelle: "Avis amenés par la demande", nature: "quantite", attendu: r.avisDemandes, calcul: `${qte(r.participants)} × ${pct(DEMANDE_D_AVIS.tauxDeReponse)} = ${qte(r.avisDemandes)}` },
           {
             libelle: "Note moyenne après la demande",
+            nature: "grandeur",
             attendu: auCentime(r.avecLaDemande.moyenne),
-            tolerance: 0.01,
-            calcul: `(${qte(r.apres.points)} + ${qte(r.avisDemandes)} × ${note(DEMANDE_D_AVIS.noteMoyenne)}) ÷ (${qte(r.apres.avis)} + ${qte(r.avisDemandes)}) = ${qte(auCentime(r.avecLaDemande.points))} ÷ ${qte(r.avecLaDemande.avis)} = ${note(auCentime(r.avecLaDemande.moyenne))}`,
+            calcul: `(${qte(r.apres.points)} + ${qte(r.avisDemandes)} × ${qte(DEMANDE_D_AVIS.noteMoyenne)}) ÷ (${qte(r.apres.avis)} + ${qte(r.avisDemandes)}) = ${qte(auCentime(r.avecLaDemande.points))} ÷ ${qte(r.avecLaDemande.avis)} = ${qte(auCentime(r.avecLaDemande.moyenne))}`,
           },
-          { libelle: "Coût des codes de remise", attendu: r.coutDesCodes, calcul: `${qte(CODES_DE_REMISE.participants)} × ${pct(CODES_DE_REMISE.remise, 0)} × ${eur(r.x.t.m.prixHt)} = ${eur(r.coutDesCodes)}` },
+          { libelle: "Coût des codes de remise", attendu: r.coutDesCodes, calcul: `${qte(CODES_DE_REMISE.participants)} × ${pct(CODES_DE_REMISE.remise)} × ${eur(r.x.t.m.prixHt)} = ${eur(r.coutDesCodes)}` },
         ];
       },
       explication: (c) => {

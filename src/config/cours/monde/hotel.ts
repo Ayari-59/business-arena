@@ -1,3 +1,4 @@
+import { arrondi2 as auCentime, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { FicheDeLHotel } from "./l-escale";
 
 /**
@@ -10,6 +11,10 @@ import type { FicheDeLHotel } from "./l-escale";
  * occupée coûte le coût variable ; les charges fixes se paient quel que soit le remplissage.
  *
  * Rien ici ne lit l'arène : le cours calcule tout, et le test le refait à la main.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les montants au centime, le taux d'occupation à deux décimales
+ * (au dixième, avant) ; les nuitées sont entières.
  */
 
 /** Un trimestre de l'hôtel, tel que l'hôtelier le lit. */
@@ -26,8 +31,6 @@ export interface TrimestreDeLHotel {
   resultat: number;
 }
 
-const auCentime = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** Les nuitées que l'hôtel offre en un trimestre : toutes ses chambres, chaque nuit. */
 export const nuiteesOffertes = (f: FicheDeLHotel) => f.chambres * f.joursParTrimestre;
@@ -72,7 +75,7 @@ export function anneeDeLHotel(f: FicheDeLHotel, prix: readonly number[]) {
     vendues,
     offertes,
     chiffreDAffaires,
-    occupation: auDixieme((vendues / offertes) * 100),
+    occupation: taux2(vendues, offertes),
     prixMoyen: auCentime(chiffreDAffaires / vendues),
     revpar: auCentime(chiffreDAffaires / offertes),
     resultat: auCentime(somme((t) => t.resultat)),

@@ -276,18 +276,25 @@ export type BudgetDeLaMasse = ReturnType<typeof budgetDeLaMasse>;
  */
 export function ecartsDeLaMasse(prevu: BudgetDeLaMasse = budgetDeLaMasse(), reel: BudgetDeLaMasse = budgetDeLaMasse(HYPOTHESES_DU_REALISE)) {
   const cats: CategorieDuSalarie[] = ["anciens", "recrues"];
-  const aStructureReelle = cats.reduce((t, c) => t + reel.categories[c].mois * prevu.categories[c].moyen, 0);
-  const aSalaireMoyenPrevu = reel.mois * prevu.moyen;
-  const effectif = auCentime((reel.mois - prevu.mois) * prevu.moyen);
+  // Deux décimales (10 novembre 2026) : chaque terme se calcule en une ligne sur les masses, mois ×
+  // masse prévue ÷ mois prévus, arrondie au centime ; le salaire moyen n'est pas arrondi en chemin,
+  // et les trois écarts retombent juste sur l'écart total.
+  const auSalaireMoyen = (mois: number, masse: number, moisPrevus: number) => auCentime((mois * masse) / moisPrevus);
+  const auMoyenDe = (c: CategorieDuSalarie) => auSalaireMoyen(reel.categories[c].mois, prevu.categories[c].masse, prevu.categories[c].mois);
+  const aStructureReelle = auCentime(cats.reduce((t, c) => t + auMoyenDe(c), 0));
+  const aSalaireMoyenPrevu = auSalaireMoyen(reel.mois, prevu.brute, prevu.mois);
+  const effectif = auSalaireMoyen(reel.mois - prevu.mois, prevu.brute, prevu.mois);
   const structure = auCentime(aStructureReelle - aSalaireMoyenPrevu);
-  const salaireParCategorie = Object.fromEntries(cats.map((c) => [c, auCentime(reel.categories[c].masse - reel.categories[c].mois * prevu.categories[c].moyen)])) as Record<CategorieDuSalarie, number>;
+  const salaireParCategorie = Object.fromEntries(cats.map((c) => [c, auCentime(reel.categories[c].masse - auMoyenDe(c))])) as Record<CategorieDuSalarie, number>;
   const salaire = auCentime(salaireParCategorie.anciens + salaireParCategorie.recrues);
   return {
     prevu,
     reel,
     total: auCentime(reel.brute - prevu.brute),
-    aSalaireMoyenPrevu: auCentime(aSalaireMoyenPrevu),
-    aStructureReelle: auCentime(aStructureReelle),
+    /** Ce que chaque catégorie coûterait, ses mois réels au salaire moyen prévu : une ligne du corrigé. */
+    auMoyenDe,
+    aSalaireMoyenPrevu,
+    aStructureReelle,
     effectif,
     structure,
     salaireParCategorie,

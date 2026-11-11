@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { aLUnite, arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte as entier, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { assortiment as assortimentDuMonde, retirerUneReference } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -40,6 +40,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · expert : la-moyenne-ponderee (une critique de la méthode), retirer-l-echarpe (une variante
  *     chiffrée), a-rebours (retrouver la part reportée à partir de l'effet observé) ; puis retirer (un
  *     jugement) et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts du chiffre d'affaires et de la marge, et la part
+ * reportée qui compense un retrait, se donnent à deux décimales, à un centième près (au dixième,
+ * avant) ; la marge récupérée et l'effet net partent de la marge d'un article des autres au centime,
+ * et se donnent au centime, à un centime près (à 50 centimes, avant) ; les ventes moyennes sont une
+ * grandeur, au centième ; les articles reportés et les ventes sont des quantités, entières, déclarées
+ * comme telles.
  */
 
 /** Le chapitre se joue dans la boutique du cours : MAILLE & CO, seule. */
@@ -92,11 +100,7 @@ export const SOLUTION_DU_LABORATOIRE: { reference: CodeDeReference; part: number
  */
 export const MARGE_DU_CARDIGAN_HYPOTHETIQUE = 33;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** « du col rond », « de l'écharpe » : l'article devant le nom d'une référence. */
 const duNom = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `de l'${nom}` : `du ${nom}`);
@@ -122,8 +126,12 @@ export const codeDuRang = (f: FicheDeLaBoutique, rang: number): CodeDeReference 
  * par ce que ses ventes rapporteraient toutes reportées (ventes × marge d'un article des autres).
  */
 export function retrait(f: FicheDeLaBoutique, code: CodeDeReference, part: number) {
-  const r = retirerUneReference(f, code, part);
-  const partQuiCompense = (r.visee.marge / (r.visee.ventes * r.margeUnitaireDesAutres)) * 100;
+  const brut = retirerUneReference(f, code, part);
+  // La copie : la marge d'un article des autres au centime ; la marge récupérée, l'effet net et la part qui compense partent d'elle.
+  const margeUnitaireDesAutres = auCentime(brut.margeUnitaireDesAutres);
+  const margeRecuperee = auCentime(brut.unitesReportees * margeUnitaireDesAutres);
+  const r = { ...brut, margeUnitaireDesAutres, margeRecuperee, effetNet: auCentime(margeRecuperee - brut.visee.marge) };
+  const partQuiCompense = taux2(r.visee.marge, r.visee.ventes * margeUnitaireDesAutres);
   return { ...r, nom: nomCourt(r.visee.nom), partQuiCompense, margeApres: auCentime(assortimentDuMonde(f).marge + r.effetNet) };
 }
 
@@ -131,7 +139,7 @@ export function retrait(f: FicheDeLaBoutique, code: CodeDeReference, part: numbe
 export function assortimentDuPointDeVente(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
   const a = assortimentDuMonde(f);
-  const lignes = a.references.map((r) => ({ ...r, nomCourt: nomCourt(r.nom), partDuCa: auDixieme(r.partDuChiffreDAffaires * 100), partDeLaMarge: auDixieme(r.partDeLaMarge * 100) }));
+  const lignes = a.references.map((r) => ({ ...r, nomCourt: nomCourt(r.nom), partDuCa: auCentime(r.partDuChiffreDAffaires * 100), partDeLaMarge: auCentime(r.partDeLaMarge * 100) }));
   const parCa = [...lignes].sort((x, y) => y.chiffreDAffaires - x.chiffreDAffaires);
   const parMarge = [...lignes].sort((x, y) => y.marge - x.marge);
   const ligne = (code: CodeDeReference) => lignes.find((l) => l.code === code)!;
@@ -158,8 +166,9 @@ export function assortimentDuPointDeVente(c: Pick<Cas, "code">) {
   // À rebours : l'effet observé, la marge récupérée, les articles reportés, la part.
   const observe = retrait(f, derniere.code, PART_OBSERVEE_A_REBOURS);
   const recupereeARebours = auCentime(derniere.marge + observe.effetNet);
-  const reportesARebours = Math.round(recupereeARebours / leRetrait.margeUnitaireDesAutres);
-  const partARebours = auDixieme((reportesARebours / derniere.ventes) * 100);
+  const reportesCalcules = auCentime(recupereeARebours / leRetrait.margeUnitaireDesAutres);
+  const reportesARebours = aLUnite(reportesCalcules);
+  const partARebours = auCentime((reportesARebours / derniere.ventes) * 100);
   return {
     f,
     a,
@@ -184,6 +193,7 @@ export function assortimentDuPointDeVente(c: Pick<Cas, "code">) {
     partEntiereQuiCompense,
     effetObserve: observe.effetNet,
     recupereeARebours,
+    reportesCalcules,
     reportesARebours,
     partARebours,
   };
@@ -211,7 +221,7 @@ function tableauDeLaMatrice(c: Pick<Cas, "code">): TableauDeDonnees {
     colonnes: ["Articles vendus", "Marge d'un article", "Marge du mois", "Famille", "Report qui compense son retrait"],
     lignes: x.lignes.map((r) => {
       const t = retrait(x.f, r.code, PART_REPORTEE).partQuiCompense;
-      return { libelle: r.nom, valeurs: [qte(r.ventes), eur(r.margeUnitaire), eur(r.marge), libelleDeLaFamille(r.famille), t > 100 ? "aucun" : pct(auDixieme(t))] };
+      return { libelle: r.nom, valeurs: [qte(r.ventes), eur(r.margeUnitaire), eur(r.marge), libelleDeLaFamille(r.famille), t > 100 ? "aucun" : pct(auCentime(t))] };
     }),
   };
 }
@@ -286,13 +296,13 @@ export const ASSORTIMENT: Chapitre = {
       question: (c) => {
         const x = assortimentDuPointDeVente(c);
         const m = x.deMarge;
-        return `Le ${x.premiereEnCa.nomCourt} fait le plus de chiffre d'affaires, le ${m.nomCourt} marge le plus par article. Calculez, pour chacun, sa part du chiffre d'affaires de la gamme (${eur(x.chiffreDAffaires)}) puis sa part de la marge (${eur(x.margeDuMois)}), en pourcentage, au dixième.`;
+        return `Le ${x.premiereEnCa.nomCourt} fait le plus de chiffre d'affaires, le ${m.nomCourt} marge le plus par article. Calculez, pour chacun, sa part du chiffre d'affaires de la gamme (${eur(x.chiffreDAffaires)}) puis sa part de la marge (${eur(x.margeDuMois)}), en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = assortimentDuPointDeVente(c);
         return [x.premiereEnCa, x.deMarge].flatMap((r) => [
-          { libelle: `Part du chiffre d'affaires · ${r.nom} (%)`, attendu: r.partDuCa, calcul: `${eur(r.chiffreDAffaires)} ÷ ${eur(x.chiffreDAffaires)} × 100 = ${pct(r.partDuCa)}`, tolerance: 0.1 },
-          { libelle: `Part de la marge · ${r.nom} (%)`, attendu: r.partDeLaMarge, calcul: `${eur(r.marge)} ÷ ${eur(x.margeDuMois)} × 100 = ${pct(r.partDeLaMarge)}`, tolerance: 0.1 },
+          { libelle: `Part du chiffre d'affaires · ${r.nom} (%)`, attendu: r.partDuCa, calcul: `${eur(r.chiffreDAffaires)} ÷ ${eur(x.chiffreDAffaires)} × 100 = ${pct(r.partDuCa)}` },
+          { libelle: `Part de la marge · ${r.nom} (%)`, attendu: r.partDeLaMarge, calcul: `${eur(r.marge)} ÷ ${eur(x.margeDuMois)} × 100 = ${pct(r.partDeLaMarge)}` },
         ]);
       },
       explication: (c) => {
@@ -314,7 +324,7 @@ export const ASSORTIMENT: Chapitre = {
         const x = assortimentDuPointDeVente(c);
         const m = x.deMarge;
         const v = x.deVolume;
-        return `Avant de calculer, pariez. Le ${m.nomCourt} laisse ${eur(m.margeUnitaire)} par article, ${qte(auDixieme(m.margeUnitaire / v.margeUnitaire))} fois le ${v.nomCourt} (${eur(v.margeUnitaire)}), mais il n'en vend que ${qte(m.ventes)} contre ${qte(v.ventes)}. Pour laisser autant de marge que le ${v.nomCourt}, le ${m.nomCourt} devrait vendre…`;
+        return `Avant de calculer, pariez. Le ${m.nomCourt} laisse ${eur(m.margeUnitaire)} par article, ${qte(auCentime(m.margeUnitaire / v.margeUnitaire))} fois le ${v.nomCourt} (${eur(v.margeUnitaire)}), mais il n'en vend que ${qte(m.ventes)} contre ${qte(v.ventes)}. Pour laisser autant de marge que le ${v.nomCourt}, le ${m.nomCourt} devrait vendre…`;
       },
       options: (c) => {
         const x = assortimentDuPointDeVente(c);
@@ -376,7 +386,7 @@ export const ASSORTIMENT: Chapitre = {
         const m = x.deMarge;
         const v = x.deVolume;
         return [
-          `Il faudrait vendre ${qte(x.ventesQuiEgalent)} pulls ${m.nomCourt}, ${qte(auDixieme(x.ventesQuiEgalent / m.ventes))} fois ses ventes, pour laisser autant que les ${qte(v.ventes)} pulls ${v.nomCourt}. La marge d'une référence est le produit de deux choses : ce qu'elle vend, et ce qu'elle laisse par article. Une forte marge par article ne suffit pas, un gros volume non plus.`,
+          `Il faudrait vendre ${qte(x.ventesQuiEgalent)} pulls ${m.nomCourt}, ${qte(auCentime(x.ventesQuiEgalent / m.ventes))} fois ses ventes, pour laisser autant que les ${qte(v.ventes)} pulls ${v.nomCourt}. La marge d'une référence est le produit de deux choses : ce qu'elle vend, et ce qu'elle laisse par article. Une forte marge par article ne suffit pas, un gros volume non plus.`,
           "C'est pourquoi on classe un assortiment sur deux axes, le volume et la marge par article : l'étape suivante en calcule les deux repères.",
         ];
       },
@@ -392,7 +402,7 @@ export const ASSORTIMENT: Chapitre = {
       champs: (c) => {
         const x = assortimentDuPointDeVente(c);
         return [
-          { libelle: "Ventes moyennes d'une référence", attendu: x.ventesMoyennes, calcul: `${qte(x.ventes)} articles ÷ ${qte(x.lignes.length)} références = ${qte(x.ventesMoyennes)}` },
+          { libelle: "Ventes moyennes d'une référence", nature: "grandeur", attendu: x.ventesMoyennes, calcul: `${qte(x.ventes)} articles ÷ ${qte(x.lignes.length)} références = ${qte(x.ventesMoyennes)}` },
           { libelle: "Marge moyenne d'un article vendu", attendu: x.margeMoyenne, calcul: `${eur(x.margeDuMois)} ÷ ${qte(x.ventes)} articles = ${eur(x.margeMoyenne)}` },
         ];
       },
@@ -544,13 +554,12 @@ export const ASSORTIMENT: Chapitre = {
         return [
           {
             libelle: "Marge moyenne d'un article des autres références",
-            attendu: auCentime(r.margeUnitaireDesAutres),
-            tolerance: 0.01,
-            calcul: `(${eur(x.margeDuMois)} − ${eur(r.visee.marge)}) ÷ (${qte(x.ventes)} − ${qte(r.visee.ventes)}) = ${eur(r.margeDesAutres)} ÷ ${qte(r.ventesDesAutres)} = ${eur(auCentime(r.margeUnitaireDesAutres))}`,
+            attendu: r.margeUnitaireDesAutres,
+            calcul: `(${eur(x.margeDuMois)} − ${eur(r.visee.marge)}) ÷ (${qte(x.ventes)} − ${qte(r.visee.ventes)}) = ${eur(r.margeDesAutres)} ÷ ${qte(r.ventesDesAutres)} = ${eur(r.margeUnitaireDesAutres)}`,
           },
-          { libelle: "Articles reportés", attendu: r.unitesReportees, calcul: `${qte(r.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(r.unitesReportees)}` },
-          { libelle: "Marge récupérée par le report", attendu: r.margeRecuperee, tolerance: 0.5, calcul: `${qte(r.unitesReportees)} × (${eur(r.margeDesAutres)} ÷ ${qte(r.ventesDesAutres)}) = ${eur(r.margeRecuperee)}` },
-          { libelle: "Effet net du retrait sur la marge du mois", attendu: r.effetNet, tolerance: 0.5, calcul: `${eur(r.margeRecuperee)} − ${eur(r.visee.marge)} = ${eur(r.effetNet)}` },
+          { libelle: "Articles reportés", nature: "quantite", attendu: r.unitesReportees, calcul: `${qte(r.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(r.unitesReportees)}` },
+          { libelle: "Marge récupérée par le report", attendu: r.margeRecuperee, calcul: `${qte(r.unitesReportees)} × ${eur(r.margeUnitaireDesAutres)} = ${eur(r.margeRecuperee)}` },
+          { libelle: "Effet net du retrait sur la marge du mois", attendu: r.effetNet, calcul: `${eur(r.margeRecuperee)} − ${eur(r.visee.marge)} = ${eur(r.effetNet)}` },
         ];
       },
       explication: (c) => {
@@ -596,7 +605,7 @@ export const ASSORTIMENT: Chapitre = {
           { libelle: "Articles reportés", montant: l.unitesReportees, reference: d.unitesReportees, unite: "articles" },
           { libelle: "Marge d'un article des autres références", montant: auCentime(l.margeUnitaireDesAutres), reference: auCentime(d.margeUnitaireDesAutres) },
           { libelle: "Marge récupérée par le report", montant: l.margeRecuperee, reference: d.margeRecuperee },
-          { libelle: "Part reportée qui compense le retrait", montant: auDixieme(l.partQuiCompense), reference: auDixieme(d.partQuiCompense), unite: "%" },
+          { libelle: "Part reportée qui compense le retrait", montant: auCentime(l.partQuiCompense), reference: auCentime(d.partQuiCompense), unite: "%" },
           { libelle: "Effet net sur la marge du mois", montant: l.effetNet, reference: d.effetNet, effet: true, fort: true },
           { libelle: "Marge du mois après le retrait", montant: l.margeApres, reference: d.margeApres },
         ];
@@ -621,8 +630,8 @@ export const ASSORTIMENT: Chapitre = {
             if (l.visee.margeUnitaire >= l.margeUnitaireDesAutres)
               return `${LeNom(l.nom)} laisse ${eur(l.visee.margeUnitaire)} par article, plus que les autres références (${eur(auCentime(l.margeUnitaireDesAutres))}) : chaque client reporté rapporte moins qu'avant, aucun report ne compense son retrait.`;
             if (l.partQuiCompense > PART_MAXIMALE_DU_DEFI)
-              return `Il faudrait ${pct(auDixieme(l.partQuiCompense))} de report pour compenser le retrait ${duNom(l.nom)} : plus que le défi ne permet. Cherchez une référence qui marge encore moins par article, face aux autres.`;
-            return `Avec ${pct(p.part!)} de report, le retrait ${duNom(l.nom)} coûte ${eur(-l.effetNet)} : montez la part jusqu'à celle qui compense, ${pct(auDixieme(l.partQuiCompense))}.`;
+              return `Il faudrait ${pct(auCentime(l.partQuiCompense))} de report pour compenser le retrait ${duNom(l.nom)} : plus que le défi ne permet. Cherchez une référence qui marge encore moins par article, face aux autres.`;
+            return `Avec ${pct(p.part!)} de report, le retrait ${duNom(l.nom)} coûte ${eur(-l.effetNet)} : montez la part jusqu'à celle qui compense, ${pct(auCentime(l.partQuiCompense))}.`;
           },
           solution: { reference: rangDe(x.f, SOLUTION_DU_LABORATOIRE.reference), part: SOLUTION_DU_LABORATOIRE.part },
         };
@@ -633,7 +642,7 @@ export const ASSORTIMENT: Chapitre = {
         const l = retrait(x.f, codeDuRang(x.f, position.reference!), position.part! / 100);
         const seuils = x.lignes.map((r) => {
           const t = retrait(x.f, r.code, PART_REPORTEE).partQuiCompense;
-          return `${leNom(r.nomCourt)} ${t > 100 ? "jamais" : `à ${pct(auDixieme(t))}`}`;
+          return `${leNom(r.nomCourt)} ${t > 100 ? "jamais" : `à ${pct(auCentime(t))}`}`;
         });
         return [
           `Retirer ${leNom(l.nom)} avec ${pct(position.part!)} de report laisse la marge du mois à ${eur(l.margeApres)}, soit ${eur(Math.abs(l.effetNet))} ${l.effetNet >= 0 ? "de plus" : "de moins"}. Le report compense ${seuils.join(", ")}.`,
@@ -650,7 +659,7 @@ export const ASSORTIMENT: Chapitre = {
       question: (c) => {
         const x = assortimentDuPointDeVente(c);
         const v = x.variante;
-        return `Variante : la direction retire ${leNom(v.nom)} au lieu du ${x.derniere.nomCourt}, toujours avec ${pct(PART_REPORTEE * 100)} de report. Calculez la marge moyenne d'un article des ${qte(x.lignes.length - 1)} autres références (au centime), l'effet net du retrait sur la marge du mois (négatif s'il en fait perdre), puis la part reportée qui le compenserait, en pourcentage, au dixième.`;
+        return `Variante : la direction retire ${leNom(v.nom)} au lieu du ${x.derniere.nomCourt}, toujours avec ${pct(PART_REPORTEE * 100)} de report. Calculez la marge moyenne d'un article des ${qte(x.lignes.length - 1)} autres références (au centime), l'effet net du retrait sur la marge du mois (négatif s'il en fait perdre), puis la part reportée qui le compenserait, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = assortimentDuPointDeVente(c);
@@ -658,21 +667,18 @@ export const ASSORTIMENT: Chapitre = {
         return [
           {
             libelle: "Marge moyenne d'un article des autres références",
-            attendu: auCentime(v.margeUnitaireDesAutres),
-            tolerance: 0.01,
-            calcul: `(${eur(x.margeDuMois)} − ${eur(v.visee.marge)}) ÷ (${qte(x.ventes)} − ${qte(v.visee.ventes)}) = ${eur(v.margeDesAutres)} ÷ ${qte(v.ventesDesAutres)} = ${eur(auCentime(v.margeUnitaireDesAutres))}`,
+            attendu: v.margeUnitaireDesAutres,
+            calcul: `(${eur(x.margeDuMois)} − ${eur(v.visee.marge)}) ÷ (${qte(x.ventes)} − ${qte(v.visee.ventes)}) = ${eur(v.margeDesAutres)} ÷ ${qte(v.ventesDesAutres)} = ${eur(v.margeUnitaireDesAutres)}`,
           },
           {
             libelle: "Effet net du retrait sur la marge du mois",
             attendu: v.effetNet,
-            tolerance: 0.5,
-            calcul: `${qte(v.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(v.unitesReportees)} articles reportés ; ${qte(v.unitesReportees)} × ${eur(auCentime(v.margeUnitaireDesAutres))} − ${eur(v.visee.marge)} = ${eur(v.effetNet)}`,
+            calcul: `${qte(v.visee.ventes)} × ${pct(PART_REPORTEE * 100)} = ${qte(v.unitesReportees)} articles reportés ; ${qte(v.unitesReportees)} × ${eur(v.margeUnitaireDesAutres)} − ${eur(v.visee.marge)} = ${eur(v.effetNet)}`,
           },
           {
             libelle: "Part reportée qui compense le retrait (%)",
-            attendu: auDixieme(v.partQuiCompense),
-            tolerance: 0.1,
-            calcul: `${eur(v.visee.marge)} ÷ (${qte(v.visee.ventes)} × ${eur(auCentime(v.margeUnitaireDesAutres))}) × 100 = ${pct(auDixieme(v.partQuiCompense))}`,
+            attendu: v.partQuiCompense,
+            calcul: `${eur(v.visee.marge)} ÷ (${qte(v.visee.ventes)} × ${eur(v.margeUnitaireDesAutres)}) × 100 = ${pct(v.partQuiCompense)}`,
           },
         ];
       },
@@ -681,7 +687,7 @@ export const ASSORTIMENT: Chapitre = {
         const v = x.variante;
         const b = x.leRetrait;
         return [
-          `Retirer ${leNom(v.nom)} coûterait ${eur(-v.effetNet)} par mois, contre ${eur(-b.effetNet)} pour le ${b.nom}, et il faudrait ${pct(auDixieme(v.partQuiCompense))} de report pour le compenser, contre ${pct(auDixieme(b.partQuiCompense))}. ${LeNom(v.nom)} vend plus et laisse plus par article : la part qui compense un retrait est le rapport entre la marge d'un article de la référence et celle d'un article des autres.`,
+          `Retirer ${leNom(v.nom)} coûterait ${eur(-v.effetNet)} par mois, contre ${eur(-b.effetNet)} pour le ${b.nom}, et il faudrait ${pct(auCentime(v.partQuiCompense))} de report pour le compenser, contre ${pct(auCentime(b.partQuiCompense))}. ${LeNom(v.nom)} vend plus et laisse plus par article : la part qui compense un retrait est le rapport entre la marge d'un article de la référence et celle d'un article des autres.`,
         ];
       },
     },
@@ -700,8 +706,8 @@ export const ASSORTIMENT: Chapitre = {
         const r = x.leRetrait;
         return [
           { libelle: "Marge récupérée par le report", attendu: x.recupereeARebours, calcul: `${eur(x.derniere.marge)} − ${eur(-x.effetObserve)} = ${eur(x.recupereeARebours)}` },
-          { libelle: "Articles reportés", attendu: x.reportesARebours, calcul: `${eur(x.recupereeARebours)} ÷ (${eur(r.margeDesAutres)} ÷ ${qte(r.ventesDesAutres)}) = ${qte(x.reportesARebours)}` },
-          { libelle: "Part des ventes reportée (%)", attendu: x.partARebours, tolerance: 0.5, calcul: `${qte(x.reportesARebours)} ÷ ${qte(x.derniere.ventes)} × 100 = ${pct(x.partARebours)}` },
+          { libelle: "Articles reportés", nature: "quantite", attendu: x.reportesARebours, calcul: `${eur(x.recupereeARebours)} ÷ ${eur(r.margeUnitaireDesAutres)} = ${qte(x.reportesCalcules)}${Number.isInteger(x.reportesCalcules) ? "" : `, soit ${entier(x.reportesARebours)} articles à l'unité la plus proche`}` },
+          { libelle: "Part des ventes reportée (%)", attendu: x.partARebours, calcul: `${qte(x.reportesARebours)} ÷ ${qte(x.derniere.ventes)} × 100 = ${pct(x.partARebours)}` },
         ];
       },
       explication: (c) => {
@@ -762,7 +768,7 @@ export const ASSORTIMENT: Chapitre = {
         {
           texte: "Déposer la marque à l'INPI ; afficher une origine vraie",
           juste: true,
-          retour: `Oui. Un dépôt à l'INPI, dans les classes ${MARQUE.classes.join(" (les vêtements) et ")} (la vente au détail), protège le nom pour ${MARQUE.dureeEnAnnees} ans, renouvelables sans limite, pour ${montantEcrit(coutDuDepot())} environ : sans dépôt, la boutique peut difficilement s'opposer au nom voisin. Les signes de qualité (labels, certifications, origine) sont encadrés : une origine fausse est une pratique commerciale trompeuse, et la composition des textiles (« 100 % laine mérinos ») est une mention obligatoire et contrôlée.`,
+          retour: `Oui. Un dépôt à l'INPI, dans les classes ${MARQUE.classes.join(" (les vêtements) et ")} (la vente au détail), protège le nom pour ${MARQUE.dureeEnAnnees} ans, renouvelables sans limite, pour ${eur(coutDuDepot())} environ : sans dépôt, la boutique peut difficilement s'opposer au nom voisin. Les signes de qualité (labels, certifications, origine) sont encadrés : une origine fausse est une pratique commerciale trompeuse, et la composition des textiles (« 100 % laine mérinos ») est une mention obligatoire et contrôlée.`,
         },
         {
           texte: "Le premier qui utilise un nom en est propriétaire, sans formalité",
@@ -784,14 +790,14 @@ export const ASSORTIMENT: Chapitre = {
       notions: ["assortment", "contribution_margin"],
       question: (c) => {
         const s = serviceAssocie(assortimentDuPointDeVente(c).f);
-        return `La boutique pourrait offrir la retouche du ${s.r.nom.toLowerCase()} : ${montantEcrit(RETOUCHE_OFFERTE.coutParRetouche)} par pull retouché, demandée par ${pct(RETOUCHE_OFFERTE.partDesAcheteurs * 100, 0)} des acheteurs ; elle ferait demander ${pct(RETOUCHE_OFFERTE.hausseDeLaDemande * 100, 0)} de mérinos en plus. Le stock du mois en tient ${qte(s.stock)}. Calculez les ventes du mois avec le service (à l'unité inférieure), la marge qu'elles ajoutent, le coût des retouches (à l'unité la plus proche), puis l'effet sur la marge du mois.`;
+        return `La boutique pourrait offrir la retouche du ${s.r.nom.toLowerCase()} : ${eur(RETOUCHE_OFFERTE.coutParRetouche)} par pull retouché, demandée par ${pct(RETOUCHE_OFFERTE.partDesAcheteurs * 100)} des acheteurs ; elle ferait demander ${pct(RETOUCHE_OFFERTE.hausseDeLaDemande * 100)} de mérinos en plus. Le stock du mois en tient ${qte(s.stock)}. Calculez les ventes du mois avec le service (à l'unité inférieure), la marge qu'elles ajoutent, le coût des retouches (à l'unité la plus proche), puis l'effet sur la marge du mois.`;
       },
       champs: (c) => {
         const s = serviceAssocie(assortimentDuPointDeVente(c).f);
         return [
-          { libelle: "Ventes du mérinos avec le service", attendu: s.ventes, calcul: `${qte(s.r.demandeDuMois)} × ${qte(1 + RETOUCHE_OFFERTE.hausseDeLaDemande)} = ${qte(s.ventes)}, sous le stock de ${qte(s.stock)}` },
+          { libelle: "Ventes du mérinos avec le service", nature: "quantite", attendu: s.ventes, calcul: `${qte(s.r.demandeDuMois)} × ${qte(1 + RETOUCHE_OFFERTE.hausseDeLaDemande)} = ${qte(s.ventes)} : sous le stock de ${qte(s.stock)}` },
           { libelle: "Marge ajoutée", attendu: s.margeEnPlus, calcul: `${qte(s.ventesEnPlus)} pulls de plus × ${eur(s.margeUnitaire)} = ${eur(s.margeEnPlus)}` },
-          { libelle: "Coût des retouches", attendu: s.coutDesRetouches, calcul: `${qte(s.ventes)} × ${pct(RETOUCHE_OFFERTE.partDesAcheteurs * 100, 0)} = ${qte(s.retouches)} retouches × ${eur(RETOUCHE_OFFERTE.coutParRetouche)} = ${eur(s.coutDesRetouches)}` },
+          { libelle: "Coût des retouches", attendu: s.coutDesRetouches, calcul: `${qte(s.ventes)} × ${pct(RETOUCHE_OFFERTE.partDesAcheteurs * 100)} = ${qte(s.retouches)} retouches × ${eur(RETOUCHE_OFFERTE.coutParRetouche)} = ${eur(s.coutDesRetouches)}` },
           { libelle: "Effet sur la marge du mois", attendu: s.effet, calcul: `${eur(s.margeEnPlus)} − ${eur(s.coutDesRetouches)} = ${eur(s.effet)}` },
         ];
       },

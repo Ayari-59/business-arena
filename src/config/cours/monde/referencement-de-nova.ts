@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { AMENDE_DE_LA_REVENTE_A_PERTE, DATE_LIMITE_DE_LA_CONVENTION } from "./fournisseurs-de-la-boutique";
 import { DELAI_CONVENU_DE_CAMPUSTECH, GESTION_DU_COURS, type FicheDeGestion } from "./nova-gestion";
 
@@ -94,7 +95,7 @@ export const CADRE_DE_LA_NEGOCIATION = {
 // 3. LE MODÈLE
 // ─────────────────────────────────────────────────────────────────────────────
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 
 /** La fiche de NOVA d'un cas : celle de la gestion, que toutes les fiches lisent. */
 export const ficheDuReferencement = (c: { code: string }): FicheDeGestion => {
@@ -194,7 +195,9 @@ export function referencementDeNova(f: FicheDeGestion) {
       ventes: animationVentes,
       marge: animationMarge,
       gain: auCentime(animationMarge - animationCout),
-      seuilParJournee: Math.ceil(ANIMATION.coutParJournee / meilleure.margeUnitaireDeNova - 1e-9),
+      // Le quotient à deux décimales, puis à l'unité au-dessus, comme sur la copie.
+      seuilParJourneeCalcule: auCentime(ANIMATION.coutParJournee / meilleure.margeUnitaireDeNova),
+      seuilParJournee: Math.ceil(auCentime(ANIMATION.coutParJournee / meilleure.margeUnitaireDeNova) - 1e-9),
     },
   };
 }

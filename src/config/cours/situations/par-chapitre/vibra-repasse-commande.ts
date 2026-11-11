@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_COMPTE_CLIENT } from "../../chapitres/le-compte-client";
 import { LCR_DE_VIBRA, LIGNES_DE_CREDIT, TTC_D_UNE_ENCEINTE, VIBRA, dateEcrite, factureDEnceintes, impayeDeVibra, type DateDuCompte } from "../../monde/compte-client-de-nova";
@@ -14,11 +14,13 @@ import type { Situation } from "../types";
  * HYPOTHÈSE DU CAS (VIBRA_REPASSE) : le 20 juin, Vibra règle l'effet impayé par virement, puis commande
  * 150 NOVA One, à 60 jours par LCR. Sa ligne de crédit reste de 10 000 €. L'élève passe le règlement,
  * mesure l'en-cours que la commande ferait, et rend sa réponse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes que la ligne accepte sont une quantité, à
+ * l'enceinte inférieure, et le corrigé écrit d'abord le quotient à deux décimales.
  */
 export const VIBRA_REPASSE = { reglement: { jour: 20, mois: 6, exercice: 1 } as DateDuCompte, enceintes: 150 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR");
 
 /** Les chiffres du cas. */
 export function vibraRepasseCommande(_c: Pick<Cas, "code">) {
@@ -96,7 +98,7 @@ export const VIBRA_REPASSE_COMMANDE: Situation = {
         return [
           { libelle: "Commande, TTC", attendu: n.commande.ttc, calcul: `${qte(VIBRA_REPASSE.enceintes)} × ${eur(TTC_D_UNE_ENCEINTE)} = ${eur(n.commande.ttc)}` },
           { libelle: "Dépassement de la ligne", attendu: n.depassement, calcul: `${eur(n.commande.ttc)} − ${eur(n.ligne)} = ${eur(n.depassement)}` },
-          { libelle: "Enceintes que la ligne accepte", attendu: n.maximum, calcul: `${eur(n.ligne)} ÷ ${eur(TTC_D_UNE_ENCEINTE)}, à l'enceinte inférieure : ${qte(n.maximum)}`, tolerance: 0 },
+          { libelle: "Enceintes que la ligne accepte", nature: "quantite", attendu: n.maximum, calcul: `${eur(n.ligne)} ÷ ${eur(TTC_D_UNE_ENCEINTE)} = ${nombreAuCentieme(n.ligne / TTC_D_UNE_ENCEINTE)}, à l'enceinte inférieure : ${qte(n.maximum)} (une de plus dépasserait la ligne)` },
         ];
       },
       explication: (c) => {

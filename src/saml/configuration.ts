@@ -129,7 +129,12 @@ export function configurationSaml(): ConfigurationSaml | null {
   return e.pret ? e.configuration : null;
 }
 
-/** La connexion par l'établissement est-elle proposée ? (les boutons) */
+/**
+ * La connexion par l'établissement est-elle proposée ? (les boutons) Seulement sur la fédération
+ * de PRODUCTION (audit du 10 novembre 2026, production P1-2) : sur celle de test, le bouton menait
+ * au service de découverte de test de RENATER, où l'établissement réel d'un étudiant ou d'un
+ * enseignant n'est pas. Les routes SAML, elles, restent en place (mise au point, /admin/renater).
+ */
 export function connexionEtablissementProposee(): boolean {
-  return configurationSaml() !== null;
+  return configurationSaml()?.federation === "production";
 }

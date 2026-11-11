@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
+import { aLUnite, arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ficheDe } from "../../chapitres/couts-ou-differenciation";
 import { LIRE_LA_STRATEGIE_DES_CONCURRENTS, NOMS_DES_STRATEGIES_LUES, dE, strategiesDesConcurrents } from "../../chapitres/lire-la-strategie-des-concurrents";
@@ -43,16 +43,44 @@ const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 
 export type ReponseALaDirectrice = "avec-la-qualite" | "prix-seul" | "rester";
 
+/**
+ * LES VENTES PARTENT DE LA PART AFFICHÉE (audit du 10 novembre 2026, contenu P1-1). La part se
+ * demande et s'écrit à deux décimales (19,24 %, 28,07 %) ; l'élève en tire les ventes du trimestre,
+ * 19,24 % × 15 502 = 2 982,58, soit 2 983 enceintes à l'unité la plus proche. Le modèle du marché
+ * vendait 2 982 (la part exacte, 19,2379… %), et la correction refusait 11 932 ventes justes. Les
+ * ventes, la marge, le résultat et le coût complet se refont donc ici, sur la part affichée, comme
+ * sur la copie ; le modèle (monde/attractivite.ts) ne change pas.
+ */
+function surLaPartAffichee<B extends { margeUnitaire: number; coutVariable: number; charges: number }>(
+  f: { marche: { parTrimestre: number; trimestres: number } },
+  bilan: B,
+  partAffichee: number,
+) {
+  const parTrimestre = aLUnite(arrondi2((partAffichee * f.marche.parTrimestre) / 100));
+  const ventes = parTrimestre * f.marche.trimestres;
+  const marge = auCentime(ventes * bilan.margeUnitaire);
+  return {
+    ...bilan,
+    parTrimestre,
+    ventes,
+    marge,
+    resultat: auCentime(marge - bilan.charges),
+    coutComplet: auCentime((ventes * bilan.coutVariable + bilan.charges) / ventes),
+  };
+}
+
 /** La place libre de la carte, et l'année jouée pour y aller, par le seul prix ou avec la qualité. */
 export function espaceLibre(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
   const k = strategiesDesConcurrents(c);
   const x = allerDansLEspaceLibre(f);
-  const seul = x.prixSeul;
-  const avec = x.avecLaQualite!;
+  const tSeul = x.prixSeul.trimestres[0]!;
+  const tAvec = x.avecLaQualite!.trimestres[0]!;
+  const partSeul = arrondi2(tSeul.part * 100);
+  const partAvec = arrondi2(tAvec.part * 100);
+  const seul = surLaPartAffichee(f, x.prixSeul, partSeul);
+  const avec = surLaPartAffichee(f, x.avecLaQualite!, partAvec);
   const gamme = gammeDe(f, x.gamme ?? "soignee");
-  const tSeul = seul.trimestres[0]!;
-  const tAvec = avec.trimestres[0]!;
   // Les attractivités des concurrents réunies : elles ne bougent pas avec NOVA.
   const desConcurrents = tSeul.attractivite / tSeul.part - tSeul.attractivite;
   // Le croisement : les ventes que la qualité retient, à la marge de la gamme soignée ; le coût de la
@@ -64,8 +92,8 @@ export function espaceLibre(c: Pick<Cas, "code">) {
   // Les ventes qu'il faut à la place, à la marge de la gamme soignée, pour égaler aujourd'hui ; et au prix seul.
   const ventesPourEgaler = Math.ceil((x.aujourdhui.resultat + avec.charges) / avec.margeUnitaire - 1e-9);
   const ventesPourEgalerAuPrixSeul = Math.ceil((x.aujourdhui.resultat + seul.charges) / seul.margeUnitaire - 1e-9);
-  const ecartSeul = x.ecartPrixSeul;
-  const ecartAvec = x.ecartAvecLaQualite ?? -Infinity;
+  const ecartSeul = auCentime(seul.resultat - x.aujourdhui.resultat);
+  const ecartAvec = auCentime(avec.resultat - x.aujourdhui.resultat);
   const reponse: ReponseALaDirectrice = ecartAvec > 0 && ecartAvec >= ecartSeul ? "avec-la-qualite" : ecartSeul > 0 ? "prix-seul" : "rester";
   return {
     f,
@@ -79,14 +107,14 @@ export function espaceLibre(c: Pick<Cas, "code">) {
     attractiviteSeul: tSeul.attractivite,
     attractiviteAvec: tAvec.attractivite,
     attractivitesDesConcurrents: desConcurrents,
-    partSeul: arrondi2(tSeul.part * 100),
-    partAvec: arrondi2(tAvec.part * 100),
+    partSeul,
+    partAvec,
     variation: arrondi2(x.variationDuPrix * 100),
     indiceDeLaPlace: x.indiceDePrixDeLaPlace,
     lectureSeul: k.carteAuPrixSeul.nova,
     lectureAvec: k.carteALaPlace.nova,
     ecartSeul,
-    ecartAvec: x.ecartAvecLaQualite!,
+    ecartAvec,
     effetDuVolume,
     effetDeLaGamme,
     effetDesBudgets,
@@ -198,7 +226,7 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
             libelle: "Ventes de l'année par le seul prix",
             nature: "quantite",
             attendu: s.ventes,
-            calcul: `${qte(e.partSeul)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(arrondi2((e.partSeul * e.f.marche.parTrimestre) / 100))}, arrondi à ${qte(s.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(s.ventes)}`,
+            calcul: `${qte(e.partSeul)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(arrondi2((e.partSeul * e.f.marche.parTrimestre) / 100))}, arrondi à ${qte(s.parTrimestre)} par trimestre, × ${e.f.marche.trimestres} = ${qte(s.ventes)}`,
           },
           { libelle: "Résultat par le seul prix", attendu: s.resultat, calcul: `${qte(s.ventes)} × (${eur(s.offre.prix)} − ${eur(s.coutVariable)}) − ${eur(s.charges)} = ${eur(s.resultat)}` },
           { libelle: "Écart avec aujourd'hui, par le seul prix", attendu: e.ecartSeul, calcul: `${eur(s.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartSeul)}` },
@@ -235,7 +263,7 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
             libelle: "Ventes de l'année avec la qualité",
             nature: "quantite",
             attendu: v.ventes,
-            calcul: `${qte(e.partAvec)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(arrondi2((e.partAvec * e.f.marche.parTrimestre) / 100))}, arrondi à ${qte(v.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(v.ventes)}`,
+            calcul: `${qte(e.partAvec)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(arrondi2((e.partAvec * e.f.marche.parTrimestre) / 100))}, arrondi à ${qte(v.parTrimestre)} par trimestre, × ${e.f.marche.trimestres} = ${qte(v.ventes)}`,
           },
           { libelle: "Résultat avec la qualité", attendu: v.resultat, calcul: `${qte(v.ventes)} × (${eur(v.offre.prix)} − ${eur(v.coutVariable)}) − ${eur(v.charges)} = ${eur(v.resultat)}` },
           { libelle: "Écart avec aujourd'hui, avec la qualité", attendu: e.ecartAvec, calcul: `${eur(v.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartAvec)}` },

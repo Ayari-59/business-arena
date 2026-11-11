@@ -65,10 +65,11 @@ describe("choisir et négocier avec le fournisseur : le chapitre et son cas", ()
     gardeDuCurseur(CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR, "la-remuneration-au-curseur", 790);
   });
 
-  it("le seuil de revente à perte : 23 € hors taxes, 27,60 € toutes taxes comprises, 58,2 % de remise au plus ; −60 % est à perte", () => {
+  it("le seuil de revente à perte : 23 € hors taxes, 27,60 € toutes taxes comprises, 58,18 % de remise au plus ; −60 % est à perte", () => {
     const ht = c(25 + 0.5 - 0.5 - 1_200 / 600);
     expect([ht, c(ht * 1.2)]).toEqual([23, 27.6]);
-    expect(attendus(CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR, "le-seuil-de-revente-a-perte")).toEqual([23, 27.6, 58.2]);
+    expect(attendus(CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR, "le-seuil-de-revente-a-perte")).toEqual([23, 27.6, c(((66 - 27.6) / 66) * 100)]);
+    expect(c(((66 - 27.6) / 66) * 100)).toBe(58.18);
     expect(c(66 * 0.4)).toBe(26.4);
     expect(juste(CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR, "la-fin-de-serie")[0]).toMatch(/^Non : 26,40 € est sous le seuil/);
     expect(juste(CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR, "le-delai-propose")[0]).toMatch(new RegExp(`${DELAI_DE_PAIEMENT_MAXIMAL_EN_JOURS} jours`));
@@ -83,7 +84,8 @@ describe("choisir et négocier avec le fournisseur : le chapitre et son cas", ()
     const prixNet = 25 * 0.96;
     const ht = c(prixNet + 0.8 - c(prixNet * 0.03));
     expect([prixNet, ht, c(ht * 1.2)]).toEqual([24, 24.08, 28.9]);
-    expect(attendus(UN_QUATRIEME_FACONNIER, "son-seuil")).toEqual([24.08, 28.9, 56.2]);
+    expect(attendus(UN_QUATRIEME_FACONNIER, "son-seuil")).toEqual([24.08, 28.9, c(((66 - 28.9) / 66) * 100)]);
+    expect(c(((66 - 28.9) / 66) * 100)).toBe(56.21);
     expect(juste(UN_QUATRIEME_FACONNIER, "le-prix-impose")[0]).toMatch(/^Interdite/);
     expect(juste(UN_QUATRIEME_FACONNIER, "reponse")[0]).toMatch(/^Une commande d'essai/);
   });

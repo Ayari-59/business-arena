@@ -51,10 +51,10 @@ describe("C2 : la réglementation des promotions", () => {
     expect(ids.length).toBeLessThanOrEqual(20);
   });
 
-  it("le prix de référence : 59,40 € (la remise de février), 47,52 € à afficher, 11,1 % de réduction réelle sur l'étiquette", () => {
+  it("le prix de référence : 59,40 € (la remise de février), 47,52 € à afficher, 11,11 % de réduction réelle sur l'étiquette", () => {
     const fevrier = c(66 * (1 - f.promotion.remise));
-    expect([fevrier, c(fevrier * 0.8), d((1 - c(66 * 0.8) / fevrier) * 100)]).toEqual([59.4, 47.52, 11.1]);
-    expect(attendus(PROMOTION_QUI_PAIE, "le-prix-de-reference")).toEqual([59.4, 47.52, 11.1]);
+    expect([fevrier, c(fevrier * 0.8), c((1 - c(66 * 0.8) / fevrier) * 100)]).toEqual([59.4, 47.52, 11.11]);
+    expect(attendus(PROMOTION_QUI_PAIE, "le-prix-de-reference")).toEqual([59.4, 47.52, 11.11]);
   });
 
   it("les soldes et les loteries", () => {

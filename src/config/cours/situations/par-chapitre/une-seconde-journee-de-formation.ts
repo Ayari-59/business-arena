@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2, eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import {
   ADOPTION_DE_LA_PREMIERE_ANNEE,
@@ -29,6 +28,10 @@ import type { Situation } from "../types";
  * Le verdict se calcule : selon ce que l'outil rapporte, la journée se paie dès la première année,
  * dans d'autres il lui faut l'année suivante, selon ce que l'outil rapporte face au nombre de
  * personnes à former.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les gains et le solde attendent le centime (à l'euro près,
+ * avant).
  */
 
 /**
@@ -42,8 +45,6 @@ export const ADOPTION_APRES_LA_SECONDE_JOURNEE = 0.9;
 export const HORIZON_EN_ANNEES = 2;
 
 /** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) =>
   /^Le /.test(nom) ? `du ${nom.slice(3)}` : /^Les /.test(nom) ? `des ${nom.slice(4)}` : /^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`;
 
@@ -53,10 +54,10 @@ export type Verdict = "des-la-premiere-annee" | "sur-l-horizon" | "pas-sur-l-hor
 export function secondeJournee(c: Cas) {
   const o = outilNumerique(c);
   const cout = o.utilisateurs * FORMATION_PAR_UTILISATEUR;
-  const gainApres = auCentime(o.gain * ADOPTION_APRES_LA_SECONDE_JOURNEE);
-  const gainEnPlus = auCentime(gainApres - o.gainAdopte);
-  const solde = auCentime(gainEnPlus - cout);
-  const soldeSurLHorizon = auCentime(gainEnPlus * HORIZON_EN_ANNEES - cout);
+  const gainApres = arrondi2(o.gain * ADOPTION_APRES_LA_SECONDE_JOURNEE);
+  const gainEnPlus = arrondi2(gainApres - o.gainAdopte);
+  const solde = arrondi2(gainEnPlus - cout);
+  const soldeSurLHorizon = arrondi2(gainEnPlus * HORIZON_EN_ANNEES - cout);
   const verdict: Verdict = solde >= 0 ? "des-la-premiere-annee" : soldeSurLHorizon >= 0 ? "sur-l-horizon" : "pas-sur-l-horizon";
   return { o, cout, gainApres, gainEnPlus, solde, soldeSurLHorizon, verdict };
 }
@@ -125,10 +126,9 @@ export const UNE_SECONDE_JOURNEE_DE_FORMATION: Situation = {
             libelle: "Gain annuel si toute l'équipe s'en sert",
             attendu: s.o.gain,
             calcul: `${qte(s.o.ventesManquees)} × ${PART} % = ${qte(s.o.ventesRetrouvees)} ; ${qte(s.o.ventesRetrouvees)} × ${eur(s.o.marge)} = ${eur(s.o.gain)}`,
-            tolerance: 1,
           },
-          { libelle: `Gain annuel à ${AVANT} % d'adoption`, attendu: s.o.gainAdopte, calcul: `${eur(s.o.gain)} × ${AVANT} % = ${eur(s.o.gainAdopte)}`, tolerance: 1 },
-          { libelle: `Gain annuel à ${APRES} % d'adoption`, attendu: s.gainApres, calcul: `${eur(s.o.gain)} × ${APRES} % = ${eur(s.gainApres)}`, tolerance: 1 },
+          { libelle: `Gain annuel à ${AVANT} % d'adoption`, attendu: s.o.gainAdopte, calcul: `${eur(s.o.gain)} × ${AVANT} % = ${eur(s.o.gainAdopte)}` },
+          { libelle: `Gain annuel à ${APRES} % d'adoption`, attendu: s.gainApres, calcul: `${eur(s.o.gain)} × ${APRES} % = ${eur(s.gainApres)}` },
         ];
       },
       explication: (c) => {
@@ -149,8 +149,8 @@ export const UNE_SECONDE_JOURNEE_DE_FORMATION: Situation = {
         const s = secondeJournee(c);
         return [
           { libelle: "Coût de la seconde journée", attendu: s.cout, calcul: `${qte(s.o.utilisateurs)} × ${eur(FORMATION_PAR_UTILISATEUR)} = ${eur(s.cout)}` },
-          { libelle: "Gain en plus chaque année", attendu: s.gainEnPlus, calcul: `${eur(s.gainApres)} − ${eur(s.o.gainAdopte)} = ${eur(s.gainEnPlus)}`, tolerance: 1 },
-          { libelle: "Solde de la première année", attendu: s.solde, calcul: `${eur(s.gainEnPlus)} − ${eur(s.cout)} = ${eur(s.solde)}`, tolerance: 1 },
+          { libelle: "Gain en plus chaque année", attendu: s.gainEnPlus, calcul: `${eur(s.gainApres)} − ${eur(s.o.gainAdopte)} = ${eur(s.gainEnPlus)}` },
+          { libelle: "Solde de la première année", attendu: s.solde, calcul: `${eur(s.gainEnPlus)} − ${eur(s.cout)} = ${eur(s.solde)}` },
         ];
       },
       explication: (c) => {
@@ -194,7 +194,7 @@ export const UNE_SECONDE_JOURNEE_DE_FORMATION: Situation = {
             retour:
               s.verdict === "pas-sur-l-horizon"
                 ? `Oui : ${eur(s.gainEnPlus)} par an ne paient pas ${eur(s.cout)} de formation en ${H} ans (solde de ${eur(s.soldeSurLHorizon)}). Mieux vaut accompagner l'équipe autrement.`
-                : `Non : sur ${H} ans, la journée rapporte ${eur(auCentime(s.gainEnPlus * H))}, plus que ses ${eur(s.cout)}.`,
+                : `Non : sur ${H} ans, la journée rapporte ${eur(arrondi2(s.gainEnPlus * H))}, plus que ses ${eur(s.cout)}.`,
           },
         ];
       },

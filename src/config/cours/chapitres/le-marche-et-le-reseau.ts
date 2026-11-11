@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentieme, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -38,6 +38,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · expert : le-laboratoire-du-reseau (la forme, un levier à choix, et la hausse ; le résultat en
  *     courbe), le-contrat, le-second-point-de-vente (le cadre légal qui change la décision), rejoindre ;
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part de marché se donne à deux décimales, à un centième près
+ * (au dixième, avant) ; la part de marché relative est une grandeur, au centième.
  */
 
 export const ENTREPRISES_DU_RESEAU: readonly string[] = ["boutique"];
@@ -51,11 +55,7 @@ export const TITRE_DU_RESEAU = "Le marché et le réseau";
 /** Le départ du laboratoire : la franchise, sans hausse des ventes. */
 export const DEPART_DU_LABORATOIRE = { forme: 3, hausse: 0 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => {
   const f = BOUTIQUES_DU_COURS[c.code];
@@ -78,8 +78,8 @@ export function reseauDeLaBoutique(c: Pick<Cas, "code">) {
   return {
     f,
     m,
-    partDeMarche: auDixieme(m.boutique.part * 100),
-    partDuLeader: auDixieme(m.leader.part * 100),
+    partDeMarche: auCentieme(m.boutique.part * 100),
+    partDuLeader: auCentieme(m.leader.part * 100),
     partRelative: auCentieme(m.partRelative),
     independante,
     groupement,
@@ -112,7 +112,7 @@ function tableauDesReseaux(c: Pick<Cas, "code">): TableauDeDonnees {
       { libelle: "Remise de la centrale sur les achats", valeurs: [pct(GROUPEMENT_D_ACHAT.remiseCentrale * 100), pct(FRANCHISE.remiseCentrale * 100)] },
       { libelle: "Ce qu'on paie chaque mois", valeurs: [`${eur(GROUPEMENT_D_ACHAT.cotisationDuMois)} de cotisation`, `${pct(x.tauxDesRedevances)} du chiffre d'affaires`] },
       { libelle: "Droit d'entrée", valeurs: ["aucun", `${eur(FRANCHISE.droitDEntree)} sur ${qte(FRANCHISE.dureeDuContratEnMois)} mois`] },
-      { libelle: "Enseigne commune", valeurs: ["non", `oui : ${pct(x.hausseObservee, 0)} de ventes en plus observés`] },
+      { libelle: "Enseigne commune", valeurs: ["non", `oui : ${pct(x.hausseObservee)} de ventes en plus observés`] },
       { libelle: "Assortiment et aménagement", valeurs: ["libres", "ceux du franchiseur"] },
     ],
   };
@@ -123,7 +123,7 @@ function tableauDesTroisFormes(c: Pick<Cas, "code">): TableauDeDonnees {
   const x = reseauDeLaBoutique(c);
   const ligne = (libelle: string, f: (m: typeof x.independante) => number) => ({ libelle, valeurs: [x.independante, x.groupement, x.franchise].map((m) => eur(f(m))) });
   return {
-    titre: `Le mois de ${x.f.moisDeReference} selon la forme de commerce (franchise à ${pct(x.hausseObservee, 0)} de ventes en plus)`,
+    titre: `Le mois de ${x.f.moisDeReference} selon la forme de commerce (franchise à ${pct(x.hausseObservee)} de ventes en plus)`,
     colonnes: ["Indépendante", "Groupement", "Franchise"],
     lignes: [
       ligne("Marge sur coût variable", (m) => m.marge),
@@ -180,13 +180,13 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
       notions: ["demand_market_share"],
       tableau: tableauDuMarche,
       question: () =>
-        "Calculez la taille du marché local de la maille en janvier : la somme des ventes de tous les acteurs. Puis la part de marché de la boutique, en pourcentage au dixième, et sa part de marché relative face au leader, au centième.",
+        "Calculez la taille du marché local de la maille en janvier : la somme des ventes de tous les acteurs. Puis la part de marché de la boutique, en pourcentage à deux décimales, et sa part de marché relative face au leader, au centième.",
       champs: (c) => {
         const x = reseauDeLaBoutique(c);
         return [
           { libelle: "Taille du marché du mois", attendu: x.m.total, calcul: `${x.m.acteurs.map((a) => eur(a.ventesDuMois)).join(" + ")} = ${eur(x.m.total)}` },
-          { libelle: "Part de marché de la boutique (%)", attendu: x.partDeMarche, tolerance: 0.1, calcul: `${eur(x.m.boutique.ventesDuMois)} ÷ ${eur(x.m.total)} × 100 = ${pct(x.partDeMarche)}` },
-          { libelle: "Part de marché relative", attendu: x.partRelative, tolerance: 0.01, calcul: `${eur(x.m.boutique.ventesDuMois)} ÷ ${eur(x.m.leader.ventesDuMois)} (${x.m.leader.nom.toLowerCase()}) = ${qte(x.partRelative)}` },
+          { libelle: "Part de marché de la boutique (%)", attendu: x.partDeMarche, calcul: `${eur(x.m.boutique.ventesDuMois)} ÷ ${eur(x.m.total)} × 100 = ${pct(x.partDeMarche)}` },
+          { libelle: "Part de marché relative", nature: "grandeur", attendu: x.partRelative, calcul: `${eur(x.m.boutique.ventesDuMois)} ÷ ${eur(x.m.leader.ventesDuMois)} (${x.m.leader.nom.toLowerCase()}) = ${qte(x.partRelative)}` },
         ];
       },
       explication: (c) => {
@@ -226,7 +226,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
       question: (c) => {
         const x = reseauDeLaBoutique(c);
         const enLigne = x.m.acteurs.find((a) => a.code === "sites-en-ligne")!;
-        return `Le centre commercial tient ${pct(x.partDuLeader)} du marché, les sites en ligne ${pct(auDixieme(enLigne.part * 100))}, la boutique ${pct(x.partDeMarche)}. Quelle lecture en tirez-vous pour la boutique ?`;
+        return `Le centre commercial tient ${pct(x.partDuLeader)} du marché, les sites en ligne ${pct(auCentieme(enLigne.part * 100))}, la boutique ${pct(x.partDeMarche)}. Quelle lecture en tirez-vous pour la boutique ?`;
       },
       options: (c) => {
         const x = reseauDeLaBoutique(c);
@@ -315,7 +315,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
       tableau: tableauDesReseaux,
       question: (c) => {
         const x = reseauDeLaBoutique(c);
-        return `Avant de calculer, pariez. La centrale du franchiseur achète ${pct(FRANCHISE.remiseCentrale * 100, 0)} moins cher, mais les redevances prennent ${pct(x.tauxDesRedevances, 0)} du chiffre d'affaires. Sans vente de plus, la franchise laisserait…`;
+        return `Avant de calculer, pariez. La centrale du franchiseur achète ${pct(FRANCHISE.remiseCentrale * 100)} moins cher, mais les redevances prennent ${pct(x.tauxDesRedevances)} du chiffre d'affaires. Sans vente de plus, la franchise laisserait…`;
       },
       options: (c) => {
         const x = reseauDeLaBoutique(c);
@@ -364,7 +364,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
       explication: (c) => {
         const x = reseauDeLaBoutique(c);
         return [
-          `Il faut ${pct(x.hausseFaceAIndependante, 0)} de ventes en plus. Sans hausse, la franchise laisse ${eur(x.franchiseSansHausse.resultat)} : la remise de la centrale (${eur(x.franchiseSansHausse.remise)}) ne paie pas les redevances (${eur(x.franchiseSansHausse.redevances)}) et le droit d'entrée. Chaque point de ventes en plus ajoute de la marge, mais aussi des redevances : c'est la marge, pas le chiffre d'affaires, qui doit les payer.`,
+          `Il faut ${pct(x.hausseFaceAIndependante)} de ventes en plus. Sans hausse, la franchise laisse ${eur(x.franchiseSansHausse.resultat)} : la remise de la centrale (${eur(x.franchiseSansHausse.remise)}) ne paie pas les redevances (${eur(x.franchiseSansHausse.redevances)}) et le droit d'entrée. Chaque point de ventes en plus ajoute de la marge, mais aussi des redevances : c'est la marge, pas le chiffre d'affaires, qui doit les payer.`,
         ];
       },
     },
@@ -377,16 +377,16 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
       tableau: tableauDesReseaux,
       question: (c) => {
         const x = reseauDeLaBoutique(c);
-        return `Sans formule cette fois. Les franchisés des villes comparables vendent ${pct(x.hausseObservee, 0)} de plus la première année. Calculez le résultat du mois de la boutique adhérente du groupement, la remise de la centrale du franchiseur, ses redevances, puis le résultat du mois en franchise à cette hausse.`;
+        return `Sans formule cette fois. Les franchisés des villes comparables vendent ${pct(x.hausseObservee)} de plus la première année. Calculez le résultat du mois de la boutique adhérente du groupement, la remise de la centrale du franchiseur, ses redevances, puis le résultat du mois en franchise à cette hausse.`;
       },
       champs: (c) => {
         const x = reseauDeLaBoutique(c);
         const g = x.groupement;
         const fr = x.franchise;
         return [
-          { libelle: "Résultat du mois au groupement", attendu: g.resultat, calcul: `${eur(x.independante.resultat)} + ${eur(g.achats)} × ${pct(GROUPEMENT_D_ACHAT.remiseCentrale * 100, 0)} − ${eur(g.cotisation)} = ${eur(x.independante.resultat)} + ${eur(g.remise)} − ${eur(g.cotisation)} = ${eur(g.resultat)}` },
-          { libelle: "Remise de la centrale du franchiseur", attendu: fr.remise, calcul: `${eur(x.independante.achats)} × ${qte(1 + fr.hausse)} = ${eur(fr.achats)} d'achats ; × ${pct(FRANCHISE.remiseCentrale * 100, 0)} = ${eur(fr.remise)}` },
-          { libelle: "Redevances du mois", attendu: fr.redevances, calcul: `${eur(x.independante.chiffreDAffaires)} × ${qte(1 + fr.hausse)} = ${eur(fr.chiffreDAffaires)} ; × ${pct(x.tauxDesRedevances, 0)} = ${eur(fr.redevances)}` },
+          { libelle: "Résultat du mois au groupement", attendu: g.resultat, calcul: `${eur(x.independante.resultat)} + ${eur(g.achats)} × ${pct(GROUPEMENT_D_ACHAT.remiseCentrale * 100)} − ${eur(g.cotisation)} = ${eur(x.independante.resultat)} + ${eur(g.remise)} − ${eur(g.cotisation)} = ${eur(g.resultat)}` },
+          { libelle: "Remise de la centrale du franchiseur", attendu: fr.remise, calcul: `${eur(x.independante.achats)} × ${qte(1 + fr.hausse)} = ${eur(fr.achats)} d'achats ; × ${pct(FRANCHISE.remiseCentrale * 100)} = ${eur(fr.remise)}` },
+          { libelle: "Redevances du mois", attendu: fr.redevances, calcul: `${eur(x.independante.chiffreDAffaires)} × ${qte(1 + fr.hausse)} = ${eur(fr.chiffreDAffaires)} ; × ${pct(x.tauxDesRedevances)} = ${eur(fr.redevances)}` },
           {
             libelle: "Résultat du mois en franchise",
             attendu: fr.resultat,
@@ -397,7 +397,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
       explication: (c) => {
         const x = reseauDeLaBoutique(c);
         return [
-          `Indépendante, ${eur(x.independante.resultat)} ; au groupement, ${eur(x.groupement.resultat)} ; en franchise, à ${pct(x.hausseObservee, 0)} de ventes en plus, ${eur(x.franchise.resultat)}. La franchise bat l'indépendance, mais pas le groupement : sa remise est plus forte, ses redevances la mangent.`,
+          `Indépendante, ${eur(x.independante.resultat)} ; au groupement, ${eur(x.groupement.resultat)} ; en franchise, à ${pct(x.hausseObservee)} de ventes en plus, ${eur(x.franchise.resultat)}. La franchise bat l'indépendance, mais pas le groupement : sa remise est plus forte, ses redevances la mangent.`,
         ];
       },
     },
@@ -447,8 +447,8 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
             const forme = formeDuRang(p.forme!);
             if (forme !== "franchise") return `${forme === "groupement" ? "Le groupement ne peut pas battre le groupement" : "L'indépendante laisse moins que le groupement"}, quelle que soit la hausse : seule l'enseigne d'un franchiseur fait vendre plus.`;
             const r = franchise(p.hausse!);
-            if (r <= x.groupement.resultat) return `À ${pct(p.hausse!, 0)} de hausse, la franchise laisse ${eur(r)}, pas plus que le groupement (${eur(x.groupement.resultat)}) : montez la hausse.`;
-            return `À ${pct(p.hausse!, 0)}, la franchise dépasse déjà le groupement ; elle le dépassait aussi un point plus bas : cherchez la plus petite hausse.`;
+            if (r <= x.groupement.resultat) return `À ${pct(p.hausse!)} de hausse, la franchise laisse ${eur(r)}, pas plus que le groupement (${eur(x.groupement.resultat)}) : montez la hausse.`;
+            return `À ${pct(p.hausse!)}, la franchise dépasse déjà le groupement ; elle le dépassait aussi un point plus bas : cherchez la plus petite hausse.`;
           },
           solution: { forme: rangDeLaForme("franchise"), hausse: x.hausseFaceAuGroupement },
         };
@@ -457,7 +457,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
       explication: (c) => {
         const x = reseauDeLaBoutique(c);
         return [
-          `Il faut ${pct(x.hausseFaceAuGroupement, 0)} de ventes en plus pour que la franchise dépasse le groupement, et ${pct(x.hausseFaceAIndependante, 0)} pour qu'elle dépasse l'indépendance. Les franchisés comparables observent ${pct(x.hausseObservee, 0)} : la franchise est entre les deux.`,
+          `Il faut ${pct(x.hausseFaceAuGroupement)} de ventes en plus pour que la franchise dépasse le groupement, et ${pct(x.hausseFaceAIndependante)} pour qu'elle dépasse l'indépendance. Les franchisés comparables observent ${pct(x.hausseObservee)} : la franchise est entre les deux.`,
           "Le groupement donne un gain sûr, qui ne dépend d'aucune vente de plus ; la franchise parie sur la notoriété de l'enseigne. Plus la hausse attendue est incertaine, plus le groupement est prudent.",
         ];
       },
@@ -533,10 +533,10 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
           {
             texte: `Le groupement : ${eur(x.groupement.resultat)} par mois, sans pari sur les ventes`,
             juste: true,
-            retour: `Oui. Le groupement ajoute ${eur(x.groupement.resultat - x.independante.resultat)} par mois sans rien demander aux ventes, et laisse l'assortiment libre. La franchise ne ferait mieux qu'au-delà de ${pct(x.hausseFaceAuGroupement - 1, 0)} de ventes en plus ; les franchisés comparables en observent ${pct(x.hausseObservee, 0)}.`,
+            retour: `Oui. Le groupement ajoute ${eur(x.groupement.resultat - x.independante.resultat)} par mois sans rien demander aux ventes, et laisse l'assortiment libre. La franchise ne ferait mieux qu'au-delà de ${pct(x.hausseFaceAuGroupement - 1)} de ventes en plus ; les franchisés comparables en observent ${pct(x.hausseObservee)}.`,
           },
           {
-            texte: `La franchise : ${pct(x.hausseObservee, 0)} de ventes en plus, c'est plus de chiffre`,
+            texte: `La franchise : ${pct(x.hausseObservee)} de ventes en plus, c'est plus de chiffre`,
             juste: false,
             retour: `Plus de chiffre, oui (${eur(x.franchise.chiffreDAffaires)}), mais ${eur(x.franchise.resultat)} de résultat, moins qu'au groupement : les redevances se paient sur tout le chiffre d'affaires.`,
           },
@@ -558,7 +558,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
         const x = reseauDeLaBoutique(c);
         return [
           `Le marché se mesure avant de se conquérir : ${eur(x.m.total)} par mois, dont ${pct(x.partDeMarche)} pour la boutique, ${qte(x.partRelative)} fois le leader. Autour du marché principal, les marchés environnant, générique et support disent ce qui remplace la maille et ce qui l'accompagne.`,
-          `Une forme de commerce se juge au résultat : le groupement ajoute sa remise moins sa cotisation ; la franchise ajoute la remise de sa centrale et les ventes de son enseigne, moins des redevances prises sur tout le chiffre d'affaires. Ici, la franchise bat l'indépendance à partir de ${pct(x.hausseFaceAIndependante, 0)} de ventes en plus et le groupement à partir de ${pct(x.hausseFaceAuGroupement, 0)}. Le droit encadre ces choix : information ${DELAI_DU_DIP_EN_JOURS} jours avant de signer une franchise, autorisation de la commission départementale au-delà de ${qte(SEUIL_DE_LA_CDAC_EN_M2)} m².`,
+          `Une forme de commerce se juge au résultat : le groupement ajoute sa remise moins sa cotisation ; la franchise ajoute la remise de sa centrale et les ventes de son enseigne, moins des redevances prises sur tout le chiffre d'affaires. Ici, la franchise bat l'indépendance à partir de ${pct(x.hausseFaceAIndependante)} de ventes en plus et le groupement à partir de ${pct(x.hausseFaceAuGroupement)}. Le droit encadre ces choix : information ${DELAI_DU_DIP_EN_JOURS} jours avant de signer une franchise, autorisation de la commission départementale au-delà de ${qte(SEUIL_DE_LA_CDAC_EN_M2)} m².`,
           "Au niveau de l'examen, vous savez mesurer un marché et une part de marché, et situer l'unité commerciale face au leader. Vous distinguez les marchés, les canaux et les formes de commerce ; vous chiffrez le résultat de chaque forme et la hausse des ventes qui rend une franchise rentable ; vous appliquez le cadre légal des contrats et de l'urbanisme commercial.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
