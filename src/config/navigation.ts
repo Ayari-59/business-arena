@@ -199,7 +199,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         // qui est lourd et que le menu, côté navigateur, n'a pas à charger.
         href: "/cours/creation-premier-bilan",
         libelle: "Essayer le cours",
-        aide: "Le premier chapitre du cours, libre d'accès : créez une entreprise, passez ses premières écritures et construisez son bilan.",
+        aide: "Un chapitre du cours, libre d'accès : créez une entreprise, passez ses premières écritures et construisez son bilan.",
       },
       {
         href: "/reprendre",

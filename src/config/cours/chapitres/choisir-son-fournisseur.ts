@@ -792,7 +792,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
       type: "choix",
       titre: "Votre recommandation",
       notions: ["income_statement", "net_treasury", "bfr"],
-      question: (c) => `La dirigeante ${dE(choixDuFournisseur(c).f.entreprise)} choisit le fournisseur de toute l'année N + 1, aux conditions des offres telles qu'elles sont. Quelle recommandation lui faites-vous ?`,
+      question: (c) => `Le président ${dE(choixDuFournisseur(c).f.entreprise)} choisit le fournisseur de toute l'année N + 1, aux conditions des offres telles qu'elles sont. Quelle recommandation lui faites-vous ?`,
       options: (c) => {
         const k = choixDuFournisseur(c);
         const a = k.asia.x;

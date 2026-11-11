@@ -6,6 +6,8 @@ import { ATELIERS } from "@/config/ateliers";
 import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS, motsDuContenu } from "@/config/cours/situations";
 import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
+import { SITUATIONS_PROPOSEES } from "@/config/chiffres-du-cours";
+import { CHAPITRES_PROPOSES } from "@/config/formations-proposees";
 
 /**
  * L'ARTICULATION DIT LES QUATRE BRIQUES, AVEC LEURS VRAIS COMPTES.
@@ -20,8 +22,9 @@ describe("l'articulation du cours", () => {
   it("quatre briques, dans l'ordre de l'enchaînement, avec les comptes des registres", () => {
     const b = briques();
     expect(b.map((x) => x.code)).toEqual(["cours", "situations", "arene", "episodes"]);
-    expect(b[0]!.compte).toBe(`${CHAPITRES.length} chapitres`);
-    expect(b[1]!.compte).toBe(`${SITUATIONS.length} cas pratiques`);
+    // Ce qui est proposé (config/chiffres-du-cours.ts ; garde : chiffres-du-site.test.ts).
+    expect(b[0]!.compte).toBe(`${CHAPITRES_PROPOSES.length} chapitres`);
+    expect(b[1]!.compte).toBe(`${SITUATIONS_PROPOSEES.length} cas pratiques`);
     expect(b[2]!.compte).toBe(`${ATELIERS.length} ateliers prêts à animer`);
     expect(b[3]!.compte).toBe(`${NOMBRE_D_EPISODES} épisodes`);
     for (const x of b) expect(x.texte, x.code).not.toMatch(/[\wÀ-ÿ] [—–] [\wÀ-ÿ]/);

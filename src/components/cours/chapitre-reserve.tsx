@@ -53,7 +53,7 @@ export function ChapitreReserve({
       <h1 className="text-3xl font-bold text-slate-50">{titre}</h1>
       <p className="text-base text-slate-300">
         {reserve} aux établissements sous licence : le contenu s&apos;ouvre aux enseignants de
-        l&apos;établissement, et à leurs élèves par leur classe. Le premier chapitre du cours et son cas pratique, eux, sont libres.
+        l&apos;établissement, et à leurs élèves par leur classe. Le chapitre libre du cours et son cas pratique, eux, s&apos;ouvrent sans compte.
         Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, une classe ouvre les chapitres de son parcours ; avec
         l&apos;offre {OFFRES.campus.nom}, tous les chapitres sont ouverts.
       </p>

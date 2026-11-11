@@ -10,7 +10,8 @@ import { reponseSansIndice } from "./gardes-de-l-ue10";
  *
  * Refait à la main : la seconde ligne, 60 000 € = 45 000 € de structure sur 6 ans + 15 000 € de
  * moteurs sur 3 ans, en service le 2 janvier N + 1, soit 359 jours sur 360 la première année ; le
- * dégressif fiscal de la structure, 1,75 ÷ 6 = 29,1667 %, sur 12 mois.
+ * dégressif fiscal de la structure, 1,75 ÷ 6, affiché 29,17 %, sur 12 mois : le plan part du taux
+ * affiché, comme l'élève (audit du 10 novembre 2026 : 13 125 € attendus pour 45 000 € × 29,17 %).
  */
 
 const r2 = (x: number) => Math.round(x * 100) / 100;
@@ -42,16 +43,16 @@ describe("les composants", () => {
     expect(juste(CH, "pourquoi-un-composant")).toEqual(["Leur durée d'utilisation diffère de celle de la ligne"]);
   });
 
-  it("le dérogatoire de N + 1 : 45 000 × 1,75 ÷ 6 = 13 125 €, moins 7 479,17 € = 5 645,83 €", () => {
-    expect(attendus(CH, "le-derogatoire")).toEqual([13_125, r2(13_125 - 7_479.17)]);
-    expect(attendus(CH, "le-derogatoire")[1]).toBe(5_645.83);
+  it("le dérogatoire de N + 1 : 45 000 × 29,17 % = 13 126,50 €, moins 7 479,17 € = 5 647,33 €", () => {
+    expect(attendus(CH, "le-derogatoire")).toEqual([r2(45_000 * 0.2917), r2(13_126.5 - 7_479.17)]);
+    expect(attendus(CH, "le-derogatoire")).toEqual([13_126.5, 5_647.33]);
   });
 
-  it("le curseur : le dérogatoire se reprend dès l'année 3, où le dégressif (6 585,29 €) passe sous le linéaire", () => {
-    // Année 2 : (45 000 − 13 125) × 29,1667 % = 9 296,88 € ; année 3 : (31 875 − 9 296,88) × 29,1667 % = 6 585,29 €.
-    const a2 = r2((45_000 - 13_125) * (1.75 / 6));
-    const a3 = r2((45_000 - 13_125 - a2) * (1.75 / 6));
-    expect([a2, a3]).toEqual([9_296.88, 6_585.29]);
+  it("le curseur : le dérogatoire se reprend dès l'année 3, où le dégressif (6 585,42 €) passe sous le linéaire", () => {
+    // Année 2 : (45 000 − 13 126,50) × 29,17 % = 9 297,50 € ; année 3 : (31 873,50 − 9 297,50) × 29,17 % = 6 585,42 €.
+    const a2 = r2((45_000 - 13_126.5) * 0.2917);
+    const a3 = r2((45_000 - 13_126.5 - a2) * 0.2917);
+    expect([a2, a3]).toEqual([9_297.5, 6_585.42]);
     expect(a2 > 7_500 && a3 < 7_500).toBe(true);
     gardeDuCurseur(CH, "la-premiere-reprise", 3);
   });

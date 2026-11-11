@@ -439,7 +439,7 @@ describe("le fournisseur allonge son délai : 60 jours face à AsiaComponents", 
 
   it("la contre-offre, refaite à la main : 30 jours de plus, le maximum permis", () => {
     casDedie(s, CHOISIR_SON_FOURNISSEUR);
-    expect(s.commanditaire).toBe("La dirigeante");
+    expect(s.commanditaire).toBe("Le président");
     expect(JOURS_DE_DELAI_EN_PLUS).toBe(30);
     expect(30 + JOURS_DE_DELAI_EN_PLUS).toBe(60);
     expect(attendus(s, "le-credit-en-plus")).toEqual({

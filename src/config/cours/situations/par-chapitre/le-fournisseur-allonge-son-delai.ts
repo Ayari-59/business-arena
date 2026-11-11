@@ -13,7 +13,7 @@ import type { Situation } from "../types";
  *
  * NOVA a dit à Électro-Composants Lyon, son fournisseur habituel, qu'elle pensait passer chez
  * AsiaComponents, 10 % moins cher. Pour la garder, il ne baisse pas ses prix : il lui laisse 30 jours
- * de plus pour payer, 60 au lieu de 30, le maximum que la loi permet. La dirigeante veut savoir ce que
+ * de plus pour payer, 60 au lieu de 30, le maximum que la loi permet. Le président veut savoir ce que
  * vaut cette contre-offre face à AsiaComponents, et laquelle signer.
  *
  * L'élève chiffre le crédit en plus (HT et TTC, et le découvert qu'il évite), croise résultat et
@@ -85,7 +85,7 @@ export const LE_FOURNISSEUR_ALLONGE_SON_DELAI: Situation = {
   palier: 2,
   blocs: [],
   reprend: ["choisir-son-fournisseur"],
-  commanditaire: "La dirigeante",
+  commanditaire: "Le président",
   titre: "Le fournisseur allonge son délai",
   accroche:
     "Pour garder son client, le fournisseur habituel ne baisse pas ses prix : il laisse 30 jours de plus pour payer. Ce que vaut la contre-offre face à l'offre la moins chère, en résultat et en trésorerie, et ce que l'entreprise peut porter.",
@@ -93,7 +93,7 @@ export const LE_FOURNISSEUR_ALLONGE_SON_DELAI: Situation = {
     "Calculer le crédit qu'un délai allongé laisse au bilan, hors taxes et toutes taxes comprises",
     "Croiser l'écart de résultat et l'écart de trésorerie de deux offres",
     "Financer un besoin de trésorerie et le confronter à ce que l'entreprise peut porter",
-    "Répondre à la dirigeante, chiffres à l'appui",
+    "Répondre au président, chiffres à l'appui",
   ],
   libre: false,
   entreprises: {
@@ -273,7 +273,7 @@ export const LE_FOURNISSEUR_ALLONGE_SON_DELAI: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la dirigeante",
+      titre: "Votre réponse au président",
       notions: ["payment_terms", "net_treasury"],
       question: () => "Quelle offre recommandez-vous de signer pour l'année ?",
       options: (c) => {

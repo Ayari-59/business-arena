@@ -7,7 +7,8 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/db", () => ({ db: {} }));
 
 import { CHAPITRES } from "@/config/cours/registre";
-import { SITUATIONS } from "@/config/cours/situations";
+import { SITUATIONS_PROPOSEES } from "@/config/chiffres-du-cours";
+import { CHAPITRES_PROPOSES } from "@/config/formations-proposees";
 import { FORMATIONS } from "@/config/formations";
 import { formationsAvecUnePage } from "@/config/couverture";
 import { ATELIERS } from "@/config/ateliers";
@@ -47,9 +48,11 @@ const texte = (html: string) =>
 describe("1. le cours sur les pages des publics", () => {
   it("les nombres du cours viennent des registres", () => {
     const n = leCoursEnChiffres();
-    expect(n.chapitres).toBe(CHAPITRES.length);
-    expect(n.casPratiques).toBe(SITUATIONS.length);
-    expect(n.avecLaboratoire).toBe(CHAPITRES.filter((c) => c.etapes.some((e) => e.type === "simulation")).length);
+    // Ce qui est proposé, pas le registre entier (audit du 10 novembre 2026, garde :
+    // tests/architecture/chiffres-du-site.test.ts).
+    expect(n.chapitres).toBe(CHAPITRES_PROPOSES.length);
+    expect(n.casPratiques).toBe(SITUATIONS_PROPOSEES.length);
+    expect(n.avecLaboratoire).toBe(CHAPITRES_PROPOSES.filter((c) => c.etapes.some((e) => e.type === "simulation")).length);
     expect(n.formations).toBeGreaterThan(0);
     expect(n.formations).toBeLessThanOrEqual(FORMATIONS.length);
     expect(n.libre.href).toBe(`/cours/${CHAPITRES.find((c) => c.libre)!.code}`);
@@ -243,7 +246,9 @@ describe("5. l'offre Classe dit ce qu'ouvre chaque combinaison", () => {
     const [e, n] = avec.split(":") as [string, string];
     expect(rendu(avec)).toContain(ateliersDeLaClasse(e, Number(n)).exacts[0]!.titre);
     expect(rendu(sans)).toContain("Aucun atelier clé en main n'est écrit pour cette entreprise à ce niveau");
-    expect(rendu(sans)).toContain("le cours entier et les parties de l'arène");
+    // « Le parcours de la classe », pas « le cours entier » : l'offre Classe ouvre un parcours (10 novembre 2026).
+    expect(rendu(sans)).toContain("le cours, sur le parcours de la classe, et les parties de l'arène");
+    expect(rendu(sans)).not.toContain("le cours entier");
     expect(lire("app/devis/page.tsx")).toMatch(/ateliers=\{ateliersParCombinaison\(\)\}/);
   });
 });

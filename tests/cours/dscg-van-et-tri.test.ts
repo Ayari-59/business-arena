@@ -741,7 +741,7 @@ describe("le cas « Acheter les deux machines » : le rationnement sous un budge
 
   it("tient ce qu'un cas dédié doit tenir", () => {
     casDedie(s, LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS);
-    expect(s.commanditaire).toBe("La directrice générale");
+    expect(s.commanditaire).toBe("Le président");
     expect(BUDGET_DU_CAS).toBe(210_000);
   });
 

@@ -15,7 +15,7 @@ import {
   parcoursQuiOuvrent,
 } from "@/config/cours/parcours-de-formation";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
-import { coursDuDiplome, rechercherChapitres, type ChapitreDuDiplome } from "@/config/cours/par-diplome";
+import { coursDuDiplome, couvertureDuCoursEnClair, rechercherChapitres, type ChapitreDuDiplome } from "@/config/cours/par-diplome";
 import { LIBELLE_POUR_ALLER_PLUS_LOIN } from "@/config/cours/pour-aller-plus-loin";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { CHAPITRES_PROPOSES, PARCOURS_PROPOSES, chapitrePropose } from "@/config/formations-proposees";
@@ -70,8 +70,8 @@ const CHAPITRES_PAR_DIPLOME = new Map(
  * liens `/cours#theme-…` des fins de chapitre l'ouvrent toujours ; une recherche par
  * mot-clé (`?q=`) le complète. Aucune adresse ne change.
  *
- * Le premier chapitre est libre ; la suite est réservée aux établissements sous
- * licence.
+ * Un chapitre est libre (`libre`, pas le premier du catalogue) ; la suite est réservée
+ * aux établissements sous licence.
  */
 async function CoursPage({
   searchParams,
@@ -261,14 +261,14 @@ async function CoursPage({
                 <h2 id="programme-titre" className="text-2xl font-bold text-slate-50">
                   {programme.formation.nom}
                 </h2>
+                {/* Ce que le cours couvre, matière par matière, comme les blocs ci-dessous le marquent ;
+                    la couverture de l'arène reste au tableau de /parcours (audit du 10 novembre 2026). */}
                 <p className="text-sm text-slate-300" data-couverture-du-programme="">
-                  {programme.couverture.lu
-                    ? `${programme.couverture.travaillees} entrées sur ${programme.couverture.total} du référentiel travaillées par l'arène${
-                        programme.couverture.horsDuChamp > 0
-                          ? `, ${programme.couverture.horsDuChamp} hors du champ de la gestion`
-                          : ""
-                      }. `
-                    : "Le référentiel de ce diplôme n'a pas encore été confronté à son texte. "}
+                  {programme.couverture.lu ? "" : "Le référentiel de ce diplôme n'a pas encore été confronté à son texte. "}
+                  {couvertureDuCoursEnClair(parcours)}
+                  {programme.couverture.horsDuChamp > 0
+                    ? ` ${programme.couverture.horsDuChamp} ${programme.couverture.horsDuChamp > 1 ? "entrées du référentiel sont" : "entrée du référentiel est"} hors du champ de la gestion.`
+                    : ""}{" "}
                   <Link
                     href={`/parcours/${programme.formation.code}`}
                     className="text-amber-300 underline-offset-4 hover:underline"
@@ -387,12 +387,12 @@ async function CoursPage({
             </p>
           ) : null}
 
-          {/* LE PREMIER CHAPITRE, EN BANDEAU : libre, pour essayer. Le choix de l'entreprise
+          {/* LE CHAPITRE LIBRE, EN BANDEAU : pour essayer (il n'est pas le premier du catalogue). Le choix de l'entreprise
               se replie. */}
           <section aria-labelledby="pilote" className="carte grid gap-4 p-5 sm:p-6">
             <div className="grid gap-1">
               <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-                Pour essayer · premier chapitre · libre d&apos;accès · {dureeEnClair(dureeDuChapitre(pilote))}
+                Pour essayer · chapitre libre d&apos;accès · {dureeEnClair(dureeDuChapitre(pilote))}
               </p>
               <h2 id="pilote" className="text-2xl font-bold text-slate-50">
                 {pilote.titre}
@@ -452,7 +452,7 @@ async function CoursPage({
               </h2>
               <p className="max-w-3xl text-base text-slate-300">
                 {CHAPITRES_PROPOSES.length} chapitres en {THEMES.length} thèmes, du bac STMG au DSCG, et, dans l&apos;enseignement supérieur, des
-                épisodes à jouer en situation. Chaque chapitre dit son palier, sa durée indicative et son accès : le premier est libre, avec son
+                épisodes à jouer en situation. Chaque chapitre dit son palier, sa durée indicative et son accès : un chapitre est libre, avec son
                 cas pratique, la suite est réservée aux établissements sous licence.
               </p>
             </div>

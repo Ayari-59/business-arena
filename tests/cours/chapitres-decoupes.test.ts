@@ -197,10 +197,15 @@ describe("les cas dédiés des suites, refaits à la main", () => {
     expect(juste(LA_PRIME_DU_CHEF_D_ATELIER)).toBe("Pas sur ce seul écart : sa part est de −8 500 €");
   });
 
-  it("le concurrent solde à 57 € : le prix d'achat qui garde 54,5 % de marque", () => {
+  it("le concurrent solde à 57 € : le prix d'achat qui garde 54,55 % de marque", () => {
     gardeDuCas(LE_CONCURRENT_SOLDE, chapitre("s-aligner-sur-le-concurrent"));
     const ht = c(57 / 1.2);
-    const achat = c(ht * (1 - 30 / 55));
+    // Le taux de marque, 30 ÷ 55, s'affiche à deux décimales, et le prix d'achat part de lui, comme
+    // sur la copie (audit du 10 novembre 2026 : « 47,50 € × (1 − 54,5 %) = 21,59 € », faux, 21,61 €).
+    const achat = c(ht * (1 - c((30 / 55) * 100) / 100));
+    const t = textes(LE_CONCURRENT_SOLDE).replace(/[\u00a0\u202f]/g, " ");
+    expect(t).toContain("47,50 € × (1 − 54,55 %) = 21,59 €");
+    expect(t).not.toMatch(/54,5 %/);
     expect(attendus(LE_CONCURRENT_SOLDE, "les-chiffres")).toEqual({ "Prix de vente hors taxes": ht, "Prix d'achat qui garde le taux de marque": achat, "Marge commerciale d'un article": c(ht - achat) });
     expect([ht, achat, c(ht - achat)]).toEqual([47.5, 21.59, 25.91]);
     expect(concurrentSolde().baisseDuPrixDAchat).toBe(c(25 - 21.59));

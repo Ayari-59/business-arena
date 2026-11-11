@@ -769,8 +769,11 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
   const s = ALLER_DANS_L_ESPACE_LIBRE;
   const aSeul = attr(69, 1);
   const aAvec = attr(69, 1.28);
-  const VS = ventesDe(aSeul);
-  const VA = ventesDe(aAvec);
+  // Les ventes partent de la part écrite à deux décimales, comme sur la copie (audit du 10 novembre
+  // 2026) : 19,24 % × 15 502 = 2 982,58, soit 2 983 par trimestre ; 28,07 % × 15 502 = 4 351,41, soit 4 351.
+  const surLaPart = (a: number) => Math.round(centime((centime((a / (a + A_SB + A_AU)) * 100) * 15_502) / 100)) * 4;
+  const VS = surLaPart(aSeul);
+  const VA = surLaPart(aAvec);
   const RS = VS * (69 - 38) - CHARGES;
   const RA = VA * (69 - 43) - CHARGES;
 
@@ -796,14 +799,16 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
       "Résultat par le seul prix": RS,
       "Écart avec aujourd'hui, par le seul prix": RS - R_MILIEU,
     });
-    expect([centime((aSeul / (aSeul + A_SB + A_AU)) * 100), VS, RS, RS - R_MILIEU]).toEqual([19.24, 11_928, -20_428, -31_584]);
+    expect([centime((aSeul / (aSeul + A_SB + A_AU)) * 100), VS, RS, RS - R_MILIEU]).toEqual([19.24, 11_932, -20_304, -31_460]);
+    // Le modèle du marché, sur la part exacte, vendait 2 982 puis 4 352 par trimestre : la réponse tirée de la part affichée était refusée.
+    expect([ventesDe(aSeul), ventesDe(aAvec)]).toEqual([11_928, 17_408]);
     expect(attendus(s, "avec-la-qualite")).toEqual({
       "Part de marché avec la qualité, chaque trimestre (%)": centime((aAvec / (aAvec + A_SB + A_AU)) * 100),
       "Ventes de l'année avec la qualité": VA,
       "Résultat avec la qualité": RA,
       "Écart avec aujourd'hui, avec la qualité": RA - R_MILIEU,
     });
-    expect([centime((aAvec / (aAvec + A_SB + A_AU)) * 100), VA, RA, RA - R_MILIEU]).toEqual([28.07, 17_408, 62_412, 51_256]);
+    expect([centime((aAvec / (aAvec + A_SB + A_AU)) * 100), VA, RA, RA - R_MILIEU]).toEqual([28.07, 17_404, 62_308, 51_152]);
     // La gamme la moins chère qui atteint 1,17 au budget d'aujourd'hui : la soignée (1,28), pas l'actuelle (1,00).
     expect(espaceLibre(cas).gamme.code).toBe("soignee");
     // À la place, la gamme soignée sans budget en plus fait mieux que la différenciation du chapitre.
@@ -818,7 +823,7 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
       "Effet du coût de la gamme": gamme,
       "Écart entre les deux façons d'y aller": RA - RS,
     });
-    expect([volume, gamme, RA - RS]).toEqual([142_480, -59_640, 82_840]);
+    expect([volume, gamme, RA - RS]).toEqual([142_272, -59_660, 82_612]);
     expect(volume + gamme).toBe(RA - RS);
   });
 
@@ -836,10 +841,10 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
         "Écart avec aujourd'hui": 26 * q - CHARGES - R_MILIEU,
       },
     });
-    // Par le seul prix, il faudrait (11 156 + 390 196) ÷ 31 ventes, et il n'en vient que 11 928.
+    // Par le seul prix, il faudrait (11 156 + 390 196) ÷ 31 ventes, et il n'en vient que 11 932.
     expect(Math.ceil((11_156 + 390_196) / 31)).toBe(12_947);
     expect(Math.ceil((R_MILIEU + CHARGES) / 31)).toBe(12_947);
-    expect(VS).toBe(11_928);
+    expect(VS).toBe(11_932);
     expect(VS).toBeLessThan(12_947);
   });
 

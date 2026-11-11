@@ -81,8 +81,9 @@ describe("métadonnées communes (layout)", () => {
     expect(source).toContain("LIGNE_DE_PARTAGE");
     expect(source).not.toMatch(/Découverte gratuite/);
     const { LIGNE_DE_PARTAGE } = await import("@/config/seo");
-    const { CHAPITRES } = await import("@/config/cours/registre");
-    expect(LIGNE_DE_PARTAGE).toContain(`${CHAPITRES.length} chapitres de cours`);
+    // Les chapitres proposés, pas le registre entier (audit du 10 novembre 2026).
+    const { CHAPITRES_PROPOSES } = await import("@/config/formations-proposees");
+    expect(LIGNE_DE_PARTAGE).toContain(`${CHAPITRES_PROPOSES.length} chapitres de cours`);
     const tw = (await import("@/app/twitter-image")) as { size: { width: number } };
     expect(tw.size.width).toBe(1200);
   });
@@ -131,10 +132,10 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     expect(m.description).toContain(
       `${SCENARIO_CHOICES.length} entreprises à piloter et ${NOMBRE_D_EPISODES} épisodes manager`,
     );
-    // Le cours, compté dans ses registres comme le reste.
-    const { CHAPITRES } = await import("@/config/cours/registre");
-    const { SITUATIONS } = await import("@/config/cours/situations");
-    expect(m.description).toContain(`${CHAPITRES.length} chapitres guidés avec leur laboratoire, ${SITUATIONS.length} cas pratiques`);
+    // Le cours, compté sur ce qui est proposé, et « avec leur laboratoire » pour ceux qui l'ont
+    // (audit du 10 novembre 2026 : 255 chapitres « avec leur laboratoire » pour 202 sur 235).
+    const { CHIFFRES_DU_COURS: n } = await import("@/config/chiffres-du-cours");
+    expect(m.description).toContain(`${n.chapitres} chapitres guidés, dont ${n.avecLaboratoire} avec leur laboratoire, ${n.casPratiques} cas pratiques`);
     expect(m.description).not.toMatch(/situations|modèles d'analyse/);
   });
 

@@ -368,7 +368,7 @@ async function PageDuDiplome({
               </h2>
               <p className="text-sm leading-relaxed text-slate-400">
                 Des chapitres guidés, sur les chiffres d&apos;une entreprise de
-                l&apos;arène. Le premier chapitre du cours est libre ; les
+                l&apos;arène. Un chapitre du cours est libre d&apos;accès ; les
                 autres s&apos;ouvrent aux établissements sous licence.
               </p>
               {cours.map((g) => (

@@ -134,6 +134,33 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
   return { formation, blocs, premier: lignes[0] ?? null };
 }
 
+/**
+ * L'EN-TÊTE DE LA PAGE D'UN DIPLÔME : CE QUE LE COURS COUVRE (audit du 10 novembre 2026,
+ * produit P1-5). Il disait « 7 entrées sur 7 du référentiel travaillées par l'arène », la
+ * couverture de l'arène et du cours réunis, au-dessus de matières marquées « en cours » : la
+ * page qui doit dire ce que le cours couvre disait d'abord « tout est couvert ». Il compte
+ * désormais les matières que les blocs de la page marquent : couvertes en entier
+ * (config/cours/matieres-en-entier.ts) ou en cours, et celles qui n'ont pas encore de
+ * chapitre. La couverture de l'arène reste au tableau de /parcours/…, entrée par entrée.
+ */
+export function couvertureDuCoursEnClair(cours: Pick<CoursDuDiplome, "blocs">): string {
+  const matieres = cours.blocs.filter((b) => b.bloc !== null);
+  const total = matieres.length;
+  const entier = matieres.filter((b) => !b.enCours).length;
+  const enCours = total - entier;
+  const vides = matieres.filter((b) => b.enCours && b.chapitres.length === 0).length;
+  const sansChapitre = vides > 0 ? `${vides} sans chapitre encore` : "";
+  if (total === 0) return "Le cours ne travaille encore aucune matière de ce diplôme.";
+  if (entier === total) return total === 1 ? "Le cours couvre en entier la matière de ce diplôme." : `Le cours couvre en entier les ${total} matières de ce diplôme.`;
+  if (entier === 0) {
+    const debut = total === 1 ? "La matière de ce diplôme n'est pas encore couverte en entier par le cours" : `Aucune des ${total} matières de ce diplôme n'est encore couverte en entier par le cours`;
+    return `${debut}${sansChapitre ? ` ; ${sansChapitre}` : ""}.`;
+  }
+  return `Le cours couvre en entier ${entier} matière${entier > 1 ? "s" : ""} sur ${total} de ce diplôme ; ${enCours} en cours${
+    sansChapitre ? `, dont ${sansChapitre}` : ""
+  }.`;
+}
+
 /** Le texte sans accents ni capitales : « Trésorerie » se trouve en tapant « tresorerie ». */
 export function normaliser(texte: string): string {
   return texte

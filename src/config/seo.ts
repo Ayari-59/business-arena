@@ -10,8 +10,7 @@
 
 import { NOMBRE_D_EPISODES } from "./episodes/familles";
 import { SCENARIO_CHOICES } from "./scenarios/registry";
-import { CHAPITRES } from "./cours/registre";
-import { SITUATIONS } from "./cours/situations";
+import { CHIFFRES_DU_COURS as COURS, laboratoireEnClair } from "./chiffres-du-cours";
 
 export const NOM_DU_SITE = "Business Arena";
 
@@ -28,11 +27,14 @@ export const TITRE_ACCUEIL = "Business Arena · Cours et simulation de gestion, 
  * ceux que l'accueil affiche : un lecteur peut les vérifier sur la page même.
  * Elle annonçait « 139 situations, 20 modèles d'analyse », deux nombres
  * qu'aucune page publique ne permettait de retrouver (audit d'octobre 2026).
+ * Ceux du cours comptent ce qui est proposé (config/chiffres-du-cours.ts) : la description
+ * disait 255 chapitres « avec leur laboratoire » pour 235 proposés, dont 202 en ont un
+ * (audit du 10 novembre 2026).
  */
-export const DESCRIPTION_ACCUEIL = `Cours de gestion et jeu d'entreprise pédagogique, à essayer gratuitement, sans compte élève : ${CHAPITRES.length} chapitres guidés avec leur laboratoire, ${SITUATIONS.length} cas pratiques, ${SCENARIO_CHOICES.length} entreprises à piloter et ${NOMBRE_D_EPISODES} épisodes manager.`;
+export const DESCRIPTION_ACCUEIL = `Cours de gestion et jeu d'entreprise pédagogique, à essayer gratuitement, sans compte élève : ${COURS.chapitres} chapitres guidés, ${laboratoireEnClair(COURS)}, ${COURS.casPratiques} cas pratiques, ${SCENARIO_CHOICES.length} entreprises à piloter et ${NOMBRE_D_EPISODES} épisodes manager.`;
 
 /** La ligne de l'image de partage : les mêmes nombres, comptés dans les mêmes registres. */
-export const LIGNE_DE_PARTAGE = `${CHAPITRES.length} chapitres de cours, ${SITUATIONS.length} cas pratiques, ${SCENARIO_CHOICES.length} entreprises à piloter, ${NOMBRE_D_EPISODES} épisodes manager.`;
+export const LIGNE_DE_PARTAGE = `${COURS.chapitres} chapitres de cours, ${COURS.casPratiques} cas pratiques, ${SCENARIO_CHOICES.length} entreprises à piloter, ${NOMBRE_D_EPISODES} épisodes manager.`;
 
 /**
  * L'APERÇU DE PARTAGE COMMUN, SANS ADRESSE. Le gabarit portait l'adresse de

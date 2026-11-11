@@ -64,7 +64,10 @@ import { GET as connexionGet } from "@/app/api/saml/connexion/route";
 import { POST as acsPost } from "@/app/api/saml/acs/route";
 import { joinGameAction } from "@/app/join/actions";
 import { rejoindreParCodeAction } from "@/app/etablissement/parties/actions";
-import { lireConfiguration, type ConfigurationSaml } from "@/saml/configuration";
+import { connexionEtablissementProposee, lireConfiguration, type ConfigurationSaml } from "@/saml/configuration";
+import { ConnexionEtablissement } from "@/components/connexion-etablissement";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { COOKIE_REQUETE } from "@/saml/constantes";
 import { lireAgregat, rafraichirFederation } from "@/saml/federation";
 import { rattacher, rattachementDe } from "@/saml/etablissements";
@@ -326,6 +329,31 @@ describe("configuration", () => {
     const p = lireConfiguration({ ...process.env, SAML_FEDERATION: "production", SAML_FEDERATION_METADATA_URL: "", SAML_WAYF_URL: "" });
     expect(p.pret && p.configuration.urlWayf).toBe("https://discovery.renater.fr/renater/WAYF");
     expect(p.pret && p.configuration.urlAgregat).toMatch(/^https:\/\/.*renater.*main-idps/);
+  });
+
+  /**
+   * LE BOUTON SE TAIT SUR LA FÉDÉRATION DE TEST (audit du 10 novembre 2026, production P1-2) :
+   * « Se connecter avec mon établissement » menait, sur /join et /teacher/login, au service de
+   * découverte de la fédération de TEST de RENATER, où l'établissement réel d'un étudiant n'est
+   * pas. Il ne paraît qu'avec SAML_FEDERATION=production ; les routes SAML restent en place.
+   */
+  it("le bouton ne paraît que sur la fédération de production ; les routes restent", async () => {
+    const bouton = () => renderToStaticMarkup(createElement(ConnexionEtablissement, { retour: "/join" }));
+    expect(c.federation).toBe("test");
+    expect(connexionEtablissementProposee()).toBe(false);
+    expect(bouton()).toBe("");
+    // La route de départ répond toujours (les tests de la connexion, plus bas, la suivent jusqu'au bout).
+    expect((await connexionGet(new Request(`${SITE}/api/saml/connexion`))).status).toBe(302);
+    expect(metadataGet().status).toBe(200);
+    process.env.SAML_FEDERATION = "production";
+    try {
+      expect(connexionEtablissementProposee()).toBe(true);
+      expect(bouton()).toContain("Se connecter avec mon établissement");
+      expect(bouton()).toContain('href="/api/saml/connexion?retour=%2Fjoin"');
+    } finally {
+      delete process.env.SAML_FEDERATION;
+    }
+    expect(connexionEtablissementProposee()).toBe(false);
   });
 });
 

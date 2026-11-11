@@ -59,4 +59,25 @@ describe("les conditions générales", () => {
       expect(source, p).toContain('href="/cgu"');
     }
   });
+
+  /**
+   * LES DONNÉES DES ÉLÈVES, DITES COMME LES MENTIONS LÉGALES (audit du 10 novembre 2026, code
+   * P1-3). Les CGV disaient « sans nom ni adresse électronique », alors que l'examen enregistre
+   * le nom et le numéro d'étudiant (db/schema/examens.ts) et la classe du cours le nom de
+   * l'élève (db/schema/cours.ts) : le contrat promettait moins que ce que le service traite.
+   */
+  it("disent quand le nom d'un élève est enregistré, comme les mentions légales", () => {
+    const mentions = lire("src/app/mentions-legales/page.tsx");
+    // Les mentions le disent : c'est la référence.
+    expect(mentions).toMatch(/Nom et numéro d&apos;étudiant/);
+    expect(mentions).toMatch(/Nom donné en rejoignant la classe/);
+    const textes = { cgv: lire("src/app/cgv/page.tsx"), tarifs: lire("src/config/tarifs.ts") };
+    for (const [nom, t] of Object.entries(textes)) {
+      const plat = t.replace(/&apos;/g, "'").replace(/\s+/g, " ");
+      expect(plat, nom).not.toMatch(/sans nom ni adresse/);
+      expect(plat, nom).toMatch(/sans compte ni adresse électronique/);
+      expect(plat, nom).toMatch(/examen[^.]*nom et (le )?numéro d'étudiant|nom et (le )?numéro d'étudiant[^.]*examen/i);
+      expect(plat, nom).toMatch(/nom[^.]*classe du cours|classe du cours[^.]*nom/i);
+    }
+  });
 });

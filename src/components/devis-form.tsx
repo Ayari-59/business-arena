@@ -298,7 +298,7 @@ export function DevisForm({
         // d'une combinaison sur deux n'en a aucun, et la carte de l'offre ne le disait pas.
         <p className="encadre-neutre rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-200 sm:col-span-2" data-ateliers-du-choix="" aria-live="polite">
           {combinaison.exacts.length + combinaison.adaptables.length === 0
-            ? "Aucun atelier clé en main n'est écrit pour cette entreprise à ce niveau, ni à un niveau près. L'offre comprend alors le cours entier et les parties de l'arène à ce niveau, sans atelier : choisissez un autre niveau ou une autre entreprise pour en avoir un."
+            ? "Aucun atelier clé en main n'est écrit pour cette entreprise à ce niveau, ni à un niveau près. L'offre comprend alors le cours, sur le parcours de la classe, et les parties de l'arène à ce niveau, sans atelier : choisissez un autre niveau ou une autre entreprise pour en avoir un."
             : [
                 combinaison.exacts.length
                   ? `Ateliers clés en main écrits pour ce choix : ${combinaison.exacts.map((a) => a.titre).join(", ")}.`

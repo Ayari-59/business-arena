@@ -8,7 +8,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « L'ANALYSE DES ÉCARTS : DU RÉSULTAT PRÉVU AU RÉSULTAT RÉEL » : LE
  * RÉSULTAT QUI MANQUE (contrôle de gestion, palier 4).
  *
- * La directrice générale de NOVA présente les comptes du trimestre au conseil : il manque 47 100 €
+ * Le président de NOVA présente les comptes du trimestre au conseil : il manque 47 100 €
  * au résultat. Le directeur commercial accuse l'usine (« le chiffre d'affaires tient son budget à
  * 400 € près, l'usine a dépassé le sien de 42 700 € ») ; la directrice de l'usine accuse les
  * ventes (« nous avons fabriqué plus de Salon, qui coûtent plus cher : le dépassement vient des
@@ -128,10 +128,10 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["analyse-des-ecarts"],
-  commanditaire: "La directrice générale",
+  commanditaire: "Le président",
   titre: "Le résultat qui manque",
   accroche:
-    "Il manque un gros morceau du résultat du trimestre. Les commerciaux accusent l'usine, l'usine accuse les commerciaux. La directrice générale doit dire au conseil ce qui revient à chacun.",
+    "Il manque un gros morceau du résultat du trimestre. Les commerciaux accusent l'usine, l'usine accuse les commerciaux. Le président doit dire au conseil ce qui revient à chacun.",
   objectifs: [
     "Juger l'usine au coût préétabli de la production réelle, et non au budget de départ",
     "Mesurer l'effet des ventes sur le résultat, le volume à la marge préétablie",

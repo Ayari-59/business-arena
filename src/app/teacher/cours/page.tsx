@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
-import { classesDeLEnseignant, NOM_DE_CLASSE_MAX } from "@/services/cours.service";
+import { classesDeLEnseignant, NOM_DE_CLASSE_MAX, parcoursImposeALEnseignant } from "@/services/cours.service";
 import { compter, jourDeCreation } from "@/lib/format";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -16,7 +16,7 @@ import { CHAPITRES } from "@/config/cours/registre";
 import { parcoursAttribues } from "@/services/attributions.service";
 import { parcoursAttribue } from "@/services/chapitres-de-la-classe";
 import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
-import { classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
+import { classeSansOffre, offreDuCoursDeLEnseignant, unParcoursParLicenceClasse } from "@/services/chapitres-de-la-classe";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { creerClasseAction } from "./actions";
@@ -30,6 +30,7 @@ export const dynamic = "force-dynamic";
 
 const REFUS: Record<string, string> = {
   nom: "Donnez un nom à la classe, par exemple « BTS CG 1 · groupe A ».",
+  parcours: `Avec l'offre ${OFFRES.classe.nom}, une nouvelle classe suit le parcours de vos autres classes : choisissez-le dans la liste.`,
   introuvable: "Cette classe n'existe pas, ou elle n'est pas l'une des vôtres.",
 };
 
@@ -44,14 +45,16 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
   const { refus } = await searchParams;
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
-  const [classes, staff, offre, attribues] = await Promise.all([
+  const [classes, staff, offre, attribues, impose] = await Promise.all([
     classesDeLEnseignant(session.userId),
     getStaffContext(session.userId),
     offreDuCoursDeLEnseignant(session.userId),
     parcoursAttribues(session.userId),
+    parcoursImposeALEnseignant(session.userId),
   ]);
   // Les parcours que l'admin a attribués (migration 0056) : sans liste, tous ceux qu'on propose.
-  const aChoisir = PARCOURS_PROPOSES_A_CHOISIR.filter((p) => parcoursAttribue(attribues, p.code));
+  // Sous l'offre Classe, le seul parcours de la licence quand il est fixé (décision du 10 novembre 2026).
+  const aChoisir = PARCOURS_PROPOSES_A_CHOISIR.filter((p) => (impose ? p.code === impose : parcoursAttribue(attribues, p.code)));
   const libre = CHAPITRES.find((c) => c.libre);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const raison = refus && Object.hasOwn(REFUS, refus) ? REFUS[refus] : null;
@@ -117,7 +120,14 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
                   (services/cours.service.ts, coursOuvert). */}
               <label className="grid gap-1">
                 <span className="text-sm font-semibold text-slate-200">Parcours du cours</span>
-                <select name="parcours" required defaultValue="" className="champ w-full px-3 py-2 text-base" data-parcours-de-la-classe="">
+                <select
+                  name="parcours"
+                  required
+                  defaultValue={impose ?? ""}
+                  className="champ w-full px-3 py-2 text-base"
+                  data-parcours-de-la-classe=""
+                  aria-describedby="parcours-de-la-classe-aide"
+                >
                   <option value="" disabled>
                     Choisir un parcours
                   </option>
@@ -129,9 +139,20 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
                     </option>
                   ))}
                 </select>
-                <span className="text-sm text-slate-400">
-                  Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, la classe ouvre les chapitres de ce parcours ; avec
-                  l&apos;offre {OFFRES.campus.nom}, tous les chapitres.
+                <span id="parcours-de-la-classe-aide" className="text-sm text-slate-400">
+                  {offre === "classe" ? (
+                    <span data-un-parcours-par-licence="">
+                      {unParcoursParLicenceClasse(
+                        { classe: OFFRES.classe.nom, programme: OFFRES.programme.nom, campus: OFFRES.campus.nom },
+                        impose ? (titreDuParcours(impose) ?? impose) : null,
+                      )}
+                    </span>
+                  ) : (
+                    <>
+                      Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, la classe ouvre les chapitres de ce parcours ; avec
+                      l&apos;offre {OFFRES.campus.nom}, tous les chapitres.
+                    </>
+                  )}
                 </span>
               </label>
               <label className="grid gap-1">
