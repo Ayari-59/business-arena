@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte as entier, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import {
   ENTREPRISES_DE_LA_SAISON,
@@ -27,14 +27,17 @@ import type { Situation } from "../types";
  * chambre disponible ; puis, à rebours, ce que la hausse peut perdre en gardant ce revenu, ce qu'elle
  * peut perdre en gardant le résultat, et ce qu'elle perd. Pour une hausse, le résultat tolère plus de
  * nuitées perdues que le revenu par chambre : chaque nuitée perdue n'emporte que sa marge.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation se donne à deux décimales, à un centième
+ * près (au dixième, avant) ; la demande moyenne et le coefficient saisonnier sont des grandeurs, au
+ * centième ; l'écart de résultat au centime, à un centime près ; les nuitées sont des quantités : le
+ * corrigé écrit le quotient à deux décimales, puis l'arrondit à l'unité au-dessus, et dit pourquoi (à
+ * une nuitée près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
+const qte = nombreAuCentieme;
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -53,10 +56,13 @@ export function plusCherAuPlusFort(c: Pick<Cas, "code">) {
   // À rebours : les nuitées que le trimestre relevé doit vendre pour garder son revenu par chambre
   // disponible, puis sa marge sur coûts variables, et ce que la hausse peut donc perdre de l'un et de l'autre.
   const f = ficheDe(c);
-  const pourLeRevpar = Math.ceil(avant.chiffreDAffaires / apres.prix - 1e-9);
+  // Les quotients à deux décimales, puis à l'unité au-dessus : une nuitée de moins ne garderait pas le seuil.
+  const pourLeRevparCalcule = auCentime(avant.chiffreDAffaires / apres.prix);
+  const pourLeRevpar = Math.ceil(pourLeRevparCalcule - 1e-9);
   const margeAvant = auCentime((avant.prix - f.coutVariableParNuitee) * avant.vendues);
   const margeParNuitee = auCentime(apres.prix - f.coutVariableParNuitee);
-  const pourLaMarge = Math.ceil(margeAvant / margeParNuitee - 1e-9);
+  const pourLaMargeCalcule = auCentime(margeAvant / margeParNuitee);
+  const pourLaMarge = Math.ceil(pourLaMargeCalcule - 1e-9);
   return {
     f,
     m,
@@ -65,16 +71,18 @@ export function plusCherAuPlusFort(c: Pick<Cas, "code">) {
     releve,
     avant,
     apres,
-    occupationAvant: auDixieme((avant.vendues / avant.offertes) * 100),
-    occupationApres: auDixieme((apres.vendues / apres.offertes) * 100),
+    occupationAvant: taux2(avant.vendues, avant.offertes),
+    occupationApres: taux2(apres.vendues, apres.offertes),
     revparAvant: auCentime(avant.chiffreDAffaires / avant.offertes),
     revparApres: auCentime(apres.chiffreDAffaires / apres.offertes),
     refuses: avant.refusees,
     ecart,
     verdict,
+    pourLeRevparCalcule,
     pourLeRevpar,
     margeAvant,
     margeParNuitee,
+    pourLaMargeCalcule,
     pourLaMarge,
     perdablesPourLeRevpar: avant.vendues - pourLeRevpar,
     perdablesPourLaMarge: avant.vendues - pourLaMarge,
@@ -175,22 +183,22 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
       notions: ["seasonality"],
       question: (c) => {
         const x = plusCherAuPlusFort(c);
-        return `À partir de la dernière ligne du tableau, calculez la demande moyenne d'un trimestre, puis le coefficient saisonnier du ${rang(x.k)} trimestre, au centième.`;
+        return `À partir de la dernière ligne du tableau, calculez la demande moyenne d'un trimestre, puis le coefficient saisonnier du ${rang(x.k)} trimestre, l'un et l'autre au centième.`;
       },
       champs: (c) => {
         const x = plusCherAuPlusFort(c);
         return [
           {
             libelle: "Demande moyenne d'un trimestre",
+            nature: "grandeur",
             attendu: x.m.moyenne,
             calcul: `(${x.m.totaux.map(qte).join(" + ")}) ÷ ${qte(x.m.n)} = ${qte(x.m.moyenne)}`,
-            tolerance: 1,
           },
           {
             libelle: `Coefficient du ${rang(x.k)} trimestre`,
+            nature: "grandeur",
             attendu: x.m.coefficients[x.k - 1]!,
             calcul: `${qte(x.m.totaux[x.k - 1]!)} ÷ ${qte(x.m.moyenne)} = ${qte(x.m.coefficients[x.k - 1]!)}`,
-            tolerance: 0.01,
           },
         ];
       },
@@ -207,7 +215,7 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
       tableau: tableauDuTrimestre,
       question: (c) => {
         const x = plusCherAuPlusFort(c);
-        return `Calculez le taux d'occupation du ${rang(x.k)} trimestre (nuitées vendues ÷ nuitées offertes × 100, au dixième) et son revenu par chambre disponible (chiffre d'affaires ÷ nuitées offertes, au centime), au prix unique puis au prix relevé.`;
+        return `Calculez le taux d'occupation du ${rang(x.k)} trimestre (nuitées vendues ÷ nuitées offertes × 100, à deux décimales) et son revenu par chambre disponible (chiffre d'affaires ÷ nuitées offertes, au centime), au prix unique puis au prix relevé.`;
       },
       champs: (c) => {
         const x = plusCherAuPlusFort(c);
@@ -216,13 +224,11 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
             libelle: "Taux d'occupation au prix unique (%)",
             attendu: x.occupationAvant,
             calcul: `${qte(x.avant.vendues)} ÷ ${qte(x.avant.offertes)} × 100 = ${pct(x.occupationAvant)}`,
-            tolerance: 0.1,
           },
           {
             libelle: "Taux d'occupation au prix relevé (%)",
             attendu: x.occupationApres,
             calcul: `${qte(x.apres.vendues)} ÷ ${qte(x.apres.offertes)} × 100 = ${pct(x.occupationApres)}`,
-            tolerance: 0.1,
           },
           {
             libelle: "Revenu par chambre disponible au prix unique",
@@ -308,18 +314,19 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
         return [
           {
             libelle: "Nuitées que la hausse peut perdre, revenu par chambre gardé",
+            nature: "quantite",
             attendu: x.perdablesPourLeRevpar,
-            calcul: `${qte(x.avant.vendues)} − ${eur(x.avant.chiffreDAffaires)} ÷ ${eur(x.apres.prix)} = ${qte(x.avant.vendues)} − ${qte(x.pourLeRevpar)} = ${qte(x.perdablesPourLeRevpar)}`,
-            tolerance: 1,
+            calcul: `${eur(x.avant.chiffreDAffaires)} ÷ ${eur(x.apres.prix)} = ${qte(x.pourLeRevparCalcule)}, soit ${entier(x.pourLeRevpar)} nuitées à garder, à l'unité au-dessus : une de moins ne garderait pas le revenu par chambre ; ${qte(x.avant.vendues)} − ${qte(x.pourLeRevpar)} = ${qte(x.perdablesPourLeRevpar)}`,
           },
           {
             libelle: "Nuitées que la hausse peut perdre, marge gardée",
+            nature: "quantite",
             attendu: x.perdablesPourLaMarge,
-            calcul: `${qte(x.avant.vendues)} − ${eur(x.margeAvant)} ÷ (${eur(x.apres.prix)} − ${eur(x.f.coutVariableParNuitee)}) = ${qte(x.avant.vendues)} − ${qte(x.pourLaMarge)} = ${qte(x.perdablesPourLaMarge)}`,
-            tolerance: 1,
+            calcul: `${eur(x.margeAvant)} ÷ (${eur(x.apres.prix)} − ${eur(x.f.coutVariableParNuitee)}) = ${qte(x.pourLaMargeCalcule)}, soit ${entier(x.pourLaMarge)} nuitées à garder, à l'unité au-dessus : une de moins ne garderait pas la marge ; ${qte(x.avant.vendues)} − ${qte(x.pourLaMarge)} = ${qte(x.perdablesPourLaMarge)}`,
           },
           {
             libelle: "Nuitées que la hausse fait perdre",
+            nature: "quantite",
             attendu: x.perdues,
             calcul: `${qte(x.avant.vendues)} − ${qte(x.apres.vendues)} = ${qte(x.perdues)}`,
           },
@@ -349,7 +356,6 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
             libelle: "Écart de résultat de l'année, prix relevé moins prix unique",
             attendu: x.ecart,
             calcul: `${eur(x.releve.resultat)} − ${retranche(x.unique.resultat)} = ${eur(x.ecart)}`,
-            tolerance: 1,
           },
         ];
       },

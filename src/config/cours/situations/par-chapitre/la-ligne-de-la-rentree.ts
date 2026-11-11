@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints, qte as entier } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_PLATEAU, plateauDuCabinet } from "../../chapitres/le-plateau-de-teleacteurs";
 import {
@@ -31,12 +31,20 @@ import type { Situation } from "../types";
  * LE JUGEMENT : à 90 %, la ligne rend 1 créneau à la prospection (3 rendez-vous par mois) et use
  * l'équipe ; le cinquième téléacteur en rend 3 (9 rendez-vous), qui valent 7 875 € de marge la
  * première année pour 2 880 € de coût. Il se paie dès 4 rendez-vous.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les effectifs et les créneaux sont des quantités : le corrigé
+ * écrit le quotient à deux décimales, puis l'arrondit à l'unité au-dessus, et dit pourquoi ; les
+ * rendez-vous attendus (une espérance, non arrondie) sont une grandeur, au centième, à un centième
+ * près (à cinq centièmes, avant), et la marge part d'eux et du taux d'honoration à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+/** Une part (0,725) écrite en pourcentage, à deux décimales (72,50 %). */
+const pct = (x: number) => enPoints(x * 100);
+/** Un effectif : le quotient à deux décimales, puis à l'unité au-dessus quand il tombe entre deux entiers. */
+const effectifEcrit = (exact: number, necessaire: number) =>
+  Number.isInteger(auCentime(exact)) ? `${qte(auCentime(exact))} téléacteurs` : `${qte(auCentime(exact))}, soit ${entier(necessaire)} téléacteurs à l'unité au-dessus : en dessous, des appels sont perdus`;
 
 /** Les bornes du curseur des rendez-vous du cinquième téléacteur. */
 export const RENDEZ_VOUS_DU_CURSEUR_DU_CAS = { min: 0, max: 10 } as const;
@@ -53,8 +61,9 @@ export function rentreeDuPlateau(c: Pick<Cas, "code">) {
   const prospection90 = prospectionDuMois({ creneauxDeLigne: a90.creneauxNecessaires });
   const cinquieme = prospectionDuMois({ teleacteurs: teleacteurs + 1, creneauxDeLigne: a80.creneauxNecessaires });
   // Ce que vaut un rendez-vous pris : la part qui est honorée × ce que vaut un rendez-vous tenu.
-  const valeurDUnRendezVousPris = auCentime(x.tdb.tauxDHonoration * x.valeurDUnRendezVousHonore);
-  const valeurDuCinquieme = auCentime(cinquieme.rendezVous * valeurDUnRendezVousPris);
+  // Chaque ligne de la copie : le taux d'honoration à deux décimales, les rendez-vous au centième.
+  const valeurDUnRendezVousPris = auCentime((auCentime(x.tdb.tauxDHonoration * 100) / 100) * x.valeurDUnRendezVousHonore);
+  const valeurDuCinquieme = auCentime(auCentime(cinquieme.rendezVous) * valeurDUnRendezVousPris);
   return {
     x,
     appels,
@@ -102,7 +111,7 @@ export const LA_LIGNE_DE_LA_RENTREE: Situation = {
       texte: (c) => {
         const r = rentreeDuPlateau(c);
         return [
-          `« À la rentrée, les participants appellent un quart de plus. Je ne veux pas perdre un appel, et je ne veux pas arrêter la prospection. Je propose de dimensionner la ligne à ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE, 0)} d'occupation au lieu de ${pct(OCCUPATION_CIBLE, 0)}, plutôt que de prendre un ${qte(r.teleacteurs + 1)}e téléacteur comme le demande le superviseur. Dites-moi ce que chaque solution laisse à la prospection, et ce qu'elle vaut. »`,
+          `« À la rentrée, les participants appellent un quart de plus. Je ne veux pas perdre un appel, et je ne veux pas arrêter la prospection. Je propose de dimensionner la ligne à ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE)} d'occupation au lieu de ${pct(OCCUPATION_CIBLE)}, plutôt que de prendre un ${qte(r.teleacteurs + 1)}e téléacteur comme le demande le superviseur. Dites-moi ce que chaque solution laisse à la prospection, et ce qu'elle vaut. »`,
           "Pas de cours cette fois : vous avez les appels de la rentrée, la DMT, le coût d'un téléacteur et la valeur d'un rendez-vous ; la méthode est celle du chapitre. À vous de l'enchaîner.",
         ];
       },
@@ -137,18 +146,19 @@ export const LA_LIGNE_DE_LA_RENTREE: Situation = {
       titre: "La ligne de la rentrée, à 80 %",
       notions: ["capacity"],
       question: () =>
-        `Hausse de ${pct(HAUSSE_DE_LA_RENTREE, 0)} des appels, à chaque créneau. À ${pct(OCCUPATION_CIBLE, 0)} d'occupation, calculez l'effectif nécessaire de chaque créneau, les créneaux de ligne par jour, puis les créneaux qui restent à la prospection avec le plateau d'aujourd'hui.`,
+        `Hausse de ${pct(HAUSSE_DE_LA_RENTREE)} des appels, à chaque créneau. À ${pct(OCCUPATION_CIBLE)} d'occupation, calculez l'effectif nécessaire de chaque créneau, les créneaux de ligne par jour, puis les créneaux qui restent à la prospection avec le plateau d'aujourd'hui.`,
       champs: (c) => {
         const r = rentreeDuPlateau(c);
         const l = r.a80;
         return [
           ...l.creneaux.map((k) => ({
             libelle: `Effectif de ${k.libelle}, à 80 %`,
+            nature: "quantite" as const,
             attendu: k.effectifNecessaire,
-            calcul: `${qte(k.recus)} × ${qte(l.dmt)} ÷ ${qte(l.minutesUtiles)} = ${qte(auCentime(k.effectifExact))}, soit ${qte(k.effectifNecessaire)}`,
+            calcul: `${qte(k.recus)} × ${qte(l.dmt)} ÷ ${qte(l.minutesUtiles)} = ${effectifEcrit(k.effectifExact, k.effectifNecessaire)}`,
           })),
-          { libelle: "Créneaux de ligne par jour, à 80 %", attendu: l.creneauxNecessaires, calcul: `${l.effectifNecessaire.map(qte).join(" + ")} = ${qte(l.creneauxNecessaires)}` },
-          { libelle: "Créneaux de prospection, à 80 %", attendu: r.prospection80.creneaux, calcul: `${qte(r.teleacteurs)} × ${qte(CRENEAUX_D_UN_TELEACTEUR)} − ${qte(l.creneauxNecessaires)} = ${qte(r.prospection80.creneaux)}` },
+          { libelle: "Créneaux de ligne par jour, à 80 %", nature: "quantite", attendu: l.creneauxNecessaires, calcul: `${l.effectifNecessaire.map(qte).join(" + ")} = ${qte(l.creneauxNecessaires)}` },
+          { libelle: "Créneaux de prospection, à 80 %", nature: "quantite", attendu: r.prospection80.creneaux, calcul: `${qte(r.teleacteurs)} × ${qte(CRENEAUX_D_UN_TELEACTEUR)} − ${qte(l.creneauxNecessaires)} = ${qte(r.prospection80.creneaux)}` },
         ];
       },
       explication: (c) => {
@@ -164,26 +174,26 @@ export const LA_LIGNE_DE_LA_RENTREE: Situation = {
       titre: "La proposition du directeur, à 90 %",
       notions: ["capacity", "productivity"],
       question: () =>
-        `Refaites la ligne à ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE, 0)} d'occupation : les créneaux de ligne par jour, les créneaux qui restent à la prospection, puis les rendez-vous qu'elle prendrait dans le mois.`,
+        `Refaites la ligne à ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE)} d'occupation : les créneaux de ligne par jour, les créneaux qui restent à la prospection, puis les rendez-vous qu'elle prendrait dans le mois.`,
       champs: (c) => {
         const r = rentreeDuPlateau(c);
         const l = r.a90;
         const p = r.prospection90;
         return [
-          { libelle: "Créneaux de ligne par jour, à 90 %", attendu: l.creneauxNecessaires, calcul: `${l.creneaux.map((k) => `${qte(k.recus)} × ${qte(l.dmt)} ÷ ${qte(l.minutesUtiles)}`).join(" ; ")} : ${l.effectifNecessaire.map(qte).join(" + ")} = ${qte(l.creneauxNecessaires)}` },
-          { libelle: "Créneaux de prospection, à 90 %", attendu: p.creneaux, calcul: `${qte(r.creneauxDuPlateau)} − ${qte(l.creneauxNecessaires)} = ${qte(p.creneaux)}` },
+          { libelle: "Créneaux de ligne par jour, à 90 %", nature: "quantite", attendu: l.creneauxNecessaires, calcul: `${l.creneaux.map((k) => `${qte(k.recus)} × ${qte(l.dmt)} ÷ ${qte(l.minutesUtiles)} = ${qte(auCentime(k.effectifExact))}`).join(" ; ")}, soit, à l'unité au-dessus, ${l.effectifNecessaire.map(qte).join(" + ")} = ${qte(l.creneauxNecessaires)}` },
+          { libelle: "Créneaux de prospection, à 90 %", nature: "quantite", attendu: p.creneaux, calcul: `${qte(r.creneauxDuPlateau)} − ${qte(l.creneauxNecessaires)} = ${qte(p.creneaux)}` },
           {
             libelle: "Rendez-vous pris dans le mois, à 90 %",
+            nature: "grandeur",
             attendu: auCentime(p.rendezVous),
             calcul: `${qte(p.creneaux)} × ${qte(heuresDuMoisDUnCreneau())} heures × ${qte(p.appelsParHeure)} × ${pct(p.joignabilite)} × ${pct(tauxDeRendezVousDeN())} = ${qte(auCentime(p.rendezVous))}`,
-            tolerance: 0.05,
           },
         ];
       },
       explication: (c) => {
         const r = rentreeDuPlateau(c);
         return [
-          `À ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE, 0)}, la ligne rend ${qte(r.prospection90.creneaux)} créneau à la prospection : ${qte(auCentime(r.prospection90.rendezVous))} rendez-vous par mois, au lieu de ${qte(r.x.prospection.rendezVous)} avant la rentrée. Le gain est mince, et il se paie : des téléacteurs occupés ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE, 0)} du temps font attendre les clients aux pics de chaque créneau, et s'usent.`,
+          `À ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE)}, la ligne rend ${qte(r.prospection90.creneaux)} créneau à la prospection : ${qte(auCentime(r.prospection90.rendezVous))} rendez-vous par mois, au lieu de ${qte(r.x.prospection.rendezVous)} avant la rentrée. Le gain est mince, et il se paie : des téléacteurs occupés ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE)} du temps font attendre les clients aux pics de chaque créneau, et s'usent.`,
         ];
       },
     },
@@ -194,14 +204,14 @@ export const LA_LIGNE_DE_LA_RENTREE: Situation = {
       notions: ["capacity", "customer_acquisition_cost"],
       question: (c) => {
         const r = rentreeDuPlateau(c);
-        return `Avec un ${qte(r.teleacteurs + 1)}e téléacteur et la ligne à ${pct(OCCUPATION_CIBLE, 0)}, calculez les créneaux de prospection par jour et les rendez-vous pris dans le mois. Calculez ensuite leur marge de la première année (la part honorée × la marge d'un rendez-vous honoré), puis ce que rapporte le téléacteur de plus, son coût déduit.`;
+        return `Avec un ${qte(r.teleacteurs + 1)}e téléacteur et la ligne à ${pct(OCCUPATION_CIBLE)}, calculez les créneaux de prospection par jour et les rendez-vous pris dans le mois. Calculez ensuite leur marge de la première année (la part honorée × la marge d'un rendez-vous honoré), puis ce que rapporte le téléacteur de plus, son coût déduit.`;
       },
       champs: (c) => {
         const r = rentreeDuPlateau(c);
         const p = r.cinquieme;
         return [
-          { libelle: "Créneaux de prospection, avec un téléacteur de plus", attendu: p.creneaux, calcul: `${qte(r.teleacteurs + 1)} × ${qte(CRENEAUX_D_UN_TELEACTEUR)} − ${qte(r.a80.creneauxNecessaires)} = ${qte(p.creneaux)}` },
-          { libelle: "Rendez-vous pris dans le mois, avec un téléacteur de plus", attendu: auCentime(p.rendezVous), calcul: `${qte(p.heures)} heures × ${qte(p.appelsParHeure)} × ${pct(p.joignabilite)} × ${pct(tauxDeRendezVousDeN())} = ${qte(auCentime(p.rendezVous))}`, tolerance: 0.05 },
+          { libelle: "Créneaux de prospection, avec un téléacteur de plus", nature: "quantite", attendu: p.creneaux, calcul: `${qte(r.teleacteurs + 1)} × ${qte(CRENEAUX_D_UN_TELEACTEUR)} − ${qte(r.a80.creneauxNecessaires)} = ${qte(p.creneaux)}` },
+          { libelle: "Rendez-vous pris dans le mois, avec un téléacteur de plus", nature: "grandeur", attendu: auCentime(p.rendezVous), calcul: `${qte(p.heures)} heures × ${qte(p.appelsParHeure)} × ${pct(p.joignabilite)} × ${pct(tauxDeRendezVousDeN())} = ${qte(auCentime(p.rendezVous))}` },
           {
             libelle: "Marge de ces rendez-vous, la première année",
             attendu: r.valeurDuCinquieme,
@@ -213,7 +223,7 @@ export const LA_LIGNE_DE_LA_RENTREE: Situation = {
       explication: (c) => {
         const r = rentreeDuPlateau(c);
         return [
-          `Le téléacteur de plus rend ${qte(r.cinquieme.creneaux)} créneaux à la prospection, et ${qte(auCentime(r.cinquieme.rendezVous))} rendez-vous par mois, qui tiennent dans l'agenda du commercial. Ils valent ${eur(r.valeurDuCinquieme)} de marge la première année, pour ${eur(r.x.cout.parMois)} de coût : la ligne reste à ${pct(OCCUPATION_CIBLE, 0)}, et la conquête continue.`,
+          `Le téléacteur de plus rend ${qte(r.cinquieme.creneaux)} créneaux à la prospection, et ${qte(auCentime(r.cinquieme.rendezVous))} rendez-vous par mois, qui tiennent dans l'agenda du commercial. Ils valent ${eur(r.valeurDuCinquieme)} de marge la première année, pour ${eur(r.x.cout.parMois)} de coût : la ligne reste à ${pct(OCCUPATION_CIBLE)}, et la conquête continue.`,
         ];
       },
     },
@@ -269,10 +279,10 @@ export const LA_LIGNE_DE_LA_RENTREE: Situation = {
           {
             texte: `Un téléacteur de plus : il rapporte ${eur(r.gainDuCinquieme)} par mois`,
             juste: true,
-            retour: `Oui : avec la ligne à ${pct(OCCUPATION_CIBLE, 0)}, il rend ${qte(r.cinquieme.creneaux)} créneaux à la prospection, ${qte(auCentime(r.cinquieme.rendezVous))} rendez-vous qui valent ${eur(r.valeurDuCinquieme)} pour ${eur(r.x.cout.parMois)} de coût. Il se paie dès ${qte(r.rendezVousQuiPaient)} rendez-vous.`,
+            retour: `Oui : avec la ligne à ${pct(OCCUPATION_CIBLE)}, il rend ${qte(r.cinquieme.creneaux)} créneaux à la prospection, ${qte(auCentime(r.cinquieme.rendezVous))} rendez-vous qui valent ${eur(r.valeurDuCinquieme)} pour ${eur(r.x.cout.parMois)} de coût. Il se paie dès ${qte(r.rendezVousQuiPaient)} rendez-vous.`,
           },
           {
-            texte: `La ligne à ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE, 0)} : ${qte(auCentime(r.prospection90.rendezVous))} rendez-vous sans embaucher personne`,
+            texte: `La ligne à ${pct(OCCUPATION_PROPOSEE_A_LA_RENTREE)} : ${qte(auCentime(r.prospection90.rendezVous))} rendez-vous sans embaucher personne`,
             juste: false,
             retour: `Non : ${qte(auCentime(r.prospection90.rendezVous))} rendez-vous par mois, au lieu de ${qte(auCentime(r.cinquieme.rendezVous))} avec un téléacteur de plus, et une ligne où les clients attendent aux pics, servie par une équipe qui s'use.`,
           },

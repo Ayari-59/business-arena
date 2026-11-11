@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_COMPTE_DE_RESULTAT, exerciceDeLaBoutique } from "../../chapitres/le-compte-de-resultat-de-la-boutique";
 import { FINANCEMENT_DE_L_OUVERTURE, IMPOT_SUR_LES_SOCIETES, impotSurLesSocietes } from "../../monde/comptes-de-la-boutique";
@@ -17,16 +17,16 @@ import type { Situation } from "../types";
  *
  * Les pièges : retirer la hausse du loyer du résultat net au lieu de l'EBE (l'impôt en absorbe une part) ;
  * oublier que les intérêts baissent avec l'emprunt et que la provision de N − 1 ne revient pas.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'EBE se donne à deux décimales, à un centième près (au
+ * dixième, avant).
  */
 
 /** LA RÉVISION DU BAIL (hypothèse du cours) : + 6 % sur le loyer hors taxes locales, au 1er janvier N. */
 export const HAUSSE_DU_LOYER = 0.06;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 /** L'année N projetée : N − 1, avec le loyer révisé, sans la provision, avec les intérêts de N. */
 export function bailRevise(c: Pick<Cas, "code">) {
@@ -43,7 +43,7 @@ export function bailRevise(c: Pick<Cas, "code">) {
   const resultatNet = auCentime(resultatCourant - impot);
   const caf = auCentime(resultatNet + dotations);
   const hausseDePrix = Math.ceil((hausse / n1.articles) * 100 - 1e-9) / 100;
-  return { ...x, loyer, hausse, ebe, tauxDEbe: auDixieme((ebe / n1.ventes) * 100), dotations, interets, resultatCourant, impot, resultatNet, caf, hausseDePrix, prixQuiCompense: auCentime(n1.prixMoyen + hausseDePrix) };
+  return { ...x, loyer, hausse, ebe, tauxDEbe: taux2(ebe, n1.ventes), dotations, interets, resultatCourant, impot, resultatNet, caf, hausseDePrix, prixQuiCompense: auCentime(n1.prixMoyen + hausseDePrix) };
 }
 
 const tableauDeNMoins1 = (c: Pick<Cas, "code">) => {
@@ -90,8 +90,8 @@ export const LE_BAIL_REVISE: Situation = {
       titre: "La demande de la gérante",
       tableau: tableauDeNMoins1,
       texte: () => [
-        `« Le bailleur révise le loyer de ${pct(HAUSSE_DU_LOYER * 100, 0)} au 1er janvier N. Si nous vendons comme en N − 1, aux mêmes prix et avec la même équipe, que deviennent l'EBE, le résultat net et la CAF ? Et de combien faudrait-il remonter le prix moyen d'un article pour garder l'EBE de N − 1 ? »`,
-        `Pas de cours cette fois : la méthode est celle du chapitre. Le litige provisionné en N − 1 ne se reproduit pas ; l'emprunt baisse de ${eur(FINANCEMENT_DE_L_OUVERTURE.emprunt.remboursementAnnuel)} par an, à ${pct(FINANCEMENT_DE_L_OUVERTURE.emprunt.taux * 100)} ; l'impôt est de ${pct(IMPOT_SUR_LES_SOCIETES.tauxReduit * 100, 0)} jusqu'à ${eur(IMPOT_SUR_LES_SOCIETES.plafondDuTauxReduit)}, ${pct(IMPOT_SUR_LES_SOCIETES.tauxNormal * 100, 0)} au-delà.`,
+        `« Le bailleur révise le loyer de ${pct(HAUSSE_DU_LOYER * 100)} au 1er janvier N. Si nous vendons comme en N − 1, aux mêmes prix et avec la même équipe, que deviennent l'EBE, le résultat net et la CAF ? Et de combien faudrait-il remonter le prix moyen d'un article pour garder l'EBE de N − 1 ? »`,
+        `Pas de cours cette fois : la méthode est celle du chapitre. Le litige provisionné en N − 1 ne se reproduit pas ; l'emprunt baisse de ${eur(FINANCEMENT_DE_L_OUVERTURE.emprunt.remboursementAnnuel)} par an, à ${pct(FINANCEMENT_DE_L_OUVERTURE.emprunt.taux * 100)} ; l'impôt est de ${pct(IMPOT_SUR_LES_SOCIETES.tauxReduit * 100)} jusqu'à ${eur(IMPOT_SUR_LES_SOCIETES.plafondDuTauxReduit)}, ${pct(IMPOT_SUR_LES_SOCIETES.tauxNormal * 100)} au-delà.`,
       ],
       repere: () => "À rendre : le loyer de N, l'EBE et son taux, le résultat courant, l'impôt, le résultat net, la CAF, la hausse de prix moyen qui compense, et votre réponse.",
     },
@@ -101,18 +101,18 @@ export const LE_BAIL_REVISE: Situation = {
       titre: "L'EBE de N",
       notions: ["ebitda_margin"],
       tableau: tableauDeNMoins1,
-      question: () => "Calculez le loyer de N, l'EBE de N, puis le taux d'EBE (en %, au dixième).",
+      question: () => "Calculez le loyer de N, l'EBE de N, puis le taux d'EBE (en %, à deux décimales).",
       champs: (c) => {
         const x = bailRevise(c);
         return [
           { libelle: "Loyer de N", attendu: x.loyer, calcul: `${eur(x.n1.loyer)} × ${qte(1 + HAUSSE_DU_LOYER)} = ${eur(x.loyer)}` },
           { libelle: "EBE de N", attendu: x.ebe, calcul: `${eur(x.n1.ebe)} − ${eur(x.hausse)} = ${eur(x.ebe)}` },
-          { libelle: "Taux d'EBE (%)", attendu: x.tauxDEbe, tolerance: 0.1, calcul: `${eur(x.ebe)} ÷ ${eur(x.n1.ventes)} × 100 = ${pct(x.tauxDEbe)}` },
+          { libelle: "Taux d'EBE (%)", attendu: x.tauxDEbe, calcul: `${eur(x.ebe)} ÷ ${eur(x.n1.ventes)} × 100 = ${pct(x.tauxDEbe)}` },
         ];
       },
       explication: (c) => {
         const x = bailRevise(c);
-        return [`Le loyer prend ${eur(x.hausse)} : l'EBE baisse d'autant, à ${eur(x.ebe)}. Le taux d'EBE passe de ${pct(auDixieme(x.n1.tauxDEbe * 100))} à ${pct(x.tauxDEbe)}.`];
+        return [`Le loyer prend ${eur(x.hausse)} : l'EBE baisse d'autant, à ${eur(x.ebe)}. Le taux d'EBE passe de ${pct(auCentime(x.n1.tauxDEbe * 100))} à ${pct(x.tauxDEbe)}.`];
       },
     },
     {
@@ -127,7 +127,7 @@ export const LE_BAIL_REVISE: Situation = {
         return [
           { libelle: "Intérêts de N", attendu: x.interets, calcul: `${eur(FINANCEMENT_DE_L_OUVERTURE.emprunt.capital - 3 * FINANCEMENT_DE_L_OUVERTURE.emprunt.remboursementAnnuel)} × ${pct(FINANCEMENT_DE_L_OUVERTURE.emprunt.taux * 100)} = ${eur(x.interets)}` },
           { libelle: "Résultat courant avant impôt", attendu: x.resultatCourant, calcul: `${eur(x.ebe)} − ${eur(x.dotations)} − ${eur(x.interets)} = ${eur(x.resultatCourant)}` },
-          { libelle: "Impôt sur les sociétés", attendu: x.impot, calcul: `${eur(i.plafondDuTauxReduit)} × ${pct(i.tauxReduit * 100, 0)} + (${eur(x.resultatCourant)} − ${eur(i.plafondDuTauxReduit)}) × ${pct(i.tauxNormal * 100, 0)} = ${eur(x.impot)}` },
+          { libelle: "Impôt sur les sociétés", attendu: x.impot, calcul: `${eur(i.plafondDuTauxReduit)} × ${pct(i.tauxReduit * 100)} + (${eur(x.resultatCourant)} − ${eur(i.plafondDuTauxReduit)}) × ${pct(i.tauxNormal * 100)} = ${eur(x.impot)}` },
           { libelle: "Résultat net", attendu: x.resultatNet, calcul: `${eur(x.resultatCourant)} − ${eur(x.impot)} = ${eur(x.resultatNet)}` },
           { libelle: "Capacité d'autofinancement", attendu: x.caf, calcul: `${eur(x.resultatNet)} + ${eur(x.dotations)} = ${eur(x.caf)}` },
         ];
@@ -154,7 +154,7 @@ export const LE_BAIL_REVISE: Situation = {
       },
       explication: (c) => {
         const x = bailRevise(c);
-        return [`Il suffit de ${eur(x.hausseDePrix)} de plus par article, ${pct(auDixieme((x.hausseDePrix / x.n1.prixMoyen) * 100))} du prix moyen : un peu moins de remises suffit, sans toucher aux étiquettes.`];
+        return [`Il suffit de ${eur(x.hausseDePrix)} de plus par article, ${pct(auCentime((x.hausseDePrix / x.n1.prixMoyen) * 100))} du prix moyen : un peu moins de remises suffit, sans toucher aux étiquettes.`];
       },
     },
     {
@@ -168,7 +168,7 @@ export const LE_BAIL_REVISE: Situation = {
           { texte: `L'EBE perd ${eur(x.hausse)} ; ${eur(x.hausseDePrix)} de prix moyen le rattrape`, juste: true, retour: `Oui : l'EBE tomberait à ${eur(x.ebe)}. Le résultat net (${eur(x.resultatNet)}) et la CAF (${eur(x.caf)}) mêlent la fin de la provision et des intérêts plus bas : c'est l'EBE qui dit ce que le loyer coûte à l'exploitation. Moins de remises le rattrape.` },
           { texte: `Le résultat net perd ${eur(x.hausse)}, autant que la hausse du loyer`, juste: false, retour: `Non : l'impôt absorbe une part de la hausse, et la provision de N − 1 ne revient pas. C'est l'EBE qui perd ${eur(x.hausse)}.` },
           { texte: `Rien à faire : le résultat net ne perd que ${eur(auCentime(x.n1.resultatNet - x.resultatNet))}`, juste: false, retour: "Le résultat net baisse peu parce que la provision ne revient pas et que les intérêts baissent : l'exploitation, elle, paie tout le loyer en plus, et l'EBE le montre." },
-          { texte: `Il faut monter les étiquettes de ${pct(HAUSSE_DU_LOYER * 100, 0)}`, juste: false, retour: `Non : le loyer ne pèse qu'une part des ventes ; ${eur(x.hausseDePrix)} par article suffit, ${pct(auDixieme((x.hausseDePrix / x.n1.prixMoyen) * 100))} du prix moyen.` },
+          { texte: `Il faut monter les étiquettes de ${pct(HAUSSE_DU_LOYER * 100)}`, juste: false, retour: `Non : le loyer ne pèse qu'une part des ventes ; ${eur(x.hausseDePrix)} par article suffit, ${pct(auCentime((x.hausseDePrix / x.n1.prixMoyen) * 100))} du prix moyen.` },
         ];
       },
     },

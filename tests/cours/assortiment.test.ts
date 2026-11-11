@@ -35,7 +35,6 @@ const code = "boutique";
 const cas = casDeLEntreprise(code);
 const f = MAILLE_ET_CO;
 const centime = (x: number) => Math.round(x * 100) / 100 + 0;
-const dixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 // La gamme, refaite à la main : marge d'un article = prix hors taxes − achat − autres coûts variables.
 const G = Object.fromEntries(f.gamme.map((r) => [r.code, { ventes: r.ventesDuMois, prix: r.prixHt, mu: r.prixHt - r.coutDAchat - r.autresCoutsVariables }]));
@@ -44,12 +43,12 @@ const codes = f.gamme.map((r) => r.code);
 const margeTotale = codes.reduce((t, c) => t + margeDe(c), 0);
 const ventesTotales = codes.reduce((t, c) => t + G[c]!.ventes, 0);
 const caTotal = codes.reduce((t, c) => t + G[c]!.ventes * G[c]!.prix, 0);
-/** Le retrait de la référence c avec une part p (en %) reportée, refait à la main. */
+/** Le retrait de la référence c avec une part p (en %) reportée, refait à la main, comme sur la copie : la marge d'un article des autres au centime. */
 function retraitALaMain(c: string, p: number) {
-  const mu = (margeTotale - margeDe(c)) / (ventesTotales - G[c]!.ventes);
+  const mu = centime((margeTotale - margeDe(c)) / (ventesTotales - G[c]!.ventes));
   const reportes = Math.round((G[c]!.ventes * p) / 100);
   const recuperee = centime(reportes * mu);
-  return { mu, reportes, recuperee, effet: centime(recuperee - margeDe(c)), compense: (G[c]!.mu / mu) * 100 };
+  return { mu, reportes, recuperee, effet: centime(recuperee - margeDe(c)), compense: centime((G[c]!.mu / mu) * 100) };
 }
 
 function textesDe(e: Etape, c: Cas, etat: EtatDuCours): string[] {
@@ -233,14 +232,14 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
 
   it("les étapes guidées : la marge de chaque référence, et ses parts", () => {
     expect(attendus(ch, "marges")).toEqual(Object.fromEntries(f.gamme.map((r) => [`Marge · ${r.nom}`, margeDe(r.code)])));
-    const part = (x: number, t: number) => dixieme((x / t) * 100);
+    const part = (x: number, t: number) => centime((x / t) * 100);
     expect(attendus(ch, "chiffre-et-marge")).toEqual({
       "Part du chiffre d'affaires · Pull col rond (%)": part(600 * 55, caTotal),
       "Part de la marge · Pull col rond (%)": part(15_900, margeTotale),
       "Part du chiffre d'affaires · Pull mérinos (%)": part(90 * 135, caTotal),
       "Part de la marge · Pull mérinos (%)": part(6_660, margeTotale),
     });
-    expect([part(600 * 55, caTotal), part(15_900, margeTotale), part(90 * 135, caTotal), part(6_660, margeTotale)]).toEqual([37.7, 35.9, 13.9, 15.1]);
+    expect([part(600 * 55, caTotal), part(15_900, margeTotale), part(90 * 135, caTotal), part(6_660, margeTotale)]).toEqual([37.74, 35.93, 13.89, 15.05]);
   });
 
   it("le curseur du mérinos, refait à la main : sa marge rattrape celle du col rond à 215 articles", () => {
@@ -286,7 +285,7 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
   it("le retrait du bonnet : le curseur de la part reportée et le retrait chiffré, refaits à la main", () => {
     expect(PART_REPORTEE).toBe(0.3);
     const b = retraitALaMain("bonnet", 30);
-    expect([centime(b.mu), b.reportes, b.recuperee, b.effet]).toEqual([30.54, 45, 1_374.46, -725.54]);
+    expect([centime(b.mu), b.reportes, b.recuperee, b.effet]).toEqual([30.54, 45, 1_374.3, -725.7]);
     expect(juste(ch, "predire-le-retrait")).toBe("Perdre moins de 2\u202f100 € : le report en rattrape une partie");
     const seuil = Math.ceil((2_100 / (150 * b.mu)) * 100);
     expect(seuil).toBe(46);
@@ -297,7 +296,7 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
       lecture: { "Marge récupérée par le report": retraitALaMain("bonnet", 46).recuperee, "Marge perdue avec la référence": 2_100, "Effet net sur la marge du mois": retraitALaMain("bonnet", 46).effet },
       voisine: { "Marge récupérée par le report": retraitALaMain("bonnet", 45).recuperee, "Marge perdue avec la référence": 2_100, "Effet net sur la marge du mois": retraitALaMain("bonnet", 45).effet },
     });
-    expect([retraitALaMain("bonnet", 46).effet, retraitALaMain("bonnet", 45).effet]).toEqual([7.5, -23.04]);
+    expect([retraitALaMain("bonnet", 46).effet, retraitALaMain("bonnet", 45).effet]).toEqual([7.26, -23.28]);
     expect(attendus(ch, "le-retrait-chiffre")).toEqual({
       "Marge moyenne d'un article des autres références": centime(b.mu),
       "Articles reportés": b.reportes,
@@ -321,20 +320,20 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
         "Articles reportés": r.reportes,
         "Marge d'un article des autres références": centime(r.mu),
         "Marge récupérée par le report": r.recuperee,
-        "Part reportée qui compense le retrait": dixieme(r.compense),
+        "Part reportée qui compense le retrait": centime(r.compense),
         "Effet net sur la marge du mois": r.effet,
         "Marge du mois après le retrait": centime(margeTotale + r.effet),
       };
     };
     expect(l.auDepart).toEqual(lire("echarpe", 30));
     expect(l.aLaSolution).toEqual(lire("bonnet", 46));
-    expect(Object.values(lire("echarpe", 30))).toEqual([6_270, 99, 31.65, 3_133.35, 60, -3_136.65, 41_113.35]);
+    expect(Object.values(lire("echarpe", 30))).toEqual([6_270, 99, 31.65, 3_133.35, 60.03, -3_136.65, 41_113.35]);
     // Le défi, à la main : au plus 50 % de report et une marge qui ne baisse pas. Seul le bonnet, de 46 % à 50 %.
     const reussis = codes.flatMap((c) => Array.from({ length: 51 }, (_, p) => p).filter((p) => retraitALaMain(c, p).effet >= 0).map((p) => `${c} ${p}`));
     expect(reussis).toEqual(["bonnet 46", "bonnet 47", "bonnet 48", "bonnet 49", "bonnet 50"]);
     for (const c of codes) for (const p of [0, 30, 46, 50, 51, 100]) expect(l.atteint({ reference: rang(c), part: p }), `${c} ${p}`).toBe(p <= 50 && retraitALaMain(c, p).effet >= 0);
     // La part qui compense : jamais pour le cardigan et le mérinos (au-dessus de 100 %).
-    expect(codes.map((c) => dixieme(retraitALaMain(c, 30).compense))).toEqual([86.9, 140, 283.5, 60, 45.8]);
+    expect(codes.map((c) => centime(retraitALaMain(c, 30).compense))).toEqual([86.94, 139.94, 283.52, 60.03, 45.84]);
     // Le levier à choix : les cinq références, dans l'ordre de la gamme.
     const levier = l.e.leviers(cas).find((x) => x.code === "reference")!;
     expect(levier.choix!.map((x) => [x.valeur, x.libelle])).toEqual(f.gamme.map((r, i) => [i + 1, r.nom]));
@@ -351,7 +350,7 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
       expect(perdue!.valeur({ reference: rang(c), part: p }), `${c} ${p}`).toBe(margeDe(c));
     }
     // Le cardigan, même tout reporté, ne rattrape pas sa marge.
-    expect(retraitALaMain("cardigan", 100).recuperee).toBe(9_516.92);
+    expect(retraitALaMain("cardigan", 100).recuperee).toBe(9_518.4);
   });
 
   it("l'expert : la variante de l'écharpe et le calcul à rebours, refaits à la main", () => {
@@ -359,25 +358,25 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
     expect(attendus(ch, "retirer-l-echarpe")).toEqual({
       "Marge moyenne d'un article des autres références": centime(e.mu),
       "Effet net du retrait sur la marge du mois": e.effet,
-      "Part reportée qui compense le retrait (%)": dixieme(e.compense),
+      "Part reportée qui compense le retrait (%)": centime(e.compense),
     });
-    expect([centime(e.mu), e.effet, dixieme(e.compense)]).toEqual([31.65, -3_136.65, 60]);
+    expect([centime(e.mu), e.effet, centime(e.compense)]).toEqual([31.65, -3_136.65, 60.03]);
     // À rebours : 40 % de report observé, l'effet net seul est donné.
     expect(PART_OBSERVEE_A_REBOURS).toBe(0.4);
     const observe = retraitALaMain("bonnet", 40).effet;
-    expect(observe).toBe(-267.39);
+    expect(observe).toBe(-267.6);
     const recuperee = centime(2_100 + observe);
     const mu = retraitALaMain("bonnet", 0).mu;
     const reportes = Math.round(recuperee / mu);
-    expect(attendus(ch, "a-rebours")).toEqual({ "Marge récupérée par le report": recuperee, "Articles reportés": reportes, "Part des ventes reportée (%)": dixieme((reportes / 150) * 100) });
-    expect([recuperee, reportes, dixieme((reportes / 150) * 100)]).toEqual([1_832.61, 60, 40]);
+    expect(attendus(ch, "a-rebours")).toEqual({ "Marge récupérée par le report": recuperee, "Articles reportés": reportes, "Part des ventes reportée (%)": centime((reportes / 150) * 100) });
+    expect([recuperee, reportes, centime((reportes / 150) * 100)]).toEqual([1_832.4, 60, 40]);
     for (const id of ["retirer-l-echarpe", "a-rebours"]) expect(Object.keys(attendus(ch, id)).length, id).toBeGreaterThanOrEqual(3);
   });
 
   it("les verdicts : faut-il retirer le bonnet, et la synthèse", () => {
-    expect(juste(ch, "retirer")).toBe("Pas pour la marge : retiré, il coûterait 725,54 € par mois, et il faudrait 46 % de report");
+    expect(juste(ch, "retirer")).toBe("Pas pour la marge : retiré, il coûterait 725,70 € par mois, et il faudrait 46 % de report");
     const t = ch.etapes.find((e) => e.id === "synthese")!.tableau!(cas);
-    expect(t.lignes.map((l) => l.valeurs.at(-1))).toEqual(["86,9 %", "aucun", "aucun", "60 %", "45,8 %"]);
+    expect(t.lignes.map((l) => l.valeurs.at(-1))).toEqual(["86,94 %", "aucun", "aucun", "60,03 %", "45,84 %"]);
     expect(t.lignes.map((l) => l.valeurs[3])).toEqual(["Produit de volume", "Locomotive", "Produit de marge", "Produit de volume", "À revoir"]);
   });
 
@@ -399,14 +398,14 @@ describe("le cas : retirer une référence ?", () => {
     expect(attendus(s, "le-report")).toEqual({ "Articles reportés": b.reportes, "Marge récupérée par le report": b.recuperee, "Effet net sur la marge du mois": b.effet });
     const k = curseur(s, "le-report-qui-compense");
     expect([k.attendu, k.bornes, k.droites]).toEqual([46, [0, 100], [0, 2_100, centime(150 * b.mu), 2_100]]);
-    expect(k.lecture["Effet net sur la marge du mois"]).toBe(7.5);
-    expect(k.voisine["Effet net sur la marge du mois"]).toBe(-23.04);
+    expect(k.lecture["Effet net sur la marge du mois"]).toBe(7.26);
+    expect(k.voisine["Effet net sur la marge du mois"]).toBe(-23.28);
     expect(attendus(s, "l-autre-candidate")).toEqual({
       "Marge moyenne d'un article des autres références": centime(e.mu),
       "Effet net du retrait sur la marge du mois": e.effet,
-      "Part reportée qui compense le retrait (%)": dixieme(e.compense),
+      "Part reportée qui compense le retrait (%)": centime(e.compense),
     });
-    expect(juste(s, "reponse")).toBe("Garder le bonnet : retiré, il coûterait 725,54 € par mois");
+    expect(juste(s, "reponse")).toBe("Garder le bonnet : retiré, il coûterait 725,70 € par mois");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

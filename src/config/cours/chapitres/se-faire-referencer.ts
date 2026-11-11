@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentieme, eur, nombreAuCentieme, pct, qte as entier } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ANIMATION,
@@ -40,6 +40,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     la-marge-arriere ; predire-la-mise-en-avant puis le-laboratoire-du-referencement ;
  *   · autonome et expert : la-marge-arriere, le-seuil-de-revente-a-perte, la-promotion-de-la-rentree,
  *     l-animation, la-convention ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marque, la part de la marge et la promotion la plus
+ * forte se donnent à deux décimales, à un centième près (au dixième, avant) ; le coefficient
+ * multiplicateur et l'indice de rentabilité du linéaire sont des grandeurs, au centième, l'indice tiré
+ * de la part de la marge arrondie ; les enceintes sont des quantités, entières, déclarées comme
+ * telles.
  */
 
 export const ENTREPRISES_DU_REFERENCEMENT: readonly string[] = ["nova"];
@@ -51,11 +58,9 @@ export const TITRE_DU_REFERENCEMENT = "Se faire référencer chez un distributeu
 export const SANS_MISE_EN_AVANT = 0;
 export const AVEC_MISE_EN_AVANT = 1;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
+/** L'indice de rentabilité du linéaire de la copie : la part de la marge à deux décimales, divisée par la part du linéaire. */
+const indiceDeLaCopie = (x: { partDeLaMarge: number; partDuLineaire: number }) => auCentieme(auCentieme(x.partDeLaMarge * 100) / auCentieme(x.partDuLineaire * 100));
 
 /** Tout ce que le chapitre et son cas lisent. */
 export function referencement(c: Pick<Cas, "code">) {
@@ -137,7 +142,7 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
       notions: ["markup_coefficient", "margin_rates"],
       question: (c) => {
         const x = referencement(c);
-        return `CampusTech affiche la NOVA One à ${eur(PRIX_PUBLIC_TTC)} TTC (TVA ${pct(x.f.semestre.tauxDeTva * 100)}) et la paie ${eur(x.aujourdHui.prixDAchat)} hors taxes. Calculez le prix public hors taxes, la marge de CampusTech sur une enceinte, son taux de marque au dixième, puis le coefficient multiplicateur au centième.`;
+        return `CampusTech affiche la NOVA One à ${eur(PRIX_PUBLIC_TTC)} TTC (TVA ${pct(x.f.semestre.tauxDeTva * 100)}) et la paie ${eur(x.aujourdHui.prixDAchat)} hors taxes. Calculez le prix public hors taxes, la marge de CampusTech sur une enceinte, son taux de marque à deux décimales, puis le coefficient multiplicateur au centième.`;
       },
       champs: (c) => {
         const x = referencement(c);
@@ -145,14 +150,14 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
         return [
           { libelle: "Prix public hors taxes", attendu: a.prixPublicHt, calcul: `${eur(PRIX_PUBLIC_TTC)} ÷ ${qte(1 + x.f.semestre.tauxDeTva)} = ${eur(a.prixPublicHt)}` },
           { libelle: "Marge du distributeur par enceinte", attendu: a.margeAvant, calcul: `${eur(a.prixPublicHt)} − ${eur(a.prixDAchat)} = ${eur(a.margeAvant)}` },
-          { libelle: "Taux de marque (%)", attendu: auDixieme(x.tauxDeMarque * 100), tolerance: 0.1, calcul: `${eur(a.margeAvant)} ÷ ${eur(a.prixPublicHt)} × 100 = ${pct(auDixieme(x.tauxDeMarque * 100))}` },
-          { libelle: "Coefficient multiplicateur", attendu: auCentieme(x.coefficient), tolerance: 0.01, calcul: `${eur(PRIX_PUBLIC_TTC)} ÷ ${eur(a.prixDAchat)} = ${qte(auCentieme(x.coefficient))}` },
+          { libelle: "Taux de marque (%)", attendu: auCentieme(x.tauxDeMarque * 100), calcul: `${eur(a.margeAvant)} ÷ ${eur(a.prixPublicHt)} × 100 = ${pct(auCentieme(x.tauxDeMarque * 100))}` },
+          { libelle: "Coefficient multiplicateur", nature: "grandeur", attendu: auCentieme(x.coefficient), calcul: `${eur(PRIX_PUBLIC_TTC)} ÷ ${eur(a.prixDAchat)} = ${qte(auCentieme(x.coefficient))}` },
         ];
       },
       explication: (c) => {
         const x = referencement(c);
         return [
-          `Sur une NOVA One, CampusTech garde ${eur(x.aujourdHui.margeAvant)}, ${pct(auDixieme(x.tauxDeMarque * 100))} de son prix hors taxes. Le coefficient, ${qte(auCentieme(x.coefficient))}, passe du prix d'achat hors taxes au prix affiché : c'est l'outil de l'acheteur pour fixer ses étiquettes.`,
+          `Sur une NOVA One, CampusTech garde ${eur(x.aujourdHui.margeAvant)}, ${pct(auCentieme(x.tauxDeMarque * 100))} de son prix hors taxes. Le coefficient, ${qte(auCentieme(x.coefficient))}, passe du prix d'achat hors taxes au prix affiché : c'est l'outil de l'acheteur pour fixer ses étiquettes.`,
           `Ce prix public, c'est CampusTech qui le fixe. Un fournisseur peut conseiller un prix, il ne peut pas imposer de prix de revente minimal. ${x.f.entreprise} ne négocie donc pas l'étiquette : elle négocie ce qu'elle facture, et ce qu'elle paie au distributeur.`,
         ];
       },
@@ -179,7 +184,7 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
       notions: ["sales_per_sqm", "assortment"],
       question: (c) => {
         const x = referencement(c);
-        return `Dans un magasin, la NOVA One vend ${qte(x.aujourdHui.parMagasin)} enceintes par mois sur ${qte(LINEAIRE_DE_NOVA)} m ; le rayon audio fait ${qte(LINEAIRE_DU_RAYON)} m et ${eur(MARGE_DU_RAYON_PAR_MOIS)} de marge. Calculez la marge de CampusTech sur la NOVA One par magasin, sa marge par mètre, la part du linéaire de NOVA (%), sa part de la marge du rayon (%, au dixième), puis l'indice de rentabilité du linéaire au centième.`;
+        return `Dans un magasin, la NOVA One vend ${qte(x.aujourdHui.parMagasin)} enceintes par mois sur ${qte(LINEAIRE_DE_NOVA)} m ; le rayon audio fait ${qte(LINEAIRE_DU_RAYON)} m et ${eur(MARGE_DU_RAYON_PAR_MOIS)} de marge. Calculez la marge de CampusTech sur la NOVA One par magasin, sa marge par mètre, la part du linéaire de NOVA (%), sa part de la marge du rayon (%, à deux décimales), puis l'indice de rentabilité du linéaire au centième.`;
       },
       champs: (c) => {
         const x = referencement(c);
@@ -188,14 +193,14 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
           { libelle: "Marge par magasin et par mois", attendu: a.margeParMagasin, calcul: `${qte(a.parMagasin)} × ${eur(a.margeAvant)} = ${eur(a.margeParMagasin)}` },
           { libelle: "Marge par mètre de linéaire", attendu: a.margeParMetre, calcul: `${eur(a.margeParMagasin)} ÷ ${qte(LINEAIRE_DE_NOVA)} = ${eur(a.margeParMetre)}` },
           { libelle: "Part du linéaire (%)", attendu: x.partDuLineaire * 100, calcul: `${qte(LINEAIRE_DE_NOVA)} ÷ ${qte(LINEAIRE_DU_RAYON)} × 100 = ${pct(x.partDuLineaire * 100)}` },
-          { libelle: "Part de la marge du rayon (%)", attendu: auDixieme(x.partDeLaMarge * 100), tolerance: 0.1, calcul: `${eur(a.margeParMagasin)} ÷ ${eur(MARGE_DU_RAYON_PAR_MOIS)} × 100 = ${pct(auDixieme(x.partDeLaMarge * 100))}` },
-          { libelle: "Indice de rentabilité du linéaire", attendu: auCentieme(x.indiceDuLineaire), tolerance: 0.01, calcul: `${pct(auDixieme(x.partDeLaMarge * 100))} ÷ ${pct(x.partDuLineaire * 100)} = ${qte(auCentieme(x.indiceDuLineaire))}` },
+          { libelle: "Part de la marge du rayon (%)", attendu: auCentieme(x.partDeLaMarge * 100), calcul: `${eur(a.margeParMagasin)} ÷ ${eur(MARGE_DU_RAYON_PAR_MOIS)} × 100 = ${pct(auCentieme(x.partDeLaMarge * 100))}` },
+          { libelle: "Indice de rentabilité du linéaire", nature: "grandeur", attendu: indiceDeLaCopie(x), calcul: `${pct(auCentieme(x.partDeLaMarge * 100))} ÷ ${pct(x.partDuLineaire * 100)} = ${qte(indiceDeLaCopie(x))}` },
         ];
       },
       explication: (c) => {
         const x = referencement(c);
         return [
-          `${x.f.entreprise} occupe ${pct(x.partDuLineaire * 100)} du rayon et n'en fait que ${pct(auDixieme(x.partDeLaMarge * 100))} de la marge : son indice, ${qte(auCentieme(x.indiceDuLineaire))}, est sous 1. Son mètre rapporte ${eur(x.aujourdHui.margeParMetre)}, quand le rayon en fait ${eur(x.margeExigee)}.`,
+          `${x.f.entreprise} occupe ${pct(x.partDuLineaire * 100)} du rayon et n'en fait que ${pct(auCentieme(x.partDeLaMarge * 100))} de la marge : son indice, ${qte(indiceDeLaCopie(x))}, est sous 1. Son mètre rapporte ${eur(x.aujourdHui.margeParMetre)}, quand le rayon en fait ${eur(x.margeExigee)}.`,
           "Un indice sous 1 dit que la marque est trop exposée pour ce qu'elle rapporte. L'acheteur peut réduire sa place, ou la sortir du rayon : c'est le déréférencement.",
         ];
       },
@@ -402,7 +407,7 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
       question: (c) => {
         const x = referencement(c);
         const m = x.meilleure;
-        return `Sans formule. L'offre retenue : ${eur(m.remise)} de remise sur facture et la mise en avant à ${eur(MISE_EN_AVANT.prixParAn)}, pour ${qte(m.ventesDeLAnnee)} enceintes dans l'année. ${x.f.entreprise} livre franco. Calculez le prix net facturé, la coopération ramenée à une enceinte, le seuil de revente à perte hors taxes, puis taxes comprises, et la plus forte promotion que CampusTech peut annoncer sur ${eur(PRIX_PUBLIC_TTC)} (%, au dixième).`;
+        return `Sans formule. L'offre retenue : ${eur(m.remise)} de remise sur facture et la mise en avant à ${eur(MISE_EN_AVANT.prixParAn)}, pour ${qte(m.ventesDeLAnnee)} enceintes dans l'année. ${x.f.entreprise} livre franco. Calculez le prix net facturé, la coopération ramenée à une enceinte, le seuil de revente à perte hors taxes, puis taxes comprises, et la plus forte promotion que CampusTech peut annoncer sur ${eur(PRIX_PUBLIC_TTC)} (%, à deux décimales).`;
       },
       champs: (c) => {
         const x = referencement(c);
@@ -412,7 +417,7 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
           { libelle: "Coopération par enceinte", attendu: m.cooperationParEnceinte, calcul: `${eur(MISE_EN_AVANT.prixParAn)} ÷ ${qte(m.ventesDeLAnnee)} = ${eur(m.cooperationParEnceinte)}` },
           { libelle: "Seuil de revente à perte hors taxes", attendu: m.seuilHt, calcul: `${eur(m.prixNet)} + 0 € de transport − ${eur(m.cooperationParEnceinte)} = ${eur(m.seuilHt)}` },
           { libelle: "Seuil de revente à perte TTC", attendu: m.seuilTtc, calcul: `${eur(m.seuilHt)} × ${qte(1 + x.f.semestre.tauxDeTva)} = ${eur(m.seuilTtc)}` },
-          { libelle: "Promotion la plus forte (%)", attendu: auDixieme(x.promotionMaximale * 100), tolerance: 0.1, calcul: `(${eur(PRIX_PUBLIC_TTC)} − ${eur(m.seuilTtc)}) ÷ ${eur(PRIX_PUBLIC_TTC)} × 100 = ${pct(auDixieme(x.promotionMaximale * 100))}` },
+          { libelle: "Promotion la plus forte (%)", attendu: auCentieme(x.promotionMaximale * 100), calcul: `(${eur(PRIX_PUBLIC_TTC)} − ${eur(m.seuilTtc)}) ÷ ${eur(PRIX_PUBLIC_TTC)} × 100 = ${pct(auCentieme(x.promotionMaximale * 100))}` },
         ];
       },
       explication: (c) => {
@@ -433,7 +438,7 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
       options: (c) => {
         const x = referencement(c);
         return [
-          { texte: `Non : ce serait revendre sous ${eur(x.meilleure.seuilTtc)}`, juste: x.rentreeAPerte, retour: `Oui. ${eur(PRIX_DE_LA_RENTREE)} est sous le seuil de revente à perte. La promotion peut descendre jusqu'à ${eur(x.meilleure.seuilTtc)}, soit ${pct(auDixieme(x.promotionMaximale * 100))} de moins que le prix public.` },
+          { texte: `Non : ce serait revendre sous ${eur(x.meilleure.seuilTtc)}`, juste: x.rentreeAPerte, retour: `Oui. ${eur(PRIX_DE_LA_RENTREE)} est sous le seuil de revente à perte. La promotion peut descendre jusqu'à ${eur(x.meilleure.seuilTtc)}, soit ${pct(auCentieme(x.promotionMaximale * 100))} de moins que le prix public.` },
           { texte: "Oui : CampusTech fixe librement son prix de vente", juste: !x.rentreeAPerte, retour: `Le distributeur fixe son prix, mais pas sous le seuil de revente à perte, ${eur(x.meilleure.seuilTtc)} ici. La liberté du prix a cette limite.` },
           { texte: "Oui, si NOVA rembourse la différence au distributeur", juste: false, retour: "Non. Un remboursement serait un avantage de plus : il baisserait le prix d'achat effectif, et il devrait figurer dans la convention. Il ne rend pas légale une revente sous le seuil d'aujourd'hui." },
         ];
@@ -454,10 +459,10 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
         const a = x.animation;
         return [
           { libelle: "Coût de l'animation", attendu: a.cout, calcul: `${qte(ANIMATION.journees)} journées × ${eur(ANIMATION.coutParJournee)} = ${eur(a.cout)}` },
-          { libelle: "Enceintes vendues en plus", attendu: a.ventes, calcul: `${qte(ANIMATION.journees)} × ${qte(ANIMATION.ventesEnPlusParJournee)} = ${qte(a.ventes)}` },
+          { libelle: "Enceintes vendues en plus", nature: "quantite", attendu: a.ventes, calcul: `${qte(ANIMATION.journees)} × ${qte(ANIMATION.ventesEnPlusParJournee)} = ${qte(a.ventes)}` },
           { libelle: "Marge en plus pour NOVA", attendu: a.marge, calcul: `${qte(a.ventes)} × ${eur(x.meilleure.margeUnitaireDeNova)} = ${eur(a.marge)}` },
           { libelle: "Gain de l'animation", attendu: a.gain, calcul: `${eur(a.marge)} − ${eur(a.cout)} = ${eur(a.gain)}` },
-          { libelle: "Ventes nécessaires par journée", attendu: a.seuilParJournee, calcul: `${eur(ANIMATION.coutParJournee)} ÷ ${eur(x.meilleure.margeUnitaireDeNova)} = ${qte(a.seuilParJournee)} enceintes` },
+          { libelle: "Ventes nécessaires par journée", nature: "quantite", attendu: a.seuilParJournee, calcul: `${eur(ANIMATION.coutParJournee)} ÷ ${eur(x.meilleure.margeUnitaireDeNova)} = ${Number.isInteger(a.seuilParJourneeCalcule) ? `${qte(a.seuilParJournee)} enceintes` : `${qte(a.seuilParJourneeCalcule)}, soit ${entier(a.seuilParJournee)} enceintes à l'unité au-dessus : une de moins ne paierait pas la journée`}` },
         ];
       },
       explication: (c) => {
@@ -493,7 +498,7 @@ export const SE_FAIRE_REFERENCER: Chapitre = {
       texte: (c) => {
         const x = referencement(c);
         return [
-          `Chez CampusTech, la NOVA One laisse ${eur(x.aujourdHui.margeAvant)} au distributeur, ${pct(auDixieme(x.tauxDeMarque * 100))} de marque, au coefficient ${qte(auCentieme(x.coefficient))}. Son mètre rapporte ${eur(x.aujourdHui.margeParMetre)} quand le rayon en fait ${eur(x.margeExigee)} : un indice de ${qte(auCentieme(x.indiceDuLineaire))}, sous 1.`,
+          `Chez CampusTech, la NOVA One laisse ${eur(x.aujourdHui.margeAvant)} au distributeur, ${pct(auCentieme(x.tauxDeMarque * 100))} de marque, au coefficient ${qte(auCentieme(x.coefficient))}. Son mètre rapporte ${eur(x.aujourdHui.margeParMetre)} quand le rayon en fait ${eur(x.margeExigee)} : un indice de ${qte(indiceDeLaCopie(x))}, sous 1.`,
           `Garder la place par la remise seule coûte ${eur(x.remiseNecessaire)} par enceinte, ${eur(x.cooperationEquivalente)} par an ; en marge arrière sans service, autant. La mise en avant payée ${eur(MISE_EN_AVANT.prixParAn)} fait vendre : avec ${eur(x.meilleure.remise)} de remise, NOVA garde ${eur(x.meilleure.margeDeNova)}.`,
           `Toutes ces concessions baissent le seuil de revente à perte, ${eur(x.meilleure.seuilTtc)} : il borne la promotion du distributeur. Une animation se juge sur la marge du fournisseur. La convention écrite fixe le tout pour l'année.`,
           "Au niveau de l'examen, vous savez calculer la marge et le coefficient du distributeur, la rentabilité du linéaire, le prix d'une place en remise ou en coopération, le seuil de revente à perte, et juger une animation.",

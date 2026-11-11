@@ -1,3 +1,4 @@
+import { arrondi, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import type { FicheDuCabinet } from "./atlas-conseil";
 import { canalDe, compteMoyen, valeurDUnClient } from "./relation-client";
 
@@ -35,7 +36,7 @@ import { canalDe, compteMoyen, valeurDUnClient } from "./relation-client";
  * pas arrondis (c'est l'affichage qui arrondit). Le trimestre a 90 jours et 13 semaines.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 
 /** La période que lisent les deux chapitres : le premier trimestre de la boutique en ligne. */
@@ -550,7 +551,8 @@ export function noteDesAvis(enPlus: { note: number; avis: number }[] = []) {
     avis,
     points,
     moyenne,
-    affichee: Math.round(moyenne * 10 + 1e-9) / 10,
+    // La note affichée, au dixième, depuis la moyenne écrite au centième, comme sur la copie.
+    affichee: arrondi(arrondi2(moyenne), 1),
     partDeBonsAvis: (AVIS_PAR_NOTE[3]! + AVIS_PAR_NOTE[4]! + somme(enPlus.filter((x) => x.note >= 4).map((x) => x.avis))) / avis,
   };
 }

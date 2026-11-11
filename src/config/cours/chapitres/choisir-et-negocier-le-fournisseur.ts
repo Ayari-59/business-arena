@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentieme, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   AMENDE_DE_LA_REVENTE_A_PERTE,
@@ -42,6 +42,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : la-cooperation, le-seuil-de-revente-a-perte ;
  *   · expert : le-laboratoire-des-poids (les trois notes en courbes selon le poids du prix),
  *     la-convention, le-delai-propose, la-fin-de-serie, retenir ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les notes pondérées sont des grandeurs, au centième ; la remise
+ * la plus forte se donne à deux décimales, à un centième près (au dixième, avant).
  */
 
 export const ENTREPRISES_DU_FOURNISSEUR: readonly string[] = ["boutique"];
@@ -58,12 +62,8 @@ export const DEPART_DU_LABORATOIRE = { prix: CRITERES[0]!.poids - 10 } as const;
 /** Les poids que propose la dirigeante (hypothèse du cours) : 20 points pour le prix, 30 pour la qualité. */
 export const POIDS_DE_LA_DIRIGEANTE = 20;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
+const qte = nombreAuCentieme;
 const note = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => {
   const f = BOUTIQUES_DU_COURS[c.code];
@@ -193,8 +193,8 @@ export const CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR: Chapitre = {
         const x = fournisseursDeLaBoutique(c);
         return x.f.fournisseurs.map((s) => ({
           libelle: `Note pondérée · ${s.nom}`,
+          nature: "grandeur" as const,
           attendu: x.noteDe(s.code),
-          tolerance: 0.01,
           calcul: `(${CRITERES.map((k) => `${qte(k.poids)} × ${qte(NOTES[s.code][k.code])}`).join(" + ")}) ÷ 100 = ${note(x.noteDe(s.code))}`,
         }));
       },
@@ -286,8 +286,8 @@ export const CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR: Chapitre = {
         const p = POIDS_DE_LA_DIRIGEANTE;
         return x.f.fournisseurs.map((s) => ({
           libelle: `Note pondérée · ${s.nom}`,
+          nature: "grandeur" as const,
           attendu: x.noteDe(s.code, p),
-          tolerance: 0.01,
           calcul: `(${qte(p)} × ${qte(NOTES[s.code].prix)} + ${CRITERES.filter((k) => k.code !== "prix" && k.code !== "qualite").map((k) => `${qte(k.poids)} × ${qte(NOTES[s.code][k.code])}`).join(" + ")} + ${qte(POIDS_DU_PRIX_ET_DE_LA_QUALITE - p)} × ${qte(NOTES[s.code].qualite)}) ÷ 100 = ${note(x.noteDe(s.code, p))}`,
         }));
       },
@@ -446,14 +446,14 @@ export const CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR: Chapitre = {
       notions: ["price_floor", "margin_rates"],
       question: (c) => {
         const s = fournisseursDeLaBoutique(c).srp;
-        return `La boutique veut écouler une fin de série de pulls col rond hors des soldes. Le façonnier les facture ${eur(s.prixNet)} hors taxes, net de remise ; la boutique paie ${eur(s.transport)} de transport par pull ; le façonnier accorde une ristourne de fin d'année de ${pct(2, 0)} du prix net, et sa coopération commerciale représente ${eur(s.cooperation)} par pull. Calculez le seuil de revente à perte hors taxes (le prix d'achat effectif), puis toutes taxes comprises, et la remise la plus forte sur l'étiquette de ${eur(s.r.prixTtc)}, en pourcentage au dixième.`;
+        return `La boutique veut écouler une fin de série de pulls col rond hors des soldes. Le façonnier les facture ${eur(s.prixNet)} hors taxes, net de remise ; la boutique paie ${eur(s.transport)} de transport par pull ; le façonnier accorde une ristourne de fin d'année de ${pct(2)} du prix net, et sa coopération commerciale représente ${eur(s.cooperation)} par pull. Calculez le seuil de revente à perte hors taxes (le prix d'achat effectif), puis toutes taxes comprises, et la remise la plus forte sur l'étiquette de ${eur(s.r.prixTtc)}, en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const s = fournisseursDeLaBoutique(c).srp;
         return [
           { libelle: "Seuil de revente à perte hors taxes", attendu: s.seuilHt, calcul: `${eur(s.prixNet)} + ${eur(s.transport)} − ${eur(s.ristourne)} de ristourne − ${eur(s.cooperation)} de coopération = ${eur(s.seuilHt)}` },
           { libelle: "Seuil de revente à perte toutes taxes comprises", attendu: s.seuilTtc, calcul: `${eur(s.seuilHt)} × 1,2 = ${eur(s.seuilTtc)}` },
-          { libelle: "Remise la plus forte sur l'étiquette (%)", attendu: auDixieme(s.remiseMaximale * 100), tolerance: 0.1, calcul: `(${eur(s.r.prixTtc)} − ${eur(s.seuilTtc)}) ÷ ${eur(s.r.prixTtc)} × 100 = ${pct(auDixieme(s.remiseMaximale * 100))}` },
+          { libelle: "Remise la plus forte sur l'étiquette (%)", attendu: auCentieme(s.remiseMaximale * 100), calcul: `(${eur(s.r.prixTtc)} − ${eur(s.seuilTtc)}) ÷ ${eur(s.r.prixTtc)} × 100 = ${pct(auCentieme(s.remiseMaximale * 100))}` },
         ];
       },
       explication: (c) => {
@@ -471,7 +471,7 @@ export const CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR: Chapitre = {
       notions: ["price_floor"],
       question: (c) => {
         const s = fournisseursDeLaBoutique(c).srp;
-        return `Le vendeur propose d'afficher « −${pct(REMISE_DE_LA_FIN_DE_SERIE * 100, 0)} » sur la fin de série, en mars, hors soldes : le pull passerait à ${eur(s.prixDeLaFinDeSerie)}. Que répondez-vous ?`;
+        return `Le vendeur propose d'afficher « −${pct(REMISE_DE_LA_FIN_DE_SERIE * 100)} » sur la fin de série, en mars, hors soldes : le pull passerait à ${eur(s.prixDeLaFinDeSerie)}. Que répondez-vous ?`;
       },
       options: (c) => {
         const s = fournisseursDeLaBoutique(c).srp;
@@ -479,7 +479,7 @@ export const CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR: Chapitre = {
           {
             texte: `Non : ${eur(s.prixDeLaFinDeSerie)} est sous le seuil de ${eur(s.seuilTtc)}`,
             juste: s.finDeSerieAPerte,
-            retour: `Oui. Hors des cas que la loi prévoit (les soldes, une liquidation, des produits saisonniers en fin de saison, des produits démodés), la revente à perte est interdite et punie d'une amende qui peut atteindre ${eur(AMENDE_DE_LA_REVENTE_A_PERTE)}. La remise s'arrête à ${pct(auDixieme(s.remiseMaximale * 100))}, ou attend les soldes, où elle redevient possible.`,
+            retour: `Oui. Hors des cas que la loi prévoit (les soldes, une liquidation, des produits saisonniers en fin de saison, des produits démodés), la revente à perte est interdite et punie d'une amende qui peut atteindre ${eur(AMENDE_DE_LA_REVENTE_A_PERTE)}. La remise s'arrête à ${pct(auCentieme(s.remiseMaximale * 100))}, ou attend les soldes, où elle redevient possible.`,
           },
           {
             texte: "Oui : la boutique fixe librement ses prix",
@@ -513,7 +513,7 @@ export const CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR: Chapitre = {
           {
             texte: "Les fins de série : c'est le prix d'achat le plus bas",
             juste: false,
-            retour: `Le prix le plus bas, mais la note la plus faible (${note(x.noteDe("fins-de-serie"))}) : payées comptant, sans réassort, avec ${pct(TAUX_DE_RETOUR["fins-de-serie"] * 100, 0)} de retours. Elles ne mèneraient qu'avec ${qte(x.poidsDesFinsDeSerie)} points sur ${qte(POIDS_DU_PRIX_ET_DE_LA_QUALITE)} au prix.`,
+            retour: `Le prix le plus bas, mais la note la plus faible (${note(x.noteDe("fins-de-serie"))}) : payées comptant, sans réassort, avec ${pct(TAUX_DE_RETOUR["fins-de-serie"] * 100)} de retours. Elles ne mèneraient qu'avec ${qte(x.poidsDesFinsDeSerie)} points sur ${qte(POIDS_DU_PRIX_ET_DE_LA_QUALITE)} au prix.`,
           },
           {
             texte: `L'atelier local, à ${qte(DELAI_PROPOSE_PAR_L_ATELIER)} jours de paiement`,

@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import type { FicheDeLaBoutique } from "./maille-et-co";
 import { passantsDeJanvier } from "./vente-et-caisse";
 
@@ -17,7 +18,7 @@ import { passantsDeJanvier } from "./vente-et-caisse";
  * (ce qu'elle laisse ÷ ce qu'elle coûte).
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 
 export type CodeDeSupport = "tracts" | "sms" | "posts" | "vitrine" | "soiree";
 
@@ -64,8 +65,11 @@ export const AUDIENCE_DES_POSTS = 25_000;
 /** Ce que les entrées font vendre et laisser : les ventes et la marge d'une vente des passants de janvier. */
 export function rendementDesEntrees(f: FicheDeLaBoutique, entrees: number) {
   const p = passantsDeJanvier(f);
-  const ventes = Math.round(entrees * p.tauxDeTransformation);
-  return { entrees, ventes, marge: auCentime(ventes * p.margeDUneVente) };
+  // La copie : le taux de transformation à deux décimales, les ventes écrites au centième puis à l'unité la plus proche.
+  const tauxEnPourcent = arrondi2(p.tauxDeTransformation * 100);
+  const ventesCalculees = arrondi2((entrees * tauxEnPourcent) / 100);
+  const ventes = aLUnite(ventesCalculees);
+  return { entrees, tauxEnPourcent, ventesCalculees, ventes, marge: auCentime(ventes * p.margeDUneVente) };
 }
 
 /** Une action de communication : son coût par contact, ses entrées, ses ventes, sa marge, ce qu'elle laisse et son retour. */

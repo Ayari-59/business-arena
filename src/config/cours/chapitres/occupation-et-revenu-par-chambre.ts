@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { aLUnite, arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeAuTarif, concurrentsDe, lHotelEnIndicateurs, type IndicateursDHotel } from "../monde/concurrence-hoteliere";
 import { trimestreDeLHotel } from "../monde/hotel";
@@ -26,7 +26,7 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * prix unique : toutes les chambres en vente chaque nuit, au prix de l'année, la demande de chaque
  * clientèle posée par la fiche, l'hôtel vend la plus petite de la demande et des chambres
  * disponibles (monde/hotel.ts). Les deux hôtels de comparaison sont les concurrents de la fiche,
- * posés tels quels (monde/concurrence-hoteliere.ts). Les taux sont au dixième, les prix au centime.
+ * posés tels quels (monde/concurrence-hoteliere.ts). Les taux sont à deux décimales, les prix au centime.
  * Une évolution du moteur de l'arène ne change rien ici.
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : progressif, mais au niveau de l'examen) :
@@ -45,6 +45,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     un écart sur prix), a-rebours (le prix moyen, les chambres vendues et le chiffre d'affaires d'un
  *     concurrent, à partir de son RevPAR et de son taux d'occupation), la-limite-du-revpar (une
  *     critique de l'indicateur) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation se donne à deux décimales, à un centième
+ * près (au dixième, avant) ; les effets de l'occupation et du prix et les chiffres retrouvés à rebours
+ * se donnent au centime, à un centime près ; les chambres à vendre et les chambres retrouvées sont des
+ * quantités : le corrigé écrit le quotient à deux décimales, puis l'arrondit à l'unité (au-dessus pour
+ * un seuil), et dit pourquoi.
  */
 
 /** Les entreprises du cours qui louent des chambres. */
@@ -70,11 +77,6 @@ export const COUT_DU_LABORATOIRE = { min: 15, max: 30, pas: 1 } as const;
 const TRIMESTRES = ["1er trim.", "2e trim.", "3e trim.", "4e trim."] as const;
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** « du Comptoir », « de la Villa », « des Halles », « de L'ESCALE » : l'article se contracte. */
 export const duNom = (nom: string) =>
@@ -162,7 +164,8 @@ export function occupation(c: Pick<Cas, "code">) {
     aRebours: {
       nom: autre.nom,
       publie,
-      vendues: Math.round((publie.occupation / 100) * dispo),
+      venduesCalculees: auCentime((publie.occupation / 100) * dispo),
+      vendues: aLUnite((publie.occupation / 100) * dispo),
       chiffreDAffaires: auCentime(publie.revpar * dispo),
       prixMoyen: auCentime(publie.revpar / (publie.occupation / 100)),
       vrai: a,
@@ -173,8 +176,10 @@ export function occupation(c: Pick<Cas, "code">) {
       prix: prixPromo,
       margeAuTarif,
       margeParChambre: margePromo,
-      pourLeRevpar: Math.ceil(creux.chiffreDAffaires / prixPromo - 1e-9),
-      pourLaMarge: Math.ceil(margeAuTarif / margePromo - 1e-9),
+      quotientDuRevpar: auCentime(creux.chiffreDAffaires / prixPromo),
+      pourLeRevpar: Math.ceil(auCentime(creux.chiffreDAffaires / prixPromo) - 1e-9),
+      quotientDeLaMarge: auCentime(margeAuTarif / margePromo),
+      pourLaMarge: Math.ceil(auCentime(margeAuTarif / margePromo) - 1e-9),
       simulee: promo,
       ecartDeResultat: auCentime(promo.resultat - modele.trimestres[kc]!.resultat),
     },
@@ -202,7 +207,7 @@ export function laboratoireDuRevpar(c: Pick<Cas, "code">) {
   const n = o.plusFaible + 1;
   const rejoue = (prix: number, cout: number) => {
     const t = trimestreDeLHotel({ ...f, coutVariableParNuitee: cout }, n, prix);
-    return { ...t, occupation: auDixieme((t.vendues / t.offertes) * 100), revpar: auCentime(t.chiffreDAffaires / t.offertes), prixMoyen: auCentime(t.chiffreDAffaires / t.vendues) };
+    return { ...t, occupation: auCentime((t.vendues / t.offertes) * 100), revpar: auCentime(t.chiffreDAffaires / t.offertes), prixMoyen: auCentime(t.chiffreDAffaires / t.vendues) };
   };
   const depart = { prix: f.prixDeLAnnee, cout: f.coutVariableParNuitee };
   const atteint = (p: Readonly<Record<string, number>>) => {
@@ -292,13 +297,12 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
       titre: "Le taux d'occupation",
       notions: ["occupancy_revpar", "seasonality"],
       tableau: tableauDeLHotel,
-      question: () => "Calculez le taux d'occupation de chaque trimestre : les chambres vendues divisées par les chambres disponibles, en pourcentage, au dixième.",
+      question: () => "Calculez le taux d'occupation de chaque trimestre : les chambres vendues divisées par les chambres disponibles, en pourcentage, à deux décimales.",
       champs: (c) =>
         occupation(c).trimestres.map((x, k) => ({
           libelle: `Taux d'occupation, ${TRIMESTRES[k]} (%)`,
           attendu: x.occupation,
           calcul: `${qte(x.vendues)} ÷ ${qte(x.disponibles)} × 100 = ${pct(x.occupation)}`,
-          tolerance: 0.1,
         })),
       explication: (c) => {
         const o = occupation(c);
@@ -346,7 +350,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
       question: (c) => {
         const o = occupation(c);
         const k = o.comparaison;
-        const plus = pct(Math.round((k.prixDuRival / k.hotel.prixMoyen - 1) * 1000) / 10);
+        const plus = pct(auCentime((k.prixDuRival / k.hotel.prixMoyen - 1) * 100));
         return `Avant de calculer, pariez. Au ${trimestre(k.trimestre)}, ${o.f.entreprise} loue ses chambres ${eur(k.hotel.prixMoyen)} et en remplit ${pct(k.hotel.occupation)}. ${k.rival.nom} les loue ${eur(k.prixDuRival)}, ${plus} plus cher, avec autant de chambres. Pour rapporter autant par chambre disponible, combien doit-il en remplir ?`;
       },
       options: (c) => {
@@ -413,7 +417,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
       explication: (c) => {
         const o = occupation(c);
         const k = o.comparaison;
-        const taux = auDixieme((k.chambresPourEgaler / k.hotel.disponibles) * 100);
+        const taux = auCentime((k.chambresPourEgaler / k.hotel.disponibles) * 100);
         return [
           `Il fallait ${qte(k.chambresPourEgaler)} chambres vendues, ${pct(taux)} d'occupation, pour rapporter ${eur(k.hotel.revpar)} par chambre disponible comme ${o.f.entreprise} ; ${k.rival.nom} en a vendu ${qte(k.rival.vendues)}.`,
           `Ce qu'une chambre disponible rapporte, c'est la part des chambres louées multipliée par leur prix : ${pct(taux)} × ${eur(k.prixDuRival)}, comme ${pct(k.hotel.occupation)} × ${eur(k.hotel.prixMoyen)}. Ce produit a un nom, le RevPAR : l'étape suivante le fait calculer.`,
@@ -451,11 +455,11 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
       titre: "L'année en trois chiffres",
       notions: ["occupancy_revpar"],
       tableau: tableauDeLHotel,
-      question: () => "Sans formule cette fois. Calculez les trois indicateurs de l'année : son taux d'occupation (au dixième), son prix moyen et son RevPAR (au centime).",
+      question: () => "Sans formule cette fois. Calculez les trois indicateurs de l'année : son taux d'occupation (à deux décimales), son prix moyen et son RevPAR (au centime).",
       champs: (c) => {
         const a = occupation(c).annee;
         return [
-          { libelle: "Taux d'occupation de l'année (%)", attendu: a.occupation, calcul: `${qte(a.vendues)} ÷ ${qte(a.disponibles)} × 100 = ${pct(a.occupation)}`, tolerance: 0.1 },
+          { libelle: "Taux d'occupation de l'année (%)", attendu: a.occupation, calcul: `${qte(a.vendues)} ÷ ${qte(a.disponibles)} × 100 = ${pct(a.occupation)}` },
           { libelle: "Prix moyen de l'année", attendu: a.prixMoyen, calcul: `${eur(a.chiffreDAffaires)} ÷ ${qte(a.vendues)} = ${eur(a.prixMoyen)}` },
           { libelle: "RevPAR de l'année", attendu: a.revpar, calcul: `${eur(a.chiffreDAffaires)} ÷ ${qte(a.disponibles)} = ${eur(a.revpar)}` },
         ];
@@ -649,16 +653,16 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
         return [
           {
             libelle: "Chambres à vendre pour garder le RevPAR",
+            nature: "quantite",
             attendu: p.pourLeRevpar,
-            calcul: `${eur(p.creux.chiffreDAffaires)} ÷ ${eur(p.prix)} = ${qte(p.pourLeRevpar)}`,
-            tolerance: 1,
+            calcul: `${eur(p.creux.chiffreDAffaires)} ÷ ${eur(p.prix)} = ${nombreAuCentieme(p.quotientDuRevpar)}, soit ${qte(p.pourLeRevpar)} chambres à l'unité au-dessus : une de moins ne garderait pas le chiffre d'affaires`,
           },
           { libelle: "Marge d'une chambre louée en promotion", attendu: p.margeParChambre, calcul: `${eur(p.prix)} − ${eur(o.f.coutVariableParNuitee)} = ${eur(p.margeParChambre)}` },
           {
             libelle: "Chambres à vendre pour garder la marge",
+            nature: "quantite",
             attendu: p.pourLaMarge,
-            calcul: `(${eur(o.prix)} − ${eur(o.f.coutVariableParNuitee)}) × ${qte(p.creux.vendues)} ÷ ${eur(p.margeParChambre)} = ${eur(p.margeAuTarif)} ÷ ${eur(p.margeParChambre)} = ${qte(p.pourLaMarge)}`,
-            tolerance: 1,
+            calcul: `(${eur(o.prix)} − ${eur(o.f.coutVariableParNuitee)}) × ${qte(p.creux.vendues)} ÷ ${eur(p.margeParChambre)} = ${eur(p.margeAuTarif)} ÷ ${eur(p.margeParChambre)} = ${nombreAuCentieme(p.quotientDeLaMarge)}, soit ${qte(p.pourLaMarge)} chambres à l'unité au-dessus : une de moins ne garderait pas la marge`,
           },
         ];
       },
@@ -765,13 +769,11 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
             libelle: "Effet de l'occupation",
             attendu: k.effetOccupation,
             calcul: `(${qte(k.rival.vendues)} − ${qte(k.hotel.vendues)}) × ${eur(k.hotel.prixMoyen)} ÷ ${d} = ${eur(k.effetOccupation)}`,
-            tolerance: 0.1,
           },
           {
             libelle: "Effet du prix",
             attendu: k.effetPrix,
             calcul: `(${eur(k.rival.prixMoyen)} − ${eur(k.hotel.prixMoyen)}) × ${qte(k.rival.vendues)} ÷ ${d} = ${eur(k.effetPrix)}`,
-            tolerance: 0.05,
           },
           {
             libelle: "Écart de RevPAR",
@@ -804,16 +806,16 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
         const r = o.aRebours;
         const d = o.comparaison.hotel.disponibles;
         return [
-          { libelle: `Prix moyen ${duNom(r.nom)}`, attendu: r.prixMoyen, calcul: `${eur(r.publie.revpar)} ÷ ${pct(r.publie.occupation)} = ${eur(r.prixMoyen)}`, tolerance: 0.05 },
-          { libelle: `Chambres vendues ${duNom(r.nom)}`, attendu: r.vendues, calcul: `${pct(r.publie.occupation)} × ${qte(d)} = ${qte(r.vendues)}`, tolerance: 3 },
-          { libelle: `Chiffre d'affaires ${duNom(r.nom)}`, attendu: r.chiffreDAffaires, calcul: `${eur(r.publie.revpar)} × ${qte(d)} = ${eur(r.chiffreDAffaires)}`, tolerance: 10 },
+          { libelle: `Prix moyen ${duNom(r.nom)}`, attendu: r.prixMoyen, calcul: `${eur(r.publie.revpar)} ÷ ${pct(r.publie.occupation)} = ${eur(r.prixMoyen)}` },
+          { libelle: `Chambres vendues ${duNom(r.nom)}`, nature: "quantite", attendu: r.vendues, calcul: `${pct(r.publie.occupation)} × ${qte(d)} = ${nombreAuCentieme(r.venduesCalculees)}, soit ${qte(r.vendues)} chambres à l'unité la plus proche : une chambre se vend entière` },
+          { libelle: `Chiffre d'affaires ${duNom(r.nom)}`, attendu: r.chiffreDAffaires, calcul: `${eur(r.publie.revpar)} × ${qte(d)} = ${eur(r.chiffreDAffaires)}` },
         ];
       },
       explication: (c) => {
         const o = occupation(c);
         const r = o.aRebours;
         return [
-          `Le RevPAR est le taux d'occupation multiplié par le prix moyen : divisé par le taux, il rend le prix moyen. Le vrai prix ${duNom(r.nom)} est de ${eur(r.vrai.prixMoyen)}, pour ${qte(r.vrai.vendues)} chambres vendues et ${eur(r.vrai.chiffreDAffaires)} : les petits écarts viennent des arrondis des chiffres publiés, au dixième et au centime.`,
+          `Le RevPAR est le taux d'occupation multiplié par le prix moyen : divisé par le taux, il rend le prix moyen. Le vrai prix ${duNom(r.nom)} est de ${eur(r.vrai.prixMoyen)}, pour ${qte(r.vrai.vendues)} chambres vendues et ${eur(r.vrai.chiffreDAffaires)} : les petits écarts viennent des arrondis des chiffres publiés, à deux décimales et au centime.`,
         ];
       },
     },

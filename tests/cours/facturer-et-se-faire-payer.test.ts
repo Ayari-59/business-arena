@@ -5,7 +5,7 @@ import { MAILLE_ET_CO as f } from "../../src/config/cours/monde/maille-et-co";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { LE_COMITE_QUI_PAIE_EN_RETARD } from "../../src/config/cours/situations/par-chapitre/le-comite-qui-paie-en-retard";
-import { attendus, casDedie, centime, curseur, dixieme, juste, laboratoire, verifierLesTextes } from "./gardes-de-la-gestion-de-la-boutique";
+import { attendus, casDedie, centime, curseur, juste, laboratoire, verifierLesTextes } from "./gardes-de-la-gestion-de-la-boutique";
 
 /**
  * FACTURER ET SE FAIRE PAYER, À LA BOUTIQUE DU MONDE DU COURS, ET SON CAS : LE COMITÉ QUI PAIE EN RETARD.
@@ -82,12 +82,12 @@ describe("facturer et se faire payer, à la boutique du monde du cours", () => {
     const reussies = [30, 45, 60].flatMap((d) => [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3].filter((t) => reussit(t, d)).map((t) => `${t} à ${d}`));
     expect(reussies).toEqual(["1 à 45", "1 à 60", "1.25 à 60", "1.5 à 60"]);
     for (const d of [30, 45, 60]) for (const t of [0.75, 1, 1.5, 2]) expect(l.atteint({ escompte: t, delai: d }), `${t} à ${d}`).toBe(reussit(t, d));
-    expect(l.auDepart["Taux annuel de l'escompte"]).toBe(dixieme((48.45 / 2_374.05) * 8 * 100));
+    expect(l.auDepart["Taux annuel de l'escompte"]).toBe(centime((48.45 / 2_374.05) * 8 * 100));
   });
 
   it("l'autonome et l'expert : le taux annuel, les trois financements, les verdicts", () => {
-    expect(attendus(ch, "le-taux-de-l-escompte")).toEqual({ "Taux annuel de l'escompte (%)": dixieme((escompte / netFinancier) * (360 / 45) * 100) });
-    expect(dixieme((escompte / netFinancier) * 8 * 100)).toBe(16.3);
+    expect(attendus(ch, "le-taux-de-l-escompte")).toEqual({ "Taux annuel de l'escompte (%)": centime((escompte / netFinancier) * (360 / 45) * 100) });
+    expect(centime((escompte / netFinancier) * 8 * 100)).toBe(16.33);
     const lcr = centime((ttc * 0.06 * 45) / 360 + 8);
     const factor = centime(centime((ttc * 0.062 * 45) / 360) + centime(ttc * 0.009));
     expect(attendus(ch, "financer-la-creance")).toEqual({

@@ -37,7 +37,8 @@ describe("réimplanter avant les soldes : le chapitre et son cas", () => {
   it("la marge par mètre et les indices : le bonnet à 420 €, 0,21 et 0,23 ; le col rond à 2 650 €, 1,51 et 1,44", () => {
     expect(Object.values(LINEAIRE).reduce((t, x) => t + x, 0)).toBe(24);
     expect(attendus(REIMPLANTER_AVANT_LES_SOLDES, "la-marge-par-metre")).toEqual([2_650, 2_664, 1_665, 1_567.5, 420]);
-    const ind = (num: number, tot: number, l: number) => c2(num / tot / (l / 24));
+    // Les parts à deux décimales, puis l'indice au centième, comme sur la copie.
+    const ind = (num: number, tot: number, l: number) => c2(c2((num / tot) * 100) / c2((l / 24) * 100));
     expect(attendus(REIMPLANTER_AVANT_LES_SOLDES, "les-indices")).toEqual([ind(3_750, 87_450, 5), ind(2_100, 44_250, 5), ind(33_000, 87_450, 6), ind(15_900, 44_250, 6)]);
     expect([ind(3_750, 87_450, 5), ind(2_100, 44_250, 5), ind(33_000, 87_450, 6), ind(15_900, 44_250, 6)]).toEqual([0.21, 0.23, 1.51, 1.44]);
     expect(Object.values(MARGE).reduce((t, x) => t + x, 0)).toBe(44_250);
@@ -87,7 +88,7 @@ describe("réimplanter avant les soldes : le chapitre et son cas", () => {
     ]);
     expect(r.toujoursCouvert).toBe(true);
     expect(juste(REIMPLANTER_AVANT_LES_SOLDES, "le-renfort")[0]).toMatch(/^Avancer ses heures/);
-    expect(juste(REIMPLANTER_AVANT_LES_SOLDES, "la-decision")[0]).toMatch(/^2,5 m du bonnet au col rond/);
+    expect(juste(REIMPLANTER_AVANT_LES_SOLDES, "la-decision")[0]).toMatch(/^2,50 m du bonnet au col rond/);
   });
 
   it("le cas : le rayonnage en 75 min repousse la fin à 195 min, 15 min après l'ouverture ; la vitrine a 90 min de marge", () => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte as entier } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutVariable, promotion as promotionDuMonde, referenceDe } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -47,6 +47,13 @@ import type { Chapitre, OptionDeChoix, TableauDeDonnees } from "../types";
  * L'EXPORT DE COMPATIBILITÉ `promotion(c)` garde, figés, les chiffres que l'arène rejouait pour la mise
  * en situation « Commander pour la promotion » (situations/commander-pour-la-promotion.ts), qui le lit
  * encore dans trois commerces. Le chapitre ne s'en sert plus.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la baisse de la marge, la hausse des ventes et la réduction
+ * réelle se donnent à deux décimales, à un centième près (au dixième, avant) ; le volume nécessaire et
+ * les pulls sont des quantités : le corrigé écrit le quotient à deux décimales, puis l'arrondit à
+ * l'unité au-dessus, et dit pourquoi. L'export figé de la promotion de l'arène (`promotion`) ne change
+ * pas.
  */
 
 /** Le chapitre se joue dans la boutique du cours : MAILLE & CO, seule. */
@@ -83,10 +90,8 @@ export const SOLUTION_DU_LABORATOIRE = { remise: 7.5, stock: 740 } as const;
 /** La variante chiffrée : le rayon plein, et trois remises à comparer, en %. */
 export const REMISES_DU_RAYON_PLEIN = [10, 15, 7.5] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+/** Au dixième : seulement pour l'export figé de l'arène, qui ne change pas. */
 const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 /** Un quotient montré avec trois décimales, tronqué : « 22,714… ». */
 const troisDecimales = (x: number) => `${(Math.floor(x * 1000 + 1e-9) / 1000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}…`;
@@ -192,8 +197,8 @@ export function promotionDuPointDeVente(c: Pick<Cas, "code">) {
     cv,
     remise,
     prixTtcEnPromotion: auCentime(r.prixTtc * (1 - p.remise)),
-    baisseDeLaMarge: auDixieme(p.baisseDeLaMargeUnitaire * 100),
-    hausseNecessaire: auDixieme((p.hausseNecessaire ?? 0) * 100),
+    baisseDeLaMarge: auCentime(p.baisseDeLaMargeUnitaire * 100),
+    hausseNecessaire: auCentime((p.hausseNecessaire ?? 0) * 100),
     volumeNecessaire: p.volumeNecessaire!,
     issue: issueDeLaPromotion(p),
     rayonPlein,
@@ -285,7 +290,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
       notions: ["markdown", "contribution_margin"],
       question: (c) => {
         const x = promotionDuPointDeVente(c);
-        return `Calculez le prix payé en promotion (${eur(x.r.prixHt)} moins ${pct(x.remise)}), la marge d'un pull au prix de l'étiquette (${eur(x.r.prixHt)} − ${eur(x.cv)}), puis en promotion, et la baisse de cette marge, en pourcentage, au dixième.`;
+        return `Calculez le prix payé en promotion (${eur(x.r.prixHt)} moins ${pct(x.remise)}), la marge d'un pull au prix de l'étiquette (${eur(x.r.prixHt)} − ${eur(x.cv)}), puis en promotion, et la baisse de cette marge, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = promotionDuPointDeVente(c);
@@ -299,7 +304,6 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
             libelle: "Baisse de la marge d'un pull (%)",
             attendu: x.baisseDeLaMarge,
             calcul: `(${eur(s.margeUnitaire)} − ${eur(a.margeUnitaire)}) ÷ ${eur(s.margeUnitaire)} × 100 = ${pct(x.baisseDeLaMarge)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -385,7 +389,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
       notions: ["markdown", "contribution_margin"],
       question: (c) => {
         const x = promotionDuPointDeVente(c);
-        return `Sans remise, ${x.f.promotion.mois} laisse ${qte(x.p.sans.ventes)} × ${eur(x.p.sans.margeUnitaire)} de marge. Calculez cette marge, le volume qu'il faudrait vendre en promotion pour la garder (à l'unité supérieure), puis la hausse des ventes que cela suppose, en pourcentage, au dixième.`;
+        return `Sans remise, ${x.f.promotion.mois} laisse ${qte(x.p.sans.ventes)} × ${eur(x.p.sans.margeUnitaire)} de marge. Calculez cette marge, le volume qu'il faudrait vendre en promotion pour la garder (à l'unité supérieure), puis la hausse des ventes que cela suppose, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = promotionDuPointDeVente(c);
@@ -393,14 +397,14 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
           { libelle: "Marge d'un mois sans remise", attendu: x.p.sans.marge, calcul: `${qte(x.p.sans.ventes)} × ${eur(x.p.sans.margeUnitaire)} = ${eur(x.p.sans.marge)}` },
           {
             libelle: "Volume nécessaire en promotion",
+            nature: "quantite",
             attendu: x.volumeNecessaire,
-            calcul: `${eur(x.p.sans.marge)} ÷ ${eur(x.p.avec.margeUnitaire)} = ${qte(auCentime(x.p.sans.marge / x.p.avec.margeUnitaire))}, soit ${qte(x.volumeNecessaire)} pulls`,
+            calcul: `${eur(x.p.sans.marge)} ÷ ${eur(x.p.avec.margeUnitaire)} = ${qte(auCentime(x.p.sans.marge / x.p.avec.margeUnitaire))}, soit ${entier(x.volumeNecessaire)} pulls à l'unité au-dessus : un de moins ne garderait pas la marge`,
           },
           {
             libelle: "Hausse des ventes nécessaire (%)",
             attendu: x.hausseNecessaire,
             calcul: `(${qte(x.volumeNecessaire)} ÷ ${qte(x.p.sans.ventes)} − 1) × 100 = ${pct(x.hausseNecessaire)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -512,8 +516,8 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
         const x = promotionDuPointDeVente(c);
         const a = x.p.avec;
         return [
-          { libelle: "Pulls demandés en promotion", attendu: a.demande, calcul: `${qte(x.p.sans.demande)} × (1 + ${qte(x.f.elasticiteALaRemise)} × ${pct(x.remise)}) = ${qte(a.demande)}` },
-          { libelle: "Pulls vendus en promotion", attendu: a.ventes, calcul: `la plus petite de ${qte(a.demande)} demandés et ${qte(a.stockEnRayon)} en rayon : ${qte(a.ventes)}` },
+          { libelle: "Pulls demandés en promotion", nature: "quantite", attendu: a.demande, calcul: `${qte(x.p.sans.demande)} × (1 + ${qte(x.f.elasticiteALaRemise)} × ${pct(x.remise)}) = ${qte(a.demande)}` },
+          { libelle: "Pulls vendus en promotion", nature: "quantite", attendu: a.ventes, calcul: `la plus petite de ${qte(a.demande)} demandés et ${qte(a.stockEnRayon)} en rayon : ${qte(a.ventes)}` },
           { libelle: "Gain de la promotion", attendu: x.p.gain, calcul: `${qte(a.ventes)} × ${eur(a.margeUnitaire)} − ${eur(x.p.sans.marge)} = ${eur(a.marge)} − ${eur(x.p.sans.marge)} = ${eur(x.p.gain)}` },
         ];
       },
@@ -640,13 +644,13 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
             calcul: `${eur(x.p.sans.marge)} ÷ ${qte(x.p.stockEnRayon)} = ${troisDecimales(x.p.sans.marge / x.p.stockEnRayon)}, soit ${eur(x.margeARebours)} au centime supérieur`,
           },
           { libelle: "Prix payé le plus bas, hors taxes", attendu: x.prixARebours, calcul: `${eur(x.cv)} + ${eur(x.margeARebours)} = ${eur(x.prixARebours)}` },
-          { libelle: "Remise la plus forte (%)", attendu: x.remiseARebours, calcul: `(1 − ${eur(x.prixARebours)} ÷ ${eur(x.r.prixHt)}) × 100 = ${pct(x.remiseARebours, 2)}`, tolerance: 0.01 },
+          { libelle: "Remise la plus forte (%)", attendu: x.remiseARebours, calcul: `(1 − ${eur(x.prixARebours)} ÷ ${eur(x.r.prixHt)}) × 100 = ${pct(x.remiseARebours)}` },
         ];
       },
       explication: (c) => {
         const x = promotionDuPointDeVente(c);
         return [
-          `Avec ${qte(x.p.stockEnRayon)} pulls en rayon, la remise ne pouvait pas dépasser ${pct(x.remiseARebours, 2)}. À cette remise, la simulation fait demander ${qte(x.demandeARebours)} pulls : la demande suit, c'est le rayon qui fixe le plafond. La remise prévue, ${pct(x.remise)}, demandait ${qte(x.volumeNecessaire)} pulls servis.`,
+          `Avec ${qte(x.p.stockEnRayon)} pulls en rayon, la remise ne pouvait pas dépasser ${pct(x.remiseARebours)}. À cette remise, la simulation fait demander ${qte(x.demandeARebours)} pulls : la demande suit, c'est le rayon qui fixe le plafond. La remise prévue, ${pct(x.remise)}, demandait ${qte(x.volumeNecessaire)} pulls servis.`,
           "Arrondir la remise au dixième, ici vers le haut, ferait déjà perdre quelques euros : un plancher se calcule au centime, et s'arrondit du côté qui garde la marge.",
         ];
       },
@@ -720,20 +724,20 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
       notions: ["markdown", "psych_price"],
       question: (c) => {
         const a = annonceDeReduction(ficheDe(c));
-        return `Après la promotion de février (le ${a.r.nom.toLowerCase()} à ${eur(a.prixDeFevrier)}), la boutique veut annoncer « −${pct(REDUCTION_DE_MARS * 100, 0)} » sur le col rond la première semaine de mars. Le prix de référence d'une réduction est le prix le plus bas pratiqué pendant les ${JOURS_DU_PRIX_DE_REFERENCE} jours qui précèdent. Calculez ce prix de référence, le prix que la boutique doit afficher pour annoncer « −${pct(REDUCTION_DE_MARS * 100, 0)} », puis la réduction réelle, en pourcentage au dixième, si elle calculait les ${pct(REDUCTION_DE_MARS * 100, 0)} sur l'étiquette de ${eur(a.r.prixTtc)}.`;
+        return `Après la promotion de février (le ${a.r.nom.toLowerCase()} à ${eur(a.prixDeFevrier)}), la boutique veut annoncer « −${pct(REDUCTION_DE_MARS * 100)} » sur le col rond la première semaine de mars. Le prix de référence d'une réduction est le prix le plus bas pratiqué pendant les ${JOURS_DU_PRIX_DE_REFERENCE} jours qui précèdent. Calculez ce prix de référence, le prix que la boutique doit afficher pour annoncer « −${pct(REDUCTION_DE_MARS * 100)} », puis la réduction réelle, en pourcentage à deux décimales, si elle calculait les ${pct(REDUCTION_DE_MARS * 100)} sur l'étiquette de ${eur(a.r.prixTtc)}.`;
       },
       champs: (c) => {
         const a = annonceDeReduction(ficheDe(c));
         return [
           { libelle: "Prix de référence", attendu: a.prixDeReference, calcul: `le plus bas de ${eur(a.r.prixTtc)} et ${eur(a.prixDeFevrier)}, pratiqué en février = ${eur(a.prixDeReference)}` },
-          { libelle: "Prix à afficher pour annoncer la réduction", attendu: a.prixAnnonce, calcul: `${eur(a.prixDeReference)} × (1 − ${pct(REDUCTION_DE_MARS * 100, 0)}) = ${eur(a.prixAnnonce)}` },
-          { libelle: "Réduction réelle sur l'étiquette (%)", attendu: auDixieme(a.reductionReelle * 100), tolerance: 0.1, calcul: `1 − ${eur(a.prixSurLEtiquette)} ÷ ${eur(a.prixDeReference)} = ${pct(auDixieme(a.reductionReelle * 100))}` },
+          { libelle: "Prix à afficher pour annoncer la réduction", attendu: a.prixAnnonce, calcul: `${eur(a.prixDeReference)} × (1 − ${pct(REDUCTION_DE_MARS * 100)}) = ${eur(a.prixAnnonce)}` },
+          { libelle: "Réduction réelle sur l'étiquette (%)", attendu: auCentime(a.reductionReelle * 100), calcul: `(1 − ${eur(a.prixSurLEtiquette)} ÷ ${eur(a.prixDeReference)}) × 100 = ${pct(auCentime(a.reductionReelle * 100))}` },
         ];
       },
       explication: (c) => {
         const a = annonceDeReduction(ficheDe(c));
         return [
-          `Calculer les ${pct(REDUCTION_DE_MARS * 100, 0)} sur l'étiquette, ${eur(a.prixSurLEtiquette)}, annoncerait une réduction que le client ne reçoit pas : par rapport au prix qu'il a vu en février, il ne gagne que ${pct(auDixieme(a.reductionReelle * 100))}. C'est une pratique commerciale trompeuse. Pour annoncer « −${pct(REDUCTION_DE_MARS * 100, 0)} », il faut descendre à ${eur(a.prixAnnonce)}, et refaire le calcul de la marge à ce prix.`,
+          `Calculer les ${pct(REDUCTION_DE_MARS * 100)} sur l'étiquette, ${eur(a.prixSurLEtiquette)}, annoncerait une réduction que le client ne reçoit pas : par rapport au prix qu'il a vu en février, il ne gagne que ${pct(auCentime(a.reductionReelle * 100))}. C'est une pratique commerciale trompeuse. Pour annoncer « −${pct(REDUCTION_DE_MARS * 100)} », il faut descendre à ${eur(a.prixAnnonce)}, et refaire le calcul de la marge à ce prix.`,
         ];
       },
     },

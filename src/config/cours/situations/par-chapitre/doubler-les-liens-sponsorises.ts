@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SITE, siteDuCabinet } from "../../chapitres/le-site-qui-vend";
 import { liensSponsorises } from "../../monde/site-d-atlas";
@@ -19,6 +19,10 @@ import type { Situation } from "../types";
  * LE JUGEMENT : le doublement rapporte encore, mais moins qu'un budget de 5 400 € ; son dernier palier
  * fait perdre de l'argent, et ne paierait que si une commande laissait 500 € de marge, presque tout son
  * panier de 525 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les commandes attendues (une espérance) et les ROAS sont des
+ * grandeurs, au centième, à un centième près (à cinq centièmes, avant, pour les commandes).
  */
 
 /** Le budget que propose l'agence, en multiple du budget du premier trimestre : le double. */
@@ -27,9 +31,7 @@ export const BUDGET_PROPOSE = 2;
 /** Les bornes du curseur de la marge d'une commande, en euros. */
 export const MARGE_DU_CURSEUR = { min: 300, max: 700 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 /** Les liens au budget du trimestre, au budget proposé et au meilleur budget, et ce qui les sépare. */
 export function doublementDesLiens(c: Pick<Cas, "code">) {
@@ -120,10 +122,10 @@ export const DOUBLER_LES_LIENS_SPONSORISES: Situation = {
         const r = doublementDesLiens(c);
         const conv = `${qte(r.x.payant.conversion * 100)} %`;
         return [
-          { libelle: `Commandes attendues à ${eur(r.aujourdhui.budget)}`, attendu: auCentime(r.aujourdhui.commandes), tolerance: 0.05, calcul: `${qte(r.aujourdhui.clics)} × ${conv} = ${qte(auCentime(r.aujourdhui.commandes))}` },
-          { libelle: `ROAS à ${eur(r.aujourdhui.budget)}`, attendu: auCentime(r.aujourdhui.roas), tolerance: 0.01, calcul: `${qte(auCentime(r.aujourdhui.commandes))} × ${eur(r.x.m.panier)} ÷ ${eur(r.aujourdhui.budget)} = ${qte(auCentime(r.aujourdhui.roas))}` },
-          { libelle: `Commandes attendues à ${eur(r.double.budget)}`, attendu: auCentime(r.double.commandes), tolerance: 0.05, calcul: `${qte(r.double.clics)} × ${conv} = ${qte(auCentime(r.double.commandes))}` },
-          { libelle: `ROAS à ${eur(r.double.budget)}`, attendu: auCentime(r.double.roas), tolerance: 0.01, calcul: `${qte(auCentime(r.double.commandes))} × ${eur(r.x.m.panier)} ÷ ${eur(r.double.budget)} = ${qte(auCentime(r.double.roas))}` },
+          { libelle: `Commandes attendues à ${eur(r.aujourdhui.budget)}`, nature: "grandeur", attendu: auCentime(r.aujourdhui.commandes), calcul: `${qte(r.aujourdhui.clics)} × ${conv} = ${qte(auCentime(r.aujourdhui.commandes))}` },
+          { libelle: `ROAS à ${eur(r.aujourdhui.budget)}`, nature: "grandeur", attendu: auCentime(r.aujourdhui.roas), calcul: `${qte(auCentime(r.aujourdhui.commandes))} × ${eur(r.x.m.panier)} ÷ ${eur(r.aujourdhui.budget)} = ${qte(auCentime(r.aujourdhui.roas))}` },
+          { libelle: `Commandes attendues à ${eur(r.double.budget)}`, nature: "grandeur", attendu: auCentime(r.double.commandes), calcul: `${qte(r.double.clics)} × ${conv} = ${qte(auCentime(r.double.commandes))}` },
+          { libelle: `ROAS à ${eur(r.double.budget)}`, nature: "grandeur", attendu: auCentime(r.double.roas), calcul: `${qte(auCentime(r.double.commandes))} × ${eur(r.x.m.panier)} ÷ ${eur(r.double.budget)} = ${qte(auCentime(r.double.roas))}` },
         ];
       },
       explication: (c) => {
@@ -146,7 +148,7 @@ export const DOUBLER_LES_LIENS_SPONSORISES: Situation = {
         const r = doublementDesLiens(c);
         const m = r.x.m.marge;
         return [
-          { libelle: "ROAS des euros ajoutés", attendu: auCentime(r.ajout.roas), tolerance: 0.01, calcul: `${eur(r.ajout.chiffreDAffaires)} ÷ ${eur(r.ajout.budget)} = ${qte(auCentime(r.ajout.roas))}` },
+          { libelle: "ROAS des euros ajoutés", nature: "grandeur", attendu: auCentime(r.ajout.roas), calcul: `${eur(r.ajout.chiffreDAffaires)} ÷ ${eur(r.ajout.budget)} = ${qte(auCentime(r.ajout.roas))}` },
           { libelle: "Gain du doublement", attendu: r.ajout.gain, calcul: `${qte(auCentime(r.ajout.commandes))} × ${eur(m)} − ${eur(r.ajout.budget)} = ${eur(r.ajout.gain)}` },
           { libelle: "Gain du dernier palier", attendu: r.dernier.gain, calcul: `${qte(auCentime(r.dernier.commandes))} × ${eur(m)} − ${eur(r.dernier.budget)} = ${eur(r.dernier.gain)}` },
         ];

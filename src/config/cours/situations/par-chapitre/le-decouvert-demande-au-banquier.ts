@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_BILAN, bilanDuChapitre } from "../../chapitres/le-bilan-et-le-bfr-de-la-boutique";
 import { BANQUE_DE_LA_BOUTIQUE, MOIS_DE_CHARGES_A_GARDER, bilanDeLaBoutique, delaiDu } from "../../monde/comptes-de-la-boutique";
@@ -18,15 +18,15 @@ import type { Situation } from "../types";
  *
  * Les pièges : croire qu'un découvert finance un BFR permanent ; oublier que le dividende baisse le fonds
  * de roulement, et le délai fournisseur le BFR.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'autonomie financière se donne à deux décimales, à un centième
+ * près (au dixième, avant).
  */
 
 /** Les bornes du curseur du dividende, en euros. */
 export const DIVIDENDE_DU_CURSEUR = { min: 250_000, max: 350_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 /** Les chiffres de la réponse. */
 export function decouvertDemande(c: Pick<Cas, "code">) {
@@ -153,14 +153,14 @@ export const LE_DECOUVERT_DEMANDE_AU_BANQUIER: Situation = {
       type: "montants",
       titre: "Ce que verra le banquier",
       notions: ["balance_sheet", "frng"],
-      question: (c) => `Après ce dividende de ${eur(decouvertDemande(c).dividendeMaximal)}, réassort comptant, calculez les capitaux propres, le total du passif, puis l'autonomie financière (en %, au dixième).`,
+      question: (c) => `Après ce dividende de ${eur(decouvertDemande(c).dividendeMaximal)}, réassort comptant, calculez les capitaux propres, le total du passif, puis l'autonomie financière (en %, à deux décimales).`,
       champs: (c) => {
         const x = decouvertDemande(c);
         const a = x.apres;
         return [
           { libelle: "Capitaux propres", attendu: a.capitauxPropres, calcul: `${eur(x.b.capitauxPropres)} − ${eur(x.dividendeMaximal)} = ${eur(a.capitauxPropres)}` },
           { libelle: "Total du passif", attendu: a.totalDuPassif, calcul: `${eur(a.capitauxPropres)} + ${eur(a.provision)} + ${eur(a.emprunt)} + ${eur(a.dettesFournisseurs)} + ${eur(a.dettesFiscalesEtSociales)} = ${eur(a.totalDuPassif)}` },
-          { libelle: "Autonomie financière (%)", attendu: auDixieme(a.autonomieFinanciere * 100), tolerance: 0.1, calcul: `${eur(a.capitauxPropres)} ÷ ${eur(a.totalDuPassif)} × 100 = ${pct(a.autonomieFinanciere * 100)}` },
+          { libelle: "Autonomie financière (%)", attendu: auCentime(a.autonomieFinanciere * 100), calcul: `${eur(a.capitauxPropres)} ÷ ${eur(a.totalDuPassif)} × 100 = ${pct(a.autonomieFinanciere * 100)}` },
         ];
       },
       explication: (c) => {

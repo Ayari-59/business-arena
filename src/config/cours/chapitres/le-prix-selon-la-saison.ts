@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte as entier } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeDeLHotel, nuiteesOffertes, trimestreDeLHotel, type AnneeDeLHotel } from "../monde/hotel";
 import { HOTELS_DU_COURS, type FicheDeLHotel } from "../monde/l-escale";
@@ -53,6 +53,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     nuitées offertes, et ce qu'il rapporte de plus), une-petite-baisse (une variante chiffrée : une
  *     baisse plus petite là où celle de 15 % ne payait pas), la-regle-des-15-pour-cent (une critique de
  *     la règle) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation se donne à deux décimales, à un centième
+ * près (au dixième, avant) ; la demande moyenne et les coefficients saisonniers sont des grandeurs, au
+ * centième ; les écarts de résultat, le prix qui remplit juste l'hôtel et son résultat au centime, à
+ * un centime près (à un euro, cinq centimes et 300 € près, avant) ; les nuitées sont des quantités :
+ * le corrigé écrit le quotient à deux décimales, puis l'arrondit à l'unité (au-dessus pour une nuitée
+ * à gagner, au-dessous pour une nuitée qu'on peut perdre), et dit pourquoi.
  */
 
 /**
@@ -77,12 +85,9 @@ export const PETITE_BAISSE = 0.05;
  */
 export const PRIX_DU_LABORATOIRE = { min: 60, max: 110, pas: 0.1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
+const qte = nombreAuCentieme;
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 /** « 1er », « 2e » : le rang d'un trimestre, compté à partir de 1. */
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
@@ -131,10 +136,20 @@ export function anneeAuPrix(c: Pick<Cas, "code">, facteur: (numero: number) => n
   return anneeDeLHotel(f, [1, 2, 3, 4].map((k) => f.prixDeLAnnee * facteur(k)));
 }
 
-/** Les nuitées qu'une baisse doit faire vendre en plus pour garder la marge : vendues × b × p ÷ (p × (1 − b) − coût variable). */
-export function nuiteesAGagner(f: FicheDeLHotel, vendues: number): number {
+/**
+ * Le quotient des nuitées qu'une baisse doit faire vendre en plus pour garder la marge, à deux
+ * décimales : vendues × (b × p) ÷ (p × (1 − b) − coût variable), chaque montant au centime.
+ */
+export function nuiteesAGagnerCalculees(f: FicheDeLHotel, vendues: number): number {
   const p = f.prixDeLAnnee;
-  return Math.ceil((vendues * BAISSE_EN_BASSE_SAISON * p) / (p * (1 - BAISSE_EN_BASSE_SAISON) - f.coutVariableParNuitee) - 1e-9);
+  const parNuiteeVendue = auCentime(p * BAISSE_EN_BASSE_SAISON);
+  const margeDuPrixBaisse = auCentime(auCentime(p * (1 - BAISSE_EN_BASSE_SAISON)) - f.coutVariableParNuitee);
+  return auCentime((vendues * parNuiteeVendue) / margeDuPrixBaisse);
+}
+
+/** Les nuitées qu'une baisse doit faire vendre en plus pour garder la marge : le quotient, à l'unité au-dessus. */
+export function nuiteesAGagner(f: FicheDeLHotel, vendues: number): number {
+  return Math.ceil(nuiteesAGagnerCalculees(f, vendues) - 1e-9);
 }
 
 /** Les trois prix de l'année, et ce que chacun donne. */
@@ -148,6 +163,7 @@ export function prixSelonLaSaison(c: Pick<Cas, "code">) {
   const refus = unique.trimestres.filter((t) => t.refusees > 0).map((t) => t.numero);
   const vides = unique.trimestres.filter((t) => t.vides > 0).map((t) => t.numero);
   const aGagner = (k: number) => nuiteesAGagner(f, unique.trimestres[k - 1]!.vendues);
+  const aGagnerCalcule = (k: number) => nuiteesAGagnerCalculees(f, unique.trimestres[k - 1]!.vendues);
   const videsDu = (k: number) => unique.trimestres[k - 1]!.vides;
   const baisses = vides.filter((k) => videsDu(k) >= aGagner(k));
   const facteurDeRemplissage = (k: number) => (refus.includes(k) ? 1 + HAUSSE_EN_HAUTE_SAISON : baisses.includes(k) ? 1 - BAISSE_EN_BASSE_SAISON : 1);
@@ -174,6 +190,7 @@ export function prixSelonLaSaison(c: Pick<Cas, "code">) {
     baisses,
     tropPeuDeVides: vides.filter((k) => !baisses.includes(k)),
     aGagner,
+    aGagnerCalcule,
     videsDu,
     ecartSaison: auCentime(saison.resultat - unique.resultat),
     ecartRemplissage: auCentime(remplissage.resultat - unique.resultat),
@@ -199,13 +216,14 @@ function lesSeuilsDuPrix(f: FicheDeLHotel, unique: AnneeDeLHotel, refus: readonl
   const kb = tropPeu[0] ?? vides[0] ?? 1;
   const tb = unique.trimestres[kb - 1]!;
   const margeDeLaBaisse = auCentime((p - cv) * tb.vendues);
-  const pourLaBaisse = Math.ceil(margeDeLaBaisse / (prixBas - cv) - 1e-9);
+  const pourLaBaisse = Math.ceil(auCentime(margeDeLaBaisse / auCentime(prixBas - cv)) - 1e-9);
   const kh = refus[0] ?? 1;
   const th = unique.trimestres[kh - 1]!;
   const margeDeLaHausse = auCentime((p - cv) * th.vendues);
-  const pourLaHausse = Math.ceil(margeDeLaHausse / (prixHaut - cv) - 1e-9);
+  const pourLaHausse = Math.ceil(auCentime(margeDeLaHausse / auCentime(prixHaut - cv)) - 1e-9);
   const gainSiRienNeSePerd = auCentime(th.vendues * (prixHaut - p));
-  const peutPerdre = Math.floor(gainSiRienNeSePerd / auCentime(prixHaut - cv) + 1e-9);
+  const peutPerdreCalcule = auCentime(gainSiRienNeSePerd / auCentime(prixHaut - cv));
+  const peutPerdre = Math.floor(peutPerdreCalcule + 1e-9);
   const relevee = trimestreDeLHotel(f, kh, prixHaut);
   // La variante : la petite baisse au trimestre où celle de 15 % ne payait pas.
   const prixPetit = auCentime(p * (1 - PETITE_BAISSE));
@@ -231,6 +249,7 @@ function lesSeuilsDuPrix(f: FicheDeLHotel, unique: AnneeDeLHotel, refus: readonl
       min: Math.floor(pourLaHausse / 1000) * 1000,
       max: th.offertes,
       gainSiRienNeSePerd,
+      peutPerdreCalcule,
       peutPerdre,
       relevee,
       perdues: th.vendues - relevee.vendues,
@@ -240,7 +259,8 @@ function lesSeuilsDuPrix(f: FicheDeLHotel, unique: AnneeDeLHotel, refus: readonl
       prix: prixPetit,
       parNuiteeVendue: auCentime(p - prixPetit),
       margeParNuitee: auCentime(prixPetit - cv),
-      aGagner: Math.ceil((tb.vendues * auCentime(p - prixPetit)) / auCentime(prixPetit - cv) - 1e-9),
+      aGagnerCalcule: auCentime((tb.vendues * auCentime(p - prixPetit)) / auCentime(prixPetit - cv)),
+      aGagner: Math.ceil(auCentime((tb.vendues * auCentime(p - prixPetit)) / auCentime(prixPetit - cv)) - 1e-9),
       simulee: petite,
       gagnees: petite.vendues - tb.vendues,
       ecart: auCentime(petite.resultat - tb.resultat),
@@ -401,22 +421,22 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
       notions: ["seasonality"],
       question: (c) => {
         const m = saisonDuMarche(c);
-        return `À partir de la dernière ligne du tableau, calculez la demande moyenne d'un trimestre (la somme des ${qte(m.n)} trimestres ÷ ${qte(m.n)}), puis le coefficient saisonnier du trimestre le plus haut et celui du trimestre le plus bas, au centième.`;
+        return `À partir de la dernière ligne du tableau, calculez la demande moyenne d'un trimestre (la somme des ${qte(m.n)} trimestres ÷ ${qte(m.n)}, au centième), puis le coefficient saisonnier du trimestre le plus haut et celui du trimestre le plus bas, au centième.`;
       },
       champs: (c) => {
         const m = saisonDuMarche(c);
         const coef = (k: number) => ({
           libelle: `Coefficient du ${rang(k)} trimestre`,
+          nature: "grandeur" as const,
           attendu: m.coefficients[k - 1]!,
           calcul: `${qte(m.totaux[k - 1]!)} ÷ ${qte(m.moyenne)} = ${qte(m.coefficients[k - 1]!)}`,
-          tolerance: 0.01,
         });
         return [
           {
             libelle: "Demande moyenne d'un trimestre",
+            nature: "grandeur",
             attendu: m.moyenne,
             calcul: `(${m.totaux.map(qte).join(" + ")}) ÷ ${qte(m.n)} = ${qte(m.moyenne)}`,
-            tolerance: 1,
           },
           coef(m.plusHaut),
           coef(m.plusBas),
@@ -448,14 +468,14 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
           ...p.refus.map((k) => ({
             libelle: `Nuitées refusées au ${rang(k)} trimestre`,
             attendu: t[k - 1]!.refusees,
+            nature: "quantite" as const,
             calcul: `${qte(t[k - 1]!.demande)} − ${qte(t[k - 1]!.offertes)} = ${qte(t[k - 1]!.refusees)}`,
-            tolerance: 0,
           })),
           ...p.vides.map((k) => ({
             libelle: `Nuitées vides au ${rang(k)} trimestre`,
             attendu: p.videsDu(k),
+            nature: "quantite" as const,
             calcul: `${qte(t[k - 1]!.offertes)} − ${qte(t[k - 1]!.vendues)} = ${qte(p.videsDu(k))}`,
-            tolerance: 0,
           })),
         ];
       },
@@ -535,14 +555,13 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const a = p.saison;
         const k = calculsDeLAnnee(a);
         return [
-          { libelle: "Taux d'occupation au prix de la saison (%)", attendu: a.occupation, calcul: k.occupation, tolerance: 0.1 },
+          { libelle: "Taux d'occupation au prix de la saison (%)", attendu: a.occupation, calcul: k.occupation },
           { libelle: "Prix moyen au prix de la saison", attendu: a.prixMoyen, calcul: k.prixMoyen },
           { libelle: "Revenu par chambre disponible au prix de la saison", attendu: a.revpar, calcul: k.revpar },
           {
             libelle: "Écart de résultat, saison moins prix unique",
             attendu: p.ecartSaison,
             calcul: `${eur(a.resultat)} − ${retranche(p.unique.resultat)} = ${eur(p.ecartSaison)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -686,9 +705,9 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const t = p.unique.trimestres;
         return p.vides.map((k) => ({
           libelle: `Nuitées à gagner au ${rang(k)} trimestre`,
+          nature: "quantite" as const,
           attendu: p.aGagner(k),
-          calcul: `${qte(t[k - 1]!.vendues)} × ${eur(auCentime(p.prixUnique * BAISSE_EN_BASSE_SAISON))} ÷ ${eur(auCentime(p.prixBas - p.f.coutVariableParNuitee))} = ${qte(p.aGagner(k))}`,
-          tolerance: 1,
+          calcul: `${qte(t[k - 1]!.vendues)} × ${eur(auCentime(p.prixUnique * BAISSE_EN_BASSE_SAISON))} ÷ ${eur(auCentime(p.prixBas - p.f.coutVariableParNuitee))} = ${qte(p.aGagnerCalcule(k))}, soit ${entier(p.aGagner(k))} nuitées à l'unité au-dessus : une de moins ne garderait pas la marge`,
         }));
       },
       explication: (c) => {
@@ -799,9 +818,9 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
           { libelle: "Marge d'une nuitée perdue", attendu: h.margeParNuitee, calcul: `${eur(p.prixHaut)} − ${eur(p.f.coutVariableParNuitee)} = ${eur(h.margeParNuitee)}` },
           {
             libelle: "Nuitées que la hausse peut perdre",
+            nature: "quantite",
             attendu: h.peutPerdre,
-            calcul: `${eur(h.gainSiRienNeSePerd)} ÷ ${eur(h.margeParNuitee)} = ${qte(h.peutPerdre)}`,
-            tolerance: 1,
+            calcul: `${eur(h.gainSiRienNeSePerd)} ÷ ${eur(h.margeParNuitee)} = ${qte(h.peutPerdreCalcule)}, soit ${entier(h.peutPerdre)} nuitées à l'unité au-dessous : une de plus coûterait plus que la hausse ne rapporte`,
           },
         ];
       },
@@ -842,13 +861,12 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const a = p.remplissage;
         const k = calculsDeLAnnee(a);
         return [
-          { libelle: "Taux d'occupation au prix du remplissage (%)", attendu: a.occupation, calcul: k.occupation, tolerance: 0.1 },
+          { libelle: "Taux d'occupation au prix du remplissage (%)", attendu: a.occupation, calcul: k.occupation },
           { libelle: "Revenu par chambre disponible au prix du remplissage", attendu: a.revpar, calcul: k.revpar },
           {
             libelle: "Écart de résultat, remplissage moins prix unique",
             attendu: p.ecartRemplissage,
             calcul: `${eur(a.resultat)} − ${retranche(p.unique.resultat)} = ${eur(p.ecartRemplissage)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -988,19 +1006,16 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
             libelle: "Prix qui remplit juste l'hôtel",
             attendu: r.prix,
             calcul: `${eur(f.prixDeLAnnee)} × (${qte(r.demande)} ÷ ${qte(l.p.offertes)}) ^ (1 ÷ ${qte(-f.elasticite)}) = ${eur(r.prix)}`,
-            tolerance: 0.05,
           },
           {
             libelle: "Résultat du trimestre à ce prix",
             attendu: r.resultat,
             calcul: `(${eur(r.prix)} − ${eur(f.coutVariableParNuitee)}) × ${qte(l.p.offertes)} − ${eur(f.chargesFixesParTrimestre)} = ${eur(r.resultat)}`,
-            tolerance: 300,
           },
           {
             libelle: "Ce qu'il rapporte de plus que la hausse",
             attendu: r.ecartAvecLaHausse,
             calcul: `${eur(r.resultat)} − ${eur(avant.resultat)} = ${eur(r.ecartAvecLaHausse)}`,
-            tolerance: 300,
           },
         ];
       },
@@ -1032,20 +1047,20 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         return [
           {
             libelle: "Nuitées à gagner, petite baisse",
+            nature: "quantite",
             attendu: v.aGagner,
-            calcul: `${qte(b.vendues)} × ${eur(v.parNuiteeVendue)} ÷ (${eur(v.prix)} − ${eur(p.f.coutVariableParNuitee)}) = ${qte(v.aGagner)}`,
-            tolerance: 1,
+            calcul: `${qte(b.vendues)} × ${eur(v.parNuiteeVendue)} ÷ (${eur(v.prix)} − ${eur(p.f.coutVariableParNuitee)}) = ${qte(v.aGagnerCalcule)}, soit ${entier(v.aGagner)} nuitées à l'unité au-dessus : une de moins ne garderait pas la marge`,
           },
           {
             libelle: "Nuitées gagnées, petite baisse",
+            nature: "quantite",
             attendu: v.gagnees,
-            calcul: `${qte(v.simulee.vendues)} − ${qte(b.vendues)} = ${qte(v.gagnees)}, l'hôtel ne vendant pas plus de ${qte(p.offertes)} nuitées`,
+            calcul: `${qte(v.simulee.vendues)} − ${qte(b.vendues)} = ${qte(v.gagnees)} : l'hôtel ne vend pas plus de ${qte(p.offertes)} nuitées`,
           },
           {
             libelle: "Écart de résultat du trimestre, petite baisse",
             attendu: v.ecart,
             calcul: `(${eur(v.prix)} − ${eur(p.f.coutVariableParNuitee)}) × ${qte(v.simulee.vendues)} − (${eur(p.prixUnique)} − ${eur(p.f.coutVariableParNuitee)}) × ${qte(b.vendues)} = ${eur(v.ecart)}`,
-            tolerance: 1,
           },
         ];
       },

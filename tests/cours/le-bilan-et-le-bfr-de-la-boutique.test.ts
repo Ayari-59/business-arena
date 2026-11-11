@@ -4,7 +4,7 @@ import { MAILLE_ET_CO as f } from "../../src/config/cours/monde/maille-et-co";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { LE_DECOUVERT_DEMANDE_AU_BANQUIER } from "../../src/config/cours/situations/par-chapitre/le-decouvert-demande-au-banquier";
-import { attendus, casDedie, centime, curseur, dixieme, juste, laboratoire, verifierLesTextes } from "./gardes-de-la-gestion-de-la-boutique";
+import { attendus, casDedie, centime, curseur, juste, laboratoire, verifierLesTextes } from "./gardes-de-la-gestion-de-la-boutique";
 
 /**
  * LE BILAN ET LE BFR DE LA BOUTIQUE, ET SON CAS : LE DÉCOUVERT DEMANDÉ AU BANQUIER.
@@ -55,7 +55,7 @@ describe("le bilan et le BFR de la boutique", () => {
     expect(attendus(ch, "le-bfr-au-comptant")).toEqual({ "Dettes fournisseurs": 0, "Besoin en fonds de roulement": bfrComptant, "Trésorerie nette": centime(frng - bfrComptant) });
     const camv = 25_992 * 24.5;
     expect(attendus(ch, "les-ratios")).toEqual({
-      "Autonomie financière (%)": dixieme((cp / passif) * 100),
+      "Autonomie financière (%)": centime((cp / passif) * 100),
       "Couverture des emplois stables": centime(rs / 61_000),
       "Liquidité générale": centime((stock + creances + dispo) / (fournisseurs + fiscales)),
       "Durée de stockage (jours)": centime((((23_400 + stock) / 2) / camv) * 360),
@@ -74,7 +74,7 @@ describe("le bilan et le BFR de la boutique", () => {
       "Capitaux propres": cpApres,
       "Fonds de roulement net global": centime(frng - 320_000),
       "Trésorerie nette": centime(dispo - 320_000),
-      "Autonomie financière (%)": dixieme((cpApres / (passif - 320_000)) * 100),
+      "Autonomie financière (%)": centime((cpApres / (passif - 320_000)) * 100),
     });
     expect(juste(ch, "la-provision-justifiee")).toMatch(/^Le fonds de roulement et le BFR baissent du même montant/);
     expect(juste(ch, "le-decouvert")).toMatch(/^Qu'un découvert finance un creux passager/);
@@ -101,7 +101,7 @@ describe("le cas : le découvert demandé au banquier", () => {
     expect(curseur(s, "le-dividende-au-curseur").attendu).toBe(d);
     const cpApres = centime(cp - d);
     const passifApres = centime(cpApres + 5_000 + 28_000 + fiscales);
-    expect(attendus(s, "l-autonomie")).toEqual({ "Capitaux propres": cpApres, "Total du passif": passifApres, "Autonomie financière (%)": dixieme((cpApres / passifApres) * 100) });
+    expect(attendus(s, "l-autonomie")).toEqual({ "Capitaux propres": cpApres, "Total du passif": passifApres, "Autonomie financière (%)": centime((cpApres / passifApres) * 100) });
     expect(juste(s, "reponse")).toMatch(/^Verser au plus 315 478 €/);
   });
 
