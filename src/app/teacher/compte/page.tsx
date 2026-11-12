@@ -12,7 +12,7 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
-import { logoutAction } from "../actions";
+import { logoutEverywhereAction } from "../actions";
 import { reglerNouveautesAction, renvoyerLeLienAction, supprimerMonCompteAction } from "./actions";
 import { SuppressionConfirmee } from "@/components/suppression-confirmee";
 import { MOT_DE_SUPPRESSION } from "@/config/conservation";
@@ -27,7 +27,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 /**
- * MON COMPTE : ce que Business Arena sait de l'enseignant, et le réglage des nouveautés.
+ * MON COMPTE : ce que Business Arena sait de l'enseignant, le réglage des nouveautés, et la
+ * déconnexion de tous ses appareils (« Se déconnecter partout »).
  *
  * La case est celle de l'inscription, avec le même texte (config/nouveautes.ts) : cochée,
  * elle enregistre l'accord, sa date et la version du texte ; décochée, elle le retire. Le
@@ -90,13 +91,6 @@ async function MonComptePage({
         <NavigationEnseignant
           className="mt-6"
           liens={{ etablissement: isOrgAdmin, administration: staff.isPlatformAdmin }}
-          compte={
-            <FormulaireDeDeconnexion action={logoutAction}>
-              <button className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-                Se déconnecter
-              </button>
-            </FormulaireDeDeconnexion>
-          }
         />
       </EnTeteDePage>
       <div className={`${COLONNE_DE_PAGE} space-y-8`}>
@@ -149,6 +143,24 @@ async function MonComptePage({
             </GuardedForm>
           </section>
         ) : null}
+
+        {/* SE DÉCONNECTER PARTOUT, ICI (novembre 2026). Il était au bout de la rangée de
+            l'accueil, à côté de la déconnexion simple, qui ferme maintenant la rangée de
+            chaque page : ce geste-ci, plus rare, va avec le compte. Il avance la version de
+            session du compte, si bien que tout cookie ouvert avant est refusé. */}
+        <Rubrique>Vos connexions</Rubrique>
+        <section id="connexions" aria-label="Vos connexions" className="carte grid gap-4 p-4 sm:p-6" data-vos-connexions="">
+          <p className="text-sm text-slate-300">
+            « Déconnexion » ne ferme votre session que sur cet appareil. Vous avez ouvert votre compte ailleurs, sur
+            un poste de la salle informatique ou un téléphone, et oublié de vous y déconnecter ? « Se déconnecter
+            partout » ferme toutes vos sessions, celle-ci comprise : il faudra vous reconnecter sur chaque appareil.
+          </p>
+          <FormulaireDeDeconnexion action={logoutEverywhereAction}>
+            <SubmitButton pendingLabel="Fermeture des sessions…" className={bouton({ variante: "secondaire" })}>
+              Se déconnecter partout
+            </SubmitButton>
+          </FormulaireDeDeconnexion>
+        </section>
 
         <Rubrique>Nouveautés de Business Arena</Rubrique>
         <section id="nouveautes" aria-label="Nouveautés de Business Arena" className="carte grid gap-4 p-4 sm:p-6" data-reglage-nouveautes="">
