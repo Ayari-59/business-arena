@@ -306,6 +306,26 @@ async function EntreprisesPage() {
         <BandeOuverture
           id="entreprises.accroche"
           contraste={c("entreprises.accroche")}
+          // POUR LES ENTREPRISES, EN TÊTE (audit UX du 11 novembre 2026, P2-10 ; décision du propriétaire) :
+          // c'est l'adresse qu'un responsable formation devine, et la page, celle des élèves, ne menait
+          // ni à l'offre ni au devis.
+          annonce={
+            <div
+              data-encart-entreprises=""
+              className="mb-8 flex max-w-3xl flex-wrap items-baseline gap-x-3 gap-y-1.5 rounded-lg border border-white/15 bg-slate-900 px-4 py-3"
+            >
+              <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-300">Pour les entreprises</p>
+              <p className="text-base leading-relaxed text-slate-200">
+                Former vos managers à décider : les épisodes manager, en autonomie ou en cohorte animée, sur devis.{" "}
+                <Link
+                  href="/entreprises/offre"
+                  className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir l&apos;offre pour les entreprises
+                </Link>
+              </p>
+            </div>
+          }
           surtitre={`${SCENARIO_CHOICES.length} métiers · ${SCENARIO_CHOICES.length} contraintes`}
           titre={
             <>
@@ -358,7 +378,7 @@ async function EntreprisesPage() {
           <div className="mt-8 flex max-w-3xl flex-col gap-4 rounded-lg border border-white/15 bg-slate-900 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-300">
-                Nouveau · Pour les entreprises
+                Nouveau · Épisodes manager
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
                 {EPISODES.length} épisodes dans la peau d&apos;un manager : une agence qui dérape,

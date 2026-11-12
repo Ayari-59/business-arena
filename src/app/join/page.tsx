@@ -11,7 +11,7 @@ import { promesseDuCarton } from "@/services/game.service";
 /** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
 export const metadata: Metadata = {
   title: "J’ai un code",
-  description: "Entrez le code de la partie donné par votre enseignant pour rejoindre votre équipe.",
+  description: "Entrez le code donné par votre enseignant : celui d'une partie, d'une classe, d'une cohorte, d'un concours ou d'un examen.",
   robots: { index: false, follow: false },
 };
 
@@ -50,9 +50,11 @@ async function JoinPage({
               ? // Le carton ne déplace plus : promettre une affectation
                 // automatique contredirait le bandeau juste en dessous.
                 "Le code est déjà rempli : entrez votre prénom pour revenir dans votre partie."
-              : codeInitial
-                ? "Le code est déjà rempli : entrez votre prénom, vous serez affecté automatiquement à une équipe."
-                : "Entrez le code donné par votre enseignant : vous serez affecté automatiquement à une équipe."}
+              : // TOUS LES CODES SE TAPENT ICI (audit UX du 11 novembre 2026, P2-12) : l'équipe n'est
+                // promise que pour une partie, la seule entrée qui en donne une.
+                codeInitial
+                ? "Le code est déjà rempli : entrez votre prénom, puis validez. Pour une partie, vous serez affecté automatiquement à une équipe."
+                : "Entrez le code donné par votre enseignant, puis votre prénom. Pour une partie, vous serez affecté automatiquement à une équipe."}
         </p>
       </div>
       {occupant ? <IdentiteDeLAppareil pseudo={occupant} variante="entree" /> : null}
@@ -80,8 +82,8 @@ async function JoinPage({
           celle-ci, et l'élève y tape le code qu'on lui donne, quel qu'il soit. */}
       {!carton ? (
         <p className="max-w-md text-center text-sm text-slate-400" data-une-seule-porte="">
-          Un code de classe du cours, de cohorte d&apos;épisodes, de concours ou d&apos;examen se tape aussi ici : vous
-          serez conduit à la bonne page.
+          Un code de partie, de classe du cours, de cohorte d&apos;épisodes, de concours ou d&apos;examen se tape ici :
+          vous serez conduit à la bonne page.
         </p>
       ) : null}
       {/* L'étudiant d'une université ou d'une école de la fédération RENATER peut se

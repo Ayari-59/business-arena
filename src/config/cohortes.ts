@@ -36,6 +36,14 @@ export type RefusDeCohorte = keyof typeof REFUS_DE_COHORTE;
 export const estUnRefusDeCohorte = (v: string | undefined): v is RefusDeCohorte =>
   !!v && Object.hasOwn(REFUS_DE_COHORTE, v);
 
+/**
+ * LA FIN DE LA LICENCE ÉPISODES, DITE À L'ENSEIGNANT (audit UX du 11 novembre 2026, P2-7 ; la phrase est
+ * celle du propriétaire). La page de la cohorte restait identique : ni l'enseignant ni les élèves ne
+ * savaient que les épisodes ne s'ouvraient plus. Elle se lit sur la page de la cohorte quand
+ * l'organisation de la cohorte n'a plus d'offre qui inclut les épisodes.
+ */
+export const LICENCE_SANS_LES_EPISODES = "Votre licence n'inclut plus les épisodes : vos participants ne peuvent plus les ouvrir.";
+
 /** Ce qu'un élève voit d'une cohorte close, sur la page d'invitation. */
 export const COHORTE_CLOSE =
   "Cette cohorte est close : elle n'accepte plus de nouveaux participants. Demandez le code de la nouvelle à votre enseignant.";

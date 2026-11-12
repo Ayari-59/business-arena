@@ -127,7 +127,7 @@ describe("l'évaluation entre coéquipiers", () => {
       await aller(p, "/join");
       await p.fill('input[name="code"]', code);
       await p.fill('input[name="pseudo"]', nom);
-      await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+      await p.getByRole("button", { name: "Valider", exact: true }).click();
       await p.waitForURL(/\/arena\/[0-9a-f-]{36}/, { timeout: 60_000 });
       await p.waitForLoadState("networkidle");
       expect(await p.locator("[data-carte-coequipiers]").count()).toBe(0);

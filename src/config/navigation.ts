@@ -254,9 +254,13 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         libelle: "Enseignants",
         aide: "Découvrir Business Arena : pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
       },
-      // « LYCÉES » A SA PLACE ICI, juste après « Enseignants » : { href: "/lycees", libelle: "Lycées" }.
-      // La page /lycees vient avec un chantier suivant, qui pose l'entrée ; d'ici là, aucune
-      // entrée ne mène à une page absente (tests/architecture/menu-par-produit.test.ts).
+      // « LYCÉES », juste après « Enseignants » (décision du propriétaire, novembre 2026 ; audit de
+      // l'offre du 11 novembre 2026, P1-3) : la page du proviseur, pour le bac STMG et les BTS.
+      {
+        href: "/lycees",
+        libelle: "Lycées",
+        aide: "Pour le proviseur : le bac STMG et les BTS, ce que chaque offre ouvre, un chapitre libre par diplôme, la commande par bon de commande et Chorus Pro.",
+      },
       {
         href: "/ecoles",
         libelle: "Écoles",

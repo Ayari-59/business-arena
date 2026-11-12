@@ -373,7 +373,7 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await aller(eleve, "/join");
     await eleve.locator('input[name="code"]').fill(code);
     await eleve.locator('input[name="pseudo"]').fill("Camille");
-    await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await eleve.getByRole("button", { name: "Valider", exact: true }).click();
     await eleve.waitForURL(/\/cours\/rejoindre\?code=/, { timeout: 60_000 });
     await eleve.getByLabel("Prénom ou pseudonyme").fill("Camille");
     await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();

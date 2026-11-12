@@ -149,7 +149,7 @@ describe("parcours enseignant et élève", () => {
     await aller(eleve, "/join");
     await eleve.fill('input[name="code"]', codeInvitation);
     await eleve.fill('input[name="pseudo"]', "Élève E2E");
-    await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await eleve.getByRole("button", { name: "Valider", exact: true }).click();
     // La période active (tour en cours) ouvre sur « Situation » ; on passe à
     // « Décider » pour atteindre le formulaire (prix, volume, etc.).
     await ouvrirDecisions(eleve);
@@ -333,7 +333,7 @@ describe("parcours enseignant et élève", () => {
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
     await executive
-      .getByRole("button", { name: "Rejoindre la partie" })
+      .getByRole("button", { name: "Valider", exact: true })
       .click();
     // Le tour ouvre sur « Situation » : on passe à « Décider » pour le
     // formulaire. Il range ses décisions par famille en accordéon : le champ

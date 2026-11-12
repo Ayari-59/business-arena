@@ -229,7 +229,7 @@ describe("l'étudiant", () => {
     const arrivee = await seConnecter(page, etudiant("ines"));
     expect(arrivee).toBe(`/join?code=${codePartie}`);
     await page.fill('input[name="pseudo"]', "Inès");
-    await page.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await page.getByRole("button", { name: "Valider", exact: true }).click();
     await page.waitForURL(/\/arena\//, { timeout: 30_000 });
     expect(new URL(page.url()).pathname).toBe(`/arena/${gameId}`);
     // Ni nom ni courriel de l'étudiant en base.

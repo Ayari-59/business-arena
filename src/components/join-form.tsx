@@ -14,6 +14,10 @@ const initial: JoinState = { error: null };
  * code ne peut plus être mal recopié. Le champ reste modifiable : un QR photo-
  * graphié de travers, un code changé entre-temps, et l'élève corrige.
  *
+ * UNE PORTE POUR TOUS LES CODES (audit UX du 11 novembre 2026, P2-12) : le champ dit « Votre code » et
+ * le bouton « Valider », et non plus « Code de la partie » ni « Rejoindre la partie » : un code de
+ * classe du cours, de cohorte, de concours ou d'examen se tape ici aussi (services/rejoindre.service).
+ *
  * Le carton d'une TABLE porte en plus une équipe. Elle ne se saisit pas et ne
  * s'affiche pas en champ : elle voyage cachée, et c'est le bandeau au-dessus
  * du formulaire qui la nomme, pour que l'élève voie où il s'assoit avant de
@@ -43,7 +47,7 @@ export function JoinForm({
       ) : null}
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-          Code de la partie
+          Votre code
         </span>
         <input
           name="code"
@@ -88,10 +92,10 @@ export function JoinForm({
         disabled={pending}
         className={`${bouton({ taille: "l" })} w-full`}
       >
-        {pending ? "Connexion…" : "Rejoindre la partie"}
+        {pending ? "Validation…" : "Valider"}
       </button>
       <p className="text-xs text-slate-400" data-mention-cgu="">
-            En rejoignant la partie, vous acceptez les{" "}
+            En validant, vous acceptez les{" "}
             <Link href="/cgu" className="underline underline-offset-4">
               conditions générales d&apos;utilisation
             </Link>

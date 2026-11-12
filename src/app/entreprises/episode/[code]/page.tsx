@@ -9,7 +9,7 @@ import { FAMILLES, SECTEURS, teinteDuMetierDeLEpisode } from "@/config/episodes/
 import { EPISODES_DE_DEMO, licencePourLEpisode, MARQUE_DEMO } from "@/config/episodes/demos";
 import {
   EPISODE_FERME_POUR_L_ELEVE,
-  lienDuDevis,
+  lienDuDevisDesEpisodes,
   LIBELLE_DU_DEVIS,
   MARQUE_DES_EPISODES,
   OFFRES,
@@ -82,12 +82,16 @@ async function EpisodePage({
   // lien de classe d'un enseignant (il porte le tirage, `?hasard=`), lit une phrase
   // neutre. Le visiteur qui parcourt le catalogue lit l'offre et le devis.
   const eleve = hasard !== undefined || (!session && (await suitUneCohorte(userId)));
+  // LE DEVIS PROPOSÉ (audit UX du 11 novembre 2026, P2-10) : celui « pour une entreprise » par défaut,
+  // le visiteur du catalogue venant le plus souvent de la page des entreprises ; celui « en cours ou en
+  // école » pour un enseignant connecté (config/tarifs.ts, `lienDuDevisDesEpisodes`).
+  const devis = lienDuDevisDesEpisodes(session !== null);
   const offre = eleve
     ? null
     : {
         marque: MARQUE_DES_EPISODES,
         nom: OFFRES.episodes.nom,
-        devis: lienDuDevis("episodes"),
+        devis,
         libelle: LIBELLE_DU_DEVIS,
       };
   return (
@@ -107,7 +111,7 @@ async function EpisodePage({
             cours={coursDeLEpisode(code)}
           />
         ) : (
-          <EpisodeFerme code={code} eleve={eleve} demosReglees={acces.demos ?? EPISODES_DE_DEMO} />
+          <EpisodeFerme code={code} eleve={eleve} devis={devis} demosReglees={acces.demos ?? EPISODES_DE_DEMO} />
         )}
       </main>
       <PiedDePage />
@@ -122,10 +126,13 @@ async function EpisodePage({
 function EpisodeFerme({
   code,
   eleve,
+  devis,
   demosReglees,
 }: {
   code: string;
   eleve: boolean;
+  /** Le devis proposé hors d'une cohorte (`lienDuDevisDesEpisodes`). */
+  devis: string;
   /** Les démonstrations de la Découverte (/admin/offres). */
   demosReglees: readonly string[];
 }) {
@@ -172,7 +179,7 @@ function EpisodeFerme({
             </p>
             <p className="mt-2">
               <Link
-                href={lienDuDevis("episodes")}
+                href={devis}
                 prefetch={false}
                 className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
               >

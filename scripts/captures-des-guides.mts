@@ -449,7 +449,7 @@ async function parcoursDeLaClasse(monde: Monde): Promise<void> {
         await photographier(p, "etudiant", "rejoindre");
       });
     }
-    await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await p.getByRole("button", { name: "Valider", exact: true }).click();
     await p.waitForURL(/\/arena\//, { timeout: 60_000 });
     await p.locator("text=Nommez votre entreprise").first().waitFor({ timeout: 60_000 });
     eleves.push(p);
@@ -895,7 +895,7 @@ async function parcoursDeLEssai(monde: Monde): Promise<void> {
   await aller(p, "/join");
   await p.fill('input[name="code"]', code);
   await p.fill('input[name="pseudo"]', "Maya");
-  await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+  await p.getByRole("button", { name: "Valider", exact: true }).click();
   await p.waitForURL(/\/arena\//, { timeout: 60_000 });
   await p.locator('[data-bandeau-d-essai="essai"]').waitFor({ timeout: 60_000 });
   await ouvrirLaFeuille(p).catch(() => undefined);
@@ -1029,7 +1029,7 @@ async function parcoursDuTelephone(monde: Monde): Promise<void> {
     await aller(p, `/join?code=${code}`);
     await p.fill('input[name="pseudo"]', "Lina");
     ecrans.push(await p.screenshot({ type: "png" }));
-    await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await p.getByRole("button", { name: "Valider", exact: true }).click();
     await p.waitForURL(/\/arena\//, { timeout: 60_000 });
     await p.locator("text=/Tour 1/").first().waitFor({ timeout: 60_000 });
     await p.waitForTimeout(1_500);

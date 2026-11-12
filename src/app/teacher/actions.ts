@@ -71,8 +71,14 @@ export interface FormState {
    * de passe.
    */
   values?: Record<string, string>;
-  /** Le champ que l'erreur concerne : le message s'affiche sous lui (P2-9). */
+  /** Le champ que l'erreur concerne : le message s'affiche sous lui (P2-9), et le focus y va. */
   champ?: string | null;
+  /**
+   * TOUTES LES ERREURS D'UN COUP, CHACUNE SOUS SON CHAMP (audit UX du 11 novembre 2026, P2-6) :
+   * l'inscription envoyée vide ne disait que « Votre nom est requis », et l'adresse et le mot de passe
+   * aux envois suivants.
+   */
+  erreurs?: Record<string, string>;
 }
 
 /** Ce que le formulaire peut rendre après un échec : tout sauf le mot de passe. */
@@ -100,8 +106,13 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   });
   const values = saisieSansMotDePasse(formData, ["displayName", "inviteCode", "schoolName", "email"]);
   if (!parsed.success) {
+    const erreurs: Record<string, string> = {};
+    for (const i of parsed.error.issues) {
+      const nom = String(i.path[0] ?? "");
+      if (nom && !erreurs[nom]) erreurs[nom] = i.message;
+    }
     const issue = parsed.error.issues[0];
-    return { error: issue?.message ?? "Formulaire invalide", champ: issue ? String(issue.path[0] ?? "") || null : null, values };
+    return { error: issue?.message ?? "Formulaire invalide", champ: issue ? String(issue.path[0] ?? "") || null : null, erreurs, values };
   }
   const { nouveautes, ...compte } = parsed.data;
   // Le plafond par adresse d'origine (audit, P2-4) : chaque tentative compte, réussie ou
@@ -114,7 +125,14 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   if (garde.refus) return { error: garde.refus, values };
   await garde.echec();
   const result = await registerTeacher({ ...compte, nouveautes: nouveautes === "oui" });
-  if ("error" in result) return { error: result.error, values };
+  if ("error" in result) {
+    return {
+      error: result.error,
+      champ: result.champ ?? null,
+      erreurs: result.champ ? { [result.champ]: result.error } : {},
+      values,
+    };
+  }
   // Le lien de confirmation de l'adresse (migration 0046). Un compte entré par un code
   // d'invitation n'en a pas besoin : le code lui a été remis. Un envoi qui échoue ne
   // défait pas l'inscription ; « Mon compte » propose de renvoyer le lien.

@@ -68,7 +68,9 @@ describe("P0-1 · l'enseignant sans offre sait d'emblée ce qu'il peut faire", (
   });
 
   it("cohortes et examens : grisés sans l'offre qui les ouvre", () => {
-    expect(lire("app/teacher/cohortes/page.tsx")).toContain("<fieldset disabled={!licence || undefined}");
+    // Le formulaire de cohorte est client depuis l'audit UX du 11 novembre 2026 (P2-6) : il garde la saisie.
+    expect(lire("components/nouvelle-cohorte.tsx")).toContain("<fieldset disabled={!licence || undefined}");
+    expect(lire("app/teacher/cohortes/page.tsx")).toContain("<NouvelleCohorte licence={licence}");
     expect(lire("app/teacher/examens/page.tsx")).toContain("<fieldset disabled={!module || undefined}");
   });
 });

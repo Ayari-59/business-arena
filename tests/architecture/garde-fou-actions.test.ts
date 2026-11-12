@@ -34,6 +34,8 @@ const COMPOSANTS_GARDES = [
   "src/components/editeur-d-offre.tsx", // une offre du catalogue (/admin/offres)
   "src/components/suppression-confirmee.tsx", // suppression du compte, d'un établissement, d'un élève (RGPD)
   "src/components/nouvelle-classe-du-cours.tsx", // création d'une classe du cours (/teacher/cours)
+  "src/components/nouvelle-cohorte.tsx", // création d'une cohorte (/teacher/cohortes ; audit UX du 11 novembre 2026, P2-6)
+  "src/components/demande-d-adresse-d-inscription.tsx", // l'adresse d'inscription LTI, par écrit (/integration)
   "src/components/cours/formulaire-reprise-en-classe.tsx", // l'élève reprend sa place dans sa classe du cours (/cours/reprendre)
 ];
 
@@ -42,7 +44,6 @@ const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/teacher/page.tsx", formulaires: 3 }, // création de partie, rangement depuis la liste, sortie de rangement
   { file: "src/app/admin/offres/page.tsx", formulaires: 7 }, // affichage des prix, mise en avant, module (et sa création), Découverte, essai, code promo (la suppression : ConfirmForm)
   { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 12 }, // … et le tuteur IA de la partie (activé ou désactivé)
-  { file: "src/app/teacher/cohortes/page.tsx", formulaires: 1 }, // création d'une cohorte
   { file: "src/app/lti/activite/page.tsx", formulaires: 5 }, // activité LTI : relier ou créer, partie ou cohorte ; relier un examen
   { file: "src/app/teacher/examens/page.tsx", formulaires: 1 }, // création d'un examen individuel
   { file: "src/app/teacher/examens/[id]/page.tsx", formulaires: 3 }, // publication (ou son retrait), clôture

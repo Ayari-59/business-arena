@@ -105,6 +105,8 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/mentions-legales/page", "Mentions légales", "/mentions-legales"],
     ["/cgv/page", "Conditions générales de vente", "/cgv"],
     ["/entreprises/offre/page", "Épisodes manager pour les entreprises", "/entreprises/offre"],
+    // La page du proviseur (audit de l'offre du 11 novembre 2026, P1-3).
+    ["/lycees/page", "Lycées : bac STMG et BTS", "/lycees"],
     // Prix éteints par défaut (offres sur mesure) : la page s'appelle « Offres ».
     ["/tarifs/page", "Offres", "/tarifs"],
     ["/integration/page", "Intégration à Moodle", "/integration"],

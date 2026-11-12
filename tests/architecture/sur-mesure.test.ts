@@ -48,7 +48,9 @@ describe("les situations sur mesure", () => {
     expect(SUR_MESURE.delai.titre).toMatch(/indicatif/i);
     expect(SUR_MESURE.delai.texte).toMatch(/ordre de grandeur|indicatif/i);
     expect(SUR_MESURE.appel.rendezVous).toBe(LIEN_CONTACT);
-    expect(SUR_MESURE.appel.devis.href).toBe("/devis");
+    // Un devis qui n'exige ni l'entreprise ni le niveau de l'arène (audit de l'offre du 11 novembre 2026,
+    // P2-2) : celui de l'offre Campus (tests/architecture/pages-de-l-offre.test.ts).
+    expect(SUR_MESURE.appel.devis.href).toBe("/devis?offre=campus");
     expect(SUR_MESURE.demande.points.length).toBeGreaterThanOrEqual(4);
     expect(SUR_MESURE.livre.points.length).toBeGreaterThanOrEqual(3);
   });

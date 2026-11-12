@@ -7,6 +7,8 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { euros } from "@/config/catalogue";
 import type { AteliersDeLaClasse } from "@/config/ateliers-de-la-classe";
 import { parametrageRequisAuDevis, parcoursRequisAuDevis } from "@/config/parametrage-du-devis";
+// Un module sans dépendance (il ne lit que le vendeur) : le composant client peut le lire.
+import { DELAIS_APRES_LE_DEVIS } from "@/config/conditions-legales";
 
 /**
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
@@ -25,7 +27,8 @@ import { parametrageRequisAuDevis, parcoursRequisAuDevis } from "@/config/parame
  * et le composant n'importe pas le registre. Une demande qui vient du cours (`source`) le trouve
  * prérempli quand il est connu, et n'exige ni l'entreprise ni le niveau.
  *
- * La confirmation DIT LA VÉRITÉ : l'accusé de réception n'est annoncé que s'il est parti.
+ * La confirmation DIT LA VÉRITÉ : l'accusé de réception n'est annoncé que s'il est parti. Elle dit aussi
+ * les délais (décision du propriétaire, 11 novembre 2026 : config/conditions-legales.ts).
  *
  * LE CODE PROMO, facultatif, est vérifié par le serveur ; un code refusé revient avec sa
  * phrase, la saisie gardée. Accepté : « Code RENTREE pris en compte : la remise sera
@@ -157,6 +160,9 @@ export function DevisForm({
         >
           ✓ Votre demande de devis est enregistrée : {demandee.offre}. Le devis vous sera
           adressé par écrit, établi par {vendeur}.
+        </p>
+        <p className="text-base font-semibold leading-relaxed text-slate-100" data-delais-du-devis="">
+          {DELAIS_APRES_LE_DEVIS}
         </p>
         <p className="text-sm leading-relaxed text-slate-300" data-accuse={state.ok.accuseEnvoye ? "envoye" : "non-envoye"}>
           {state.ok.accuseEnvoye

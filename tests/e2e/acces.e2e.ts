@@ -108,7 +108,8 @@ describe("/jouer sans licence", () => {
       page.locator("[role=status]", { hasText: "offres Classe, Programme et Campus" }),
     );
     await statut.first().waitFor({ state: "visible" });
-    expect(await statut.first().getByRole("link", { name: /tarifs/ }).getAttribute("href")).toBe(
+    // « voyez les offres » : aucun prix ne s'affiche ici (audit de l'offre du 11 novembre 2026, P2-9).
+    expect(await statut.first().getByRole("link", { name: "voyez les offres" }).getAttribute("href")).toBe(
       "/tarifs",
     );
     await c.close();
@@ -257,9 +258,11 @@ describe("les épisodes sans licence", () => {
     expect(vu).toContain(NON_DEMO.titre);
     expect(vu).toContain("Épisodes manager · sur devis");
     expect(vu).toContain("Cet épisode est inclus dans l'offre Épisodes manager");
+    // Hors d'une cohorte, sans compte enseignant : le devis « pour une entreprise » (audit UX du
+    // 11 novembre 2026, P2-10 ; config/tarifs.ts, `lienDuDevisDesEpisodes`).
     expect(
       await ferme.getByRole("link", { name: "Demander un devis" }).getAttribute("href"),
-    ).toBe("/devis?offre=episodes");
+    ).toBe("/devis?offre=entreprise");
     expect(await page.getByRole("button", { name: "Commencer l'épisode" }).count()).toBe(0);
     // Les démos sont proposées à la place.
     for (const code of EPISODES_DE_DEMO) {
