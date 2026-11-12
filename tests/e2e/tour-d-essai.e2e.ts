@@ -53,7 +53,7 @@ async function rejoindre(p: Page, pseudo: string): Promise<string> {
   await aller(p, "/join");
   await p.fill('input[name="code"]', code);
   await p.fill('input[name="pseudo"]', pseudo);
-  await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+  await p.getByRole("button", { name: "Valider", exact: true }).click();
   await p.waitForURL(/\/arena\//, { timeout: 60_000 });
   return p.url().split("?")[0]!.split("#")[0]!;
 }

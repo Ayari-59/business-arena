@@ -205,7 +205,7 @@ describe("les portes d'entrée mènent au bon guide", () => {
     const eleve = await (await navigateur.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
     await aller(eleve, `/join?code=${code}`);
     await eleve.fill('input[name="pseudo"]', "Léa");
-    await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await eleve.getByRole("button", { name: "Valider", exact: true }).click();
     await eleve.waitForURL(/\/arena\//, { timeout: 60_000 });
     await eleve.waitForLoadState("networkidle");
     const lien = eleve.locator("main [data-lien-guide-etudiant]:visible").first();

@@ -357,7 +357,7 @@ describe("le pilotage enseignant", () => {
     await aller(eleve, "/join");
     await eleve.fill('input[name="code"]', code);
     await eleve.fill('input[name="pseudo"]', "Inès");
-    await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await eleve.getByRole("button", { name: "Valider", exact: true }).click();
     await eleve.waitForURL(/\/arena\//, { timeout: 60_000 });
     const urlEleve = eleve.url().split("?")[0]!.split("#")[0]!;
     // Au tour 1, l'article du journal, dans « Ce qui a bougé » de l'onglet Situation.

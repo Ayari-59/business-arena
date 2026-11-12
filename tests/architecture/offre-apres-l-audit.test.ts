@@ -99,7 +99,8 @@ describe("la page commerciale des entreprises", () => {
   const page = "src/app/entreprises/offre/page.tsx";
   it("existe, dit ce qui est inclus, mène au devis, sans affirmer Qualiopi ni OPCO", () => {
     expect(existsSync(join(racine, page))).toBe(true);
-    const t = lire(page);
+    // Le rendu vit dans un composant depuis le 11 novembre 2026 (le déroulé, les animateurs, les formules).
+    const t = lire(page) + lire("src/components/offre-des-entreprises.tsx");
     expect(t).toMatch(/\/devis\?offre=entreprise/);
     expect(t).not.toMatch(/Qualiopi|OPCO/);
     expect(NAVIGATION.find((g) => g.code === "offres")!.liens.map((l) => l.href)).toContain("/entreprises/offre");
@@ -116,8 +117,12 @@ describe("l'essai avec un groupe", () => {
     expect(r).toMatch(/sans paiement/);
     expect(r).toContain("21 jours au plus");
   });
-  it("éteint (le défaut), elle reste « Non » : rien n'est promis que /admin ne puisse ouvrir", () => {
-    expect(reponse({ autorise: false, dureeMaxJours: 30 })).toMatch(/^Non/);
+  it("éteint (le défaut), elle dit oui pour le cours (décision du 11 novembre 2026) ; « Non » sans inscription libre", () => {
+    // Le cours s'essaie en classe sans offre : le compte enseignant, une classe, le chapitre libre et son
+    // cas (tests/architecture/pages-de-l-offre.test.ts vérifie chaque mot dans le code).
+    expect(reponse({ autorise: false, dureeMaxJours: 30 })).toMatch(/^Oui, pour le cours/);
+    const fermee = questionsDesTarifs({ autorise: false, dureeMaxJours: 30 }, false).find((x) => /essayer avec un groupe/.test(x.q))!.r;
+    expect(fermee).toMatch(/^Non/);
   });
   it("/tarifs passe le réglage de l'essai à la page", () => {
     expect(lire("src/app/tarifs/page.tsx")).toMatch(/essai=\{essai\}/);

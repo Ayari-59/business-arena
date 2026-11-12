@@ -1,3 +1,5 @@
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { aller, BASE, ouvrirNavigateur } from "./helpers/browser";
@@ -5,7 +7,9 @@ import { enseignantSousLicence } from "./helpers/licence";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
 import { estUneDemo, EPISODES_DE_DEMO } from "../../src/config/episodes/demos";
 import { FICHES } from "../../src/config/episodes/fiches";
-import { REFUS_SANS_LICENCE } from "../../src/config/cohortes";
+import { LICENCE_SANS_LES_EPISODES, REFUS_DE_COHORTE, REFUS_SANS_LICENCE } from "../../src/config/cohortes";
+import { EPISODE_FERME_POUR_L_ELEVE } from "../../src/config/tarifs";
+import { Client } from "pg";
 import { insecables } from "../../src/lib/typographie";
 
 /**
@@ -52,6 +56,24 @@ async function contexte(mobile = false): Promise<BrowserContext> {
 
 const debordement = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+
+/**
+ * Avec E2E_CAPTURES (un dossier), l'écran photographié à 390 px, l'élément au milieu ; ou la page
+ * entière, la barre collante du site laissée en tête de page (sinon, elle en couvre une partie). La
+ * fenêtre reprend ensuite sa largeur.
+ */
+async function capturerA390(page: Page, nom: string, cible: string, pleine = false) {
+  const dossier = process.env.E2E_CAPTURES;
+  if (!dossier) return;
+  mkdirSync(dossier, { recursive: true });
+  const avant = page.viewportSize();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator(cible).first().evaluate((e) => e.scrollIntoView({ block: "center" }));
+  const style = pleine ? await page.addStyleTag({ content: "[data-en-tete-du-site]{position:static !important}" }) : null;
+  await page.screenshot({ path: join(dossier, `${nom}.png`), fullPage: pleine });
+  if (style) await style.evaluate((s) => (s as Element).remove());
+  if (avant) await page.setViewportSize(avant);
+}
 
 /** Les aplats orange visibles dans la fenêtre : un seul bouton plein par écran. */
 const pleinsVisibles = (page: Page) =>
@@ -202,9 +224,10 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     await aller(eleve, `/entreprises/episode/${HORS_COHORTE}`);
     expect(await eleve.getByRole("button", { name: "Commencer l'épisode" }).count()).toBe(0);
     // Devant un élève (il suit une cohorte), pas de message de vente : une phrase neutre.
-    expect(await eleve.locator("[data-episode-ferme-eleve]").innerText()).toBe(
-      insecables("Cet épisode n'est pas ouvert sur cet appareil ; demandez le lien à votre enseignant."),
-    );
+    // La phrase du propriétaire (audit UX du 11 novembre 2026, P2-7) : l'élève a suivi le lien de son groupe.
+    expect(EPISODE_FERME_POUR_L_ELEVE).toBe("Cet épisode n'est plus ouvert pour votre groupe ; prévenez votre animateur.");
+    expect(await eleve.locator("[data-episode-ferme-eleve]").innerText()).toBe(insecables(EPISODE_FERME_POUR_L_ELEVE));
+    await capturerA390(eleve, "eleve-episode-ferme-390", "[data-episode-ferme-eleve]");
     expect(await eleve.getByText("Épisodes manager · sur devis").count()).toBe(0);
     // Dans le contenu de la page (la barre du site porte « Tarifs » partout, comme le pied).
     expect(await eleve.locator("main").getByRole("link", { name: /devis|tarifs/i }).count()).toBe(0);
@@ -253,9 +276,13 @@ describe("un enseignant sous licence Classe seule (sans les épisodes)", () => {
     await aller(page, "/teacher/cohortes");
     expect(await page.locator("[data-cohortes-sans-licence]").count()).toBe(1);
     await forcerLaCreation(page, "Seconde 4", [EPISODES_DE_DEMO[0]]);
-    await page.waitForURL(/refus=licence/);
+    // Le refus revient dans le formulaire, sans recharger la page, la saisie gardée (audit UX du
+    // 11 novembre 2026, P2-6).
     const refus = page.locator('[data-refus-de-cohorte="licence"]');
+    await refus.waitFor({ state: "visible" });
     expect(await refus.textContent()).toContain(REFUS_SANS_LICENCE);
+    expect(await page.getByLabel("Nom de la cohorte").inputValue()).toBe("Seconde 4");
+    expect(await page.locator(`input[name="episodes"][value="${EPISODES_DE_DEMO[0]}"]`).isChecked()).toBe(true);
     expect(await page.getByText("Aucune cohorte pour l'instant.").count()).toBe(1);
     await ctx.close();
   });
@@ -275,12 +302,72 @@ describe("un enseignant sans licence", () => {
 
     // Même une cohorte des seules démonstrations.
     await forcerLaCreation(page, "Seconde 3", [EPISODES_DE_DEMO[0]]);
-    await page.waitForURL(/refus=licence/);
     const refus = page.locator('[data-refus-de-cohorte="licence"]');
+    await refus.waitFor({ state: "visible" });
     expect(await refus.getAttribute("role")).toBe("alert");
     expect(await refus.textContent()).toContain(REFUS_SANS_LICENCE);
     expect(await refus.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     expect(await page.getByText("Aucune cohorte pour l'instant.").count()).toBe(1);
+    await ctx.close();
+  }, 120_000);
+});
+
+describe("une cohorte refusée garde la saisie (audit UX du 11 novembre 2026, P2-6)", () => {
+  it("sans épisode : le nom reste ; sans nom : les épisodes cochés restent", async () => {
+    const ctx = await contexte();
+    await enseignantSousLicence(ctx, { episodes: true });
+    const page = await ctx.newPage();
+    await creer(page, "Terminale STMG · groupe C", []);
+    const refus = page.locator("[data-refus-de-cohorte]");
+    await refus.waitFor({ state: "visible" });
+    expect(await refus.getAttribute("data-refus-de-cohorte")).toBe("episodes");
+    expect(await refus.textContent()).toContain(REFUS_DE_COHORTE.episodes);
+    // La page ne s'est pas rechargée, le nom tapé est là.
+    expect(new URL(page.url()).search).toBe("");
+    expect(await page.getByLabel("Nom de la cohorte").inputValue()).toBe("Terminale STMG · groupe C");
+    await capturerA390(page, "cohorte-refus-sans-episode-390", "[data-refus-de-cohorte]", true);
+    // Puis sans nom, deux épisodes cochés : le refus du nom, et les deux cases toujours cochées.
+    await page.getByLabel("Nom de la cohorte").fill("");
+    for (const code of [DANS_LA_COHORTE, HORS_COHORTE]) await cocher(page, code);
+    await page.getByRole("button", { name: "Créer la cohorte" }).click();
+    await expect.poll(() => refus.getAttribute("data-refus-de-cohorte")).toBe("nom");
+    for (const code of [DANS_LA_COHORTE, HORS_COHORTE]) {
+      expect(await page.locator(`input[name="episodes"][value="${code}"]`).isChecked(), code).toBe(true);
+    }
+    expect(await page.locator('input[name="episodes"]:checked').count()).toBe(2);
+    await capturerA390(page, "cohorte-refus-sans-nom-390", "[data-refus-de-cohorte]", true);
+    // Et le nom donné, la cohorte se crée avec les deux épisodes.
+    await page.getByLabel("Nom de la cohorte").fill("Terminale STMG · groupe C");
+    await page.getByRole("button", { name: "Créer la cohorte" }).click();
+    await page.waitForURL(/\/teacher\/cohortes\/[0-9a-f-]{36}\?creee=1$/);
+    expect(await page.locator("[data-episodes-de-la-cohorte] li").count()).toBe(2);
+    await ctx.close();
+  }, 120_000);
+});
+
+describe("la fin de la licence épisodes (audit UX du 11 novembre 2026, P2-7)", () => {
+  it("la page de la cohorte prévient l'enseignant", async () => {
+    const ctx = await contexte();
+    const { orgId } = await enseignantSousLicence(ctx, { episodes: true });
+    const page = await ctx.newPage();
+    await creer(page, "Licence qui s'arrête", [DANS_LA_COHORTE]);
+    await page.waitForURL(/\/teacher\/cohortes\/[0-9a-f-]{36}\?creee=1$/);
+    const adresse = new URL(page.url()).pathname;
+    // Sous licence : aucun avertissement.
+    expect(await page.locator("[data-licence-sans-episodes]").count()).toBe(0);
+    // La licence s'arrête (comme à sa date de fin).
+    const c = new Client({ connectionString: process.env.DATABASE_URL });
+    await c.connect();
+    try {
+      await c.query("update org_licences set ends_at = now() - interval '1 day', starts_at = now() - interval '30 days' where organization_id = $1", [orgId]);
+    } finally {
+      await c.end();
+    }
+    await aller(page, adresse);
+    const avis = page.locator("[data-licence-sans-episodes]");
+    expect(await avis.count()).toBe(1);
+    expect(await avis.innerText()).toContain(insecables(LICENCE_SANS_LES_EPISODES));
+    await capturerA390(page, "cohorte-licence-sans-episodes-390", "[data-licence-sans-episodes]");
     await ctx.close();
   }, 120_000);
 });

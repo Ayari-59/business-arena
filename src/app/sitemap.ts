@@ -22,6 +22,7 @@ export const PAGES_PUBLIQUES = [
   "/",
   "/jouer",
   "/enseignants",
+  "/lycees",
   "/ecoles",
   "/integration",
   "/entreprises",

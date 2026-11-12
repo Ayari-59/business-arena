@@ -270,6 +270,7 @@ export async function listerCohortes(): Promise<
       creeParEmail: users.email,
       episodes: episodeCohortes.episodes,
       closeLe: episodeCohortes.closeLe,
+      organisation: episodeCohortes.organizationId,
       membres: count(episodeMembres.userId),
     })
     .from(episodeCohortes)
@@ -400,6 +401,12 @@ export interface CohorteDeLEnseignant {
   membres: number;
   creeeLe: Date;
   closeLe: Date | null;
+  /**
+   * L'organisation de la cohorte, celle dont la licence ouvre ses épisodes à ses membres
+   * (services/acces.service.ts) : la page de la cohorte la lit pour prévenir l'enseignant quand elle
+   * n'inclut plus les épisodes (audit UX du 11 novembre 2026, P2-7).
+   */
+  organisation: string | null;
 }
 
 const filtreDuCreateur = (enseignantId: string, cohorteId?: string) =>
@@ -420,6 +427,7 @@ async function lireLesCohortes(
       episodes: episodeCohortes.episodes,
       creeeLe: episodeCohortes.createdAt,
       closeLe: episodeCohortes.closeLe,
+      organisation: episodeCohortes.organizationId,
       membres: count(episodeMembres.userId),
     })
     .from(episodeCohortes)

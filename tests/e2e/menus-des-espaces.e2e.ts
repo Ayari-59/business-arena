@@ -248,7 +248,7 @@ describe("l'arène", () => {
       const eleve = await contexte.newPage();
       await aller(eleve, `/join?code=${code}`);
       await eleve.fill('input[name="pseudo"]', "Léa");
-      await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
+      await eleve.getByRole("button", { name: "Valider", exact: true }).click();
       await eleve.waitForURL(/\/arena\//, { timeout: 60_000 });
       await eleve.waitForLoadState("networkidle");
       // L'arène arrive en flux (loading.tsx) : on attend la partie, pas le réseau.

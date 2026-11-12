@@ -101,7 +101,7 @@ describe("la révélation du classement en projection", () => {
     await aller(eleve, "/join");
     await eleve.fill('input[name="code"]', code);
     await eleve.fill('input[name="pseudo"]', "Inès");
-    await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await eleve.getByRole("button", { name: "Valider", exact: true }).click();
     await eleve.waitForURL(/\/arena\//, { timeout: 60_000 });
     // La feuille de décision est en étapes : on avance sans rien changer, puis
     // on valide — l'équipe assume les valeurs proposées.

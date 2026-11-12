@@ -100,6 +100,10 @@ describe("la règle : au lycée, le bac STMG seul", () => {
       "src/app/enseignants/page.tsx",
       "src/app/parcours/page.tsx",
       "src/app/ecoles/page.tsx",
+      // La page des lycées : le bac STMG et les BTS, rien d'autre (audit de l'offre du 11 novembre 2026, P1-3).
+      "src/app/lycees/page.tsx",
+      "src/components/page-des-lycees.tsx",
+      "src/config/lycees.ts",
       "src/app/animations/page.tsx",
       "src/app/fonctionnalites/page.tsx",
       "src/app/teacher/games/[gameId]/page.tsx",

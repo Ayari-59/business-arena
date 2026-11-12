@@ -15,6 +15,7 @@ import { ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { lireLeCatalogue } from "@/services/catalogue.service";
 import { VENDEUR } from "@/config/editeur";
 import { LIEN_CONTACT } from "@/config/navigation";
+import { FicheFournisseur } from "@/components/fiche-fournisseur";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/devis" },
@@ -37,6 +38,10 @@ export const metadata: Metadata = {
  * vient du cours (`?source=cours`) le trouve prérempli quand il est connu (`?parcours=`, ou un
  * diplôme qui n'en a qu'un, `?diplome=`), et n'exige ni l'entreprise ni le niveau de l'arène
  * (config/parametrage-du-devis.ts).
+ *
+ * APRÈS LE DEVIS (décision du propriétaire, 11 novembre 2026 ; audit de l'offre du même jour, P2-1) :
+ * l'écran de confirmation dit les délais, et la page porte la fiche fournisseur, lue dans `VENDEUR`,
+ * pour le service des achats. « Offres », et non « Offres et tarifs » : la page n'affiche aucun prix.
  */
 async function DevisPage({
   searchParams,
@@ -66,7 +71,7 @@ async function DevisPage({
     <>
       <main id="main">
         <EnTeteDePage
-          surtitre="Offres et tarifs"
+          surtitre="Offres"
           titre="Demander un devis"
           chapeau={`Toutes les offres se vendent sur devis. Dites-nous pour qui, et combien : le devis vous est adressé par écrit, établi par ${VENDEUR.nom}.`}
         />
@@ -94,7 +99,7 @@ async function DevisPage({
             </Link>
             . Pour relire les offres :{" "}
             <Link href="/tarifs" className={LIEN_A_L_ENCRE}>
-              les tarifs
+              la page Offres
             </Link>
             . La commande suit nos{" "}
             <Link href="/cgv" className={LIEN_A_L_ENCRE}>
@@ -102,6 +107,7 @@ async function DevisPage({
             </Link>
             .
           </p>
+          <FicheFournisseur className="carte mt-8 p-6" />
         </div>
       </main>
       <PiedDePage />

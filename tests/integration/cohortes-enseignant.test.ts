@@ -93,6 +93,9 @@ const formulaire = (champs: Record<string, string | string[]>) => {
   return fd;
 };
 
+/** L'état de départ du formulaire de création (components/nouvelle-cohorte.tsx). */
+const AVANT = { refus: null, valeurs: null };
+
 /** L'adresse où l'action renvoie : la redirection de Next, rendue lisible. */
 async function redirection(action: Promise<unknown>): Promise<string> {
   try {
@@ -136,12 +139,15 @@ describe("créer une cohorte depuis l'espace enseignant", () => {
     ).rejects.toMatchObject({ raison: "licence" });
 
     connecte(sansLicence.userId);
-    const vers = await redirection(
-      creerCohorteAction(
-        formulaire({ nom: "BTS MCO 2 · groupe A", episodes: [EPISODES_DE_DEMO[0], dansLaCohorte!.code] }),
-      ),
+    // Le refus revient dans l'état du formulaire, la saisie avec lui (audit UX du 11 novembre 2026, P2-6).
+    const refus = await creerCohorteAction(
+      AVANT,
+      formulaire({ nom: "BTS MCO 2 · groupe A", episodes: [EPISODES_DE_DEMO[0], dansLaCohorte!.code] }),
     );
-    expect(vers).toMatch(/^\/teacher\/cohortes\?refus=licence/);
+    expect(refus).toEqual({
+      refus: "licence",
+      valeurs: { nom: "BTS MCO 2 · groupe A", episodes: [EPISODES_DE_DEMO[0], dansLaCohorte!.code] },
+    });
     expect(await cohortesDeLEnseignant(sansLicence.userId)).toEqual([]);
   });
 
@@ -165,6 +171,7 @@ describe("créer une cohorte depuis l'espace enseignant", () => {
     connecte(prof.userId);
     const vers = await redirection(
       creerCohorteAction(
+        AVANT,
         formulaire({
           nom: "  BTS MCO 2 · groupe A  ",
           // Un code inconnu est écarté, un doublon compté une fois, l'ordre est celui du registre.
@@ -182,15 +189,16 @@ describe("créer une cohorte depuis l'espace enseignant", () => {
     expect(c.code).toMatch(/^BTSMCO-[A-Z2-9]{4}$/);
   });
 
-  it("refuse sans nom ou sans épisode, avec la raison", async () => {
+  it("refuse sans nom ou sans épisode, avec la raison et la saisie", async () => {
     connecte(prof.userId);
-    expect(await redirection(creerCohorteAction(formulaire({ nom: " ", episodes: [dansLaCohorte!.code] })))).toMatch(
-      /refus=nom/,
-    );
-    expect(await redirection(creerCohorteAction(formulaire({ nom: "Vide" })))).toMatch(/refus=episodes/);
-    expect(
-      await redirection(creerCohorteAction(formulaire({ nom: "Inconnus", episodes: ["rien-du-tout"] }))),
-    ).toMatch(/refus=episodes/);
+    expect(await creerCohorteAction(AVANT, formulaire({ nom: " ", episodes: [dansLaCohorte!.code] }))).toEqual({
+      refus: "nom",
+      valeurs: { nom: " ", episodes: [dansLaCohorte!.code] },
+    });
+    expect(await creerCohorteAction(AVANT, formulaire({ nom: "Vide" }))).toEqual({ refus: "episodes", valeurs: { nom: "Vide", episodes: [] } });
+    expect(await creerCohorteAction(AVANT, formulaire({ nom: "Inconnus", episodes: ["rien-du-tout"] }))).toMatchObject({
+      refus: "episodes",
+    });
   });
 });
 

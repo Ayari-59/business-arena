@@ -23,9 +23,19 @@ import { refusDuDomaine } from "@/config/inscriptions";
  * - les e-mails listés dans ADMIN_EMAILS deviennent admin général.
  */
 
+/** L'adresse déjà prise : le même message dans les trois cas, qui ne dit pas lequel. */
+const COMPTE_EXISTANT = "Un compte existe déjà avec cette adresse électronique.";
+
 /** La règle des mots de passe : l'inscription et la réinitialisation l'appliquent toutes deux. */
 export const LONGUEUR_MINIMALE_DU_MOT_DE_PASSE = 8;
 export const MOT_DE_PASSE_TROP_COURT = `Mot de passe : ${LONGUEUR_MINIMALE_DU_MOT_DE_PASSE} caractères minimum.`;
+
+/**
+ * LE CHAMP D'UN REFUS DE L'INSCRIPTION (audit UX du 11 novembre 2026, P2-6) : le formulaire dit chaque
+ * erreur sous son champ ; un refus qui ne tient à aucun champ (une panne, le plafond d'essais) se dit
+ * sous le formulaire.
+ */
+export type ChampDeLInscription = "email" | "password" | "inviteCode";
 
 export async function registerTeacher(args: {
   email: string;
@@ -38,24 +48,25 @@ export async function registerTeacher(args: {
    * l'enseignant l'a cochée (services/nouveautes.service.ts).
    */
   nouveautes?: boolean;
-}): Promise<{ userId: string } | { error: string }> {
+}): Promise<{ userId: string } | { error: string; champ?: ChampDeLInscription }> {
   const email = args.email.trim().toLowerCase();
-  if (args.password.length < LONGUEUR_MINIMALE_DU_MOT_DE_PASSE) return { error: MOT_DE_PASSE_TROP_COURT };
+  if (args.password.length < LONGUEUR_MINIMALE_DU_MOT_DE_PASSE) return { error: MOT_DE_PASSE_TROP_COURT, champ: "password" };
 
   const invite = args.inviteCode?.trim() ? await resolveInvite(args.inviteCode) : null;
   if (args.inviteCode?.trim() && !invite) {
-    return { error: "Code d'invitation inconnu ou désactivé." };
+    return { error: "Code d'invitation inconnu ou désactivé.", champ: "inviteCode" };
   }
   const config = await getPlatformConfig();
   // Les domaines d'e-mail (/admin/inscrits) : les bloqués toujours ; les autorisés pour
   // l'inscription libre seulement, un code valide passe outre (config/inscriptions.ts).
   const refusDomaine = refusDuDomaine(email, config, { parInvitation: invite !== null });
-  if (refusDomaine) return { error: refusDomaine };
+  if (refusDomaine) return { error: refusDomaine, champ: "email" };
   if (!invite) {
     if (!config.allowSelfServiceTeachers) {
       return {
         error:
           "Les inscriptions libres sont fermées : demandez un code d'invitation à votre établissement.",
+        champ: "inviteCode",
       };
     }
   }
@@ -67,7 +78,7 @@ export async function registerTeacher(args: {
     try {
       await assertCanAddTeacher(invite.organizationId);
     } catch (erreur) {
-      return { error: erreur instanceof Error ? erreur.message : "Licence insuffisante." };
+      return { error: erreur instanceof Error ? erreur.message : "Licence insuffisante.", champ: "inviteCode" };
     }
   }
 
@@ -83,14 +94,14 @@ export async function registerTeacher(args: {
     userId = inserted[0].id;
   } else {
     const row = (await db.select().from(users).where(eq(users.email, email)))[0];
-    if (!row?.passwordHash) return { error: "Un compte existe déjà avec cette adresse électronique." };
+    if (!row?.passwordHash) return { error: COMPTE_EXISTANT, champ: "email" };
     const match = await bcrypt.compare(args.password, row.passwordHash);
-    if (!match) return { error: "Un compte existe déjà avec cette adresse électronique." };
+    if (!match) return { error: COMPTE_EXISTANT, champ: "email" };
     const membership = await db
       .select({ organizationId: organizationMembers.organizationId })
       .from(organizationMembers)
       .where(eq(organizationMembers.userId, row.id));
-    if (membership.length > 0) return { error: "Un compte existe déjà avec cette adresse électronique." };
+    if (membership.length > 0) return { error: COMPTE_EXISTANT, champ: "email" };
     userId = row.id;
   }
 

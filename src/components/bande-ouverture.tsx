@@ -23,10 +23,15 @@ import { Bande } from "@/components/bande";
  * page : l'administrateur peut la remettre au clair, et tout s'y relit
  * puisque aucune couleur n'est écrite ici, seulement les paliers de l'échelle
  * que le contre-jour retourne.
+ *
+ * L'ANNONCE, AU-DESSUS DU SURTITRE : un encart court pour un autre public que celui de la page,
+ * le premier qu'on lit (/entreprises, la page des élèves, et son encart « Pour les entreprises » :
+ * audit UX du 11 novembre 2026, P2-10).
  */
 export function BandeOuverture({
   id,
   contraste,
+  annonce,
   surtitre,
   titre,
   chapeau,
@@ -37,6 +42,8 @@ export function BandeOuverture({
   /** L'identifiant de la bande au registre : « enseignants.accroche ». */
   id: string;
   contraste: boolean;
+  /** Un encart pour un autre public, au-dessus du surtitre : le premier qu'on lit. */
+  annonce?: ReactNode;
   surtitre: ReactNode;
   titre: ReactNode;
   chapeau: ReactNode;
@@ -56,6 +63,7 @@ export function BandeOuverture({
       interieur={cadre}
       interieurContraste={cadre}
     >
+      {annonce}
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-end lg:gap-14">
         <div className="min-w-0">
           <p>

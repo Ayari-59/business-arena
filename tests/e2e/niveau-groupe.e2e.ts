@@ -517,7 +517,7 @@ describe.skip("une partie de classe à deux équipes : l'enchère", () => {
       await aller(p, "/join");
       await p.fill('input[name="code"]', code);
       await p.fill('input[name="pseudo"]', pseudo);
-      await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+      await p.getByRole("button", { name: "Valider", exact: true }).click();
       await p.waitForURL(/\/arena\//, { timeout: 60_000 });
       eleves.push(p);
     }

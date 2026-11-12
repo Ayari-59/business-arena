@@ -9,6 +9,9 @@ import { adressesDeLOutil, DUREE_JETON_INSCRIPTION_JOURS } from "@/lti/constante
 import { adressesDuSp, ATTRIBUTS_DEMANDES, entityIdDuSp } from "@/saml/constantes";
 import { connexionEtablissementProposee } from "@/saml/configuration";
 import { connexionEtablissementDite } from "@/config/connexion-etablissement";
+import { DemandeDAdresseDInscription } from "@/components/demande-d-adresse-d-inscription";
+import { PLATEFORMES_LTI } from "@/services/adresse-d-inscription.service";
+import { VENDEUR } from "@/config/editeur";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/integration" },
@@ -93,11 +96,25 @@ function IntegrationPage() {
                 de lancement par défaut sur « Nouvelle fenêtre ».
               </li>
             </ol>
+            {/* UNE DEMANDE ÉCRITE, PAS UN RENDEZ-VOUS (audit UX du 11 novembre 2026, P2-10) : le lien menait au
+                rendez-vous téléphonique, un entretien pédagogique ; il mène au formulaire court, plus bas. */}
             <p>
-              <Link href="/rendez-vous" className={LIEN_A_L_ENCRE}>
+              <a href="#adresse-d-inscription" className={LIEN_A_L_ENCRE}>
                 Demander votre adresse d&apos;inscription
-              </Link>
+              </a>
             </p>
+          </Section>
+
+          <Section id="adresse-d-inscription" titre="Demander votre adresse d'inscription">
+            <p>
+              Une demande écrite : votre établissement, votre plateforme de cours et l&apos;adresse électronique où
+              recevoir l&apos;adresse d&apos;inscription.
+            </p>
+            <DemandeDAdresseDInscription
+              plateformes={PLATEFORMES_LTI}
+              dureeJours={DUREE_JETON_INSCRIPTION_JOURS}
+              contact={VENDEUR.contact}
+            />
           </Section>
 
           <Section id="manuelle" titre="La voie manuelle : recopier les adresses">
@@ -228,7 +245,7 @@ function IntegrationPage() {
               </li>
               <li>
                 Un établissement de la fédération qui n&apos;a pas encore d&apos;offre : l&apos;enseignant le lit, avec
-                les tarifs et la demande de devis ; l&apos;étudiant joue comme invité.
+                les offres et la demande de devis ; l&apos;étudiant joue comme invité.
               </li>
             </ul>
             <p>Les données reçues de l&apos;établissement :</p>

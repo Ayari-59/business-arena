@@ -8,10 +8,12 @@ import { lienDInvitation, origineDeLaRequete } from "@/lib/origine";
 import { compter } from "@/lib/format";
 import { getStaffContext } from "@/services/admin.service";
 import { cohorteDeLEnseignant } from "@/services/cohortes.service";
+import { uneOrganisationAvecEpisodes } from "@/services/acces.service";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { lienDuDebrief } from "@/config/episodes/debrief";
 import { ficheParCode } from "@/config/episodes/fiches";
-import { NOM_DE_COHORTE_MAX } from "@/config/cohortes";
+import { LICENCE_SANS_LES_EPISODES, NOM_DE_COHORTE_MAX } from "@/config/cohortes";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { BoutonCopierLeLien } from "@/components/bouton-copier-le-lien";
@@ -81,6 +83,10 @@ async function MaCohortePage({
     origineDeLaRequete(),
   ]);
   if (!cohorte) notFound();
+  // LA LICENCE DE LA COHORTE, celle de son organisation (services/acces.service.ts) : sans offre qui
+  // inclut les épisodes, ses membres ne les ouvrent plus, et la page le dit (audit UX du 11 novembre
+  // 2026, P2-7).
+  const avecEpisodes = await uneOrganisationAvecEpisodes([cohorte.organisation]);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const lien = lienDInvitation(origine, cohorte.code);
   const episodes = cohorte.episodes
@@ -116,6 +122,18 @@ async function MaCohortePage({
         {message ? (
           <p role="status" className="rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200">
             {message}
+          </p>
+        ) : null}
+        {!avecEpisodes ? (
+          <p
+            role="status"
+            data-licence-sans-episodes=""
+            className="rounded-lg encadre-perte px-3 py-2.5 text-sm text-slate-100"
+          >
+            <strong className="font-semibold">{LICENCE_SANS_LES_EPISODES}</strong>{" "}
+            <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+              Voir les offres
+            </Link>
           </p>
         ) : null}
         {cohorte.closeLe ? (
