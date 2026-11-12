@@ -125,17 +125,30 @@ function LigneDuTableauBrut({
   haut?: number;
 }) {
   const { nom, semaine, indicateurs } = tableau;
+  // Le nom de la ligne dit tout ce qu'elle montre, valeurs et écarts compris : la zone qui défile,
+  // dedans, a son propre nom (audit UX du 11 novembre 2026, P2-11).
+  const resume = `${nom} · ${semaine ? `fin de semaine ${semaine}` : "aujourd'hui"} : ${indicateurs
+    .map((ind) => `${ind.nom} ${ind.valeur}${ecarts && ind.ecart ? ` (${ind.ecart.signe}${ind.ecart.montant})` : ""}`)
+    .join(", ")}`;
   return (
     <details
       data-ligne-du-tableau=""
       style={{ top: haut }}
       className="ardoise group sticky z-20 -mx-4 mb-5 border-b border-white/10 bg-slate-950 text-slate-100 sm:-mx-6 lg:hidden print:hidden"
     >
-      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-4 py-1.5 sm:px-6 [&::-webkit-details-marker]:hidden">
-        <span className="sr-only">
-          {nom} · {semaine ? `fin de semaine ${semaine}` : "aujourd'hui"} :
-        </span>
-        <span className="flex min-w-0 flex-1 gap-x-4 overflow-x-auto whitespace-nowrap text-sm tabular-nums [scrollbar-width:none]">
+      <summary
+        aria-label={resume}
+        className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-4 py-1.5 sm:px-6 [&::-webkit-details-marker]:hidden"
+      >
+        {/* À 390 PX, LA LIGNE DÉFILE DE CÔTÉ : sa zone a un nom et s'atteint au clavier, où les flèches la
+            font défiler (audit UX du 11 novembre 2026, P2-11). */}
+        <span
+          role="group"
+          aria-label="Les indicateurs, à faire glisser de côté"
+          tabIndex={0}
+          data-indicateurs-qui-defilent=""
+          className="flex min-w-0 flex-1 gap-x-4 overflow-x-auto whitespace-nowrap rounded-md text-sm tabular-nums [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
           {indicateurs.map((ind) => {
             return (
               <span key={ind.cle} className="flex shrink-0 items-baseline gap-1.5">

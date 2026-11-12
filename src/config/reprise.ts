@@ -73,6 +73,20 @@ export const AIDE_CODE_DE_REPRISE_SOLO =
   "téléphone à l'ordinateur. Il se saisit sur la page « Reprendre ma partie ».";
 
 /**
+ * DANS UNE CLASSE DU COURS (décision du propriétaire du 11 novembre 2026 ; audit UX du même jour,
+ * P1-5). L'élève qui changeait d'appareil rejoignait de nouveau sa classe et devenait un second élève,
+ * repartant de zéro. Le code est celui de son profil (le mécanisme des épisodes) : il lui rend sa place
+ * et sa progression. Personne ne le relit à sa place : le texte demande de le noter.
+ */
+export const AIDE_CODE_DE_REPRISE_COURS =
+  "Notez ce code : sur un autre appareil, ou si ce navigateur oublie vos données, il vous rend " +
+  "votre place dans la classe et votre progression, sans compter un élève de plus. Il se saisit " +
+  "sur la page « Reprendre ma place ». Gardez-le pour vous : qui le lit peut travailler à votre place.";
+
+/** Le refus d'un code qui ne mène à aucun élève d'une classe du cours : le même pour un code mal écrit. */
+export const REFUS_DE_LA_REPRISE_EN_CLASSE = "Ce code ne correspond à aucun élève d'une classe. Vérifiez-le et réessayez.";
+
+/**
  * Le plafond des codes faux, par adresse et par fenêtre de quinze minutes. Toute une classe
  * sort souvent par la même adresse (le réseau du lycée) : trente-cinq élèves qui se trompent
  * d'une lettre ne doivent pas fermer la porte aux autres. Soixante échecs laissent passer une

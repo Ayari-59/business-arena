@@ -27,7 +27,10 @@ describe("place du bouton de la calculatrice", () => {
   });
 
   it("collé au bord droit sur téléphone, zone sûre comprise ; à 16 px du bord au-delà", () => {
-    expect(html).toMatch(/data-calculatrice=""[^>]*class="[^"]*\bright-\[env\(safe-area-inset-right,0px\)\][^"]*\bsm:right-4\b/);
+    // Fermée (le rendu serveur), quel que soit l'ordre des classes : ouverte sur téléphone, elle devient le
+    // bandeau bas (audit UX du 11 novembre 2026, P2-2), et ses classes de place dépendent de cet état.
+    const classes = html.match(/data-calculatrice=""[^>]*class="([^"]*)"/)?.[1]?.split(/\s+/) ?? [];
+    expect(classes).toEqual(expect.arrayContaining(["right-[env(safe-area-inset-right,0px)]", "sm:right-4"]));
   });
 
   it("la page lui laisse sa bande à droite, sur téléphone", () => {

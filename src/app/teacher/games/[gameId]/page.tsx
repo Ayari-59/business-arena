@@ -65,6 +65,7 @@ import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 import { resumePourLePilotage } from "@/services/pairs.service";
 import { CommencerLaVraiePartie } from "@/components/commencer-la-vraie-partie";
 import { EXPLICATION_DU_TOUR_D_ESSAI } from "@/config/tour-d-essai";
+import { ZoneQuiDefile } from "@/components/zone-qui-defile";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -445,7 +446,9 @@ async function TeacherGamePage({
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes · état des décisions du {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
         </h2>
-        <div className="overflow-x-auto">
+        {/* Sur téléphone, le tableau défile de côté : sa zone est nommée et s'atteint au clavier (audit UX
+            du 11 novembre 2026, P2-11). */}
+        <ZoneQuiDefile nom="Les équipes et l'état de leurs décisions, tableau qui défile de côté">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
@@ -544,7 +547,7 @@ async function TeacherGamePage({
               ))}
             </tbody>
           </table>
-        </div>
+        </ZoneQuiDefile>
         <JustificationsReview gameId={gameId} available={aiReview} />
       </section>
 
@@ -822,7 +825,9 @@ async function TeacherGamePage({
               </span>
             )}
           </div>
-          <div className="overflow-x-auto">
+          {/* À 390 PX, LE RELEVÉ DÉFILE DE CÔTÉ (8 colonnes) : sa zone est nommée et s'atteint au clavier. C'est
+              celle qu'axe-core relevait sur le pilotage (audit UX du 11 novembre 2026, P2-11). */}
+          <ZoneQuiDefile nom="Le relevé de notes, tableau qui défile de côté">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
@@ -886,7 +891,7 @@ async function TeacherGamePage({
                 ))}
               </tbody>
             </table>
-          </div>
+          </ZoneQuiDefile>
           {releve.roundsResolved === 0 ? (
             <p className="mt-3 text-sm text-slate-400">
               Aucun tour clôturé : le relevé se remplit à la première clôture.

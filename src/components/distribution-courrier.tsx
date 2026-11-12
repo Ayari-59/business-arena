@@ -156,10 +156,13 @@ export function DistributionCourrier({
               />
             </button>
             <span className="text-xs text-slate-400">ou</span>
+            {/* Une liste sans étiquette se lisait « liste, Courrier au hasard » sans dire ce qu'elle
+                choisit (audit UX du 11 novembre 2026, P2-11 : défaut critique d'axe-core). */}
             <select
               name="eventCode"
               defaultValue=""
               key={adresse ? "team" : "market"}
+              aria-label="Le courrier à distribuer"
               className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none"
             >
               <option value="">Courrier au hasard</option>

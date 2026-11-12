@@ -227,6 +227,7 @@ describe("plus de description par défaut reprise par une page d'entrée", () =>
     ["/examen/page"],
     ["/reprendre/page"],
     ["/cours/rejoindre/page"],
+    ["/cours/reprendre/page"],
     ["/teacher/login/page"],
     ["/profile/layout"],
   ])("%s a sa description propre", async (module) => {

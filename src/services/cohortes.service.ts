@@ -191,10 +191,19 @@ export async function codeDeRepriseDuProfil(userId: string, creer = false): Prom
 /**
  * Retrouver la personne qui porte ce code. Le refus ne dit jamais ce qui
  * existe : un code mal formé et un code inconnu pèsent le même poids.
+ *
+ * LE MÊME CODE REND SA PLACE À L'ÉLÈVE D'UNE CLASSE DU COURS (décision du propriétaire du 11 novembre
+ * 2026 ; audit UX du même jour, P1-5) : c'est l'identité de l'appareil qu'il rend, classe et progression
+ * comprises. La page de la classe dit son refus dans ses mots (`inconnu`) et n'accepte que le code d'un
+ * élève de classe (`porteur`) ; un autre code compte comme un code inconnu.
  */
 export async function reprendreProfil(args: {
   code: string;
   ip?: string | null;
+  /** Le refus d'un code qui ne mène à personne, dans les mots de la page. */
+  inconnu?: string;
+  /** Ce que le porteur du code doit être en plus ; sinon, le même refus qu'un code inconnu. */
+  porteur?: (userId: string) => Promise<boolean>;
 }): Promise<{ ok: true; userId: string } | { ok: false; erreur: string }> {
   const garde = await garderLesTentatives({ marqueur: MARQUEUR_REPRISE_PROFIL, ip: args.ip });
   if (garde.refus) return { ok: false, erreur: garde.refus };
@@ -202,9 +211,9 @@ export async function reprendreProfil(args: {
   const [trouve] = codeDeReprisePlausible(net)
     ? await db.select().from(episodeReprises).where(eq(episodeReprises.code, net))
     : [];
-  if (!trouve) {
+  if (!trouve || (args.porteur && !(await args.porteur(trouve.userId)))) {
     await garde.echec();
-    return { ok: false, erreur: "Ce code ne correspond à aucun profil. Vérifiez-le et réessayez." };
+    return { ok: false, erreur: args.inconnu ?? "Ce code ne correspond à aucun profil. Vérifiez-le et réessayez." };
   }
   await garde.succes();
   return { ok: true, userId: trouve.userId };

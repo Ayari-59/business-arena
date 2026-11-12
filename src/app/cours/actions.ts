@@ -1,9 +1,14 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getGuestUserId, getOrCreateGuestUserId } from "@/lib/guest";
+import { getGuestUserId, getOrCreateGuestUserId, setGuestCookie } from "@/lib/guest";
 import { codeFaux, gardeDesCodes, minutesDuRefus } from "@/lib/garde-des-codes";
+import { REFUS_DE_LA_REPRISE_EN_CLASSE } from "@/config/reprise";
+import { reprendreProfil } from "@/services/cohortes.service";
+import { adresseDOrigine } from "@/lib/garde-des-codes";
 import {
+  classeDeLEleve,
   classeParCode,
   enregistrerProgression,
   quitterClasse,
@@ -49,6 +54,31 @@ export async function quitterClasseAction(): Promise<void> {
   const userId = await getGuestUserId();
   if (userId) await quitterClasse(userId);
   redirect("/cours?classe=quittee");
+}
+
+export interface RepriseEnClasseState {
+  error: string | null;
+}
+
+/**
+ * REPRENDRE SA PLACE DANS SA CLASSE SUR CET APPAREIL (décision du propriétaire du 11 novembre 2026 ;
+ * audit UX du même jour, P1-5). Sur un autre appareil, l'élève qui rejoignait de nouveau sa classe
+ * devenait un second élève, et l'enseignant voyait deux « Léa ». Le code de reprise est celui des
+ * épisodes (services/cohortes.service.ts, `reprendreProfil`, avec sa garde des tentatives) : il rend à
+ * l'appareil l'identité de l'élève, sa classe et sa progression. Seul le code d'un élève de classe
+ * passe ; un autre est refusé comme un code inconnu.
+ */
+export async function reprendreSaPlaceAction(_prev: RepriseEnClasseState, formData: FormData): Promise<RepriseEnClasseState> {
+  const r = await reprendreProfil({
+    code: String(formData.get("code") ?? ""),
+    ip: await adresseDOrigine(),
+    inconnu: REFUS_DE_LA_REPRISE_EN_CLASSE,
+    porteur: async (userId) => (await classeDeLEleve(userId)) !== null,
+  });
+  if (!r.ok) return { error: r.erreur };
+  await setGuestCookie(r.userId);
+  revalidatePath("/cours");
+  redirect("/cours?classe=reprise");
 }
 
 /** La progression d'un chapitre, envoyée par le navigateur à chaque étape. Sans classe : rien. */

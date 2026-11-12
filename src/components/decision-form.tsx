@@ -1167,6 +1167,13 @@ export function plageAuto(valeur: number, suffixe: string): { min: number; max: 
 }
 
 /**
+ * LA VALEUR D'UN CURSEUR, DITE AVEC SON UNITÉ (`aria-valuetext` ; audit UX du 11 novembre 2026, P2-11) :
+ * un lecteur d'écran annonçait « 1990 » sans « € ».
+ */
+const valeurDuCurseur = (x: number, unite: string) =>
+  `${(Math.round(x * 100) / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })}${unite.trim() ? ` ${unite.trim()}` : ""}`;
+
+/**
  * LE CURSEUR D'UNE SAISIE, SUR TÉLÉPHONE. Un doigt règle un montant d'un geste, là
  * où des boutons − et + l'auraient fait cran par cran. La saisie au clavier reste
  * au-dessus : c'est elle qui porte la valeur et le `name`, le curseur ne fait que
@@ -1206,6 +1213,8 @@ function CurseurDeSaisie({
       type="range"
       onWheel={sansMolette}
       aria-label={`${label} : curseur`}
+      // La valeur se dit avec son unité (audit UX du 11 novembre 2026, P2-11).
+      aria-valuetext={valeurDuCurseur(Math.min(Math.max(valeur, min), max), suffixe)}
       min={min}
       max={max}
       step="any"
@@ -1514,6 +1523,7 @@ function ChampPlafonne({
             type="range"
             onWheel={sansMolette}
             aria-label={`${label} : curseur`}
+            aria-valuetext={valeurDuCurseur(Math.min(Math.max(valeur, 0), maximum), suffix)}
             min={0}
             max={maximum}
             step="any"

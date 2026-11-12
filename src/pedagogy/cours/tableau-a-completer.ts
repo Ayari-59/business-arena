@@ -1,3 +1,4 @@
+import { manqueDeDecimales } from "./aides-du-guide";
 import { lireNombre, montantEcrit } from "./correcteur";
 import type { NatureDuNombre } from "./deux-decimales";
 
@@ -237,6 +238,8 @@ export function corrigerLeTableau(t: TableauACompleter, saisies: SaisiesDuTablea
     if (x === null) return faux("ce qui est écrit ne se lit pas comme un nombre");
     if (Math.abs(x - attendu) <= tol) return { ligne, colonne, juste: true, remarque: null };
     if (Math.abs(attendu) > tol && Math.abs(x + attendu) <= tol) return faux("le nombre convient, pas son signe");
+    // Le bon calcul arrêté trop tôt : « 54,5 » pour 54,55 (audit UX du 11 novembre 2026, P2-5).
+    if (manqueDeDecimales(brut, { libelle: "", attendu, nature: cellule.nature, unite: cellule.unite })) return faux("arrondissez à 2 décimales");
     for (const total of totaux.filter((s) => s.ligne === ligne && s.colonne === colonne)) {
       const somme = sommeDe(total, valeurDeLEleve);
       if (somme === null) continue;

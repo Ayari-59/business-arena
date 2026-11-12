@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { calculer, enSaisie } from "@/pedagogy/cours/calculatrice";
 
 /**
@@ -15,6 +15,15 @@ import { calculer, enSaisie } from "@/pedagogy/cours/calculatrice";
  *
  * L'enseignant peut la retirer à sa classe (espace enseignant) : la page ne la
  * rend alors pas du tout.
+ *
+ * SUR TÉLÉPHONE, UN BANDEAU BAS QUI SE REPLIE (audit UX du 11 novembre 2026, P2-2). Ouverte à 390 px,
+ * elle couvrait 46 % de l'écran et 5 des 8 paragraphes visibles, données du calcul comprises. Elle
+ * devient un bandeau collé au bas de l'écran, sur toute la largeur, aux touches plus basses et sans
+ * l'historique (le dernier résultat reste dans le champ) ; la page lui laisse sa hauteur en bas
+ * (globals.css), si bien que tout l'énoncé se fait défiler au-dessus. Un geste la replie sur sa seule
+ * ligne de calcul, valeur gardée, et la déplie. Son clavier remplace celui du téléphone, qui ne
+ * s'ouvre plus par-dessus. ÉCHAP la ferme et rend le focus au bouton « Calculatrice » (il retombait
+ * sur « Aller au contenu », en haut de la page).
  */
 
 /** Les cases de réponse : les montants et les écritures, qui se saisissent en décimal. */
@@ -45,14 +54,26 @@ function ecrireDans(el: HTMLInputElement, valeur: string) {
   el.focus();
 }
 
+/** Un écran tactile : le clavier de la calculatrice y remplace celui du téléphone. */
+const TACTILE = "(pointer: coarse)";
+const suivreLeTactile = (prevenir: () => void) => {
+  const m = window.matchMedia(TACTILE);
+  m.addEventListener("change", prevenir);
+  return () => m.removeEventListener("change", prevenir);
+};
+
 export function Calculatrice() {
   const [ouverte, setOuverte] = useState(false);
+  const [repliee, setRepliee] = useState(false);
   const [saisie, setSaisie] = useState("");
   const [historique, setHistorique] = useState<{ expression: string; resultat: string }[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [cible, setCible] = useState<HTMLInputElement | null>(null);
+  const [rendreLeFocus, setRendreLeFocus] = useState(false);
   const champ = useRef<HTMLInputElement>(null);
+  const bouton = useRef<HTMLButtonElement>(null);
   const id = useId();
+  const tactile = useSyncExternalStore(suivreLeTactile, () => window.matchMedia(TACTILE).matches, () => false);
 
   // La dernière case de réponse où l'élève est passé : c'est là que « Reporter » écrit.
   useEffect(() => {
@@ -66,6 +87,19 @@ export function Calculatrice() {
   useEffect(() => {
     if (ouverte) champ.current?.focus();
   }, [ouverte]);
+
+  // Fermée au clavier (Échap) ou par son bouton du bandeau : le focus revient au bouton « Calculatrice ».
+  useEffect(() => {
+    if (ouverte || !rendreLeFocus) return;
+    bouton.current?.focus();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRendreLeFocus(false);
+  }, [ouverte, rendreLeFocus]);
+
+  const fermer = () => {
+    setOuverte(false);
+    setRendreLeFocus(true);
+  };
 
   const egal = () => {
     const r = calculer(saisie);
@@ -94,6 +128,8 @@ export function Calculatrice() {
   };
   const resultat = historique[0]?.resultat ?? null;
   const visee = ouverte ? caseVisee() : null;
+  // Repliée, la calculatrice ne garde que sa ligne de calcul : sur téléphone seulement.
+  const replier = repliee ? "max-sm:hidden" : "";
 
   return (
     // SUR TÉLÉPHONE, UN ONGLET DANS LA MARGE (novembre 2026). Le rond de 44 px posé à
@@ -102,15 +138,31 @@ export function Calculatrice() {
     // devient un onglet de 32 × 56 px collé au bord droit de l'écran (zone sûre comprise), et
     // la page lui laisse cette bande (`main:has([data-calculatrice])`, globals.css) : il ne
     // recouvre plus rien, où que l'on soit dans la page. Son nom accessible reste « Calculatrice ».
-    <div data-calculatrice="" className="fixed bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] right-[env(safe-area-inset-right,0px)] z-40 grid justify-items-end gap-2 sm:bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:right-4">
+    // Ouverte, elle est un bandeau bas sur toute la largeur (voir l'en-tête).
+    <div
+      data-calculatrice=""
+      data-ouverte={ouverte ? "" : undefined}
+      data-repliee={ouverte && repliee ? "" : undefined}
+      className={`fixed z-40 grid justify-items-end gap-2 sm:bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:right-4 ${
+        ouverte
+          ? "max-sm:inset-x-0 max-sm:bottom-0"
+          : "bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] right-[env(safe-area-inset-right,0px)]"
+      }`}
+    >
       {ouverte && (
         <section
           id={id}
           aria-label="Calculatrice"
-          className="carte grid w-[min(20rem,calc(100vw-2rem))] gap-3 max-sm:mr-2 bg-slate-950 p-3 shadow-xl"
+          onKeyDown={(e) => {
+            if (e.key !== "Escape") return;
+            e.preventDefault();
+            fermer();
+          }}
+          className="carte grid gap-3 bg-slate-950 p-3 shadow-xl max-sm:w-full max-sm:gap-2 max-sm:rounded-b-none max-sm:px-3 max-sm:pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] max-sm:pt-2 sm:w-[min(20rem,calc(100vw-2rem))]"
+          data-bandeau-de-la-calculatrice=""
         >
           {historique.length > 0 && (
-            <ol className="grid gap-0.5 text-right text-xs tabular-nums text-slate-400" aria-label="Derniers calculs">
+            <ol className="grid gap-0.5 text-right text-xs tabular-nums text-slate-400 max-sm:hidden" aria-label="Derniers calculs">
               {historique.map((h, i) => (
                 <li key={`${i}-${h.expression}`}>
                   {h.expression} = <span className="text-slate-200">{h.resultat}</span>
@@ -118,33 +170,51 @@ export function Calculatrice() {
               ))}
             </ol>
           )}
-          <input
-            ref={champ}
-            aria-label="Calcul"
-            className="champ w-full px-2.5 py-2 text-right text-lg tabular-nums"
-            inputMode="text"
-            autoComplete="off"
-            value={saisie}
-            onChange={(e) => {
-              setErreur(null);
-              setSaisie(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === "=") {
-                e.preventDefault();
-                egal();
-              } else if (e.key === "Escape") setOuverte(false);
-            }}
-          />
-          <p className="min-h-4 text-xs text-rose-300" role="status">
+          <div className="flex items-center gap-2">
+            <input
+              ref={champ}
+              aria-label="Calcul"
+              className="champ min-w-0 flex-1 px-2.5 py-2 text-right text-lg tabular-nums"
+              // Sur un écran tactile, les touches de la calculatrice : le clavier du téléphone ne
+              // s'ouvre pas par-dessus l'énoncé. Un clavier branché écrit toujours.
+              inputMode={tactile ? "none" : "text"}
+              autoComplete="off"
+              value={saisie}
+              onChange={(e) => {
+                setErreur(null);
+                setSaisie(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "=") {
+                  e.preventDefault();
+                  egal();
+                }
+              }}
+            />
+            {/* Sur téléphone : la replier d'un geste, valeur gardée, et la fermer, depuis le bandeau. */}
+            <button
+              type="button"
+              className="champ min-h-10 shrink-0 px-3 text-sm font-semibold sm:hidden"
+              aria-expanded={!repliee}
+              aria-controls={`${id}-touches`}
+              data-replier-la-calculatrice=""
+              onClick={() => setRepliee((r) => !r)}
+            >
+              {repliee ? "Déplier" : "Replier"}
+            </button>
+            <button type="button" className="champ min-h-10 shrink-0 px-3 text-sm sm:hidden" aria-label="Fermer la calculatrice" onClick={fermer}>
+              ✕
+            </button>
+          </div>
+          <p className={`min-h-4 text-xs text-rose-300 ${erreur ? "" : "max-sm:hidden"}`} role="status">
             {erreur ?? ""}
           </p>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div id={`${id}-touches`} className={`grid grid-cols-4 gap-1.5 max-sm:gap-1 ${replier}`}>
             {TOUCHES.flat().map((t) => (
               <button
                 key={t}
                 type="button"
-                className={`champ min-h-11 text-base tabular-nums ${t === "=" ? "bg-amber-400 font-semibold text-slate-950" : ""}`}
+                className={`champ min-h-11 text-base tabular-nums max-sm:min-h-9 ${t === "=" ? "bg-amber-400 font-semibold text-slate-950" : ""}`}
                 aria-label={t === "⌫" ? "Effacer le dernier signe" : t === "=" ? "Égal" : undefined}
                 onClick={() => toucher(t)}
               >
@@ -152,11 +222,15 @@ export function Calculatrice() {
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <button type="button" className="text-xs text-slate-400 underline-offset-4 hover:underline" onClick={() => {
-              setSaisie("");
-              setErreur(null);
-            }}>
+          <div className={`flex flex-wrap items-center justify-between gap-2 ${replier}`}>
+            <button
+              type="button"
+              className="min-h-6 text-xs text-slate-400 underline-offset-4 hover:underline"
+              onClick={() => {
+                setSaisie("");
+                setErreur(null);
+              }}
+            >
               Tout effacer
             </button>
             {resultat !== null && visee && (
@@ -173,16 +247,17 @@ export function Calculatrice() {
         </section>
       )}
       <button
+        ref={bouton}
         type="button"
         aria-expanded={ouverte}
         aria-controls={id}
         data-bouton-calculatrice=""
         className={`border border-white/15 bg-slate-900 text-sm font-semibold text-slate-100 shadow-lg hover:border-amber-400/50 ${
           ouverte
-            ? "rounded-full px-4 py-2.5 max-sm:mr-2"
+            ? "rounded-full px-4 py-2.5 max-sm:hidden"
             : "grid h-14 w-8 place-items-center rounded-l-xl border-r-0 sm:h-auto sm:w-auto sm:rounded-full sm:border-r sm:px-4 sm:py-2.5"
         }`}
-        onClick={() => setOuverte((o) => !o)}
+        onClick={() => (ouverte ? fermer() : setOuverte(true))}
       >
         {ouverte ? (
           "Fermer la calculatrice"
