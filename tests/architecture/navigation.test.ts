@@ -7,6 +7,7 @@ import {
   LIEN_ESPACE_ENSEIGNANT,
   LIEN_ETABLISSEMENT,
   LIEN_REGLES,
+  LIENS_LEGAUX,
   NAVIGATION,
   NAVIGATION_ADMIN,
   NAVIGATION_ARENE,
@@ -94,6 +95,7 @@ describe("plan du site", () => {
     const liens = [
       ...tousLesLiens(),
       ...liensDeTete(),
+      ...LIENS_LEGAUX,
       ...NAVIGATION_ARENE,
       ...PASTILLES.flatMap(([, p]) => p),
     ];
@@ -109,7 +111,7 @@ describe("plan du site", () => {
   });
 
   it("aucune adresse n'est portée deux fois, et une page n'a qu'un seul nom", () => {
-    const adresses = tousLesLiens().map((l) => l.href);
+    const adresses = [...tousLesLiens(), ...LIENS_LEGAUX].map((l) => l.href);
     expect(adresses.length, "plan vide").toBeGreaterThan(5);
     expect([...new Set(adresses)].sort()).toEqual([...adresses].sort());
     // Les mêmes mots partout : la page des fiches s'appelle « Notions » dans le
@@ -118,7 +120,7 @@ describe("plan du site", () => {
     // « Écoles » la page entière). Le mot de la barre nomme le GROUPE : « Cours »
     // ouvre la page que le groupe appelle « Diplômes ».
     const noms = new Map<string, Set<string>>();
-    for (const l of [...tousLesLiens(), ...NAVIGATION_ARENE, ...NAVIGATION_ETUDIANT]) {
+    for (const l of [...tousLesLiens(), ...LIENS_LEGAUX, ...NAVIGATION_ARENE, ...NAVIGATION_ETUDIANT]) {
       noms.set(l.href, (noms.get(l.href) ?? new Set()).add(l.libelle));
     }
     const doubles = [...noms].filter(([, n]) => n.size > 1).map(([p, n]) => `${p} : ${[...n].join(" / ")}`);
@@ -139,7 +141,7 @@ describe("plan du site", () => {
     // « Référentiels », « Règles » et « Notions » ne se distinguent pas pour qui
     // découvre le site : sans la phrase d'aide, on ouvre les trois. Un mot seul en
     // dit moins qu'une phrase : l'aide, au survol, dit le reste.
-    for (const lien of [...tousLesLiens(), ...liensDeTete()]) {
+    for (const lien of [...tousLesLiens(), ...liensDeTete(), ...LIENS_LEGAUX]) {
       expect(lien.libelle.trim().length, `${lien.href} : libellé vide`).toBeGreaterThan(2);
       expect(lien.aide.trim().length, `${lien.href} : aide trop courte`).toBeGreaterThan(40);
     }
@@ -150,8 +152,9 @@ describe("plan du site", () => {
 
   it("parle français : pas d'anglais ni de jargon", () => {
     const mots = [
-      ...NAVIGATION.flatMap((g) => [g.titre, ...g.liens.map((l) => l.libelle)]),
+      ...NAVIGATION.flatMap((g) => [g.titre, g.phrase ?? "", ...g.liens.map((l) => l.libelle)]),
       ...liensDAcces().flatMap((l) => [l.libelle, l.nom ?? ""]),
+      ...LIENS_LEGAUX.map((l) => l.libelle),
       ...NAVIGATION_ARENE.map((l) => l.libelle),
       ...PASTILLES.flatMap(([, p]) => p.map((x) => x.libelle)),
       LIBELLE_QUITTER_LA_PARTIE,
@@ -196,22 +199,31 @@ describe("plan du site", () => {
     expect(liensDAcces().some((l) => liensDeTete().some((t) => t.href === l.href))).toBe(false);
   });
 
-  it("toute page publique du sitemap est dans le plan, à deux clics au plus", () => {
+  it("toute page publique du sitemap est atteinte depuis le plan, à deux clics au plus", () => {
     // Le sitemap dit ce que le site montre aux moteurs ; le plan, ce qu'il
     // montre aux visiteurs. Une page dans l'un et pas dans l'autre est une page
     // qu'on trouve par Google et jamais depuis le site : c'était le cas de
     // /integration, /reprendre, /examen et /profile.
     //
-    // Une exception, et pourquoi : l'accueil (le logo de la barre y mène, sur
-    // toutes les pages). Le devis, qui en était une, est une entrée des offres
-    // depuis novembre 2026. Les pages par code (ateliers, guides, concours) sont
-    // les enfants d'une page du plan : un clic de plus. Les mots de la barre
-    // comptent : ils sont aussi les titres du menu déplié, sur téléphone.
+    // Le plan : les mots de la barre (aussi titres du menu déplié, sur
+    // téléphone), les entrées, les portes et la petite ligne légale du pied de
+    // page. Une exception, l'accueil (le logo de la barre y mène, sur toutes les
+    // pages). Deux pages ont quitté le menu en novembre 2026 (la pédagogie en
+    // avant) : une page du plan y mène, et le lien est vérifié ici. Les pages
+    // par code (ateliers, guides, concours) sont les enfants d'une page du plan.
     const EXCEPTIONS: Record<string, string> = {
       "/": "le logo de la barre",
     };
-    const pages = [...tousLesLiens(), ...liensDeTete()].map((l) => l.href.split("#")[0]!);
-    const absentes = PAGES_PUBLIQUES.filter((p) => !pages.includes(p) && !(p in EXCEPTIONS));
+    const MENEES: Record<string, { page: string; fichier: string; preuve: string }> = {
+      "/orientation": { page: "/enseignants", fichier: "src/app/enseignants/page.tsx", preuve: '<Link href="/orientation"' },
+      "/integration": { page: "/guides", fichier: "src/app/guides/page.tsx", preuve: '<Link href="/integration"' },
+    };
+    const pages = [...tousLesLiens(), ...liensDeTete(), ...LIENS_LEGAUX].map((l) => l.href.split("#")[0]!);
+    for (const [href, { page, fichier, preuve }] of Object.entries(MENEES)) {
+      expect(pages, `${href} : ${page}, qui y mène, n'est pas au plan`).toContain(page);
+      expect(lire(fichier), `${href} : ${fichier} n'y mène plus`).toContain(preuve);
+    }
+    const absentes = PAGES_PUBLIQUES.filter((p) => !pages.includes(p) && !(p in EXCEPTIONS) && !(p in MENEES));
     expect(absentes, `pages du sitemap introuvables depuis le plan : ${absentes.join(", ")}`).toEqual([]);
     for (const p of Object.keys(EXCEPTIONS)) expect(PAGES_PUBLIQUES).toContain(p);
   });
@@ -228,7 +240,7 @@ describe("plan du site", () => {
       ["l'en-tête de l'administration", "src/components/en-tete-admin.tsx", "NAVIGATION_ADMIN"],
       ["le menu de l'arène", "src/components/menu-de-l-arene.tsx", "NAVIGATION_ARENE"],
     ];
-    const liens = [...tousLesLiens(), ...liensDeTete(), ...NAVIGATION_ARENE, ...PASTILLES.flatMap(([, p]) => p)];
+    const liens = [...tousLesLiens(), ...liensDeTete(), ...LIENS_LEGAUX, ...NAVIGATION_ARENE, ...PASTILLES.flatMap(([, p]) => p)];
     for (const [nom, fichier, lecture] of BLOCS) {
       const bloc = lire(fichier);
       expect(bloc, `${nom} n'importe pas le plan`).toContain(lecture);

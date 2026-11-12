@@ -4,7 +4,7 @@ import Link from "next/link";
 // Le chemin normalisé : `/index` (régénération de l'accueil sur Vercel) vaut `/`.
 import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
 import { BrandMark } from "@/components/brand-mark";
-import { LIEN_GUIDES, NAVIGATION, liensDeTete, type LienDeMenu } from "@/config/navigation";
+import { LIEN_GUIDES, LIENS_LEGAUX, NAVIGATION, liensDeTete, type LienDeMenu } from "@/config/navigation";
 import { VENDEUR } from "@/config/editeur";
 
 /**
@@ -23,9 +23,16 @@ import { VENDEUR } from "@/config/editeur";
  * sous le mot de la barre et vers la même page, puis ses entrées, d'un mot.
  * Jamais une copie qui dérivera. Le plan d'avant comptait 5 colonnes, une ligne
  * pour les offres et une pour ce qui sert à tous, et une précision à côté de
- * trois titres : les 5 groupes suffisent, les mentions légales sont dans
- * « Aide ». Cinq colonnes sur grand écran, trois sur tablette, deux sur
- * téléphone : des mots seuls tiennent à deux de front.
+ * trois titres : les 5 groupes suffisent. Cinq colonnes sur grand écran, trois
+ * sur tablette, deux sur téléphone : des mots seuls tiennent à deux de front.
+ * Les phrases que le menu déplié pose sous trois titres n'y sont pas : le pied
+ * de page est une carte, pas une présentation.
+ *
+ * LE LÉGAL EN PETIT, TOUT EN BAS (le propriétaire : « les CGV, CGU, RGPD et
+ * cie, je ne veux pas que ce soit trop voyant »). Les mentions légales, les CGV
+ * et les CGU ne sont dans aucune colonne : une seule petite ligne, sous le
+ * filet, à côté de l'année, lue du plan (`LIENS_LEGAUX`). Elle est sur toutes
+ * les pages publiques, comme la loi le veut.
  *
  * IL SE POSE HORS DU `<main>`, en frère de celui-ci. C'est ce qui en fait un
  * repère « contentinfo » pour une synthèse vocale ; imbriqué dans le contenu,
@@ -104,7 +111,21 @@ export function PiedDePage() {
             vers la droite, et l'orange ne décore pas. */}
         <div aria-hidden className="mt-12 h-px bg-[var(--filet-carte)]" />
         <div className="mt-5 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 text-xs text-slate-400">
-          <p>© {annee} Business Arena</p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+            <p>© {annee} Business Arena</p>
+            {/* LA PETITE LIGNE LÉGALE : Mentions · CGV · CGU, en petit, et nulle
+                part ailleurs dans la navigation (config/navigation.ts). */}
+            <nav aria-label="Informations légales" data-ligne-legale="">
+              <ul className="flex flex-wrap items-center gap-x-2">
+                {LIENS_LEGAUX.map((lien, i) => (
+                  <li key={lien.href} className="flex items-center gap-x-2">
+                    {i > 0 ? <span aria-hidden>·</span> : null}
+                    <EntreeLegale lien={lien} courant={courant(lien.href)} />
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
           {/* L'adresse de contact, en texte : elle se sélectionne et se recopie
               (config/editeur.ts). */}
           <span data-contact-pied="" className="select-all">
@@ -150,6 +171,31 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
       // L'aide, sur toutes les pages publiques : les guides de prise en main (tests/e2e/guides.e2e.ts).
       {...(lien.href === LIEN_GUIDES.href ? { "data-lien-des-guides": "" } : {})}
       className="text-slate-400 transition-colors hover:text-slate-200"
+    >
+      {lien.libelle}
+    </Link>
+  );
+}
+
+/**
+ * Un lien de la petite ligne légale : en petit, à l'encre du pied de page, sans
+ * relief. La page courante est du texte, comme ailleurs au pied de page ; au
+ * doigt, la ligne garde ses 44 px.
+ */
+function EntreeLegale({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
+  const classe = "pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center";
+  if (courant) {
+    return (
+      <span aria-current="page" className={`text-slate-200 ${classe}`}>
+        {lien.libelle}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={lien.href}
+      title={lien.aide}
+      className={`text-slate-400 underline-offset-4 transition-colors hover:text-slate-200 hover:underline ${classe}`}
     >
       {lien.libelle}
     </Link>

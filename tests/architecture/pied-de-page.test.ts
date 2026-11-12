@@ -108,9 +108,15 @@ describe("le pied de page", () => {
     expect(source).toContain('aria-label="Plan du site"');
     expect(source).toMatch(/grid-cols-2 [^"]*sm:grid-cols-3 [^"]*lg:grid-cols-5/);
     expect(source).toContain("data-groupe-du-pied={g.code}");
-    // Plus de ligne à part : tout est dans les groupes.
+    // Plus de ligne à part dans le plan : tout est dans les groupes.
     expect(source).not.toContain("LIENS_TRANSVERSES");
     expect(source).not.toMatch(/col-span/);
+    // Le légal, en petit, tout en bas (novembre 2026) : sa ligne, sous le filet, lue du plan.
+    expect(source).toContain("LIENS_LEGAUX.map(");
+    expect(source).toContain('data-ligne-legale=""');
+    expect(source.indexOf('data-ligne-legale=""'), "la ligne légale vient après le plan du site").toBeGreaterThan(
+      source.indexOf('aria-label="Plan du site"'),
+    );
     // L'adresse de contact reste en texte, et l'année se lit au rendu.
     expect(source).toContain("VENDEUR.contact");
     expect(source).toContain("new Date().getFullYear()");

@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CATALOGUE_PAR_DEFAUT, LE_COURS_PAR_OFFRE, questionsDesTarifs } from "@/config/tarifs";
-import { NAVIGATION } from "@/config/navigation";
+import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 
 /**
  * L'OFFRE APRÈS L'AUDIT D'OCTOBRE 2026 (rapport audit-offre) :
@@ -89,8 +89,8 @@ describe("les conditions générales de vente", () => {
   it("se lisent depuis /tarifs, /devis et le pied de page", () => {
     expect(lire("src/components/page-des-tarifs.tsx")).toMatch(/href="\/cgv"/);
     expect(lire("src/app/devis/page.tsx")).toMatch(/href="\/cgv"/);
-    // Les CGV sont une entrée de l'aide, au menu comme au pied de page (menu par produit, novembre 2026).
-    expect(NAVIGATION.find((g) => g.code === "aide")!.liens.map((l) => l.href)).toContain("/cgv");
+    // Les CGV sont sur la petite ligne légale du pied de page (novembre 2026), pas dans le menu.
+    expect(LIENS_LEGAUX.map((l) => l.href)).toContain("/cgv");
     expect(lire("src/app/sitemap.ts")).toMatch(/"\/cgv"/);
   });
 });

@@ -111,6 +111,10 @@ describe("le menu, rangé par produit", () => {
     for (const h of hauteurs) expect(h.haut, `« ${h.mot} » trop bas`).toBeGreaterThanOrEqual(43);
     // Le solo se voit sans rien déplier ; la barre d'action basse le propose aussi, sous son verbe.
     await menu.getByRole("link", { name: "Solo", exact: true }).waitFor({ state: "visible" });
+    // Les 3 phrases de la pédagogie se lisent sous leur titre, sans déborder.
+    const phrases = menu.locator("[data-phrase-du-groupe]");
+    expect(await phrases.count()).toBe(NAVIGATION.filter((g) => g.phrase).length);
+    for (let i = 0; i < (await phrases.count()); i += 1) expect(await phrases.nth(i).isVisible()).toBe(true);
     await contexte.close();
   });
 

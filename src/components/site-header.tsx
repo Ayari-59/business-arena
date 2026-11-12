@@ -8,6 +8,8 @@ import { InstallButton } from "@/components/install-button";
 import { bouton } from "@/components/bouton";
 import { SiteLogo } from "@/components/site-logo";
 import { liensDAcces, liensDeTete, NAVIGATION, type LienDeMenu } from "@/config/navigation";
+// Les phrases des groupes s'écrivent avec des espaces ordinaires : l'insécable se pose au rendu.
+import { insecables } from "@/lib/typographie";
 
 /**
  * La barre de navigation.
@@ -43,7 +45,10 @@ import { liensDAcces, liensDeTete, NAVIGATION, type LienDeMenu } from "@/config/
  * novembre 2026 : un menu par produit, un mot par entrée). La barre dit
  * Cours · Arène · Épisodes · Offres · Aide, chaque mot vers la page de son
  * produit ; le menu déplié pose les mêmes 5 mots, vers les mêmes pages, et
- * sous chacun ses entrées, d'un mot elles aussi. Le menu d'avant comptait un
+ * sous chacun ses entrées, d'un mot elles aussi ; sous le titre du cours, de
+ * l'arène et des épisodes, une phrase dit ce qu'on y apprend. Les mentions
+ * légales, les CGV et les CGU n'y sont pas : elles tiennent sur une petite
+ * ligne, en bas du pied de page. Le menu d'avant comptait un
  * groupe de plus que la barre (« Élèves »), et un accordéon y cachait les
  * entrées : sur téléphone, où la barre ne montre pas ses mots, la page d'un
  * groupe qui n'est pas une de ses entrées (la présentation de l'arène, les
@@ -296,9 +301,13 @@ export function SiteHeader() {
             ))}
           </div>
           {/* LES CINQ GROUPES, dépliés : le mot de la barre en titre, vers la
-              même page, et sous lui ses entrées, d'un mot chacune. Le filet
-              occupe ce que le titre laisse : c'est ce qui distingue un groupe
-              d'une entrée, sans l'écrire. */}
+              même page, puis, pour le cours, l'arène et les épisodes, la phrase
+              qui dit ce qu'on y fait (la pédagogie, en texte discret : pas une
+              entrée ; discret par l'encre, en 14 px comme toute prose de second
+              plan, tests/architecture/echelle-typographique.test.ts), et ses
+              entrées, d'un mot chacune. Le filet occupe ce que le
+              titre laisse : c'est ce qui distingue un groupe d'une entrée, sans
+              l'écrire. */}
           <div className="mt-2 space-y-2">
             {NAVIGATION.map((groupe, i) => {
               const titre = mots[i]!;
@@ -319,8 +328,12 @@ export function SiteHeader() {
                     </Link>
                     <span aria-hidden className="h-px flex-1 bg-white/10" />
                   </div>
-                  {/* La liste porte le nom de son groupe : « Profil » se lit
-                      « Arène » ou « Épisodes » pour une synthèse vocale. */}
+                  {groupe.phrase ? (
+                    <p data-phrase-du-groupe="" className="px-3 pb-1 text-sm leading-relaxed text-slate-400">
+                      {insecables(groupe.phrase)}
+                    </p>
+                  ) : null}
+                  {/* La liste porte le nom de son groupe pour une synthèse vocale. */}
                   <ul aria-labelledby={`menu-${groupe.code}`} className="flex flex-wrap gap-x-1 gap-y-0.5">
                     {groupe.liens.map((lien) => (
                       <li key={lien.href}>

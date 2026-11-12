@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
-import { NAVIGATION, lienDuPlan, liensDAcces, liensDeTete, tousLesLiens } from "../../src/config/navigation";
+import { LIENS_LEGAUX, NAVIGATION, lienDuPlan, liensDAcces, liensDeTete, tousLesLiens } from "../../src/config/navigation";
 
 /**
  * La navigation, à la largeur d'un téléphone comme à celle d'un vidéoprojecteur.
@@ -201,11 +201,22 @@ describe("la barre, le menu et le pied de page lisent le même plan", () => {
     expect(await textes(titres)).toEqual(NAVIGATION.map((g) => g.titre));
     expect(await adresses(titres)).toEqual(liensDeTete().map((l) => l.href));
     expect(await adresses(page.locator('#plan-du-site a[aria-current="page"]'))).toEqual(["/tarifs"]);
-    // Sous chaque titre, ses entrées, d'un mot.
+    // Sous chaque titre, sa phrase s'il en a une (la pédagogie, en texte discret), puis ses entrées,
+    // d'un mot.
     for (const g of NAVIGATION) {
-      expect(await textes(page.locator(`#plan-du-site [data-groupe-du-menu="${g.code}"] ul a`)), g.titre).toEqual(
-        g.liens.map((l) => l.libelle),
-      );
+      const groupe = page.locator(`#plan-du-site [data-groupe-du-menu="${g.code}"]`);
+      const phrase = groupe.locator("[data-phrase-du-groupe]");
+      if (g.phrase) {
+        expect(await phrase.isVisible(), g.titre).toBe(true);
+        expect((await phrase.innerText()).replace(/[\u00a0\u202f]/g, " ").trim(), g.titre).toBe(g.phrase);
+      } else {
+        expect(await phrase.count(), g.titre).toBe(0);
+      }
+      expect(await textes(groupe.locator("ul a")), g.titre).toEqual(g.liens.map((l) => l.libelle));
+    }
+    // Le légal n'est pas dans le menu déplié : il tient sur une petite ligne, au pied de page.
+    for (const l of LIENS_LEGAUX) {
+      expect(await page.locator(`#plan-du-site a[href="${l.href}"]`).count(), l.href).toBe(0);
     }
     await page.keyboard.press("Escape");
   });
@@ -244,6 +255,19 @@ describe("la barre, le menu et le pied de page lisent le même plan", () => {
         expect((await a.innerText()).trim(), lien.href).toBe(lien.libelle);
       }
       expect(await pied.locator('a[href="/notions"]').count(), "le pied propose la page où l'on est").toBe(0);
+      // Ni phrase ni lien légal dans les colonnes ; le légal, en petit, tout en bas : Mentions · CGV · CGU.
+      for (const g of NAVIGATION.filter((x) => x.phrase)) expect(await pied.innerText()).not.toContain(g.phrase!.slice(0, 20));
+      for (const l of LIENS_LEGAUX) expect(await pied.locator(`a[href="${l.href}"]`).count(), l.href).toBe(0);
+      const ligne = page.locator("footer [data-ligne-legale]");
+      await ligne.scrollIntoViewIfNeeded();
+      expect(await ligne.isVisible()).toBe(true);
+      expect(await textes(ligne.locator("a"))).toEqual(LIENS_LEGAUX.map((l) => l.libelle));
+      expect(await adresses(ligne.locator("a"))).toEqual(LIENS_LEGAUX.map((l) => l.href));
+      const corps = await ligne.locator("a").first().evaluate((a) => parseFloat(getComputedStyle(a).fontSize));
+      expect(corps, "la ligne légale n'est pas en petit").toBeLessThanOrEqual(12.5);
+      const basDuPlan = (await pied.boundingBox())!;
+      const haut = (await ligne.boundingBox())!;
+      expect(haut.y, "la ligne légale n'est pas sous le plan").toBeGreaterThan(basDuPlan.y + basDuPlan.height);
       // Cinq colonnes sur une rangée sur grand écran ; deux colonnes sur trois rangées sur téléphone.
       const cases = await blocs.evaluateAll((els) =>
         els.map((e) => {
