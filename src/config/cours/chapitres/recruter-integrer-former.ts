@@ -464,7 +464,8 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
         const fo = x.fo;
         return [
           { libelle: "Coût net de la formation", attendu: fo.cout, calcul: `${eur(fo.frais)} − ${eur(fo.priseEnCharge)} + ${eur(fo.heures)} = ${eur(fo.cout)}` },
-          { libelle: "Marge gagnée par mois", attendu: fo.gainParMois, calcul: `${qte(fo.passages)} × ${qte(FORMATION.indiceEnPlus)} = ${qte(fo.articlesEnPlus)} articles × ${eur(auCentime(fo.margeDUnArticle))} = ${eur(fo.gainParMois)}` },
+          // Sans « 38,50 articles » en route : un demi-article ne se vend pas (audit pédagogique du 11 novembre 2026, P1-2).
+          { libelle: "Marge gagnée par mois", attendu: fo.gainParMois, calcul: `${qte(fo.passages)} passages × ${qte(FORMATION.indiceEnPlus)} article × ${eur(auCentime(fo.margeDUnArticle))} = ${eur(fo.gainParMois)}` },
           { libelle: "Mois pour se payer", nature: "grandeur", attendu: auCentime(fo.mois), calcul: `${eur(fo.cout)} ÷ ${eur(fo.gainParMois)} = ${qte(fo.mois)} mois` },
         ];
       },

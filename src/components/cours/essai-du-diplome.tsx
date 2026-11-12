@@ -6,9 +6,9 @@ import type { Chapitre } from "@/config/cours/types";
 
 /**
  * L'ESSAI D'UN DIPLÔME, EN TÊTE DE SA PAGE (décision du propriétaire, novembre 2026 ; audit du
- * 10 novembre, produit P1-1). Le chapitre libre du diplôme, celui par lequel son parcours commence
+ * 10 novembre, produit P1-1). Le chapitre libre du diplôme, celui de la liste choisie le 11 novembre
  * (config/cours/chapitres-libres.ts), et son cas pratique dédié, qui s'ouvrent l'un et l'autre sans
- * compte. Sur la page /parcours/<formation> et dans la vue du diplôme de /cours, sous le nom du
+ * compte. Le chapitre n'est plus forcément le premier du parcours : l'encart ne le dit plus. Sur la page /parcours/<formation> et dans la vue du diplôme de /cours, sous le nom du
  * diplôme : l'encart est court, pour se lire sans défiler sur un téléphone.
  *
  * La page donne ses liens (`lien`) : ils portent le diplôme (`diplome=`), comme les autres liens de
@@ -46,7 +46,7 @@ export function EssaiDuDiplome({
         <span className="text-xs tabular-nums text-slate-400">{dureeEnClair(dureeDuChapitre(chapitre))}</span>
       </p>
       <p className="text-sm leading-relaxed text-slate-300">
-        Le parcours commence par ce chapitre.
+        Un chapitre de ce parcours, à son niveau.
         {cas ? (
           <>
             {" "}

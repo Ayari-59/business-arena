@@ -732,8 +732,8 @@ describe("la classe autour de son diplôme", () => {
   }, 120_000);
 });
 
-describe("le seuil de rentabilité, chapitre libre du BTS MHR", () => {
-  it("sans licence, le chapitre s'ouvre (le premier du parcours du BTS MHR) ; il se joue de bout en bout sans faute", async () => {
+describe("le seuil de rentabilité, chapitre libre du BUT GEA et du BUT GACO", () => {
+  it("sans licence, le chapitre s'ouvre (le chapitre libre du BUT GEA et du BUT GACO) ; il se joue de bout en bout sans faute", async () => {
     const libre = await nouvellePage();
     await aller(libre, "/cours/seuil-de-rentabilite?entreprise=nova");
     expect(await libre.locator("main").innerText().then(espacesOrdinaires)).not.toContain("réservé aux établissements sous licence");
@@ -1758,8 +1758,8 @@ describe("la page d'un chapitre n'annonce que les compétences du diplôme d'où
 
 /**
  * UN CHAPITRE LIBRE PAR DIPLÔME (décision du propriétaire, novembre 2026 ; config/cours/chapitres-libres.ts).
- * En tête de la page de chaque diplôme, sans défiler sur un téléphone de 390 px : son chapitre libre, le
- * premier de son parcours, et son cas pratique. L'un et l'autre s'ouvrent sans compte, et la page du
+ * En tête de la page de chaque diplôme, sans défiler sur un téléphone de 390 px : son chapitre libre, celui
+ * de la liste du 11 novembre 2026, et son cas pratique. L'un et l'autre s'ouvrent sans compte, et la page du
  * chapitre montre les compétences de ce diplôme. Un chapitre réservé de son parcours y ramène.
  */
 describe("un chapitre libre par diplôme", () => {

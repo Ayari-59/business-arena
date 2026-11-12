@@ -737,7 +737,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
       notions: ["full_unit_cost", "variable_costs"],
       question: (c) => {
         const k = coutsOuDifferenciation(c);
-        return `Le directeur propose de rester au milieu, mais en produisant moins cher : même prix (${eur(k.milieu.offre.prix)}), même qualité perçue, donc mêmes ventes (${qte(k.milieu.ventes)} ${k.f.unites}), mêmes charges. Le coût d'une enceinte ne change pas son attractivité. Retrouvez la marge par enceinte qu'il faudrait au milieu pour gagner autant que la différenciation, le coût variable le plus haut qui la donne, et la baisse que cela demande sur chaque enceinte.`;
+        return `Le président propose de rester au milieu, mais en produisant moins cher : même prix (${eur(k.milieu.offre.prix)}), même qualité perçue, donc mêmes ventes (${qte(k.milieu.ventes)} ${k.f.unites}), mêmes charges. Le coût d'une enceinte ne change pas son attractivité. Retrouvez la marge par enceinte qu'il faudrait au milieu pour gagner autant que la différenciation, le coût variable le plus haut qui la donne, et la baisse que cela demande sur chaque enceinte.`;
       },
       champs: (c) => {
         const k = coutsOuDifferenciation(c);
@@ -958,7 +958,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
       notions: ["price_elasticity", "segmentation"],
       question: (c) => {
         const k = coutsOuDifferenciation(c);
-        return `Le directeur conclut : « La simulation prouve que la différenciation est la bonne stratégie pour ${k.f.entreprise}. » Quelle limite lui opposez-vous ?`;
+        return `Le président conclut : « La simulation prouve que la différenciation est la bonne stratégie pour ${k.f.entreprise}. » Quelle limite lui opposez-vous ?`;
       },
       options: (c) => {
         const k = coutsOuDifferenciation(c);

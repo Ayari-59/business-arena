@@ -136,8 +136,8 @@ describe("le chapitre pilote, quelle que soit l'entreprise", () => {
   });
 
   it("est libre d'accès (décision du propriétaire : le premier chapitre sert de démonstration)", () => {
-    // Gardé ouvert en novembre 2026, à côté du chapitre libre de chaque diplôme
-    // (tests/architecture/un-chapitre-libre-par-diplome.test.ts, `LIBRES_HORS_DU_PREMIER_RANG`).
+    // Le chapitre libre du BTS CG depuis la liste des chapitres libres du 11 novembre 2026
+    // (config/cours/chapitres-libres.ts, tests/architecture/un-chapitre-libre-par-diplome.test.ts).
     expect(pilote.libre).toBe(true);
   });
 

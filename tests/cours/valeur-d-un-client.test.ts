@@ -13,6 +13,7 @@ import {
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
+import { champJuste } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
 /**
@@ -295,10 +296,14 @@ describe("la valeur d'un client, chez ATLAS CONSEIL", () => {
     expect(attendus(ch, "recruter-ou-fideliser")).toEqual({
       "Portefeuille d'équilibre en recrutant": enRecrutant,
       "Portefeuille d'équilibre en fidélisant": centime(enFidelisant),
-      "Journées demandées par le plus grand portefeuille": centime(centime(enFidelisant) * parCompte),
+      "Journées demandées par le plus grand portefeuille": centime(enFidelisant * parCompte),
     });
-    // Le portefeuille de la copie, 42,67 comptes, fait les journées : 42,67 × 60 = 2 560,20.
-    expect([enRecrutant, centime(enFidelisant), centime(centime(enFidelisant) * parCompte)]).toEqual([40, 42.67, 2_560.2]);
+    // Les journées se comptent sur le portefeuille exact (audit pédagogique du 11 novembre 2026, P1-2) :
+    // 8 ÷ 18,75 % × 60 = 2 560, et non 42,67 × 60 = 2 560,20 ; l'élève qui part de l'arrondi reste accepté.
+    expect([enRecrutant, centime(enFidelisant), centime(enFidelisant * parCompte)]).toEqual([40, 42.67, 2_560]);
+    const journees = (ch.etapes.find((e) => e.id === "recruter-ou-fideliser") as EtapeMontants).champs(cas, etatVide).at(-1)!;
+    expect(journees.autreChemin).toBe(2_560.2);
+    expect(["2560", "2560,20", "2560,50"].map((t) => champJuste(t, journees))).toEqual([true, true, false]);
     expect(enFidelisant * parCompte).toBeGreaterThan(capacite);
     expect(juste(ch, "la-capacite")).toBe("Fidéliser, en prévoyant un consultant de plus");
   });

@@ -47,20 +47,24 @@ describe("le compte de résultat de NOVA", () => {
     expect(juste.map((o) => o.texte)).toEqual(["L'activité est rentable : ce sont le financement et l'impôt qui réduisent le résultat"]);
   });
 
-  it("le curseur : 18 795 enceintes, la plus petite quantité où l'activité ne perd pas d'argent", () => {
-    // 23 564 − 100 162,89 ÷ 21 = 18 794,34 : il faut 18 795 enceintes.
-    expect(seuilDeLActivite(k)).toBe(18_795);
-    const e = gardeDuCurseur(ch, "le-seuil-de-l-activite", 18_795);
-    const lu = e.lecture(NOVA, 18_795);
-    expect(lu.map((l) => l.montant)).toEqual([18_795 * 59, c(1_290_113.11 - 38 * (23_564 - 18_795)), c(100_162.89 - 21 * (23_564 - 18_795))]);
+  it("le curseur : 18 840 enceintes, la plus petite quantité où l'activité ne perd pas d'argent", () => {
+    // 23 609 − 100 162,89 ÷ 21 = 18 839,34 : il faut 18 840 enceintes (audit du 11 novembre, P2-2 : les
+    // 23 609 enceintes livrées, et non 23 564 ; la remise de Sonora, 2 655 €, reste dans les ventes).
+    expect(seuilDeLActivite(k)).toBe(18_840);
+    const e = gardeDuCurseur(ch, "le-seuil-de-l-activite", 18_840);
+    // À la quantité de l'année, le curseur lit le compte de l'année.
+    expect(e.lecture(NOVA, 23_609).map((l) => l.montant)).toEqual([1_390_276, 1_290_113.11, 100_162.89]);
+    const lu = e.lecture(NOVA, 18_840);
+    expect(lu.map((l) => l.montant)).toEqual([18_840 * 59 - 2_655, c(1_290_113.11 - 38 * (23_609 - 18_840)), c(100_162.89 - 21 * (23_609 - 18_840))]);
     expect(lu[2]!.montant).toBe(13.89);
-    expect(e.lecture(NOVA, 18_794)[2]!.montant).toBe(-7.11);
+    expect(e.lecture(NOVA, 18_839)[2]!.montant).toBe(-7.11);
   });
 
   it("le laboratoire : 8 % de résultat net dès 62 €, ou en vendant 20 % d'enceintes de plus", () => {
     gardeDuLaboratoire(ch, "le-laboratoire-du-compte");
     expect(SOLUTION_DU_COMPTE).toEqual({ prix: 62, ventes: 0 });
-    // À 62 € : 3 × 23 564 de plus avant impôt, 170 659,96 € ; l'impôt 6 375 + 25 % × 128 159,96 = 38 415 €.
+    // À 62 € : 3 € de plus sur 23 609 enceintes, moins 5 % de ces 3 € sur les 900 de Sonora, soit 70 692 € de
+    // plus avant impôt, 170 659,96 € ; l'impôt 6 375 + 25 % × 128 159,96 = 38 415 €.
     const a62 = compteDuLaboratoire(k, { prix: 62, ventes: 0 });
     expect(a62.resultatNet).toBe(c(170_659.96 - 38_415));
     expect(a62.tauxDeResultat).toBeCloseTo(132_244.96 / 1_460_968, 10);
@@ -69,10 +73,10 @@ describe("le compte de résultat de NOVA", () => {
     const a61 = compteDuLaboratoire(k, { prix: 61, ventes: 0 });
     expect(a61.resultatNet).toBe(c(147_095.96 - 32_524));
     expect(a61.tauxDeResultat < TAUX_DU_DEFI).toBe(true);
-    // 59 € et 20 % d'enceintes de plus : 28 277 enceintes, 4 713 × 21 € de plus.
+    // 59 € et 20 % d'enceintes de plus : 28 331 enceintes, 4 722 × 21 € de plus.
     const v20 = compteDuLaboratoire(k, { prix: 59, ventes: 20 });
-    expect(v20.quantite).toBe(28_277);
-    expect(v20.resultatDActivite).toBe(c(100_162.89 + 4_713 * 21));
+    expect(v20.quantite).toBe(28_331);
+    expect(v20.resultatDActivite).toBe(c(100_162.89 + 4_722 * 21));
     expect(v20.tauxDeResultat >= TAUX_DU_DEFI).toBe(true);
   });
 

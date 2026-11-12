@@ -178,7 +178,7 @@ function casDedie(s: Situation, ch: Chapitre) {
   expect(s.palier).toBe(ch.palier);
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
-  // Libre avec son chapitre, le premier d'un parcours (config/cours/chapitres-libres.ts), réservé sinon.
+  // Libre avec son chapitre quand c'est le chapitre libre d'un diplôme (config/cours/chapitres-libres.ts), réservé sinon.
   expect(s.libre).toBe(ch.libre);
   expect(s.blocs).toEqual([]);
   expect(s.etapes[0]!.type).toBe("lecture");
@@ -241,8 +241,9 @@ describe("croître en investissant : la place dans le parcours, chez NOVA seule"
     expect(ch.parcours).toBe("strategie");
     expect(ch.palier).toBe(3);
     expect(PROGRAMME.strategie[3]).toContain(ch.titre);
-    // Libre : le premier chapitre du parcours du DSCG (config/cours/chapitres-libres.ts).
-    expect(ch.libre).toBe(true);
+    // Libre du 9 au 11 novembre 2026, comme premier du parcours du DSCG ; réservé depuis la liste des
+    // chapitres libres, qui donne au DSCG « L'effet de levier » (config/cours/chapitres-libres.ts).
+    expect(ch.libre).toBe(false);
     expect(ch.blocs).toEqual(["BTS CG P6 · Analyse de la situation financière", "DCG UE6 · Finance d'entreprise", "DSCG UE3 · Contrôle de gestion et stratégie", "BUT GEA · Concevoir la stratégie de création de valeur"]);
     for (const b of ch.blocs) {
       const r = referentielDeCitation(b);

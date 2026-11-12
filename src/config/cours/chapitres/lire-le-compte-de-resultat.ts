@@ -78,6 +78,9 @@ export function seuilDeLActivite(k: CompteDeResultat) {
 /** Les charges de l'activité pour un nombre d'enceintes : celles de l'année, plus ou moins les coûts variables. */
 const chargesDeLActivite = (k: CompteDeResultat, q: number) => auCentime(k.activite + k.coutVariable * (q - k.quantiteDeLaFiche));
 
+/** Les ventes pour un nombre d'enceintes : chacune au prix, moins la remise de Sonora, dont les commandes restent. */
+const ventesDeLActivite = (k: CompteDeResultat, q: number) => auCentime(q * k.prix - k.remise);
+
 /** Une position du laboratoire : le prix, et les ventes en % de celles de l'année. */
 export function compteDuLaboratoire(k: CompteDeResultat, p: Readonly<Record<string, number>>) {
   return compteDuLycee(k.f, { prix: p.prix!, quantite: Math.round(k.quantiteDeLaFiche * (1 + p.ventes! / 100)) });
@@ -130,7 +133,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
         const k = compteDeResultat(c);
         return [
           `Le compte de résultat raconte une année : ce que l'entreprise a gagné (les produits) et ce que cela lui a coûté (les charges). Voici le premier exercice ${dE(k.entreprise)}, qui fabrique des enceintes, dans la simulation du cours.`,
-          `Les produits sont surtout les ventes : ${eur(k.ventes)}, ${qte(k.quantite)} enceintes à ${eur(k.prix)}. S'y ajoutent les revenus de son compte à terme, ${eur(k.produitsFinanciers)}. Les charges sont de trois natures : celles de l'activité (composants, personnel, loyer, usure de la ligne...), celles du financement (les intérêts de l'emprunt, les escomptes) et l'impôt sur les bénéfices.`,
+          `Les produits sont surtout les ventes : ${eur(k.ventes)}, soit ${qte(k.quantite)} enceintes à ${eur(k.prix)}, moins ${eur(k.remise)} de remise à son client Sonora. S'y ajoutent les revenus de son compte à terme, ${eur(k.produitsFinanciers)}. Les charges sont de trois natures : celles de l'activité (composants, personnel, loyer, usure de la ligne...), celles du financement (les intérêts de l'emprunt, les escomptes) et l'impôt sur les bénéfices.`,
         ];
       },
       tableau: (c) => tableauDuCompte(c),
@@ -255,7 +258,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
       notions: ["income_statement", "breakeven"],
       question: (c) => {
         const k = compteDeResultat(c);
-        return `Et si ${k.entreprise} avait vendu moins ? Faites varier les enceintes vendues dans l'année. Chaque enceinte rapporte ${eur(k.prix)} et coûte ${eur(k.coutVariable)} de composants, d'emballage, de transport et d'énergie ; le loyer, le personnel, l'assurance et l'usure de la ligne ne bougent pas. Placez le curseur sur le plus petit nombre d'enceintes où l'activité ne perd pas d'argent, puis validez.`;
+        return `Et si ${k.entreprise} avait vendu moins ? Faites varier les enceintes vendues dans l'année. Chaque enceinte rapporte ${eur(k.prix)} et coûte ${eur(k.coutVariable)} de composants, d'emballage, de transport et d'énergie ; le loyer, le personnel, l'assurance, l'usure de la ligne et la remise de Sonora (${eur(k.remise)}) ne bougent pas. Placez le curseur sur le plus petit nombre d'enceintes où l'activité ne perd pas d'argent, puis validez.`;
       },
       grandeur: () => ({ libelle: "Enceintes vendues dans l'année", unite: "enceintes" }),
       cible: (c) => {
@@ -270,7 +273,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
       montrer: "Montrer le seuil",
       lecture: (c, q) => {
         const k = compteDeResultat(c);
-        const ventes = auCentime(q * k.prix);
+        const ventes = ventesDeLActivite(k, q);
         const charges = chargesDeLActivite(k, q);
         return [
           { libelle: "Ventes de l'année", montant: ventes },
@@ -281,7 +284,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
       droites: (c) => {
         const k = compteDeResultat(c);
         return {
-          produit: (q) => q * k.prix,
+          produit: (q) => ventesDeLActivite(k, q),
           cout: (q) => chargesDeLActivite(k, q),
           libelles: ["Ventes", "Charges de l'activité"],
         };

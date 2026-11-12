@@ -3,7 +3,7 @@ import { casDeLEntreprise } from "@/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
-import { servirLeChapitre, type CurseurServi } from "@/pedagogy/cours/chapitre-servi";
+import { ECART_DU_DEPART, servirLeChapitre, type CurseurServi } from "@/pedagogy/cours/chapitre-servi";
 
 /**
  * L'INDICE DU CURSEUR VA DANS LE BON SENS, ET LE CURSEUR NE PART PAS SUR LA RÉPONSE
@@ -15,7 +15,7 @@ import { servirLeChapitre, type CurseurServi } from "@/pedagogy/cours/chapitre-s
  * messages échangés. La garde lit les consignes de direction des messages (« cherchez le plus
  * petit », « remisez moins », « montez »…) et vérifie leur sens, sur tous les curseurs, dans
  * toutes les entreprises. Elle vérifie aussi que la position de départ n'est jamais la bonne
- * réponse : l'élève validerait sans avoir rien manipulé.
+ * réponse, ni à moins de cinq pas d'elle : l'élève validerait sans avoir rien manipulé.
  */
 
 /** Les consignes qui disent de baisser la position. */
@@ -65,5 +65,13 @@ describe.each(curseurs)("$nom", ({ etape }) => {
 
   it("la position de départ n'est pas la bonne réponse", () => {
     expect(etape.depart).not.toBe(etape.cible.attendu);
+  });
+
+  // Ni à un pas d'elle (audit pédagogique du 11 novembre 2026, P2-1) : à cinq pas au moins, quand la
+  // course le permet.
+  it(`la position de départ est à ${ECART_DU_DEPART} pas au moins de la réponse`, () => {
+    const { attendu, min, max } = etape.cible;
+    const possible = Math.min(ECART_DU_DEPART, Math.max(attendu - min, max - attendu));
+    expect(Math.abs(etape.depart - attendu), `départ ${etape.depart}, réponse ${attendu}`).toBeGreaterThanOrEqual(possible);
   });
 });

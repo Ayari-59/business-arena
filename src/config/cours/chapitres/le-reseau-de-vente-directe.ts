@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ATTRITION_MENSUELLE,
@@ -469,7 +469,12 @@ export const LE_RESEAU_DE_VENTE_DIRECTE: Chapitre = {
           { libelle: "Coûts évités", attendu: r.coutsEvites, calcul: `(${eur(v.achats)} + ${eur(v.autres)}) × ${pct(TAUX_DE_RETRACTATION * 100)} = ${eur(r.coutsEvites)}` },
           { libelle: "Commission non due", attendu: r.commissionNonDue, calcul: `${eur(v.commissionDeLaReunion)} × ${pct(TAUX_DE_RETRACTATION * 100)} = ${eur(r.commissionNonDue)}` },
           { libelle: "Marge perdue par réunion", attendu: r.margePerdue, calcul: `${eur(r.retracte)} − ${eur(r.coutsEvites)} − ${eur(r.commissionNonDue)} = ${eur(r.margePerdue)}` },
-          { libelle: "Valeur nette d'une conseillère", attendu: r.conseillere.valeur, calcul: `${qte(r.conseillere.reunions)} × (${eur(v.marge)} − ${eur(r.margePerdue)}) − ${eur(r.conseillere.formation)} = ${eur(r.conseillere.valeur)}` },
+          // L'autre chemin : la marge perdue gardée avec tous ses chiffres, l'arrondi à la fin.
+          {
+            libelle: "Valeur nette d'une conseillère",
+            ...deuxChemins(r.conseillere.valeur, r.conseillere.reunions * (v.marge - (v.chiffreHt - v.achats - v.autres - v.commissionDeLaReunion) * TAUX_DE_RETRACTATION) - r.conseillere.formation),
+            calcul: `${qte(r.conseillere.reunions)} × (${eur(v.marge)} − ${eur(r.margePerdue)}) − ${eur(r.conseillere.formation)} = ${eur(r.conseillere.valeur)}`,
+          },
         ];
       },
       explication: (c) => {

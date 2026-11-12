@@ -1,6 +1,6 @@
 import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
-import { communication as lireLaCampagne, grille, meilleurBudget, trimestreAuBudget, ventesPourPayer } from "../monde/economie-et-marketing";
+import { communication as lireLaCampagne, grille, trimestreAuBudget, ventesPourPayer } from "../monde/economie-et-marketing";
 import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
 import { GAMME_DE_NOVA } from "../monde/nova-gestion";
 import type { Chapitre } from "../types";
@@ -57,8 +57,18 @@ const f = (c: Cas) => mercatiqueDe(c);
 /** Les cinq budgets essayés, et ce que la campagne proposée rapporte. */
 export const communication = (c: Cas) => lireLaCampagne(f(c));
 
-/** Le budget du laboratoire : celui de la grille qui laisse le meilleur résultat du trimestre. */
-export const budgetDuLaboratoire = (c: Cas) => meilleurBudget(f(c), grille(BUDGETS_DU_LABORATOIRE.min, BUDGETS_DU_LABORATOIRE.max, BUDGETS_DU_LABORATOIRE.pas));
+/**
+ * LE BUDGET QUE LE TRIMESTRE PEUT PAYER (audit pédagogique du 11 novembre 2026, P2-9). Le laboratoire
+ * redemandait le meilleur budget, que le tableau de l'étape 1 donne et que l'étape 4 demande déjà. Il
+ * fait chercher maintenant ce qu'une campagne de lancement peut coûter, quand ses ventes du trimestre
+ * ne la paient pas : le plus gros budget de la grille qui ne fait pas perdre d'argent au trimestre.
+ * HYPOTHÈSE de l'histoire : le président ne veut pas d'un trimestre en perte.
+ */
+export const budgetQueLeTrimestrePeutPayer = (c: Cas) =>
+  grille(BUDGETS_DU_LABORATOIRE.min, BUDGETS_DU_LABORATOIRE.max, BUDGETS_DU_LABORATOIRE.pas)
+    .map((b) => trimestreAuBudget(f(c), b))
+    .filter((t) => t.resultat >= 0)
+    .reduce((a, b) => (b.budget > a.budget ? b : a));
 
 export const COMMUNICATION: Chapitre = {
   code: "ce-que-rapporte-la-communication",
@@ -222,7 +232,8 @@ export const COMMUNICATION: Chapitre = {
       type: "simulation",
       titre: "Le laboratoire du budget",
       notions: ["customer_acquisition_cost", "contribution_margin"],
-      question: (c) => `Faites varier le budget de communication du trimestre, par ${eur(BUDGETS_DU_LABORATOIRE.pas)}, en partant de la campagne de l'agence, ${eur(communication(c).jouee.budget)}. Le tableau donne les ventes, leur marge et le résultat du trimestre. Relevez le défi.`,
+      question: (c) =>
+        `Quand ${c.entreprise} lancera sa gamme, sa campagne ne se paiera pas en ventes du trimestre : c'est le résultat du trimestre qui la paiera, et le président ne veut pas d'un trimestre en perte. Faites varier le budget de communication du trimestre, par ${eur(BUDGETS_DU_LABORATOIRE.pas)}, en partant de la campagne de l'agence, ${eur(communication(c).jouee.budget)}. Le tableau donne les ventes, leur marge et le résultat du trimestre. Relevez le défi.`,
       leviers: (c) => [{ code: "budget", libelle: "Budget de communication du trimestre", unite: "€", ...BUDGETS_DU_LABORATOIRE, depart: communication(c).jouee.budget }],
       lecture: (c, p) => {
         const t = trimestreAuBudget(f(c), p.budget!);
@@ -241,13 +252,15 @@ export const COMMUNICATION: Chapitre = {
         ],
       }),
       defi: (c) => {
-        const juste = budgetDuLaboratoire(c);
+        const juste = budgetQueLeTrimestrePeutPayer(c);
         return {
-          consigne: "Trouvez le budget qui laisse le meilleur résultat du trimestre.",
+          consigne: "Trouvez le plus gros budget qui ne fait pas perdre d'argent au trimestre.",
           atteint: (p) => p.budget === juste.budget,
           indice: (p) => {
             const t = trimestreAuBudget(f(c), p.budget!);
-            return `À ${eur(t.budget)}, le résultat est de ${eur(t.resultat)}. Comparez ce que le dernier palier de budget coûte et la marge des ventes qu'il ajoute.`;
+            return t.resultat < 0
+              ? `À ${eur(t.budget)}, le trimestre perd ${eur(-t.resultat)} : le budget est trop gros.`
+              : `À ${eur(t.budget)}, le trimestre laisse encore ${eur(t.resultat)} : un palier de plus le ferait-il perdre ?`;
           },
           solution: { budget: juste.budget },
         };
@@ -255,9 +268,10 @@ export const COMMUNICATION: Chapitre = {
       explication: (c, p) => {
         const t = trimestreAuBudget(f(c), p.budget!);
         const k = communication(c);
+        const suivant = trimestreAuBudget(f(c), t.budget + BUDGETS_DU_LABORATOIRE.pas);
         return [
-          `Défi relevé : à ${eur(t.budget)}, le trimestre laisse ${eur(t.resultat)}. ${t.budget === 0 ? `Même le premier palier de ${eur(BUDGETS_DU_LABORATOIRE.pas)} fait vendre trop peu : ses ventes gagnées laissent moins de marge qu'il ne coûte.` : "Au-delà, chaque euro ajouté rapporte moins qu'il ne coûte."}`,
-          `En ventes du trimestre, une campagne ne se paie que si une vente gagnée coûte moins que la marge qu'elle laisse : ici ${eur(k.margeUnitaire)} par ${c.unite}. Ce calcul juge un objectif de ventes immédiates ; une campagne qui vise d'abord à faire connaître une offre se juge aussi sur d'autres indicateurs.`,
+          `Défi relevé : à ${eur(t.budget)}, le trimestre laisse encore ${eur(t.resultat)} ; à ${eur(suivant.budget)}, il perdrait ${eur(-suivant.resultat)}. Les ventes gagnées ne paient pas la campagne : le résultat du trimestre la paie, ${eur(k.sans.resultat - t.resultat)} de moins que sans communication.`,
+          `En ventes du trimestre, une campagne ne se paie que si une vente gagnée coûte moins que la marge qu'elle laisse : ici ${eur(k.margeUnitaire)} par ${c.unite}. Une campagne qui ne se paie pas ainsi peut valoir son prix si elle vise autre chose que les ventes du trimestre : elle se décide alors sur ce que l'entreprise peut payer, et se suit avec d'autres indicateurs.`,
         ];
       },
     },
@@ -296,7 +310,7 @@ export const COMMUNICATION: Chapitre = {
       texte: (c) => {
         const k = communication(c);
         return [
-          `Chez ${c.entreprise}, la campagne de l'agence ferait vendre ${qte(k.ventesEnPlus)} ${c.unites} de plus, à ${eur(k.coutParVente)} chacune, et le meilleur des cinq budgets est ${eur(k.meilleur.budget)}.`,
+          `Chez ${c.entreprise}, la campagne de l'agence ferait vendre ${qte(k.ventesEnPlus)} ${c.unites} de plus, à ${eur(k.coutParVente)} chacune, et le meilleur des cinq budgets est ${eur(k.meilleur.budget)}. Une campagne de lancement peut coûter jusqu'à ${eur(budgetQueLeTrimestrePeutPayer(c).budget)} par trimestre sans faire perdre d'argent au trimestre.`,
           "Quand une campagne vise des ventes, elle se juge sur la marge des ventes en plus, pas sur ce qu'elle coûte seule ni sur les ventes totales. Et chaque euro de plus rapporte moins que le précédent : le bon budget est celui au-delà duquel un euro de publicité ne se paie plus.",
           "Une campagne se prépare dans l'ordre : un objectif (faire connaître, faire aimer, faire acheter), une cible, des médias, puis les indicateurs qui suivent cet objectif : personnes touchées, coût pour mille contacts, notoriété avant et après, ventes en plus. Une campagne de notoriété, comme celle d'un lancement, ne se juge pas sur les seules ventes de son trimestre.",
           "Dans l'arène, faites varier votre budget marketing d'un tour à l'autre, et comptez ce que chaque vente gagnée vous a coûté.",

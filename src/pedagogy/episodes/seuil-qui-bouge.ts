@@ -93,7 +93,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
   const d = p.diagnostic;
   const lecture: Record<string, string> = {
     structure:
-      "Votre diagnostic de la semaine 1 était juste : avec 13 % de marge de sécurité et une demande qui pouvait aussi baisser, chaque charge fixe ajoutée rapprochait le seuil du chiffre d'affaires.",
+      "Votre diagnostic de la semaine 1 était juste : avec un indice de sécurité de 13 % et une demande qui pouvait aussi baisser, chaque charge fixe ajoutée rapprochait le seuil du chiffre d'affaires.",
     volume:
       "En semaine 1, vous avez vu le manque de volume : c'était vrai, mais le volume ne se commandait pas, et personne ne savait s'il viendrait. Ce qui se décidait, c'était la structure.",
     prix: "En semaine 1, vous avez retenu les prix ; avec un taux de marge sur coût variable de 20 %, chaque point de prix retirait 5 % de la marge et faisait monter le seuil.",
@@ -148,7 +148,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
       SEUIL_DEPART,
     )} au départ. Au rythme du premier mois, ${
       s.securite > 0 && s.levier !== null
-        ? `sa marge de sécurité est de ${taux(s.securite, 0)} et son levier opérationnel de ${nombre(s.levier, 1)} : une baisse de 10 % du chiffre d'affaires retirerait ${taux(Math.min(1, s.levier * 0.1), 0)} du résultat.`
+        ? `son indice de sécurité est de ${taux(s.securite, 0)} et son levier opérationnel de ${nombre(s.levier, 1)} : une baisse de 10 % du chiffre d'affaires retirerait ${taux(Math.min(1, s.levier * 0.1), 0)} du résultat.`
         : "le drive serait sous son seuil : chaque mois à ce rythme serait une perte."
     }`,
   };
@@ -164,7 +164,7 @@ export function axe([information, diagnostic, reflexe, calibrage, marge]: readon
     return {
       titre: "Lire la structure avant de décider",
       texte:
-        "Rejouez l'épisode en reprenant d'abord le compte du premier mois, charges fixes et variables séparées, et l'histoire des autres drives du groupe : le seuil, la marge de sécurité et le scénario bas y sont.",
+        "Rejouez l'épisode en reprenant d'abord le compte du premier mois, charges fixes et variables séparées, et l'histoire des autres drives du groupe : le seuil, l'indice de sécurité et le scénario bas y sont.",
     };
   }
   if (reflexe!.score === 0) {
@@ -176,7 +176,7 @@ export function axe([information, diagnostic, reflexe, calibrage, marge]: readon
   }
   if (marge!.score === 0) {
     return {
-      titre: "Garder une marge de sécurité",
+      titre: "Garder de l'avance sur le seuil",
       texte:
         "Un seuil de rentabilité se déplace à chaque décision : une charge fixe le monte, une charge variable le baisse et réduit le taux de marge. Gardez des charges fixes que le scénario bas couvre encore.",
     };
@@ -185,7 +185,7 @@ export function axe([information, diagnostic, reflexe, calibrage, marge]: readon
     return {
       titre: "Chercher ce qui fait bouger le seuil",
       texte:
-        "Le volume ne se décide pas ; la structure, si. Regardez quelles charges sont fixes, lesquelles suivent l'activité, et ce que chacune fait au seuil et à la marge de sécurité.",
+        "Le volume ne se décide pas ; la structure, si. Regardez quelles charges sont fixes, lesquelles suivent l'activité, et ce que chacune fait au seuil et à l'indice de sécurité.",
     };
   }
   if (calibrage!.score < 1) {
@@ -308,7 +308,7 @@ export const EPISODE_SEUIL: Episode<Trimestre> = {
     },
     {
       cle: "securite",
-      nom: "Marge de sécurité",
+      nom: "Indice de sécurité",
       format: (v) => taux(v, 0),
       formatEcart: (v) => `${nombre(v * 100, 0)} pt`,
       sensBon: 1,
@@ -420,7 +420,7 @@ export const EPISODE_SEUIL: Episode<Trimestre> = {
           tenu: s.seuil <= SEUIL_DEPART,
         },
         {
-          nom: "Marge de sécurité",
+          nom: "Indice de sécurité",
           valeur: taux(s.securite, 0),
           aide: "au rythme du premier mois ; 15 % au moins",
           tenu: s.securite >= 0.15,

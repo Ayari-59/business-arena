@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeDuMarche, battreAuris, carteDuMarche, enseigneDe, gammeDe, gammePourLaQualite, meilleurPrix, type StrategieLue } from "../monde/attractivite";
 import type { CodeDeGamme, FicheDuMarche } from "../monde/marche-a-trois";
@@ -443,7 +443,8 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
           {
             libelle: `Indice de qualité ${dE(k.f.entreprise)} en gamme soignée`,
             nature: "grandeur",
-            attendu: s.nova.indiceQualite,
+            // L'autre chemin : la qualité moyenne gardée avec tous ses chiffres, l'arrondi à la fin.
+            ...deuxChemins(s.nova.indiceQualite, (s.nova.qualite / (s.sommeDesQualites / s.enseignes.length)) * 100),
             calcul: `${dec(s.nova.qualite)} ÷ ${dec(s.qualiteMoyenne)} × 100 = ${qte(s.nova.indiceQualite)}`,
           },
         ];
@@ -850,7 +851,12 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
           { libelle: "Prix moyen du marché de cette année", attendu: x.prixMoyen, calcul: `${eur(x.chiffreDAffaires)} ÷ ${qte(x.ventes)} = ${eur(x.prixMoyen)}` },
           { libelle: "Qualité moyenne de cette année", nature: "grandeur", attendu: x.qualiteMoyenne, calcul: `(${x.enseignes.map((e) => dec(e.qualite)).join(" + ")}) ÷ ${x.enseignes.length} = ${dec(x.qualiteMoyenne)}` },
           { libelle: `Indice de prix ${dE(k.f.entreprise)} cette année`, nature: "grandeur", attendu: n.indicePrix, calcul: `${eur(n.prix)} ÷ ${eur(x.prixMoyen)} × 100 = ${qte(n.indicePrix)}` },
-          { libelle: `Indice de qualité ${dE(k.f.entreprise)} cette année`, nature: "grandeur", attendu: n.indiceQualite, calcul: `${dec(n.qualite)} ÷ ${dec(x.qualiteMoyenne)} × 100 = ${qte(n.indiceQualite)}` },
+          {
+            libelle: `Indice de qualité ${dE(k.f.entreprise)} cette année`,
+            nature: "grandeur",
+            ...deuxChemins(n.indiceQualite, (n.qualite / (x.enseignes.reduce((t, e) => t + e.qualite, 0) / x.enseignes.length)) * 100),
+            calcul: `${dec(n.qualite)} ÷ ${dec(x.qualiteMoyenne)} × 100 = ${qte(n.indiceQualite)}`,
+          },
         ];
       },
       explication: (c) => {

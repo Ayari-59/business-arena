@@ -108,7 +108,9 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
     "Retrouver à rebours le taux d'emprunt à partir duquel le levier s'inverse",
     "Répondre à la directrice financière, chiffre à l'appui",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du DSCG (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: L_EFFET_DE_LEVIER.entreprises,
   etapes: [
     {

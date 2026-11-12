@@ -28,8 +28,10 @@ describe("le chapitre, dans son parcours", () => {
 describe("les risques chiffrés", () => {
   it("l'année N et trois risques", () => {
     const a = anneeDesRisques();
-    expect([a.quantite, a.resultat, a.margeUnitaire]).toEqual([23_564, 100_162.89, 21]);
-    expect(attendusSgn(CH, "trois-risques")).toEqual([51_840.8, 74_226.6, 41_237]);
+    // Les 23 609 enceintes livrées (audit du 11 novembre, P2-2 : 23 564 avant).
+    expect([a.quantite, a.resultat, a.margeUnitaire]).toEqual([23_609, 100_162.89, 21]);
+    // 22 € × 10 % × 23 609 ; 23 609 × 15 % × 21 € ; 23 609 ÷ 12 × 21 €, un mois de rupture.
+    expect(attendusSgn(CH, "trois-risques")).toEqual([51_939.8, 74_368.35, 41_315.75]);
   });
 
   it("le curseur : 26 € le jeu au plus", () => {
@@ -39,7 +41,7 @@ describe("les risques chiffrés", () => {
 
   it("le laboratoire : la moitié chez le second fournisseur, seule solution", () => {
     expect(PART_LA_PLUS_SURE).toBe(0.5);
-    expect([0, 0.25, 0.5, 0.75, 1].map((p) => diversifier(p).pireDesCas)).toEqual([58_925.89, 63_344.14, 67_762.39, 51_562.14, 35_361.89]);
+    expect([0, 0.25, 0.5, 0.75, 1].map((p) => diversifier(p).pireDesCas)).toEqual([58_847.14, 63_273.83, 67_700.51, 51_469.33, 35_238.14]);
     gardeDuLaboratoireSgn(CH, "diversifier");
   });
 
@@ -50,9 +52,10 @@ describe("les risques chiffrés", () => {
 });
 
 describe("le cas du chapitre", () => {
-  it("deux mois sans composants : 17 688,89 € seul, 47 143,89 € à deux fournisseurs", () => {
+  it("deux mois sans composants : 17 531,39 € seul, 47 042,64 € à deux fournisseurs", () => {
     gardeDuCasSgn(DEUX_MOIS_SANS_COMPOSANTS, CH);
     const k = deuxMoisSansComposants();
-    expect([k.seul.pireDesCas, k.partage.pireDesCas, k.gain]).toEqual([17_688.89, 47_143.89, 29_455]);
+    // 100 162,89 € − 23 609 × 2 ÷ 12 × 21 € seul ; à moitié chez le second, 11 804,50 € de surcoût et la moitié de la perte.
+    expect([k.seul.pireDesCas, k.partage.pireDesCas, k.gain]).toEqual([17_531.39, 47_042.64, 29_511.25]);
   });
 });

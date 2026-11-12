@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENCEINTES_PAR_PALETTE,
@@ -142,7 +142,8 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
         return [
           { libelle: "Coût d'une palette, aujourd'hui", attendu: t.parPalette, calcul: `${eur(t.cout.total)} ÷ ${qte(t.palettes)} = ${eur(t.parPalette)}` },
           { libelle: "Coût d'une palette, porteur plein", attendu: t.parPalettePlein, calcul: `${eur(t.cout.total)} ÷ ${qte(t.places)} = ${eur(t.parPalettePlein)}` },
-          { libelle: "Coût des places vides", attendu: vides, calcul: `${qte(t.vides)} × ${eur(t.parPalettePlein)} = ${eur(vides)}` },
+          // L'autre chemin : le coût d'une palette gardé avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Coût des places vides", ...deuxChemins(vides, (t.vides * t.cout.total) / t.places), calcul: `${qte(t.vides)} × ${eur(t.parPalettePlein)} = ${eur(vides)}` },
         ];
       },
       explication: () => {

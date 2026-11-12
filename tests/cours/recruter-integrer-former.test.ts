@@ -113,11 +113,13 @@ describe("recruter, intégrer, former : le chapitre", () => {
     expect(x.fo.passages).toBe(940 - 170);
   });
 
+  // Servi dans chaque entreprise, le chapitre dépasse les 5 s par défaut sous la suite entière (déjà
+  // vrai sur 467c0aa, 5,5 s seul) : la garde a sa durée à elle.
   it("textes propres, une seule bonne réponse, notions existantes", () => {
     gardesDeTexte(ch);
     jamaisLaPlusLongue(ch);
     jamaisLaPlusLongue(UN_APPRENTI_OU_UN_TEMPS_PARTIEL);
-  });
+  }, 60_000);
 });
 
 describe("un apprenti ou un temps partiel ? : le cas", () => {

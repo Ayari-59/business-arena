@@ -99,8 +99,8 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
     "Calculer les entrées et les sorties d'argent d'un mois, et la banque à la fin du mois",
     "Dire ce que les partenaires doivent encore, ou attendent de l'entreprise",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du bac STMG (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du bac STMG (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
   libre: true,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_LA_GESTION_DE_BASE },
   etapes: [
@@ -112,6 +112,8 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
         const r = acompteDuClient(c);
         return [
           `« En commandant, ${r.client} nous a versé un acompte de ${pct(ACOMPTE_A_LA_COMMANDE)}, avant la livraison ; le reste se paiera à l'échéance. La banque va m'envoyer le relevé de janvier. Avant de l'ouvrir, je veux savoir ce qui a dû entrer et sortir de notre compte depuis notre création, le ${date(1)}, ce qu'il doit nous rester au 31 janvier, et ce que nos partenaires nous doivent encore ou attendent de nous. »`,
+          // Le chapitre raconte un autre janvier, où le reste de l'apport est placé le 6 (audit du 11 novembre 2026, P2-5).
+          "Ce janvier n'est pas tout à fait celui du chapitre : ici, NOVA ne place rien, tout son argent reste sur son compte courant.",
           "Pas de cours cette fois : vous avez les opérations du mois, taxes comprises, et la méthode est celle du chapitre. À vous de l'enchaîner.",
         ];
       },

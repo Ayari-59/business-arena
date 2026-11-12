@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_PARTENAIRES, partenairesDuCabinet } from "../../chapitres/commissions-des-partenaires";
 import type { Cas } from "../../cas";
 import type { Situation } from "../types";
@@ -223,12 +223,13 @@ export const LA_MISE_EN_AVANT_PAYANTE: Situation = {
           { libelle: "Comptes nécessaires, sur la vie", nature: "grandeur", attendu: r.comptesNecessaires, calcul: `${eur(r.b.valeur)} ÷ ${eur(r.m.netParCompte)} = ${qte(r.comptesNecessaires)} comptes attendus` },
           {
             libelle: "Hausse nécessaire des comptes, sur la vie (%)",
-            attendu: r.hausseNecessaire,
+            // L'autre chemin : les comptes nécessaires gardés avec tous leurs chiffres, l'arrondi à la fin.
+            ...deuxChemins(r.hausseNecessaire, (r.b.valeur / r.m.netParCompte / r.b.comptes - 1) * 100),
             calcul: `(${qte(r.comptesNecessaires)} ÷ ${qte(r.b.comptes)} − 1) × 100 = ${pct(r.hausseNecessaire)}`,
           },
           {
             libelle: "Hausse nécessaire, sur la première année seule (%)",
-            attendu: r.hausseNecessaireALaPremiereAnnee,
+            ...deuxChemins(r.hausseNecessaireALaPremiereAnnee, (r.b.margePremiereAnnee / (r.x.m.marge - r.m.premiere) / r.b.comptes - 1) * 100),
             calcul: `${eur(r.b.margePremiereAnnee)} ÷ (${eur(r.x.m.marge)} − ${eur(r.m.premiere)}) = ${qte(r.comptesNecessairesALaPremiereAnnee)} comptes ; (${qte(r.comptesNecessairesALaPremiereAnnee)} ÷ ${qte(r.b.comptes)} − 1) × 100 = ${pct(r.hausseNecessaireALaPremiereAnnee)}`,
           },
         ];

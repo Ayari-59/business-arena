@@ -268,7 +268,9 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     "Chiffrer le seuil de massue et le taux limite, et retrouver à rebours le résultat qu'exige une rentabilité visée",
     "Mesurer ce qu'un changement de structure ou une mauvaise année fait à la rentabilité des associés",
   ],
-  libre: false,
+  // Libre : le chapitre libre du DSCG
+  // (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DU_LEVIER,
     pourquoi:

@@ -95,8 +95,8 @@ export const LE_FOURNISSEUR_ALLONGE_SON_DELAI: Situation = {
     "Financer un besoin de trésorerie et le confronter à ce que l'entreprise peut porter",
     "Répondre au président, chiffres à l'appui",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS GPME (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du BTS GPME (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
   libre: true,
   entreprises: {
     codes: ENTREPRISES_DES_FOURNISSEURS,

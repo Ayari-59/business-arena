@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent, taux2 } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct as pourcent, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { coutsDeLaGamme, donneesDuMois, seuilAuTauxArrondi, seuilDeRentabilite } from "../monde/couts-et-budgets";
@@ -271,8 +271,8 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
     "Chiffrer l'effet d'une baisse de prix, et lire le levier opérationnel",
     "Calculer le seuil d'une gamme et celui de charges fixes par paliers, et en tirer une décision",
   ],
-  // Libre : le premier chapitre du parcours du BTS MHR (décision du propriétaire, novembre 2026 ;
-  // config/cours/chapitres-libres.ts).
+  // Libre : le chapitre libre du BUT GEA et du BUT GACO
+  // (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
   libre: true,
   entreprises: {
     codes: ENTREPRISES_DU_SEUIL,
@@ -847,7 +847,8 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
           },
           {
             libelle: "Seuil de rentabilité de la gamme",
-            attendu: gamme.seuilValeur,
+            // L'autre chemin : le taux moyen gardé avec tous ses chiffres, l'arrondi à la fin.
+            ...deuxChemins(gamme.seuilValeur, (gamme.chargesFixes * gamme.chiffreDAffaires) / gamme.marge),
             calcul: `(${eur(gamme.communes)} + ${eur(gamme.publicite)} de publicité) ÷ ${pourcent(gamme.tauxPct)} = ${eur(gamme.chargesFixes)} ÷ ${pourcent(gamme.tauxPct)} = ${eur(gamme.seuilValeur)}`,
           },
           {
@@ -1143,7 +1144,7 @@ export const LES_LEVIERS_DU_SEUIL: Chapitre = partieDuChapitre(
     accroche: "Le seuil de NOVA est connu : une baisse de prix, le levier opérationnel, le seuil d'une gamme et des charges fixes par paliers, jusqu'à la décision chiffrée.",
     prerequis: ["seuil-de-rentabilite"],
     ouverture: undefined,
-    // La suite reste réservée : seul le premier chapitre du parcours est libre (config/cours/chapitres-libres.ts).
+    // La suite reste réservée : seul le chapitre de la liste est libre (config/cours/chapitres-libres.ts).
     libre: false,
   },
 );

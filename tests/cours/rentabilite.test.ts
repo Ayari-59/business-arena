@@ -45,11 +45,12 @@ describe("la rentabilité de NOVA", () => {
     expect(juste("emprunter")).toEqual(["Oui : chaque euro investi rapporte plus qu'il ne coûte"]);
   });
 
-  it("le curseur : 18 940 enceintes pour que l'activité rapporte au moins le taux de l'emprunt", () => {
-    // 5 % de 60 766,51 € = 3 038,33 € ; 23 564 − (100 162,89 − 3 038,33) ÷ 21 = 18 939,02.
-    expect(enceintesAuTauxDeLEmprunt(r)).toBe(18_940);
-    const e = gardeDuCurseur(ch, "l-activite-face-a-l-emprunt", 18_940);
-    expect(e.lecture(NOVA, 18_940).map((l) => l.montant)).toEqual([c(100_162.89 - 21 * 4_624), 3_038.33, 5.03]);
+  it("le curseur : 18 985 enceintes pour que l'activité rapporte au moins le taux de l'emprunt", () => {
+    // 5 % de 60 766,51 € = 3 038,33 € ; 23 609 − (100 162,89 − 3 038,33) ÷ 21 = 18 984,02 (les 23 609
+    // enceintes livrées, audit du 11 novembre, P2-2 : 23 564 avant).
+    expect(enceintesAuTauxDeLEmprunt(r)).toBe(18_985);
+    const e = gardeDuCurseur(ch, "l-activite-face-a-l-emprunt", 18_985);
+    expect(e.lecture(NOVA, 18_985).map((l) => l.montant)).toEqual([c(100_162.89 - 21 * 4_624), 3_038.33, 5.03]);
   });
 
   it("le laboratoire : 80 000 € repris par les associés et empruntés portent la rentabilité financière à 52,13 %", () => {

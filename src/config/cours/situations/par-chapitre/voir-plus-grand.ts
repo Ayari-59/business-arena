@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2, donneeTelleQuelle, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { CROITRE_EN_INVESTISSANT, ENTREPRISES_DE_LA_CROISSANCE, croissance, tableauDesMachines } from "../../chapitres/croitre-en-investissant";
 import { machineEnPlus } from "../../monde/capacite";
@@ -152,9 +152,9 @@ export const VOIR_PLUS_GRAND: Situation = {
     "Croiser deux machines : les ventes en plus qui égalisent leurs VAN, et la demande où la plus grande passe devant",
     "Répondre à la direction, chiffres à l'appui",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du DSCG (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_LA_CROISSANCE,
     pourquoi: "ce cas reprend le chapitre « Croître en investissant », qui se calcule sur l'atelier de NOVA et son catalogue de machines.",
@@ -199,7 +199,7 @@ export const VOIR_PLUS_GRAND: Situation = {
             libelle: "Capacité de l'équipe avec son opérateur",
             nature: "quantite",
             attendu: g.capaciteEquipe,
-            calcul: `${qte(f.operateurs.heuresParMois)} heures ÷ ${qte(g.machine.heuresParEnceinte)} × 3 mois = ${qte(g.equipeEnPlus)} ; ${qte(equipe)} + ${qte(g.equipeEnPlus)} = ${qte(g.capaciteEquipe)}`,
+            calcul: `${qte(f.operateurs.heuresParMois)} heures ÷ ${donneeTelleQuelle(g.machine.heuresParEnceinte)} × 3 mois = ${qte(g.equipeEnPlus)} ; ${qte(equipe)} + ${qte(g.equipeEnPlus)} = ${qte(g.capaciteEquipe)}`,
           },
           {
             libelle: "Ventes gagnées sur l'année",

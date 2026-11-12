@@ -466,6 +466,7 @@ export function partsDesActeurs(hausseDesSalaires = 0, prix?: number, quantite?:
   return {
     prix: k.prix,
     enceintes: k.quantite,
+    remise: k.remise,
     ventes: k.ventes,
     fournisseurs: k.consommations,
     salaries: k.personnel,

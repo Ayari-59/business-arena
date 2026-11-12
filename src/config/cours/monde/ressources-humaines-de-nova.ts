@@ -205,6 +205,8 @@ export function masseSalarialeDeN(hausseGenerale = 0) {
     tauxDeFraisDePersonnel: masse / k.ventes,
     caParSalarie: k.ventes / p.effectif,
     prix: FICHE_RH.enceinte.prix,
+    /** Les enceintes livrées dans l'année (23 609 pour NOVA), et non les ventes divisées par le prix : Sonora a une remise. */
+    enceintes: k.quantiteDeLaFiche,
   };
 }
 

@@ -48,12 +48,13 @@ describe("la valeur ajoutée de NOVA", () => {
     expect(juste.map((o) => o.texte)).toEqual(["Les salariés"]);
   });
 
-  it("le curseur : 17 553 enceintes pour que la valeur ajoutée paie l'équipe", () => {
-    // 23 564 − (254 034 − 127 800) ÷ 21 = 17 552,86.
-    expect(enceintesQuiPaientLEquipe(v)).toBe(17_553);
-    const e = gardeDuCurseur(ch, "la-richesse-qui-paie-l-equipe", 17_553);
-    expect(e.lecture(NOVA, 17_553)[0]!.montant).toBe(254_034 - 21 * (23_564 - 17_553));
-    expect(e.lecture(NOVA, 17_553)[2]!.montant).toBe(3);
+  it("le curseur : 17 598 enceintes pour que la valeur ajoutée paie l'équipe", () => {
+    // 23 609 − (254 034 − 127 800) ÷ 21 = 17 597,86 (les 23 609 enceintes livrées, audit du 11 novembre,
+    // P2-2 : 23 564 avant).
+    expect(enceintesQuiPaientLEquipe(v)).toBe(17_598);
+    const e = gardeDuCurseur(ch, "la-richesse-qui-paie-l-equipe", 17_598);
+    expect(e.lecture(NOVA, 17_598)[0]!.montant).toBe(254_034 - 21 * (23_609 - 17_598));
+    expect(e.lecture(NOVA, 17_598)[2]!.montant).toBe(3);
   });
 
   it("le laboratoire : 20 % de hausse et un tiers gardé demandent 5 % de ventes en plus", () => {
@@ -63,11 +64,12 @@ describe("la valeur ajoutée de NOVA", () => {
     const sans = partageDuLaboratoire(v, { hausse: 20, ventes: 0 });
     expect(sans.entreprise).toBe(c(254_034 - 153_360 - 4_129.51 - 14_352));
     expect(sans.partGardee < PART_GARDEE_DU_DEFI).toBe(true);
-    // Et 5 % d'enceintes de plus : 24 742 enceintes, 1 178 × 21 € de valeur ajoutée en plus.
+    // Et 5 % d'enceintes de plus : 24 789 enceintes, 1 180 × 21 € de valeur ajoutée en plus.
     const avec = partageDuLaboratoire(v, { hausse: 20, ventes: 5 });
-    expect(avec.va).toBe(254_034 + 1_178 * 21);
-    expect(avec.k.impot).toBe(20_536); // 6 375 + 25 % × (99 145,96 − 42 500), arrondi
-    expect(avec.entreprise).toBe(c(278_772 - 153_360 - 4_129.51 - 20_536));
+    expect(avec.k.quantite).toBe(24_789);
+    expect(avec.va).toBe(254_034 + 1_180 * 21);
+    expect(avec.k.impot).toBe(20_547); // 6 375 + 25 % × (99 187,96 − 42 500), arrondi
+    expect(avec.entreprise).toBe(c(278_814 - 153_360 - 4_129.51 - 20_547));
     expect(avec.partGardee >= PART_GARDEE_DU_DEFI).toBe(true);
     // Une hausse de 19 % ne relève pas le défi, même en vendant beaucoup plus.
     expect(etape(ch, "le-laboratoire-du-partage", "simulation").defi(NOVA).atteint({ hausse: 19, ventes: 20 })).toBe(false);

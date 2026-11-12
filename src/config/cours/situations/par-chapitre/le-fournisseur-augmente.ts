@@ -14,8 +14,8 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  *
  * Le fournisseur annonce une hausse de ses tarifs. Le président veut garder le même taux de
  * marque, et demande à quel prix il faudra vendre. L'élève refait seul le chemin du
- * chapitre : le coût d'une unité, sa marge, le taux de marque, ce qu'ils deviennent si le
- * prix ne bouge pas, puis le prix qui rend le même taux de marque.
+ * chapitre : le coût d'une unité, sa marge, le taux de marge sur coût variable, ce qu'ils deviennent si le
+ * prix ne bouge pas, puis le prix qui rend le même taux de marge sur coût variable.
  *
  * Le cas est neuf par sa question : c'est le coût qui bouge, pas le prix (le cas de
  * synthèse « Suivre la baisse du concurrent » fait jouer le prix). Seuls les achats
@@ -23,8 +23,8 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  * janvier de NOVA (monde/gestion-et-information.ts).
  *
  * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
- * pedagogy/cours/deux-decimales.ts) : les taux de marque et la hausse du prix se donnent à deux
- * décimales (au dixième, avant) ; le nouveau prix se calcule sur le taux de marque à deux décimales,
+ * pedagogy/cours/deux-decimales.ts) : les taux de marge sur coût variable et la hausse du prix se donnent à deux
+ * décimales (au dixième, avant) ; le nouveau prix se calcule sur le taux de marge sur coût variable à deux décimales,
  * 39,76 € ÷ (1 − 35,59 %) = 61,73 €, et les « ≈ » et « sans arrondir le taux » disparaissent avec les
  * tolérances de 0,05 € et d'un dixième.
  */
@@ -44,7 +44,7 @@ export function fournisseurQuiAugmente(c: Cas) {
   const nouveauCout = auCentime(nouveauxAchats + m.autres);
   const margeSansHausseDePrix = auCentime(m.prix - nouveauCout);
   const tauxDeMarqueSansHausse = arrondi2((margeSansHausseDePrix / m.prix) * 100);
-  // Garder le taux de marque : prix = coût ÷ (1 − taux de marque), comme au chapitre, sur le taux à
+  // Garder le taux de marge sur coût variable : prix = coût ÷ (1 − taux de marge sur coût variable), comme au chapitre, sur le taux à
   // deux décimales que l'élève vient d'écrire (35,59 %), et la ligne suivante part de ce prix.
   // (Le rapport exact du prix au coût, coût × prix ÷ ancien coût, tombe au même centime ici.)
   const nouveauPrix = quotient2(nouveauCout, 1 - m.tauxDeMarque / 100);
@@ -78,16 +78,16 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
   commanditaire: "Le président",
   titre: "Le fournisseur augmente ses prix",
   accroche:
-    "Le fournisseur annonce une hausse de ses tarifs. Le président veut garder le même taux de marque : à quel prix faudra-t-il vendre ?",
+    "Le fournisseur annonce une hausse de ses tarifs. Le président veut garder le même taux de marge sur coût variable : à quel prix faudra-t-il vendre ?",
   objectifs: [
-    "Calculer le coût d'une unité, sa marge et son taux de marque",
+    "Calculer le coût d'une unité, sa marge et son taux de marge sur coût variable",
     "Mesurer ce qu'une hausse des achats retire à la marge quand le prix ne bouge pas",
-    "Calculer le prix de vente qui garde le même taux de marque",
+    "Calculer le prix de vente qui garde le même taux de marge sur coût variable",
     "Rédiger une réponse chiffrée au président",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS CG et du DCG (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {
@@ -95,7 +95,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       type: "lecture",
       titre: "La demande du président",
       texte: (c) => [
-        `« Notre fournisseur augmente ses prix de ${pct(HAUSSE_DES_ACHATS * 100)} le mois prochain. Je ne veux pas ${que(c.entreprise)} y perde : je veux garder le même taux de marque qu'aujourd'hui. À quel prix de vente moyen, hors taxes, faudra-t-il passer ? »`,
+        `« Notre fournisseur augmente ses prix de ${pct(HAUSSE_DES_ACHATS * 100)} le mois prochain. Je ne veux pas ${que(c.entreprise)} y perde : je veux garder le même taux de marge sur coût variable qu'aujourd'hui. À quel prix de vente moyen, hors taxes, faudra-t-il passer ? »`,
         "Pas de cours cette fois : vous avez les chiffres du mois, et la méthode est celle du chapitre. À vous de l'enchaîner.",
       ],
       tableau: (c) => {
@@ -112,7 +112,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
         };
       },
       repere: () =>
-        "À rendre : le taux de marque d'aujourd'hui, ce qu'il devient si le prix ne bouge pas, le prix qui le garde, et votre réponse.",
+        "À rendre : le taux de marge sur coût variable d'aujourd'hui, ce qu'il devient si le prix ne bouge pas, le prix qui le garde, et votre réponse.",
     },
     {
       id: "aujourd-hui",
@@ -120,13 +120,13 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       titre: "La marge d'aujourd'hui",
       notions: ["margin_rates", "markup_coefficient"],
       question: () =>
-        "Commencez par aujourd'hui : le coût d'une unité, la marge qu'elle laisse, puis le taux de marque, en pourcentage, à deux décimales.",
+        "Commencez par aujourd'hui : le coût d'une unité, la marge qu'elle laisse, puis le taux de marge sur coût variable, en pourcentage, à deux décimales.",
       champs: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
           { libelle: "Coût d'une unité", attendu: r.cout, calcul: `${eur(r.matiere)} + ${eur(r.autres)} = ${eur(r.cout)}` },
           { libelle: "Marge d'une unité", attendu: r.marge, calcul: `${eur(r.prix)} − ${eur(r.cout)} = ${eur(r.marge)}` },
-          { libelle: "Taux de marque (%)", attendu: r.tauxDeMarque, calcul: `${eur(r.marge)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarque)}` },
+          { libelle: "Taux de marge sur coût variable (%)", attendu: r.tauxDeMarque, calcul: `${eur(r.marge)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarque)}` },
         ];
       },
       explication: (c) => {
@@ -142,30 +142,30 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       titre: "Si le prix ne bouge pas",
       notions: ["margin_rates"],
       question: () =>
-        `Seuls les achats augmentent de ${pct(HAUSSE_DES_ACHATS * 100)}. Si le prix de vente ne bouge pas, que deviennent les achats par unité, le coût d'une unité, sa marge, et le taux de marque (à deux décimales) ?`,
+        `Seuls les achats augmentent de ${pct(HAUSSE_DES_ACHATS * 100)}. Si le prix de vente ne bouge pas, que deviennent les achats par unité, le coût d'une unité, sa marge, et le taux de marge sur coût variable (à deux décimales) ?`,
       champs: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
           { libelle: "Achats par unité après la hausse", attendu: r.nouveauxAchats, calcul: `${eur(r.matiere)} × (1 + ${pct(HAUSSE_DES_ACHATS * 100)}) = ${eur(r.nouveauxAchats)}` },
           { libelle: "Nouveau coût d'une unité", attendu: r.nouveauCout, calcul: `${eur(r.nouveauxAchats)} + ${eur(r.autres)} = ${eur(r.nouveauCout)}` },
           { libelle: "Marge d'une unité, au prix d'aujourd'hui", attendu: r.margeSansHausseDePrix, calcul: `${eur(r.prix)} − ${eur(r.nouveauCout)} = ${eur(r.margeSansHausseDePrix)}` },
-          { libelle: "Taux de marque, au prix d'aujourd'hui (%)", attendu: r.tauxDeMarqueSansHausse, calcul: `${eur(r.margeSansHausseDePrix)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarqueSansHausse)}` },
+          { libelle: "Taux de marge sur coût variable, au prix d'aujourd'hui (%)", attendu: r.tauxDeMarqueSansHausse, calcul: `${eur(r.margeSansHausseDePrix)} ÷ ${eur(r.prix)} × 100 = ${pct(r.tauxDeMarqueSansHausse)}` },
         ];
       },
       explication: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
-          `Sans toucher au prix, toute la hausse, ${eur(r.hausseParUnite)} par unité, se prend sur la marge : le taux de marque passe de ${pct(r.tauxDeMarque)} à ${pct(r.tauxDeMarqueSansHausse)}. Le coût d'une unité, lui, ne monte que de ${pct(r.hausseDuCout)} : les autres coûts ne bougent pas.`,
+          `Sans toucher au prix, toute la hausse, ${eur(r.hausseParUnite)} par unité, se prend sur la marge : le taux de marge sur coût variable passe de ${pct(r.tauxDeMarque)} à ${pct(r.tauxDeMarqueSansHausse)}. Le coût d'une unité, lui, ne monte que de ${pct(r.hausseDuCout)} : les autres coûts ne bougent pas.`,
         ];
       },
     },
     {
       id: "le-nouveau-prix",
       type: "montants",
-      titre: "Le prix qui garde le taux de marque",
+      titre: "Le prix qui garde le taux de marge sur coût variable",
       notions: ["margin_rates", "markup_coefficient"],
       question: () =>
-        "Le taux de marque rapporte la marge au prix de vente : le coût est donc la part du prix qui ne reste pas. Quel prix hors taxes garde le taux de marque d'aujourd'hui avec le nouveau coût ? Calculez-le au centime, sur le taux de marque à deux décimales. De combien monte-t-il, en pourcentage, à deux décimales ?",
+        "Le taux de marge sur coût variable rapporte la marge au prix de vente : le coût est donc la part du prix qui ne reste pas. Quel prix hors taxes garde le taux de marge sur coût variable d'aujourd'hui avec le nouveau coût ? Calculez-le au centime, sur le taux de marge sur coût variable à deux décimales. De combien monte-t-il, en pourcentage, à deux décimales ?",
       champs: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
@@ -184,7 +184,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       explication: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
-          `À ${eur(r.nouveauPrix)}, chaque ${c.unite} laisse ${eur(r.nouvelleMarge)} de marge, et le taux de marque redevient ${pct(r.tauxDeMarque)}. Garder un taux, c'est faire monter le prix dans la même proportion que le coût, et non comme les seuls achats.`,
+          `À ${eur(r.nouveauPrix)}, chaque ${c.unite} laisse ${eur(r.nouvelleMarge)} de marge, et le taux de marge sur coût variable redevient ${pct(r.tauxDeMarque)}. Garder un taux, c'est faire monter le prix dans la même proportion que le coût, et non comme les seuls achats.`,
         ];
       },
     },
@@ -204,7 +204,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
           {
             texte: `Il suffira d'ajouter la hausse au prix : ${eur(r.prixPlusLaHausse)} hors taxes, pour la même marge`,
             juste: false,
-            retour: `Non : la marge d'une unité resterait de ${eur(r.marge)}, mais rapportée à un prix plus élevé. Le taux de marque tomberait sous ${pct(r.tauxDeMarque)}, et le président veut garder le taux.`,
+            retour: `Non : la marge d'une unité resterait de ${eur(r.marge)}, mais rapportée à un prix plus élevé. Le taux de marge sur coût variable tomberait sous ${pct(r.tauxDeMarque)}, et le président veut garder le taux.`,
           },
           {
             texte: `Il faudra monter le prix de ${pct(HAUSSE_DES_ACHATS * 100)}, comme les achats : ${eur(r.prixHausseDuTaux)} hors taxes`,
@@ -212,9 +212,9 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
             retour: `Non : seuls les achats augmentent de ${pct(HAUSSE_DES_ACHATS * 100)}. Le coût d'une unité ne monte que de ${pct(r.hausseDuCout)}, et le prix n'a pas à monter plus que lui pour garder le taux.`,
           },
           {
-            texte: `Il faudra vendre ${eur(r.coutPlusTauxDeMarque)} : le nouveau coût majoré de notre taux de marque`,
+            texte: `Il faudra vendre ${eur(r.coutPlusTauxDeMarque)} : le nouveau coût majoré de notre taux de marge sur coût variable`,
             juste: false,
-            retour: `Non : c'est confondre le taux de marque et le taux de marge. Le taux de marque se calcule sur le prix, pas sur le coût : majorer le coût de ${pct(r.tauxDeMarque)} donne un prix bien trop bas.`,
+            retour: `Non : c'est confondre les deux taux. Le taux de marge sur coût variable se calcule sur le prix, pas sur le coût : majorer le coût de ${pct(r.tauxDeMarque)} donne un prix bien trop bas.`,
           },
         ];
       },

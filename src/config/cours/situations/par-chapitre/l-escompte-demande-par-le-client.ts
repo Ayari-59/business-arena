@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as enPoints, taux2 } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct as enPoints, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { aNom, deNom, nomDuClient, paiementDuClient } from "../../chapitres/creation-premier-bilan";
@@ -40,6 +40,17 @@ const qte = (n: number) => n.toLocaleString("fr-FR");
 /** Un taux donné en fraction (0,03), écrit en pourcentage à deux décimales. */
 const pct = (t: number) => enPoints(t * 100);
 const majuscule = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`;
+/** Un taux donné en fraction, écrit au dix-millième de point : « 0,3212 % ». */
+const auDixMillieme = (t: number) => `${(t * 100).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} %`;
+/**
+ * Quand l'escompte le plus fort et le coût de la période s'écrivent pareil au centième (« 0,32 % ÷ (1 +
+ * 0,32 %) = 0,32 % »), l'écart que l'étape veut montrer ne se voit plus : la correction le dit, au
+ * dix-millième de point (audit pédagogique du 11 novembre 2026, P1-2).
+ */
+const ecartInvisible = (k: { plafond: number; coutDeLaPeriode: number; plafondExact: number; coutDeLaPeriodeExact: number }) =>
+  arrondi2(k.plafond * 100) === k.coutDeLaPeriode
+    ? ` : au centième, l'écart ne se voit pas. Au dix-millième de point, l'escompte le plus fort est ${auDixMillieme(k.plafondExact)}, un peu sous les ${auDixMillieme(k.coutDeLaPeriodeExact)} de la période`
+    : "";
 /** L'escompte demandé, rapporté au plafond que paie l'emprunt, en mots. */
 const combienDePlus = (rapport: number) => (rapport >= 3 ? "plus du triple" : rapport >= 2 ? "plus du double" : rapport > 1 ? "davantage" : "moins que ce plafond");
 
@@ -78,8 +89,12 @@ export function escompteDemande(c: Cas) {
     joursAvances,
     tauxPeriode,
     tauxAnnuel,
+    // L'autre chemin : le coût de la période gardé avec tous ses chiffres, l'arrondi à la fin.
+    tauxAnnuelSansArrondi: ((f.escompte / f.netFinancier) * JOURS_PAR_AN) / joursAvances,
     plafond,
     coutDeLaPeriode,
+    plafondExact,
+    coutDeLaPeriodeExact: (c.pret.tauxAnnuel * joursAvances) / JOURS_PAR_AN,
     plafondEnCentiemes,
     joursCalcules,
     joursNecessaires,
@@ -214,7 +229,7 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
           },
           {
             libelle: "Coût de l'escompte ramené à l'année (%)",
-            attendu: arrondi2(k.tauxAnnuel * 100),
+            ...deuxChemins(arrondi2(k.tauxAnnuel * 100), k.tauxAnnuelSansArrondi * 100),
             calcul: `${pct(k.tauxPeriode)} × ${qte(JOURS_PAR_AN)} ÷ ${qte(k.joursAvances)} = ${pct(k.tauxAnnuel)}`,
           },
         ];
@@ -284,7 +299,7 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
           {
             libelle: "Escompte le plus fort que paie l'emprunt (%)",
             attendu: arrondi2(k.plafond * 100),
-            calcul: `${pct(c.pret.tauxAnnuel)} × ${qte(k.joursAvances)} ÷ ${qte(JOURS_PAR_AN)} = ${enPoints(k.coutDeLaPeriode)} pour la période, puis ${enPoints(k.coutDeLaPeriode)} ÷ (1 + ${enPoints(k.coutDeLaPeriode)}) = ${pct(k.plafond)}`,
+            calcul: `${pct(c.pret.tauxAnnuel)} × ${qte(k.joursAvances)} ÷ ${qte(JOURS_PAR_AN)} = ${enPoints(k.coutDeLaPeriode)} pour la période, puis ${enPoints(k.coutDeLaPeriode)} ÷ (1 + ${enPoints(k.coutDeLaPeriode)}) = ${pct(k.plafond)}${ecartInvisible(k)}`,
           },
           {
             libelle: "Jours d'avance qu'il faudrait",

@@ -698,7 +698,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       question: (c) => {
         const k = indicateursDuPointDeVente(c);
         const v = suivreUnMauvaisPayeur(CSE_DES_LABORATOIRES_VERNAL);
-        return `Hypothèse du cours : ${v.client} passe ${v.objet}, une commande moyenne de comité, ${eur(v.ht)} HT, soit ${eur(v.ttc)} TTC, payable à ${qte(v.delaiConvenu)} jours. Le trésorier du comité ne signe les virements qu'à la réunion du mois : il paie ${qte(v.retard)} jours en retard. ${k.f.entreprise} vend des biens, elle a déjà déclaré la TVA à la livraison et finance la commande toutes taxes comprises. Calculez ce que le retard lui coûte au découvert, à ${pct(v.tauxDeFinancement * 100)} l'an, les pénalités de retard à ${pct(TAUX_DES_PENALITES * 100)} l'an, puis tout ce qu'elle peut réclamer, indemnité forfaitaire comprise.`;
+        return `Hypothèse du cours : ${v.client} passe ${v.objet}, une commande moyenne de comité, ${eur(v.ht)} HT, soit ${eur(v.ttc)} TTC, payable à ${qte(v.delaiConvenu)} jours. Le trésorier du comité ne signe les virements qu'à la réunion du mois : il paie ${qte(v.retard)} jours en retard. Les conditions de vente du magasin, que le comité a acceptées, prévoient des pénalités de retard et l'indemnité forfaitaire. ${k.f.entreprise} vend des biens, elle a déjà déclaré la TVA à la livraison et finance la commande toutes taxes comprises. Calculez ce que le retard lui coûte au découvert, à ${pct(v.tauxDeFinancement * 100)} l'an, les pénalités de retard à ${pct(TAUX_DES_PENALITES * 100)} l'an, puis tout ce qu'elle peut réclamer, indemnité forfaitaire comprise.`;
       },
       champs: () => {
         const v = suivreUnMauvaisPayeur(CSE_DES_LABORATOIRES_VERNAL);
@@ -713,7 +713,9 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
         const lIndemnitePese = v.indemnite > v.penalites;
         return [
           `Sur une petite facture, les pénalités pèsent peu : ${eur(v.penalites)} pour ${qte(v.retard)} jours. L'indemnité forfaitaire de ${eur(v.indemnite)}, due par facture quelle que soit la durée du retard, ${lIndemnitePese ? "pèse plus qu'elles" : "pèse moins qu'elles"} : ${eur(v.reclamable)} réclamables, quand le retard coûte ${eur(v.coutDuRetard)}.`,
-          `Un comité d'entreprise achète pour ses salariés, mais il paie comme un professionnel : le délai convenu et les pénalités s'appliquent. Un gros panier se négocie avec ses conditions de paiement, et un retard se relance, comme pour tout client professionnel.`,
+          // Prudence (audit pédagogique du 11 novembre 2026, P2-10) : un comité qui achète pour les activités sociales
+          // des salariés n'est pas forcément un acheteur professionnel au sens de l'article L. 441-10 du code de commerce.
+          `Un comité social et économique achète pour les activités sociales des salariés. Qu'il doive, comme un acheteur professionnel, les pénalités et l'indemnité forfaitaire dépend de sa situation : cela se vérifie avant toute réclamation. Le cours les applique ici par hypothèse, celle des conditions de vente du magasin. Dans tous les cas, un gros panier se négocie avec ses conditions de paiement, et un retard se relance.`,
         ];
       },
     },
@@ -726,7 +728,9 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       texte: (c) => {
         const k = indicateursDuPointDeVente(c);
         return [
-          `Le chiffre d'affaires en caisse de ${k.f.entreprise} se décompose en quatre indicateurs qui se multiplient : ${qte(k.m.entrees)} entrées × ${pct(k.transformation)} de transformation × ${deux(k.indice)} articles par passage × ${eur(k.prixMoyen)} = ${eur(k.m.chiffreDAffairesEnCaisse)}. Les commandes des comités (${eur(k.m.commandes.chiffreDAffaires)}) s'y ajoutent pour faire ${eur(k.m.chiffreDAffaires)}. Le panier moyen (${eur(k.panier)}) est le produit des deux derniers. Un objectif se chiffre levier par levier, et deux hausses se multiplient.`,
+          // Les indicateurs s'écrivent arrondis : leur produit ne retombe sur le chiffre d'affaires qu'à leurs arrondis
+          // près, et la phrase le dit (audit pédagogique du 11 novembre 2026, garde des égalités des corrigés).
+          `Le chiffre d'affaires en caisse de ${k.f.entreprise} se décompose en quatre indicateurs qui se multiplient : ${qte(k.m.entrees)} entrées × ${pct(k.transformation)} de transformation × ${deux(k.indice)} articles par passage × ${eur(k.prixMoyen)} ≈ ${eur(k.m.chiffreDAffairesEnCaisse)}. Le produit tombe juste sur les indicateurs gardés avec tous leurs chiffres ; arrondis, ils donnent ${eur(auCentime(((k.m.entrees * k.transformation) / 100) * k.indice * k.prixMoyen))}. Les commandes des comités (${eur(k.m.commandes.chiffreDAffaires)}) s'y ajoutent pour faire ${eur(k.m.chiffreDAffaires)}. Le panier moyen (${eur(k.panier)}) est le produit des deux derniers. Un objectif se chiffre levier par levier, et deux hausses se multiplient.`,
           `Deux pièges. Le taux de transformation rapporte les passages aux entrées (${pct(k.transformation)}) ; le taux de service rapporte les ventes à la demande (${pct(k.tauxDeService)}) : l'un mesure la vente, l'autre le rayon. Et une moyenne se laisse tirer : compter les commandes des comités comme des passages porterait le panier à ${eur(k.avecComites.panier)}. Dites toujours de quel panier vous parlez.`,
           "Au niveau de l'examen, vous savez calculer et interpréter les indicateurs d'un point de vente, décomposer le chiffre d'affaires en ses leviers, chiffrer un objectif à rebours, et choisir l'indicateur qui juge l'équipe sur ce qu'elle fait.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

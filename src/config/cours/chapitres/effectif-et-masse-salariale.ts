@@ -74,9 +74,9 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
     "Calculer le chiffre d'affaires par salarié",
     "Expliquer pourquoi le personnel est une charge fixe",
   ],
-  // Libre : le premier chapitre du parcours du BTS SAM (décision du propriétaire, novembre 2026 ;
-  // config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: { codes: ENTREPRISES_DES_RESSOURCES_HUMAINES, pourquoi: POURQUOI_LES_RESSOURCES_HUMAINES },
   etapes: [
     {
@@ -211,7 +211,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
         const m = masseSalariale(c);
         const q = enceintesPourLePlafond(EFFECTIF_ESSAYE);
         return [
-          `Avec ${EFFECTIF_ESSAYE} salariés, la masse salariale serait de ${eur(EFFECTIF_ESSAYE * m.coutAnnuel)} : il faudrait vendre ${qte(q)} ${c.unites} dans l'année pour qu'elle reste sous ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes. Le premier exercice en a vendu ${qte(Math.round(m.ventes / m.prix))}.`,
+          `Avec ${EFFECTIF_ESSAYE} salariés, la masse salariale serait de ${eur(EFFECTIF_ESSAYE * m.coutAnnuel)} : il faudrait vendre ${qte(q)} ${c.unites} dans l'année pour qu'elle reste sous ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes. Le premier exercice en a vendu ${qte(m.enceintes)}.`,
           "Un salarié de plus se décide sur les ventes qu'il permettra : sans elles, le personnel pèse plus lourd sur chaque euro vendu.",
         ];
       },

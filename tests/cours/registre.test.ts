@@ -32,11 +32,14 @@ it("un parcours en préparation a encore des chapitres à écrire, et aucun chap
   for (const c of CHAPITRES) expect(PROGRAMME[c.parcours][c.palier], `${c.code} : palier ${c.palier} de ${c.parcours}`).toBeDefined();
 });
 
-it("chaque chapitre a un code unique ; le premier est libre, avec les premiers des parcours des diplômes", () => {
+it("chaque chapitre a un code unique ; le premier est libre, et seuls les chapitres libres des diplômes le sont avec lui", () => {
   expect(new Set(CHAPITRES.map((c) => c.code)).size).toBe(CHAPITRES.length);
   for (const c of CHAPITRES) expect(chapitreParCode(c.code)).toBe(c);
+  // Le premier du registre, « De la création au premier bilan », est le chapitre libre du BTS CG
+  // depuis la liste du 11 novembre 2026 (config/cours/chapitres-libres.ts).
+  expect(CHAPITRES[0]!.libre).toBe(true);
   expect(CHAPITRES.filter((c) => c.libre).map((c) => c.code).sort()).toEqual(
-    [CHAPITRES[0]!.code, ...chapitresLibresParDiplome().map((l) => l.chapitre.code)].sort(),
+    [...new Set([CHAPITRES[0]!.code, ...chapitresLibresParDiplome().map((l) => l.chapitre.code)])].sort(),
   );
 });
 

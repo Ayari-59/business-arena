@@ -85,8 +85,8 @@ export const L_ETIQUETTE_DU_CONCURRENT: Situation = {
     "Retrouver à rebours les ventes, puis le prix d'achat, qui gardent la marge du mois",
     "Répondre à la gérante sur le bon critère, chiffres à l'appui",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS MCO (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
+  // Libre comme le chapitre qu'il reprend, le chapitre libre du BTS MCO (« avec son cas pratique »,
+  // liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
   libre: true,
   entreprises: {
     codes: ENTREPRISES_DU_POINT_DE_VENTE,

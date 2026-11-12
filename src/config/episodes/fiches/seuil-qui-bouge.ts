@@ -1,7 +1,7 @@
 /**
  * FICHE ENSEIGNANT · ÉPISODE 34, LE SEUIL QUI BOUGE.
  *
- * Seuil de rentabilité, marge de sécurité et levier opérationnel, face à une
+ * Seuil de rentabilité, marge et indice de sécurité, levier opérationnel, face à une
  * demande incertaine : chaque charge variable transformée en charge fixe est
  * moins chère au volume du plan, et plus dangereuse dans le scénario bas.
  */
@@ -16,15 +16,15 @@ export const FICHE: FicheEnseignant = {
     "BUT GEA · Contrôle de gestion",
   ],
   notion:
-    "Le seuil de rentabilité n'est pas une donnée de l'entreprise : il dépend de sa structure de coûts, et chaque décision le déplace. L'erreur classique consiste à choisir la structure la moins chère au volume du plan d'affaires, en transformant des charges variables en charges fixes (salariés à la place de l'intérim, loyer fixe à la place d'un loyer indexé, matériel en crédit-bail à la place de la location), sans regarder ce qu'elle coûte si le volume n'arrive pas ; la seconde consiste à baisser les prix pour « passer le seuil », alors qu'avec un taux de marge sur coût variable de 20 % une baisse de 5 % retire le quart de la marge et fait monter le seuil. Le drive matériaux de l'épisode tourne à 254 retraits par semaine pour un plan à 300, avec une marge de sécurité de 13 % et un levier opérationnel proche de 8 : la direction régionale pousse vers la structure du plan, et la demande peut monter, plafonner ou décrocher. L'élève découvre que la meilleure structure en moyenne garde un socle fixe que le volume probable remplit, que la plus sûre est toute variable et ne coûte que peu de plus, et qu'un volume en plus se juge à sa marge sur coût variable, non à son coût complet.",
+    "Le seuil de rentabilité n'est pas une donnée de l'entreprise : il dépend de sa structure de coûts, et chaque décision le déplace. L'erreur classique consiste à choisir la structure la moins chère au volume du plan d'affaires, en transformant des charges variables en charges fixes (salariés à la place de l'intérim, loyer fixe à la place d'un loyer indexé, matériel en crédit-bail à la place de la location), sans regarder ce qu'elle coûte si le volume n'arrive pas ; la seconde consiste à baisser les prix pour « passer le seuil », alors qu'avec un taux de marge sur coût variable de 20 % une baisse de 5 % retire le quart de la marge et fait monter le seuil. Le drive matériaux de l'épisode tourne à 254 retraits par semaine pour un plan à 300, avec un indice de sécurité de 13 % et un levier opérationnel proche de 8 : la direction régionale pousse vers la structure du plan, et la demande peut monter, plafonner ou décrocher. L'élève découvre que la meilleure structure en moyenne garde un socle fixe que le volume probable remplit, que la plus sûre est toute variable et ne coûte que peu de plus, et qu'un volume en plus se juge à sa marge sur coût variable, non à son coût complet.",
   objectifs: [
     "Je sépare les charges d'un compte de résultat en charges variables et charges fixes, et j'en tire la marge sur coût variable et son taux.",
-    "Je calcule un seuil de rentabilité en chiffre d'affaires et en volume, une marge de sécurité et un levier opérationnel.",
+    "Je calcule un seuil de rentabilité en chiffre d'affaires et en volume, une marge et un indice de sécurité, et un levier opérationnel.",
     "Je mesure ce qu'une charge fixe ajoutée ou une baisse de prix fait au seuil et au résultat dans le scénario de demande le plus bas.",
     "Je distingue la qualité d'une décision du résultat qu'elle a obtenu sous un tirage donné.",
   ],
   prerequis:
-    "La distinction entre charges variables et charges fixes, la marge sur coût variable et le calcul du seuil de rentabilité doivent avoir été vus en cours ; la marge de sécurité et le levier opérationnel peuvent être introduits pendant la séance.",
+    "La distinction entre charges variables et charges fixes, la marge sur coût variable et le calcul du seuil de rentabilité doivent avoir été vus en cours. La marge et l'indice de sécurité, et le levier opérationnel, peuvent être introduits pendant la séance.",
   dureeMinutes: 120,
   deroule: [
     {
@@ -61,7 +61,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Synthèse",
       detail:
-        "Vous écrivez les trois formules (seuil, marge de sécurité, levier opérationnel) et la règle qui les relie : chaque charge fixe ajoutée rapproche le seuil du chiffre d'affaires et élève le levier. Vous rappelez que fixer une charge n'est pas une faute en soi : le chariot en crédit-bail, rentable dès 440 retraits par mois, l'est encore dans le scénario bas. La consigne qui reste : refaire son compte à 40 % sous le rythme actuel avant d'engager une charge fixe.",
+        "Vous écrivez les quatre formules (seuil, marge de sécurité, indice de sécurité, levier opérationnel) et la règle qui les relie : chaque charge fixe ajoutée rapproche le seuil du chiffre d'affaires et élève le levier. Vous rappelez que fixer une charge n'est pas une faute en soi : le chariot en crédit-bail, rentable dès 440 retraits par mois, l'est encore dans le scénario bas. La consigne qui reste : refaire son compte à 40 % sous le rythme actuel avant d'engager une charge fixe.",
     },
   ],
   calcul: {
@@ -165,11 +165,11 @@ export const FICHE: FicheEnseignant = {
   },
   evaluation: [
     "Les charges du compte du premier mois sont correctement ventilées entre variables et fixes, et le seuil de rentabilité est juste en euros et en retraits.",
-    "La marge de sécurité et le levier opérationnel sont calculés et traduits en risque : ce que coûte au résultat une baisse de 10 % du chiffre d'affaires.",
+    "La marge et l'indice de sécurité, et le levier opérationnel, sont calculés et traduits en risque : ce que coûte au résultat une baisse de 10 % du chiffre d'affaires.",
     "Chaque engagement d'une charge fixe est justifié par un calcul au volume probable et dans le scénario bas, pas seulement au volume du plan.",
     "Le volume supplémentaire de Bâtir Nord-Isère est jugé sur sa marge sur coût variable, en tenant compte de la structure déjà choisie.",
     "L'élève sait dire si une décision était bonne indépendamment du résultat obtenu sous le tirage de la classe, en s'appuyant sur le rejeu des trente tirages.",
   ],
   vigilance:
-    "L'épisode appelle « marge de sécurité » le rapport (chiffre d'affaires − seuil) / chiffre d'affaires, que la plupart des manuels nomment indice de sécurité, la marge de sécurité s'exprimant en euros : à préciser aux élèves. Les redevances de crédit-bail et le loyer fixe y sont traités comme des charges fixes du compte de résultat, sans retraitement en immobilisation.",
+    "L'épisode affiche l'indice de sécurité, (chiffre d'affaires − seuil) / chiffre d'affaires, en pourcentage ; la marge de sécurité, elle, s'exprime en euros. Les redevances de crédit-bail et le loyer fixe y sont traités comme des charges fixes du compte de résultat, sans retraitement en immobilisation.",
 };

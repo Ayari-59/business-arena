@@ -3,7 +3,7 @@ import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctio
 import { rentabilite } from "../../src/config/cours/chapitres/rentabilite";
 import { soldesDeNova } from "../../src/config/cours/chapitres/soldes-intermediaires";
 import { cloture } from "../../src/config/cours/monde/cloture";
-import { ENTREPRISES_DES_COMPTES_DU_LYCEE, bilanDuLycee, compteDuLycee, coutVariableDeLEnceinte, enceintesDeLAnnee, exerciceDe } from "../../src/config/cours/monde/comptes-du-lycee";
+import { ENTREPRISES_DES_COMPTES_DU_LYCEE, bilanDuLycee, compteDuLycee, coutVariableDeLEnceinte, enceintesDeLAnnee, exerciceDe, remiseDeSonora } from "../../src/config/cours/monde/comptes-du-lycee";
 
 /**
  * LES COMPTES DE NOVA LUS AU LYCÉE (monde/comptes-du-lycee.ts), la source des six chapitres de
@@ -74,23 +74,27 @@ describe("le compte de résultat de NOVA, au lycée", () => {
   });
 
   it("les enceintes de l'année et leur coût variable viennent de la fiche", () => {
-    expect(enceintesDeLAnnee(f)).toBe(23_564);
-    expect(23_564 * 59).toBe(LIGNES.ventes);
+    // Les enceintes livrées dans l'année, 23 609, dont 900 à Sonora avec 5 % de remise (audit du 11 novembre,
+    // P2-2). Les ventes divisées par le prix donnaient 23 564 : la remise vaut 45 enceintes, pas 45 de moins.
+    expect(enceintesDeLAnnee(f)).toBe(23_609);
+    expect(remiseDeSonora(f)).toBe(2_655);
+    expect(c(23_609 * 59 - 900 * 59 * 0.05)).toBe(LIGNES.ventes);
     expect(coutVariableDeLEnceinte(f)).toBe(22 + 16);
   });
 
   it("une variante rejoue les ventes, les coûts variables, les salaires, les intérêts et l'impôt", () => {
     // Le même prix et la même quantité, écrits : rien ne bouge.
-    expect(compteDuLycee(f, { prix: 59, quantite: 23_564 }).resultatNet).toBe(79_225.96);
-    // L'enceinte à 62 € : 3 € de plus sur 23 564 enceintes.
+    expect(compteDuLycee(f, { prix: 59, quantite: 23_609 }).resultatNet).toBe(79_225.96);
+    // L'enceinte à 62 € : 3 € de plus sur 23 609 enceintes, moins 5 % de ces 3 € sur les 900 de Sonora.
     const p = compteDuLycee(f, { prix: 62 });
-    expect(p.ventes).toBe(23_564 * 62);
-    expect(p.resultatDActivite).toBe(c(100_162.89 + 3 * 23_564));
-    expect(p.impot).toBe(impot(c(99_967.96 + 3 * 23_564)));
+    expect(p.ventes).toBe(c(23_609 * 62 - 900 * 62 * 0.05));
+    expect(p.remise).toBe(2_790);
+    expect(p.resultatDActivite).toBe(c(100_162.89 + 3 * 23_609 - 900 * 3 * 0.05));
+    expect(p.impot).toBe(impot(c(99_967.96 + 3 * 23_609 - 900 * 3 * 0.05)));
     expect(p.impot).toBe(38_415);
     expect(p.resultatNet).toBe(132_244.96);
     // 1 000 enceintes de moins : 59 € de ventes et 38 € de coûts variables en moins chacune.
-    const q = compteDuLycee(f, { quantite: 22_564 });
+    const q = compteDuLycee(f, { quantite: 22_609 });
     expect(q.ligne("composants")).toBe(520_598 - 22_000);
     expect(q.ligne("emballage")).toBe(377_744 - 16_000);
     expect(q.resultatDActivite).toBe(c(100_162.89 - 21_000));

@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { budgetDuTrimestre, fournisseurDe, margesDeLaGamme } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeFournisseur, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -710,16 +710,18 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
       champs: (c) => {
         const x = budgetDuPointDeVente(c);
         const r = x.finsColRond;
+        // L'autre chemin : le coût moyen pondéré gardé avec tous ses chiffres, l'arrondi à la fin.
+        const finaleSansArrondi = (r.stockFinal * (r.valeurInitiale + r.achatsHt)) / (r.stockInitial + r.achats);
         return [
           {
             libelle: "Coût moyen pondéré d'un pull col rond",
             attendu: x.coutMoyen,
             calcul: `(${eur(r.valeurInitiale)} + ${qte(r.achats)} × ${eur(r.coutDAchat)}) ÷ (${qte(r.stockInitial)} + ${qte(r.achats)}) = ${eur(r.valeurInitiale + r.achatsHt)} ÷ ${qte(r.stockInitial + r.achats)} = ${eur(x.coutMoyen)}`,
           },
-          { libelle: "Valeur du stock de pulls col rond au 31 mars", attendu: r.valeurFinale, calcul: `${qte(r.stockFinal)} × ${eur(x.coutMoyen)} = ${eur(r.valeurFinale)}` },
+          { libelle: "Valeur du stock de pulls col rond au 31 mars", ...deuxChemins(r.valeurFinale, finaleSansArrondi), calcul: `${qte(r.stockFinal)} × ${eur(x.coutMoyen)} = ${eur(r.valeurFinale)}` },
           {
             libelle: "Coût d'achat des pulls col rond vendus",
-            attendu: r.coutDAchatDesVendues,
+            ...deuxChemins(r.coutDAchatDesVendues, r.valeurInitiale + r.achatsHt - finaleSansArrondi),
             calcul: `${eur(r.valeurInitiale)} + ${eur(r.achatsHt)} − ${eur(r.valeurFinale)} = ${eur(r.coutDAchatDesVendues)}`,
           },
         ];

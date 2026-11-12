@@ -1,4 +1,4 @@
-import { arrondi2, arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2, arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { masseSalariale } from "../../chapitres/effectif-et-masse-salariale";
 import { ENTREPRISES_DES_RESSOURCES_HUMAINES } from "../../monde/ressources-humaines-de-nova";
@@ -51,6 +51,9 @@ export function augmentationGenerale(c: Cas) {
   // Garder le même taux : la masse salariale après l'augmentation ÷ le taux d'aujourd'hui, à deux
   // décimales, comme l'élève l'a écrit à la première étape (la ligne suivante part du taux arrondi).
   const ventesNecessaires = quotient2(masseApres, m.tauxDeFraisDePersonnel / 100);
+  // L'autre chemin : le taux d'aujourd'hui gardé avec tous ses chiffres (la masse ÷ les ventes) : les
+  // ventes montent alors de 3 % exactement, comme la masse (audit pédagogique du 11 novembre 2026, P1-1, P1-2).
+  const ventesNecessairesSansArrondi = (m.ventes * masseApres) / m.masse;
   return {
     m,
     masseApres,
@@ -59,6 +62,8 @@ export function augmentationGenerale(c: Cas) {
     pointsEnPlus: arrondi2(tauxApres - m.tauxDeFraisDePersonnel),
     ventesNecessaires,
     ventesEnPlus: auCentime(ventesNecessaires - m.ventes),
+    ventesNecessairesSansArrondi: auCentime(ventesNecessairesSansArrondi),
+    ventesEnPlusSansArrondi: auCentime(ventesNecessairesSansArrondi - m.ventes),
   };
 }
 
@@ -78,9 +83,9 @@ export const L_AUGMENTATION_GENERALE: Situation = {
     "Calculer les ventes qui gardent le même taux de frais de personnel",
     "Répondre à la direction, chiffre à l'appui",
   ],
-  // Libre comme le chapitre qu'il reprend, le premier du parcours du BTS SAM (décision du
-  // propriétaire, novembre 2026 : « avec son cas pratique » ; config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: {
     codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
     pourquoi: "le cas reprend la masse salariale du premier exercice de NOVA, celle du chapitre.",
@@ -164,14 +169,18 @@ export const L_AUGMENTATION_GENERALE: Situation = {
       champs: (c) => {
         const r = augmentationGenerale(c);
         return [
-          { libelle: "Ventes nécessaires", attendu: r.ventesNecessaires, calcul: `${eur(r.masseApres)} ÷ ${pct(r.m.tauxDeFraisDePersonnel)} = ${eur(r.ventesNecessaires)}` },
-          { libelle: "Ventes en plus", attendu: r.ventesEnPlus, calcul: `${eur(r.ventesNecessaires)} − ${eur(r.m.ventes)} = ${eur(r.ventesEnPlus)}` },
+          { libelle: "Ventes nécessaires", ...deuxChemins(r.ventesNecessaires, r.ventesNecessairesSansArrondi), calcul: `${eur(r.masseApres)} ÷ ${pct(r.m.tauxDeFraisDePersonnel)} = ${eur(r.ventesNecessaires)}` },
+          { libelle: "Ventes en plus", ...deuxChemins(r.ventesEnPlus, r.ventesEnPlusSansArrondi), calcul: `${eur(r.ventesNecessaires)} − ${eur(r.m.ventes)} = ${eur(r.ventesEnPlus)}` },
         ];
       },
       explication: (c) => {
         const r = augmentationGenerale(c);
+        const hausse = pct(AUGMENTATION_GENERALE * 100);
+        const arrondiDuTaux = auCentime(r.ventesEnPlus - r.ventesEnPlusSansArrondi);
         return [
-          `Pour que le personnel ne pèse pas plus lourd, les ventes ${dE(c.entreprise)} doivent monter au même rythme que les salaires : ${eur(r.ventesEnPlus)} de plus sur l'année. Une augmentation générale se finance par des ventes, ou par une meilleure productivité de l'équipe.`,
+          `Pour que le personnel ne pèse pas plus lourd, les ventes ${dE(c.entreprise)} doivent monter au même rythme que les salaires, de ${hausse}. Sur le taux gardé avec tous ses chiffres, il faut ${eur(r.m.ventes)} × ${nombreAuCentieme(1 + AUGMENTATION_GENERALE)} = ${eur(r.ventesNecessairesSansArrondi)} de ventes. C'est ${eur(r.m.ventes)} × ${hausse} = ${eur(r.ventesEnPlusSansArrondi)} de plus sur l'année.${
+            arrondiDuTaux === 0 ? "" : ` Sur le taux arrondi à ${pct(r.m.tauxDeFraisDePersonnel)}, le calcul en demande ${eur(r.ventesEnPlus)} de plus : l'arrondi du taux en ajoute ${eur(Math.abs(arrondiDuTaux))}.`
+          } Une augmentation générale se finance par des ventes, ou par une meilleure productivité de l'équipe.`,
         ];
       },
     },
@@ -187,7 +196,7 @@ export const L_AUGMENTATION_GENERALE: Situation = {
           {
             texte: `Il faudra ${eur(r.ventesEnPlus)} de ventes en plus pour garder notre taux`,
             juste: true,
-            retour: `Oui : la masse salariale passe à ${eur(r.masseApres)}. Pour qu'elle pèse toujours ${pct(t)} des ventes, il faut ${eur(r.ventesNecessaires)} de ventes, ${eur(r.ventesEnPlus)} de plus qu'aujourd'hui.`,
+            retour: `Oui : la masse salariale passe à ${eur(r.masseApres)}. Pour qu'elle pèse toujours ${pct(t)} des ventes, il faut ${eur(r.ventesNecessaires)} de ventes, ${eur(r.ventesEnPlus)} de plus qu'aujourd'hui : ${pct(AUGMENTATION_GENERALE * 100)} de plus, à l'arrondi du taux près.`,
           },
           {
             texte: `Notre taux de frais de personnel passerait de ${pct(t)} à ${pct(arrondi2(t + AUGMENTATION_GENERALE * 100))}`,
@@ -197,7 +206,7 @@ export const L_AUGMENTATION_GENERALE: Situation = {
           {
             texte: `Il suffira de ${eur(r.hausseDeLaMasse)} de ventes en plus pour garder notre taux`,
             juste: false,
-            retour: `Non : pour garder le taux, les ${eur(r.hausseDeLaMasse)} de salaires en plus ne doivent peser que ${pct(t)} des ventes en plus. Il en faut donc ${eur(r.hausseDeLaMasse)} ÷ ${pct(t)}, environ ${eur(r.ventesEnPlus)} : ${pct(AUGMENTATION_GENERALE * 100)} des ventes, comme la masse.`,
+            retour: `Non : pour garder le taux, les ${eur(r.hausseDeLaMasse)} de salaires en plus ne doivent peser que ${pct(t)} des ventes en plus. Les ventes doivent donc monter de ${pct(AUGMENTATION_GENERALE * 100)}, comme la masse : ${eur(r.ventesEnPlusSansArrondi)} sur le taux exact, ${eur(r.ventesEnPlus)} sur le taux arrondi.`,
           },
           {
             texte: "Rien ne change pour notre taux tant que l'effectif ne bouge pas",

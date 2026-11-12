@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CABINETS_DU_COURS, type CodeDIndicateurCommercial, type CodeDeCommercial, type FicheDuCabinet, type Trimestre } from "../monde/atlas-conseil";
 import {
@@ -569,7 +569,8 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
           },
           {
             libelle: `Seuil de rentabilité de ${k.k.prenom}, par trimestre`,
-            attendu: k.s.seuil,
+            // L'autre chemin : le taux de marge gardé avec tous ses chiffres, l'arrondi à la fin.
+            ...deuxChemins(k.s.seuil, ((k.k.salaireCharge + k.k.frais) * k.comptes.chiffreDAffaires) / k.comptes.marge),
             calcul: `(${eur(k.k.salaireCharge)} + ${eur(k.k.frais)}) ÷ ${pct(enPct(k.s.tauxDeMarge))} = ${eur(k.s.seuil)}, sur le taux arrondi à deux décimales`,
           },
         ];
