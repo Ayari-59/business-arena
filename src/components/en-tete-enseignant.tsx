@@ -5,6 +5,7 @@ import {
   type Pastille,
 } from "@/config/navigation";
 import { PastillesDeNavigation } from "@/components/pastilles-de-navigation";
+import { BoutonDeDeconnexion } from "@/components/bouton-de-deconnexion";
 
 /**
  * L'EN-TÊTE DE L'ESPACE ENSEIGNANT, écrit une fois.
@@ -49,7 +50,7 @@ export function EnTeteEnseignant({
   liens?: { etablissement?: boolean; administration?: boolean };
   /** Pastilles et frise à droite du titre. */
   droite?: React.ReactNode;
-  /** Les gestes de compte (déconnexion), sous la navigation. */
+  /** Un geste de compte au bout de la rangée, avant « Déconnexion » (« Mon compte », sur l'accueil). */
   compte?: React.ReactNode;
 }) {
   return (
@@ -72,12 +73,22 @@ export function EnTeteEnseignant({
   );
 }
 
+/** Un geste de compte au bout de la rangée : l'encre grise de « Mon compte », et 44 px au doigt comme les pastilles. */
+const GESTE_DE_COMPTE =
+  "text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center";
+
 /**
  * La navigation de l'espace, seule : la rangée de pastilles, la page courante
  * mise en avant, et à droite les sorties vers l'établissement (pour qui
  * l'administre) et vers l'administration générale (pour le propriétaire). Une
  * page qui pose l'en-tête commun des pages intérieures (« Mes parties ») la
  * place sous son chapeau ; les autres la reçoivent avec l'en-tête enseignant.
+ *
+ * « DÉCONNEXION » FERME LA RANGÉE, SUR CHAQUE PAGE DE L'ESPACE (le
+ * propriétaire, novembre 2026 : « Il me faut un bouton déconnexion quand je
+ * suis connecté »). Elle n'était qu'au bout de la rangée de l'accueil, avec
+ * « Se déconnecter partout », qui vit maintenant dans « Mon compte ». C'est un
+ * geste de compte, pas une page : ni pastille ni lien, un bouton.
  */
 export function NavigationEnseignant({
   actif,
@@ -103,7 +114,12 @@ export function NavigationEnseignant({
         pastilles={NAVIGATION_ENSEIGNANT}
         actif={actif}
         droite={droite}
-        fin={compte}
+        fin={
+          <>
+            {compte}
+            <BoutonDeDeconnexion className={GESTE_DE_COMPTE} />
+          </>
+        }
         className={className}
       />
       {aide ? (

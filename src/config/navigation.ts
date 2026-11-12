@@ -472,6 +472,16 @@ export const LIEN_ADMINISTRATION: Pastille = { code: "administration", href: "/a
 export const LIEN_ESPACE_ENSEIGNANT: Pastille = { code: "parties", href: "/teacher", libelle: "Espace enseignant" };
 
 /**
+ * LA DÉCONNEXION, AU BOUT DE LA RANGÉE DE L'ESPACE ENSEIGNANT (le propriétaire, novembre 2026 :
+ * « Il me faut un bouton déconnexion quand je suis connecté »). Un mot, après les sorties vers
+ * l'établissement et l'administration, sur chaque page de l'espace ; le même mot prend la place de
+ * « Connexion » dans la barre du site, une fois connecté. Ce n'est pas une pastille mais un bouton
+ * (components/bouton-de-deconnexion.tsx) : une déconnexion part d'un geste, jamais d'un lien qu'on
+ * suit ou qu'on précharge. « Se déconnecter partout » est dans la page « Mon compte ».
+ */
+export const LIBELLE_DECONNEXION = "Déconnexion";
+
+/**
  * L'ADMINISTRATION GÉNÉRALE, dans l'ordre d'usage : les inscrits et les offres
  * tous les jours, les cohortes souvent, Moodle et RENATER à l'arrivée d'un
  * établissement, le thème une fois. « Plateforme » est la page d'accueil de

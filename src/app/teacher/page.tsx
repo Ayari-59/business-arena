@@ -34,13 +34,7 @@ import { LigneDEtatDeLOffre } from "@/components/etat-de-l-offre";
 import { AccueilDeLaDecouverte } from "@/components/accueil-de-la-decouverte";
 import { lireLEssai } from "@/services/catalogue.service";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
-import {
-  archiverPartieAction,
-  createClassGameAction,
-  desarchiverPartieAction,
-  logoutAction,
-  logoutEverywhereAction,
-} from "./actions";
+import { archiverPartieAction, createClassGameAction, desarchiverPartieAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { compter, jourDeCreation } from "@/lib/format";
 import {
@@ -62,7 +56,6 @@ import { listScenariosByAuthor } from "@/services/scenario-editor.service";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { CompetitionCreateForm } from "@/components/competition-create-form";
 import { GuardedForm } from "@/components/guarded-action";
-import { FormulaireDeDeconnexion } from "@/components/formulaire-de-deconnexion";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
 import { FormPendingProgress } from "@/components/long-action-progress";
@@ -173,28 +166,15 @@ async function TeacherDashboard({
           className="mt-6"
           actif="parties"
           liens={{ etablissement: isOrgAdmin, administration: staff?.isPlatformAdmin ?? false }}
+          // La déconnexion ferme la rangée de chaque page de l'espace, et celle de tous les
+          // appareils est dans « Mon compte » (novembre 2026).
           compte={
-            <>
-              <Link
-                href="/teacher/compte"
-                className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
-              >
-                Mon compte
-              </Link>
-              <FormulaireDeDeconnexion action={logoutAction}>
-                <button className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-                  Se déconnecter
-                </button>
-              </FormulaireDeDeconnexion>
-              <FormulaireDeDeconnexion action={logoutEverywhereAction}>
-                <button
-                  className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
-                  title="Ferme aussi les sessions ouvertes sur d'autres appareils"
-                >
-                  Se déconnecter partout
-                </button>
-              </FormulaireDeDeconnexion>
-            </>
+            <Link
+              href="/teacher/compte"
+              className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
+            >
+              Mon compte
+            </Link>
           }
         />
       </EnTeteDePage>

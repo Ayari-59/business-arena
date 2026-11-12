@@ -69,6 +69,7 @@ import { COULEUR_DU_PAPIER } from "@/config/themes";
 import { paletteDuSite } from "@/config/theme-du-site";
 import { feuilleDePalette } from "@/config/palettes";
 import { getPlatformConfig } from "@/services/admin.service";
+import { estConnecte } from "@/lib/session";
 import { SITE_URL } from "@/config/site";
 import { SCRIPT_DU_SITE } from "@/config/security-headers";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, OPEN_GRAPH_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
@@ -121,7 +122,15 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const { theme } = await getPlatformConfig();
+  // LA BARRE SAIT SI L'ON EST CONNECTÉ, ET RIEN DE PLUS (novembre 2026) : elle
+  // dit alors « Déconnexion » à la place de « Connexion ». Le cookie de session
+  // ne se lit qu'au serveur ; la barre n'en reçoit qu'un booléen.
+  //
+  // Lire un cookie rend la page à la demande. Toutes les pages sous cette mise
+  // en page l'étaient déjà (la page introuvable, que chacune porte, appelle
+  // `connection()` : not-found.tsx) : cette lecture n'en change aucune, mais
+  // elle les y tiendrait le jour où celle-là partirait.
+  const [{ theme }, connecte] = await Promise.all([getPlatformConfig(), estConnecte()]);
   // La palette d'accent se pose par une feuille de style, vide pour celle
   // d'origine : le site d'usine ne reçoit alors pas un octet de plus.
   const feuille = feuilleDePalette(paletteDuSite(theme));
@@ -145,7 +154,7 @@ export default async function RootLayout({
         >
           Aller au contenu
         </a>
-        <SiteHeader />
+        <SiteHeader connecte={connecte} />
         {children}
         {/* Invite d'installation, sur mobile uniquement (fermable, mémorisée). */}
         <InstallPrompt />

@@ -25,6 +25,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: () => undefined, replace: () => undefined, refresh: () => undefined, prefetch: () => undefined }),
   useSearchParams: () => new URLSearchParams(),
 }));
+// La barre importe l'action de déconnexion (novembre 2026) : remplacée ici, sans la base.
+vi.mock("@/app/teacher/actions", () => ({ logoutAction: async () => undefined }));
 
 async function rendre(nom: string, module: string, sous: string): Promise<string> {
   chemin = sous;
