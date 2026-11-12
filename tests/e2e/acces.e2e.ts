@@ -108,7 +108,8 @@ describe("/jouer sans licence", () => {
       page.locator("[role=status]", { hasText: "offres Classe, Programme et Campus" }),
     );
     await statut.first().waitFor({ state: "visible" });
-    expect(await statut.first().getByRole("link", { name: /tarifs/ }).getAttribute("href")).toBe(
+    // « voyez les offres » : aucun prix ne s'affiche ici (audit de l'offre du 11 novembre 2026, P2-9).
+    expect(await statut.first().getByRole("link", { name: "voyez les offres" }).getAttribute("href")).toBe(
       "/tarifs",
     );
     await c.close();
@@ -118,6 +119,10 @@ describe("/jouer sans licence", () => {
     const c = await contexte();
     const page = await c.newPage();
     await aller(page, "/jouer");
+    // La page s'ouvre au niveau 1, comme elle le conseille (audit UX du 29 octobre 2026, P1-8,
+    // ec53396) : le niveau 3, le plus haut sans licence, se choisit.
+    expect(await page.locator("input[name=level]").inputValue()).toBe("1");
+    await page.getByRole("button", { name: /^Niveau 3/ }).click();
     expect(await page.locator("input[name=level]").inputValue()).toBe("3");
     await page.getByRole("button", { name: "Lancer la partie" }).click();
     await page.waitForURL(/\/arena\/|trop=1/, { timeout: 60_000 });
@@ -169,13 +174,22 @@ describe("la partie d'un enseignant sans licence", () => {
     expect(await message.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe(
       "/tarifs",
     );
-    // Un formulaire forgé : le serveur refuse, l'enseignant lit pourquoi, et où.
+    // Sans offre, le formulaire est grisé AVANT la saisie (audit UX du 29 octobre 2026, P0-1,
+    // ec53396) : ni le niveau ni l'envoi ne se choisissent.
+    const formulaire = page.locator("#nouvelle-partie fieldset[data-formulaire-sans-offre]");
+    expect(await formulaire.count()).toBe(1);
+    expect(await page.locator('select[name="level"]').isDisabled()).toBe(true);
+    const creer = page.getByRole("button", { name: /Créer la partie/ });
+    expect(await creer.isDisabled()).toBe(true);
+    // Un formulaire forgé, dégrisé à la main et le niveau 5 rouvert : le serveur refuse,
+    // l'enseignant lit pourquoi, et où.
+    await formulaire.evaluate((f) => f.removeAttribute("disabled"));
     await page.evaluate(() => {
       const o = document.querySelector('select[name="level"] option[value="5"]') as HTMLOptionElement;
       o.disabled = false;
     });
     await page.selectOption('select[name="level"]', "5");
-    await page.getByRole("button", { name: /Créer la partie/ }).click();
+    await creer.click();
     await page.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
     const alerte = page.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
     expect(await alerte.innerText()).toContain("inclus dans les offres Classe, Programme et Campus");
@@ -257,9 +271,11 @@ describe("les épisodes sans licence", () => {
     expect(vu).toContain(NON_DEMO.titre);
     expect(vu).toContain("Épisodes manager · sur devis");
     expect(vu).toContain("Cet épisode est inclus dans l'offre Épisodes manager");
+    // Hors d'une cohorte, sans compte enseignant : le devis « pour une entreprise » (audit UX du
+    // 11 novembre 2026, P2-10 ; config/tarifs.ts, `lienDuDevisDesEpisodes`).
     expect(
       await ferme.getByRole("link", { name: "Demander un devis" }).getAttribute("href"),
-    ).toBe("/devis?offre=episodes");
+    ).toBe("/devis?offre=entreprise");
     expect(await page.getByRole("button", { name: "Commencer l'épisode" }).count()).toBe(0);
     // Les démos sont proposées à la place.
     for (const code of EPISODES_DE_DEMO) {

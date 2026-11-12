@@ -117,9 +117,16 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/components/nouvelle-classe-du-cours.tsx"],
   },
   {
+    // Le formulaire client de /teacher/cohortes (audit UX du 11 novembre 2026, P2-6), et la liste des
+    // épisodes que la page serveur lui passe.
     nom: "création d'une cohorte (enseignant)",
     action: { file: "src/app/teacher/cohortes/actions.ts", fn: "creerCohorteAction" },
-    sources: ["src/app/teacher/cohortes/page.tsx", "src/components/choix-des-episodes.tsx"],
+    sources: ["src/components/nouvelle-cohorte.tsx", "src/components/choix-des-episodes.tsx"],
+  },
+  {
+    nom: "demande d'adresse d'inscription LTI (/integration)",
+    action: { file: "src/app/integration/actions.ts", fn: "demanderLAdresseDInscriptionAction" },
+    sources: ["src/components/demande-d-adresse-d-inscription.tsx"],
   },
   {
     nom: "nom d'une cohorte (enseignant)",

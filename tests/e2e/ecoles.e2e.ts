@@ -3,6 +3,7 @@ import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur, texte } from "./helpers/browser";
 import { SUR_MESURE } from "../../src/config/sur-mesure";
 import { LIBELLE_DU_DEVIS } from "../../src/config/tarifs";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * LES SITUATIONS SUR MESURE, LÀ OÙ ELLES SE MENTIONNENT : un paragraphe sur la
@@ -28,8 +29,9 @@ describe("le paragraphe sur mesure", () => {
       const paragraphe = page.locator("[data-sur-mesure-paragraphe]");
       expect(await paragraphe.count()).toBe(1);
       const vu = await paragraphe.innerText();
-      expect(vu).toContain(SUR_MESURE.titre);
-      expect(vu).toContain(SUR_MESURE.promesse);
+      // Le texte tel que la typographie le pose au rendu (898c238) : insécable avant « : ».
+      expect(vu).toContain(insecables(SUR_MESURE.titre));
+      expect(vu).toContain(insecables(SUR_MESURE.promesse));
       expect(vu).toContain(SUR_MESURE.appel.rendezVous.libelle);
       expect(vu).toContain(LIBELLE_DU_DEVIS);
       expect(await paragraphe.locator(`a[href="${SUR_MESURE.appel.devis.href}"]`).count()).toBe(1);

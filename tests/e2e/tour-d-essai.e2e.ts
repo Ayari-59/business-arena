@@ -3,6 +3,7 @@ import { Client } from "pg";
 import { devices, type Browser, type Page } from "playwright-core";
 import { aller, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * LE TOUR D'ESSAI, DANS UN VRAI NAVIGATEUR, SUR LE BUILD DE PRODUCTION.
@@ -53,7 +54,7 @@ async function rejoindre(p: Page, pseudo: string): Promise<string> {
   await aller(p, "/join");
   await p.fill('input[name="code"]', code);
   await p.fill('input[name="pseudo"]', pseudo);
-  await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+  await p.getByRole("button", { name: "Valider", exact: true }).click();
   await p.waitForURL(/\/arena\//, { timeout: 60_000 });
   return p.url().split("?")[0]!.split("#")[0]!;
 }
@@ -80,7 +81,10 @@ describe("le tour d'essai, de la création à la vraie partie", () => {
       await prof.locator("#nouvelle-partie > summary").click();
     }
     const choix = prof.locator("[data-tour-d-essai-choix]");
-    expect(await choix.innerText()).toContain("Les équipes s'entraînent ; rien ne compte ; la partie repart ensuite de zéro.");
+    // Le texte tel que la typographie le pose au rendu (898c238) : insécable avant « ; ».
+    expect(await choix.innerText()).toContain(
+      insecables("Les équipes s'entraînent ; rien ne compte ; la partie repart ensuite de zéro."),
+    );
     // « Aucun » reste le défaut.
     expect(await prof.locator('input[name="toursDEssai"][value=""]').isChecked()).toBe(true);
     await prof.selectOption('select[name="humanTeamsCount"]', "2");

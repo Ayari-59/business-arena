@@ -3,6 +3,7 @@ import { devices, type Browser, type BrowserContext, type Page } from "playwrigh
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * DU BILAN AU PROFIL, DANS UN VRAI NAVIGATEUR.
@@ -93,12 +94,14 @@ describe("le profil décisionnel", () => {
     await expect.poll(() => robustesse.innerText()).toMatch(/\d de vos 6 choix tiennent/);
     expect(await robustesse.innerText()).toMatch(/sur 30 tirages au hasard/);
     const observe = section(page, "Ce que cet épisode a observé");
-    expect(await observe.innerText()).toMatch(/Diagnostiquer la cause :/);
+    // Les textes tels que la typographie les pose au rendu (898c238) : insécable avant « : »
+    // et à l'intérieur des guillemets.
+    expect(await observe.innerText()).toMatch(/Diagnostiquer la cause\u00a0:/);
 
     await suiteRecue(page);
     const ensuite = section(page, "Ensuite");
     expect(await ensuite.getByRole("link").count()).toBeGreaterThanOrEqual(1);
-    expect(await ensuite.innerText()).toMatch(/Famille « .+ »/);
+    expect(await ensuite.innerText()).toMatch(/Famille «\u00a0.+\u00a0»/);
     expect(await ensuite.innerText()).toContain("s'ouvre après deux épisodes");
     expect(await page.locator("main").innerText()).not.toMatch(/undefined|NaN/);
     expect(erreurs).toEqual([]);
@@ -143,7 +146,9 @@ describe("le profil décisionnel", () => {
     expect(await page.locator("main").innerText()).not.toMatch(/undefined|NaN/);
 
     // Choisir soi-même la compétence à travailler : les épisodes proposés la suivent.
-    expect(await page.getByText(/Niveau conseillé : (Standard|Expert|Démonstration)\./).count()).toBe(
+    // Les textes tels que la typographie les pose au rendu (898c238) : insécable avant « : »
+    // et à l'intérieur des guillemets.
+    expect(await page.getByText(/Niveau conseillé\u00a0: (Standard|Expert|Démonstration)\./).count()).toBe(
       1,
     );
     await page
@@ -157,11 +162,11 @@ describe("le profil décisionnel", () => {
       .toBe(1);
     const suite = section(page, "Prochain épisode");
     expect(await suite.innerText()).toContain(
-      "Vous avez choisi de travailler « Engager les personnes »",
+      insecables("Vous avez choisi de travailler « Engager les personnes »"),
     );
     const raisons = await suite.locator("li p").allTextContents();
     expect(raisons.length).toBeGreaterThan(0);
-    for (const r of raisons) expect(r).toContain("« Engager les personnes »");
+    for (const r of raisons) expect(r).toContain(insecables("« Engager les personnes »"));
     const lien = await suite.locator("li a").first().getAttribute("href");
     expect(lien).toMatch(/\?niveau=(standard|expert|decouverte)$/);
 

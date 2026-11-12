@@ -20,6 +20,7 @@ const PAGES = [
   "notions/page.tsx",
   "parcours/page.tsx",
   "ecoles/page.tsx",
+  "lycees/page.tsx",
   "enseignants/page.tsx",
   "entreprises/page.tsx",
   "fonctionnalites/page.tsx",

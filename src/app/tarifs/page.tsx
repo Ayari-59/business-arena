@@ -4,6 +4,7 @@ import { PageDesTarifs } from "@/components/page-des-tarifs";
 import { descriptionDesTarifs, variablesDuCatalogue } from "@/config/tarifs";
 import { vueDesTarifs } from "@/config/catalogue";
 import { bandeauDeLaPromotion, lireLEtatDuCatalogue } from "@/services/catalogue.service";
+import { getPlatformConfig } from "@/services/admin.service";
 
 /**
  * LES OFFRES (ET LEURS TARIFS, SI L'ADMIN LES AFFICHE), LUES AU CATALOGUE (/admin/offres).
@@ -41,14 +42,21 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function TarifsPage() {
-  const { catalogue, decouverte, essai, affichage } = await lireLEtatDuCatalogue();
+  const [{ catalogue, decouverte, essai, affichage }, { allowSelfServiceTeachers }] = await Promise.all([
+    lireLEtatDuCatalogue(),
+    getPlatformConfig(),
+  ]);
   const prix = affichage.prixPublics;
+  // L'ESSAI AVEC UN GROUPE suit aussi l'inscription libre des enseignants (config/tarifs.ts,
+  // `reponseSurLEssai`) : « créez votre compte » n'est vrai que si elle est ouverte. Une panne de
+  // lecture la dit fermée (services/admin.service.ts) : la réponse ne promet alors rien.
   return (
     <PageDesTarifs
       vue={vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix })}
       bandeau={await bandeauDeLaPromotion()}
       prixPublics={prix}
       essai={essai}
+      inscriptionLibre={allowSelfServiceTeachers}
     />
   );
 }

@@ -14,6 +14,7 @@ import {
 import type { ColonneDEpisodes, VueDesTarifs } from "@/config/catalogue";
 import { VENDEUR } from "@/config/editeur";
 import { LIEN_CONTACT } from "@/config/navigation";
+import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 
 /**
  * LA PAGE DES TARIFS, RENDUE D'UN CATALOGUE (app/tarifs/page.tsx la remplit avec le
@@ -32,10 +33,13 @@ export function PageDesTarifs({
   bandeau,
   prixPublics,
   essai = { autorise: false, dureeMaxJours: 0 },
+  inscriptionLibre = true,
 }: {
   vue: VueDesTarifs;
   /** Le réglage de l'essai d'établissement (/admin/offres) : la question de l'essai le suit. */
   essai?: { autorise: boolean; dureeMaxJours: number };
+  /** L'inscription libre des enseignants (/admin) : fermée, le cours ne s'essaie plus seul. */
+  inscriptionLibre?: boolean;
   bandeau: string | null;
   /**
    * Les prix de référence se lisent-ils ? (réglage de /admin/offres, éteint par défaut :
@@ -138,6 +142,12 @@ export function PageDesTarifs({
                 </h2>
                 <p className="text-lg font-semibold text-slate-200">{vue.episodes.tarif}</p>
               </div>
+              {/* LE PUBLIC DES ÉPISODES, EN TÊTE (audit de l'offre du 11 novembre 2026, P2-5) : la page
+                  disait « en classe » sans dire que les épisodes ne s'annoncent pas au lycée
+                  (config/episodes/public-des-episodes.ts). */}
+              <p data-public-des-episodes="" className="mt-2 max-w-3xl text-base font-semibold leading-relaxed text-slate-200">
+                {PUBLIC_DES_EPISODES}
+              </p>
               <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
                 Des trimestres joués dans la peau d&apos;un manager : en MBA, en cours de
                 leadership, en formation continue (Executive Education), en classe ou en
@@ -213,7 +223,7 @@ export function PageDesTarifs({
             Les questions qu&apos;on nous pose
           </h2>
           <dl className="mt-5 grid gap-x-10 md:grid-cols-2">
-            {questionsDesTarifs(essai).map((x) => (
+            {questionsDesTarifs(essai, inscriptionLibre).map((x) => (
               <div key={x.q} className="border-t border-white/10 py-4">
                 <dt className="titre-carte text-slate-100">{x.q}</dt>
                 <dd className="mt-1 text-base leading-relaxed text-slate-400">{x.r}</dd>

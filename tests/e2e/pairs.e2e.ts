@@ -3,6 +3,7 @@ import { devices, type Browser, type BrowserContext, type Page } from "playwrigh
 import { aller, BASE, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { mesurerContraste } from "./helpers/contraste";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * L'ÉVALUATION ENTRE COÉQUIPIERS, DANS UN VRAI NAVIGATEUR, SUR LE BUILD DE PRODUCTION.
@@ -127,7 +128,7 @@ describe("l'évaluation entre coéquipiers", () => {
       await aller(p, "/join");
       await p.fill('input[name="code"]', code);
       await p.fill('input[name="pseudo"]', nom);
-      await p.getByRole("button", { name: "Rejoindre la partie" }).click();
+      await p.getByRole("button", { name: "Valider", exact: true }).click();
       await p.waitForURL(/\/arena\/[0-9a-f-]{36}/, { timeout: 60_000 });
       await p.waitForLoadState("networkidle");
       expect(await p.locator("[data-carte-coequipiers]").count()).toBe(0);
@@ -164,12 +165,16 @@ describe("l'évaluation entre coéquipiers", () => {
       expect(await pleinsVisibles(p)).toEqual(["Envoyer mon évaluation"]);
       expect(await debordement(p)).toBeLessThanOrEqual(0);
       if (nom !== "Bruno") await sansTexteIllisible(p);
-      // Un bloc par coéquipier, et « Et vous ? » pour l'auto-évaluation.
+      // Un bloc par coéquipier, et « Et vous ? » pour l'auto-évaluation. Le bloc porte son titre
+      // tel que la typographie le pose au rendu (898c238) : « Et vous ? » avec son insécable.
       const blocs = p.locator("[data-coequipier]");
       expect(await blocs.count()).toBe(3);
       for (const [cible, note] of Object.entries(PLAN[nom]!)) {
-        const bloc = p.locator(`[data-coequipier="${cible === "moi" ? "Et vous ?" : cible}"]`);
+        const bloc = p.locator(`[data-coequipier="${cible === "moi" ? insecables("Et vous ?") : cible}"]`);
         const criteres = bloc.locator("fieldset[data-critere]");
+        // Un bloc introuvable ne passe plus en silence : l'envoi resterait bloqué sur ses cases
+        // obligatoires, et le test n'échouerait qu'à l'adresse, 30 s plus tard.
+        expect(await criteres.count(), `les critères de ${cible}`).toBeGreaterThan(0);
         for (let i = 0; i < (await criteres.count()); i++) {
           await criteres.nth(i).locator(`input[type="radio"][value="${note}"]`).check();
         }

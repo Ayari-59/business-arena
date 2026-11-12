@@ -28,3 +28,18 @@ export const TRIBUNAL_COMPETENT = `les tribunaux du ressort de ${VENDEUR.adresse
 
 /** La version des conditions, affichée au bas des pages. */
 export const VERSION_DES_CONDITIONS = "novembre 2026";
+
+/**
+ * LES DÉLAIS APRÈS LE DEVIS (décision du propriétaire, 11 novembre 2026 ; audit de l'offre du même
+ * jour, P2-1 : ni l'écran de confirmation, ni l'accusé, ni les CGV ne disaient quand la réponse vient,
+ * ni quand la licence s'ouvre). En jours ouvrés. La phrase se dit à l'écran de confirmation du devis
+ * (components/devis-form.tsx), dans l'accusé de réception (services/devis.service.ts) et dans les CGV.
+ */
+export const REPONSE_AU_DEVIS_JOURS_OUVRES = 2;
+export const OUVERTURE_DE_LA_LICENCE_JOURS_OUVRES = 2;
+
+/** « 2 jours ouvrés », « 1 jour ouvré ». */
+const joursOuvres = (n: number) => (n > 1 ? `${n} jours ouvrés` : `${n} jour ouvré`);
+
+/** « Réponse sous 2 jours ouvrés ; licence ouverte sous 2 jours ouvrés après la commande. » */
+export const DELAIS_APRES_LE_DEVIS = `Réponse sous ${joursOuvres(REPONSE_AU_DEVIS_JOURS_OUVRES)} ; licence ouverte sous ${joursOuvres(OUVERTURE_DE_LA_LICENCE_JOURS_OUVRES)} après la commande.`;

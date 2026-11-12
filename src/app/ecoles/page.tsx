@@ -33,6 +33,7 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { ParagrapheSurMesure } from "@/components/encart-sur-mesure";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
+import { PARCOURS_EN_COHORTE, SEMAINES_DU_PARCOURS, TEMPS_DU_PARCOURS } from "@/config/episodes/parcours-en-cohorte";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/ecoles" },
@@ -104,34 +105,6 @@ const PREUVES = [
   },
 ];
 
-/** Un parcours en cohorte, tel que le guide d'animation le déroule. */
-const PARCOURS = [
-  {
-    quand: "Semaine 1",
-    quoi: "Le lancement",
-    texte:
-      "Une heure et demie : chacun rejoint la cohorte par un code, et joue l'épisode d'entrée.",
-  },
-  {
-    quand: "Semaines 2 à 7",
-    quoi: "Un épisode par semaine",
-    texte:
-      "En autonomie, choisi d'après son propre bilan. Vingt minutes, sur ordinateur ou téléphone.",
-  },
-  {
-    quand: "Toutes les deux semaines",
-    quoi: "Un débrief d'une heure",
-    texte:
-      "Tout le groupe a joué le même trimestre sous les mêmes aléas : on discute des deux décisions qui l'ont le plus partagé.",
-  },
-  {
-    quand: "Semaine 8",
-    quoi: "La clôture",
-    texte:
-      "Un dernier épisode, puis chacun lit son profil, qui compare ses premiers épisodes aux plus récents, et choisit une compétence à travailler.",
-  },
-];
-
 const QUESTIONS = [
   {
     q: "Les épisodes existent-ils en anglais ?",
@@ -143,7 +116,9 @@ const QUESTIONS = [
   },
   {
     q: "Quelles données sont collectées ?",
-    r: "Aucun compte étudiant, aucune adresse : un code de cohorte et un pseudonyme. Les données sont hébergées dans l'Union européenne.",
+    // L'examen garde le nom et le numéro d'étudiant (db/schema/examens.ts), comme les CGV le disent
+    // (audit de l'offre du 11 novembre 2026, P2-4 : la réponse ne le disait pas, sur la page qui le vend).
+    r: "Aucun compte étudiant, aucune adresse : un code de cohorte et un pseudonyme. L'examen individuel garde le nom et le numéro d'étudiant du candidat. Les données sont hébergées dans l'Union européenne.",
   },
   {
     q: "Combien de temps pour l'enseignant ?",
@@ -153,6 +128,10 @@ const QUESTIONS = [
     r: `Une partie ou une cohorte se crée en quelques minutes ; chaque épisode a son guide de débrief, avec la décision qui fait débattre : les ${FICHES.length} fiches se lisent librement sur la page Épisodes en classe.`,
   },
 ];
+
+/** Les deux devis de la page, chacun sous son nom : les épisodes, et l'arène (Campus, ou Programme dans la liste). */
+const DEVIS_DES_EPISODES = "Devis des épisodes manager";
+const DEVIS_DE_L_ARENE = `Devis ${OFFRES.campus.nom} ou ${OFFRES.programme.nom}`;
 
 async function EcolesPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
@@ -196,8 +175,13 @@ async function EcolesPage() {
           preuve={{ valeur: `${EPISODES.length}`, libelle: "épisodes manager" }}
           actions={
             <>
+              {/* DEUX DEVIS, CHACUN SOUS SON NOM (audit du 11 novembre 2026, offre P1-3 et UX P2-10) : le
+                  bouton de tête menait au seul devis des épisodes ; l'arène se demande à côté. */}
               <Link href={lienDuDevis("episodes")} className={bouton({ taille: "l" })}>
-                {LIBELLE_DU_DEVIS}
+                {DEVIS_DES_EPISODES}
+              </Link>
+              <Link href={lienDuDevis("campus")} className={PORTE_SECONDAIRE}>
+                {DEVIS_DE_L_ARENE}
               </Link>
               <Link href="/entreprises/episode" className={PORTE_SECONDAIRE}>
                 Jouer un épisode
@@ -311,7 +295,7 @@ async function EcolesPage() {
             </ul>
             <p className="mt-6 text-sm text-slate-400">
               <Link href="/tarifs" className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
-                Toutes les offres et les tarifs →
+                Toutes les offres →
               </Link>
             </p>
             {/* LES SITUATIONS SUR MESURE, en un paragraphe : le texte de
@@ -328,8 +312,11 @@ async function EcolesPage() {
         >
           <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
             <div>
+              {/* L'accréditation est celle de l'école (audit de l'offre du 11 novembre 2026, P2-9) : le
+                  surtitre « AACSB, EQUIS, Qualiopi » se lisait comme des certifications de Business Arena,
+                  qui n'en a aucune. */}
               <p className="text-xs uppercase tracking-surtitre text-amber-300">
-                AACSB, EQUIS, Qualiopi
+                Pour l&apos;accréditation de votre école
               </p>
               <h2
                 id="accreditation"
@@ -434,15 +421,16 @@ async function EcolesPage() {
           interieur="mx-auto max-w-6xl px-6"
           labelledby="parcours"
         >
+          {/* LE PARCOURS EN COHORTE, LU AU MÊME ENDROIT QUE LA PAGE DES ENTREPRISES
+              (config/episodes/parcours-en-cohorte.ts). */}
           <h2 id="parcours" className="text-center text-2xl font-bold text-slate-50">
-            Un parcours de huit semaines, en cohorte
+            Un parcours de {SEMAINES_DU_PARCOURS} semaines, en cohorte
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-base leading-relaxed text-slate-400">
-            Pour un module de master ou un programme de formation continue : environ huit heures et
-            demie par participant, dont trois en autonomie.
+            Pour un module de master ou un programme de formation continue : {TEMPS_DU_PARCOURS}.
           </p>
           <ol className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-            {PARCOURS.map((e) => (
+            {PARCOURS_EN_COHORTE.map((e) => (
               <li key={e.quand} className="border-t border-white/15 pt-4">
                 <p className="text-xs uppercase tracking-etiquette text-amber-300">{e.quand}</p>
                 <h3 className="titre-carte mt-2 text-slate-100">{e.quoi}</h3>
@@ -490,7 +478,13 @@ async function EcolesPage() {
           prix={<LigneDePrix />}
         >
           <Link href={lienDuDevis("episodes")} className={bouton({ taille: "l" })}>
-            {LIBELLE_DU_DEVIS}
+            {DEVIS_DES_EPISODES}
+          </Link>
+          <Link
+            href={lienDuDevis("campus")}
+            className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+          >
+            {DEVIS_DE_L_ARENE}
           </Link>
           <Link
             href="/rendez-vous"

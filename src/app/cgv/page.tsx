@@ -4,10 +4,12 @@ import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
+import { FicheFournisseur } from "@/components/fiche-fournisseur";
 import { VENDEUR } from "@/config/editeur";
 import { CONDITIONS, ELEVES_PAR_CLASSE, LE_COURS_PAR_OFFRE, MENTION_TVA, OFFRES, variablesDuCatalogue } from "@/config/tarifs";
 import { remplir } from "@/config/catalogue";
 import {
+  DELAIS_APRES_LE_DEVIS,
   DELAI_DE_MISE_EN_DEMEURE_JOURS,
   DISPONIBILITE_ENGAGEE_POURCENT,
   INDEMNITE_DE_RECOUVREMENT_EUROS,
@@ -33,6 +35,10 @@ export const metadata: Metadata = {
  * RIEN N'EST INVENTÉ. Les choix du propriétaire (validité du devis, pénalités, résiliation,
  * disponibilité, plafond de responsabilité, tribunal, novembre 2026) sont dans
  * config/conditions-legales.ts. Garde : tests/architecture/conditions-generales.test.ts.
+ *
+ * APRÈS LE DEVIS (décision du propriétaire, 11 novembre 2026 ; audit de l'offre du même jour, P2-1) : les
+ * délais de réponse et d'ouverture de la licence, et la fiche fournisseur, lue dans `VENDEUR`
+ * (components/fiche-fournisseur.tsx). « Offres » en surtitre : la page n'affiche aucun prix.
  */
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -50,7 +56,7 @@ function CgvPage() {
     <>
       <main id="main">
         <EnTeteDePage
-          surtitre="Offres et tarifs"
+          surtitre="Offres"
           titre="Conditions générales de vente"
           chapeau={`Ce que signe un établissement, une école ou une entreprise qui commande Business Arena à ${VENDEUR.nom}.`}
         />
@@ -115,12 +121,17 @@ function CgvPage() {
               </Link>
               . Le devis précise l&apos;offre, son paramétrage, la durée et le prix ; il est valable {VALIDITE_DU_DEVIS_JOURS} jours.
             </p>
+            <p data-delais-du-devis="">{DELAIS_APRES_LE_DEVIS}</p>
             <p>
               La commande est ferme à réception du devis signé, ou d&apos;un bon de commande qui le reprend. Un acheteur public
               peut émettre un bon de commande et payer par mandat administratif ; les factures aux entités publiques sont déposées
-              sur Chorus Pro, où le vendeur s&apos;identifie par son SIRET, {VENDEUR.siret}. La licence est ouverte après la commande ; la facture suit.
+              sur Chorus Pro, où le vendeur s&apos;identifie par son SIRET, {VENDEUR.siret}. La facture suit l&apos;ouverture de la licence.
             </p>
           </Section>
+
+          <section className="carte p-6 sm:p-8">
+            <FicheFournisseur />
+          </section>
 
           <Section title="Prix et TVA">
             <p>
