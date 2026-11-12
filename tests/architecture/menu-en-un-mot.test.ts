@@ -4,13 +4,21 @@ import { DOMParser } from "@xmldom/xmldom";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * UN MOT PAR ENTRÉE, ET LES MÊMES GROUPES DANS LA BARRE ET DANS LE MENU DÉPLIÉ.
+ * UN MOT PAR ENTRÉE, LES MÊMES GROUPES DANS LA BARRE ET LE MENU DÉPLIÉ, LA PÉDAGOGIE EN AVANT,
+ * LE LÉGAL EN PETIT.
  *
  * Le propriétaire (novembre 2026) : « un menu plus cohérent et plus simple, avec à chaque fois un
  * seul mot et pas plusieurs ». Le menu d'avant montrait 5 groupes dans la barre et 6 dans le menu
  * déplié (« Élèves » n'était que dans le menu), une précision à côté de trois titres (« lycée, BTS,
  * université ») et des entrées en phrases (« Choisir ma simulation », « Conditions générales
  * d'utilisation »), jusque dans l'espace enseignant (« Mes classes du cours »).
+ *
+ * Puis, avant la mise en ligne : « les CGV, CGU, RGPD et cie, je ne veux pas que ce soit trop
+ * voyant ; le menu horizontal m'a l'air bien ; je veux un menu qui montre la pédagogie et met en
+ * avant le produit ». Le menu déplié dit donc, sous le titre du cours, de l'arène et des épisodes,
+ * une phrase sur ce qu'on y apprend (en texte discret, jamais une entrée) ; les mentions légales,
+ * les CGV et les CGU quittent le menu déplié et les groupes du pied de page pour une seule petite
+ * ligne, tout en bas du pied de page.
  *
  * La garde lit le plan (config/navigation.ts), puis ce que la barre, le menu déplié, le pied de
  * page et l'espace enseignant RENDENT : un libellé écrit demain à la main dans un composant y est
@@ -38,6 +46,20 @@ import {
   tousLesLiens,
 } from "@/config/navigation";
 
+/** Les adresses légales : en petit, tout en bas du pied de page ; jamais dans le menu déplié. */
+const LEGALES = [
+  ["Mentions", "/mentions-legales"],
+  ["CGV", "/cgv"],
+  ["CGU", "/cgu"],
+] as const;
+
+/** Les 3 phrases que le propriétaire a validées, sous le titre de leur groupe, dans le menu déplié seulement. */
+const PHRASES: Record<string, string> = {
+  cours: "Chaque notion se pratique : vous passez l'écriture, et vous voyez ce qu'elle change dans les comptes.",
+  arene: "Vous dirigez une entreprise en équipe, et le marché répond à vos choix.",
+  episodes: "Vous décidez en manager, puis vous voyez ce que la décision a coûté.",
+};
+
 /** Un mot : une suite sans espace (« CGV », « Établissement », « Aujourd'hui » en est un). */
 const estUnMot = (texte: string) => /^\S+$/u.test(texte.trim());
 
@@ -48,11 +70,11 @@ function rendre(composant: FunctionComponent, sous = "/notions", props: Record<s
   return new DOMParser().parseFromString(`<racine>${html}</racine>`, "text/xml") as unknown as Document;
 }
 
-/** Tous les éléments d'un document, dans l'ordre. */
+/** Tous les éléments d'un document ou d'un bloc, dans l'ordre. */
 const elements = (racine: Document | Element): Element[] => Array.from(racine.getElementsByTagName("*")) as Element[];
 
 /** Le premier élément qui porte cet attribut (et cette valeur, si elle est donnée). */
-function bloc(doc: Document, attribut: string, valeur?: string): Element {
+function bloc(doc: Document | Element, attribut: string, valeur?: string): Element {
   const e = elements(doc).find((x) => x.hasAttribute(attribut) && (valeur === undefined || x.getAttribute(attribut) === valeur));
   if (!e) throw new Error(`aucun élément [${attribut}${valeur === undefined ? "" : `="${valeur}"`}] dans le rendu`);
   return e;
@@ -66,7 +88,8 @@ function texteVu(e: Node): string {
   if (el.getAttribute("aria-hidden") === "true" || el.tagName === "svg") return "";
   return Array.from(el.childNodes).map(texteVu).join("");
 }
-const propre = (s: string) => s.replace(/\s+/g, " ").trim();
+/** Espaces, insécables comprises, ramenées à une espace ordinaire. */
+const propre = (s: string) => s.replace(/[\s  ]+/g, " ").trim();
 
 /** Les commandes d'un bloc (liens et boutons), avec ce qu'elles affichent et le nom qu'elles portent. */
 function commandes(racine: Element): { vu: string; nom: string; href: string | null }[] {
@@ -126,6 +149,43 @@ describe("le menu en un mot, rangé par produit", () => {
     expect(noms, noms.join(", ")).toEqual([]);
   });
 
+  it("les 3 phrases de la pédagogie sont sous le titre du cours, de l'arène et des épisodes, dans le menu déplié seulement", () => {
+    // Dans le plan : une phrase par groupe qui fait apprendre, aucune pour les offres ni l'aide.
+    expect(NAVIGATION.map((g) => [g.code, (g as { phrase?: string }).phrase ?? null])).toEqual(
+      NAVIGATION.map((g) => [g.code, PHRASES[g.code] ?? null]),
+    );
+    // Dans le menu déplié : chaque phrase dans son groupe, après son titre et avant ses entrées,
+    // en texte (jamais un lien), discret : l'encre grise, et 14 px, la prose de second plan de
+    // l'échelle du site (une phrase ne se lit pas en 12 px : tests/architecture/echelle-typographique.test.ts).
+    const menu = bloc(rendre(SiteHeader), "id", "plan-du-site");
+    for (const [code, phrase] of Object.entries(PHRASES)) {
+      const groupe = bloc(menu, "data-groupe-du-menu", code);
+      const porteuse = elements(groupe).find((e) => propre(texteVu(e)) === phrase && e.tagName !== "a" && e.tagName !== "button");
+      expect(porteuse, `« ${code} » : la phrase manque sous le titre`).toBeDefined();
+      const classe = porteuse!.getAttribute("class") ?? "";
+      expect(classe, `« ${code} » : la phrase n'est pas discrète`).toMatch(/\btext-slate-400\b/);
+      expect(classe, `« ${code} » : la phrase n'est pas en prose de second plan`).toMatch(/\btext-sm\b/);
+      const ordre = elements(groupe);
+      const titre = ordre.findIndex((e) => e.hasAttribute("data-titre-du-groupe"));
+      const premiereEntree = ordre.findIndex((e) => e.tagName === "ul");
+      expect(titre, code).toBeLessThan(ordre.indexOf(porteuse!));
+      expect(ordre.indexOf(porteuse!), code).toBeLessThan(premiereEntree);
+    }
+    // Ni dans la barre, ni au pied de page.
+    const barre = propre(texteVu(bloc(rendre(SiteHeader), "aria-label", "Navigation principale")));
+    const pied = propre(texteVu(bloc(rendre(PiedDePage), "aria-label", "Plan du site")));
+    for (const phrase of Object.values(PHRASES)) {
+      expect(barre, "une phrase dans la barre").not.toContain(phrase);
+      expect(pied, "une phrase au pied de page").not.toContain(phrase);
+    }
+  });
+
+  it("aucun lien légal dans le menu déplié", () => {
+    const adresses = commandes(bloc(rendre(SiteHeader), "id", "plan-du-site")).map((c) => c.href);
+    const legaux = LEGALES.filter(([, href]) => adresses.includes(href)).map(([mot]) => mot);
+    expect(legaux, `des liens légaux dans le menu déplié : ${legaux.join(", ")}`).toEqual([]);
+  });
+
   it("en tête du menu déplié, rien d'autre que Rejoindre et Connexion, puis les groupes", () => {
     const menu = commandes(bloc(rendre(SiteHeader), "id", "plan-du-site"));
     const portes = liensDAcces();
@@ -146,14 +206,32 @@ describe("le menu en un mot, rangé par produit", () => {
     expect(marques).toEqual(["/entreprises/episode", "/entreprises/episode"]);
   });
 
-  it("le pied de page suit les mêmes groupes, sous les mêmes mots, sans précision", () => {
+  it("le pied de page suit les mêmes groupes, sous les mêmes mots, sans phrase ni lien légal", () => {
     const pied = bloc(rendre(PiedDePage), "aria-label", "Plan du site");
     const groupes = elements(pied).filter((e) => e.hasAttribute("data-groupe-du-pied"));
     expect(groupes.map((g) => g.getAttribute("data-groupe-du-pied"))).toEqual(NAVIGATION.map((g) => g.code));
     // Le titre d'une colonne est son premier enfant, et il ne dit que le mot du groupe.
     expect(groupes.map((g) => propre(texteVu(elements(g)[0]!)))).toEqual(NAVIGATION.map((g) => g.titre));
-    const phrases = commandes(pied).filter((c) => !estUnMot(c.vu)).map((c) => c.vu);
+    const lus = commandes(pied);
+    const phrases = lus.filter((c) => !estUnMot(c.vu)).map((c) => c.vu);
     expect(phrases, `des phrases au pied de page : ${phrases.join(" · ")}`).toEqual([]);
+    const legaux = LEGALES.filter(([, href]) => lus.some((c) => c.href === href)).map(([mot]) => mot);
+    expect(legaux, `des liens légaux dans les groupes du pied de page : ${legaux.join(", ")}`).toEqual([]);
+  });
+
+  it("la petite ligne légale est tout en bas du pied de page : Mentions · CGV · CGU", () => {
+    const doc = rendre(PiedDePage);
+    const ligne = bloc(doc, "data-ligne-legale");
+    expect(commandes(ligne).map((c) => [c.vu, c.href])).toEqual(LEGALES.map(([mot, href]) => [mot, href]));
+    // Après le plan du site, et en petit : elle ou l'un de ses parents est en `text-xs`.
+    const tous = elements(doc);
+    expect(tous.indexOf(ligne)).toBeGreaterThan(tous.indexOf(bloc(doc, "aria-label", "Plan du site")));
+    const enPetit = (e: Node | null): boolean =>
+      !!e && e.nodeType === 1 && (/\btext-xs\b/.test((e as Element).getAttribute("class") ?? "") || enPetit(e.parentNode));
+    expect(enPetit(ligne), "la ligne légale n'est pas en petit").toBe(true);
+    // Sur la page d'une condition, son mot est du texte, comme toute page courante au pied.
+    const surLesCgv = bloc(rendre(PiedDePage, "/cgv"), "data-ligne-legale");
+    expect(commandes(surLesCgv).map((c) => c.vu)).toEqual(["Mentions", "CGU"]);
   });
 
   it("le menu de l'espace enseignant tient en un mot, sorties comprises", () => {

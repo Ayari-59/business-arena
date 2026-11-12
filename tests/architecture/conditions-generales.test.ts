@@ -8,7 +8,7 @@ import {
   TRIBUNAL_COMPETENT,
   VALIDITE_DU_DEVIS_JOURS,
 } from "@/config/conditions-legales";
-import { tousLesLiens } from "@/config/navigation";
+import { LIENS_LEGAUX } from "@/config/navigation";
 
 /**
  * LES CONDITIONS GÉNÉRALES (chantier délimité approuvé par le propriétaire, novembre 2026).
@@ -47,7 +47,8 @@ describe("les conditions générales", () => {
   });
 
   it("les CGU sont au plan du site et au plan pour les moteurs, et les CGV y mènent", () => {
-    expect(tousLesLiens().some((l) => l.href === "/cgu")).toBe(true);
+    // Au plan du site : sur la petite ligne légale, en bas du pied de page de chaque page publique.
+    expect(LIENS_LEGAUX.some((l) => l.href === "/cgu")).toBe(true);
     expect(lire("src/app/sitemap.ts")).toContain('"/cgu"');
     expect(lire("src/app/cgv/page.tsx")).toContain('href="/cgu"');
   });
