@@ -48,6 +48,12 @@ export const SUR_MESURE = {
   },
   appel: {
     rendezVous: LIEN_CONTACT,
-    devis: { href: "/devis" },
+    /**
+     * LE DEVIS DU SUR-MESURE (audit de l'offre du 11 novembre 2026, P2-2 ; décision du propriétaire) :
+     * « /devis » seul préremplissait l'offre Classe, qui exige l'entreprise et le niveau de l'arène,
+     * alors qu'on demande ici une entreprise qui n'existe pas encore. Le devis de l'offre Campus ne les
+     * demande pas (tests/architecture/pages-de-l-offre.test.ts le vérifie au catalogue).
+     */
+    devis: { href: "/devis?offre=campus" },
   },
 } as const;

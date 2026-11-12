@@ -2,7 +2,7 @@
 
 import { bouton } from "@/components/bouton";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { loginAction, registerAction, type FormState } from "@/app/teacher/actions";
 import { TEXTE_DU_CONSENTEMENT } from "@/config/nouveautes";
 
@@ -34,9 +34,13 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
   );
 }
 
-/** L'erreur d'un champ précis, sinon rien (le message général reste sous le formulaire). */
+/**
+ * L'erreur d'un champ précis, sinon rien (le message général reste sous le formulaire). TOUTES D'UN
+ * COUP (audit UX du 11 novembre 2026, P2-6) : le serveur rend chaque erreur sous son champ
+ * (`erreurs`), et non plus la première seule.
+ */
 const erreurDe = (etat: FormState, nom: string): string | null =>
-  etat.error && etat.champ === nom ? etat.error : null;
+  etat.erreurs?.[nom] ?? (etat.error && etat.champ === nom ? etat.error : null);
 
 function ErrorBox({ error }: { error: string | null }) {
   if (!error) return null;
@@ -68,6 +72,13 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
     registerAction,
     initial,
   );
+  // LE FOCUS SUR LA PREMIÈRE ERREUR, comme au devis : sur téléphone, les autres se lisent en dessous.
+  const inscription = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (!registerState.champ) return;
+    const el = inscription.current?.elements.namedItem(registerState.champ);
+    if (el && "focus" in el) (el as HTMLElement).focus();
+  }, [registerState]);
 
   return (
     <div className="w-full max-w-md carte p-4 sm:p-7">
@@ -135,7 +146,7 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
           </button>
         </form>
       ) : (
-        <form action={avecLAncre(registerFormAction)} noValidate className="space-y-4">
+        <form action={avecLAncre(registerFormAction)} noValidate ref={inscription} className="space-y-4">
           {suite ? <input type="hidden" name="suite" value={suite} /> : null}
           <Input
             label="Votre nom"
@@ -151,12 +162,14 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
             autoComplete="off"
             placeholder="EX : K7M2PR9T"
             defaultValue={registerState.values?.inviteCode ?? ""}
+            erreur={erreurDe(registerState, "inviteCode")}
           />
           <Input
             label="Sinon : nom de votre établissement (il sera créé)"
             name="schoolName"
             placeholder="Lycée / IUT / École…"
             defaultValue={registerState.values?.schoolName ?? ""}
+            erreur={erreurDe(registerState, "schoolName")}
           />
           <Input
             label="Adresse électronique"

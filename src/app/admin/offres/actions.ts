@@ -38,6 +38,9 @@ const PAGES_DU_CATALOGUE = [
   "/devis",
   "/ecoles",
   "/enseignants",
+  // Les pages de l'offre qui lisent aussi le catalogue (audit du 11 novembre 2026, chantier 3).
+  "/lycees",
+  "/entreprises/offre",
   "/fonctionnalites",
   "/guide",
   "/guides",

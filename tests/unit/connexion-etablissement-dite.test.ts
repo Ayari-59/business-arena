@@ -2,7 +2,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+// La page porte le formulaire de l'adresse d'inscription (audit UX du 11 novembre 2026, P2-10), dont
+// l'action lit la base : on ne rend que l'écran.
+vi.mock("@/db", () => ({ db: {} }));
+
 import IntegrationPage from "@/app/integration/page";
 import { ConnexionEtablissement } from "@/components/connexion-etablissement";
 import { BOUTON_DE_L_ETABLISSEMENT, connexionEtablissementDite } from "@/config/connexion-etablissement";

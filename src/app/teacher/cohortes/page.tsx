@@ -20,10 +20,8 @@ import { compter, jourDeCreation } from "@/lib/format";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { ChoixDesEpisodes } from "@/components/choix-des-episodes";
-import { GuardedForm } from "@/components/guarded-action";
-import { SubmitButton } from "@/components/submit-button";
+import { NouvelleCohorte } from "@/components/nouvelle-cohorte";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
-import { creerCohorteAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Mes cohortes",
@@ -146,28 +144,12 @@ async function MesCohortesPage({
               Un nom et des épisodes, c&apos;est tout. La cohorte reçoit un code à donner à
               la classe ; {EPISODES.length} épisodes sont proposés.
             </p>
-            <GuardedForm
-              action={creerCohorteAction}
-              label="création d'une cohorte"
-              className="mt-4 grid gap-5"
-            >
-              <fieldset disabled={!licence || undefined} className="contents" data-formulaire-sans-offre={!licence ? "" : undefined}>
-              <label className="grid gap-1">
-                <span className="text-sm font-semibold text-slate-200">Nom de la cohorte</span>
-                <input
-                  name="nom"
-                  required
-                  maxLength={NOM_DE_COHORTE_MAX}
-                  placeholder="BTS MCO 2 · groupe A"
-                  className="champ w-full px-3 py-2 text-base"
-                />
-              </label>
+            {/* UN REFUS GARDE LA SAISIE (audit UX du 11 novembre 2026, P2-6) : le formulaire est client
+                (components/nouvelle-cohorte.tsx), le refus revient dans son état, avec le nom tapé et les
+                épisodes cochés. La liste des épisodes reste rendue ici, au serveur. */}
+            <NouvelleCohorte licence={licence} phrases={REFUS_DE_COHORTE} lienDesOffres={LIEN_TARIFS} nomMax={NOM_DE_COHORTE_MAX}>
               <ChoixDesEpisodes preselection={preselection} demos={demos} />
-              <SubmitButton pendingLabel="Création de la cohorte…" className={bouton()}>
-                Créer la cohorte
-              </SubmitButton>
-              </fieldset>
-            </GuardedForm>
+            </NouvelleCohorte>
           </section>
         </details>
 

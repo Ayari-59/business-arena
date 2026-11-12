@@ -10,6 +10,7 @@ import {
   renommerCohorte,
   renouvelerCodeDeCohorte,
 } from "@/services/cohortes.service";
+import type { RefusDeCohorte } from "@/config/cohortes";
 
 /**
  * LES GESTES DE L'ENSEIGNANT SUR SES COHORTES.
@@ -19,8 +20,9 @@ import {
  * action appelée avec l'identifiant de la cohorte d'un autre ne touche donc à rien,
  * et revient sur la liste avec le refus « introuvable ».
  *
- * Les refus repartent par un CODE dans l'adresse (config/cohortes.ts dit la phrase) :
- * rien de ce que l'adresse porte ne s'affiche tel quel.
+ * Les refus repartent par un CODE (config/cohortes.ts dit la phrase) : dans l'adresse pour les gestes
+ * sur une cohorte existante, rien de ce qu'elle porte ne s'affichant tel quel ; dans l'état du
+ * formulaire pour la création, qui rend aussi la saisie.
  */
 
 async function enseignant(): Promise<string> {
@@ -31,22 +33,28 @@ async function enseignant(): Promise<string> {
 
 const introuvable = (): never => redirect("/teacher/cohortes?refus=introuvable");
 
+/**
+ * LE FORMULAIRE DE CRÉATION, APRÈS UN REFUS (audit UX du 11 novembre 2026, P2-6) : le refus revenait par
+ * l'adresse, la page se rechargeait, le nom tapé s'effaçait et les épisodes cochés se décochaient. Il
+ * revient maintenant dans l'état du formulaire (components/nouvelle-cohorte.tsx), avec la saisie à y
+ * remettre : le nom et les épisodes cochés.
+ */
+export interface EtatDeLaNouvelleCohorte {
+  refus: RefusDeCohorte | null;
+  valeurs: { nom: string; episodes: string[] } | null;
+}
+
 /** Créer une cohorte : un nom, des épisodes cochés. La licence se vérifie dans le service. */
-export async function creerCohorteAction(formData: FormData): Promise<void> {
+export async function creerCohorteAction(_avant: EtatDeLaNouvelleCohorte, formData: FormData): Promise<EtatDeLaNouvelleCohorte> {
   const enseignantId = await enseignant();
+  const nom = String(formData.get("nom") ?? "");
   const episodes = formData.getAll("episodes").map(String);
   let id: string;
   try {
-    ({ id } = await creerCohorteDeLEnseignant({
-      enseignantId,
-      nom: String(formData.get("nom") ?? ""),
-      episodes,
-    }));
+    ({ id } = await creerCohorteDeLEnseignant({ enseignantId, nom, episodes }));
   } catch (e) {
     if (!(e instanceof CohorteRefuseeError)) throw e;
-    // On retrouve le formulaire ouvert, avec le premier épisode qu'on avait coché.
-    const premier = episodes[0] ? `&episode=${encodeURIComponent(episodes[0])}` : "";
-    redirect(`/teacher/cohortes?refus=${e.raison}${premier}#nouvelle-cohorte`);
+    return { refus: e.raison, valeurs: { nom, episodes } };
   }
   revalidatePath("/teacher/cohortes");
   redirect(`/teacher/cohortes/${id}?creee=1`);

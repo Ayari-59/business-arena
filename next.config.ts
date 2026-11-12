@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
     // Une redirection de configuration est résolue avant toute page : rien à
     // prérendre, rien à régénérer.
     { source: "/concepts", destination: "/notions", permanent: true },
+    // L'ESPACE ÉTABLISSEMENT (/etablissement) n'avait que des sous-pages : son adresse répondait 404
+    // (audit de l'offre du 11 novembre 2026, P2-9). Elle mène à son entrée, « Vos parties et
+    // cohortes », là où la connexion par l'établissement conduit l'étudiant (src/saml/aiguillage.ts,
+    // `PAGE_DE_L_ETUDIANT`). Temporaire : l'entrée de l'espace peut changer.
+    { source: "/etablissement", destination: "/etablissement/parties", permanent: false },
   ],
   headers: async () => [
     {

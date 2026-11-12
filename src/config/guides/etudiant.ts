@@ -19,9 +19,9 @@ export const GUIDE_ETUDIANT: Guide = {
     "Le guide de l'élève : rejoindre une partie avec un code, reprendre avec son code de reprise, lire le tableau de bord et la feuille de décision, décider en équipe, lire les résultats et le courrier, le bilan, mérite ou chance, l'examen et le téléphone.",
   pourQui: "Vous êtes élève ou étudiant, et votre enseignant vous a donné un code de partie ou d'examen.",
   resultat: "Vous savez rejoindre votre équipe, prendre et envoyer vos décisions, et lire ce que le marché vous répond.",
-  version: "2026-10-16",
+  version: "2026-11-12",
   enCinqMinutes: [
-    "Ouvrez la page « Rejoindre une partie », tapez le code donné par votre enseignant et votre prénom, puis « Rejoindre la partie ».",
+    "Ouvrez la page « Rejoindre une partie », tapez le code donné par votre enseignant et votre prénom, puis « Valider ».",
     "Lisez la situation du tour, puis passez à « Décider ».",
     "Parcourez votre feuille de décision avec « Suivant », puis envoyez-la avec « Valider les décisions de l'équipe ».",
     "Attendez la clôture du tour par votre enseignant : la page se met à jour d'elle-même avec vos résultats.",
@@ -33,7 +33,7 @@ export const GUIDE_ETUDIANT: Guide = {
       faire: [
         "Ouvrez la page « Rejoindre une partie », depuis le bouton « J'ai un code » en haut du site ou en scannant le QR code projeté.",
         "Tapez le code donné par votre enseignant, puis votre prénom.",
-        "Cliquez sur « Rejoindre la partie ».",
+        "Cliquez sur « Valider ».",
       ],
       voir: "Vous arrivez dans la partie, placé automatiquement dans l'équipe la moins remplie.",
       erreur:

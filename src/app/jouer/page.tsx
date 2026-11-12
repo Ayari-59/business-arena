@@ -135,7 +135,7 @@ async function JouerPage({
                 prefetch={false}
                   className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  voyez les tarifs
+                  voyez les offres
                 </Link>
                 .
               </p>

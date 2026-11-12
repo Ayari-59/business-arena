@@ -9,6 +9,7 @@ import { euros, type DevisChiffre } from "@/config/catalogue";
 import { db } from "@/db";
 import { demandesDeDevis } from "@/db/schema";
 import { VENDEUR } from "@/config/editeur";
+import { DELAIS_APRES_LE_DEVIS } from "@/config/conditions-legales";
 import { MENTION_TVA, nomDeLEntreprise, nomDuNiveau, type LibellesDuDevis } from "@/config/tarifs";
 import { titreDuParcours } from "@/config/cours/parcours-a-choisir";
 import { LIBELLE_DU_PARCOURS } from "@/config/parametrage-du-devis";
@@ -210,7 +211,10 @@ export function texteNotificationDevis(d: DemandeDeDevis): { sujet: string; text
   };
 }
 
-/** L'accusé au demandeur : ce qu'il a demandé, qui y répond, et rien de promis de plus. */
+/**
+ * L'accusé au demandeur : ce qu'il a demandé, qui y répond, les délais (décision du propriétaire,
+ * 11 novembre 2026 : config/conditions-legales.ts), et rien de promis de plus.
+ */
 export function texteAccuseDevis(d: DemandeDeDevis, contact: string): { sujet: string; texte: string } {
   return {
     sujet: `Votre demande de devis Business Arena · ${d.libelles.offre}`,
@@ -218,6 +222,7 @@ export function texteAccuseDevis(d: DemandeDeDevis, contact: string): { sujet: s
       "Bonjour,",
       "",
       `Votre demande de devis est enregistrée. Le devis vous sera adressé par écrit, établi par ${VENDEUR.nom} (${MENTION_TVA}).`,
+      DELAIS_APRES_LE_DEVIS,
       "",
       ...recapitulatif(d, d.montantsPublics === true),
       "",

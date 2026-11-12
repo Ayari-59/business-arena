@@ -1138,17 +1138,40 @@ const QUESTION_DE_L_ESSAI = "Peut-on essayer avec un groupe ?";
  * licence d'essai de /admin (nature « essai », à 0 €, datée, bornée par la durée maximale
  * réglée dans /admin/offres, rubrique Gratuités ; services/vente.service.ts). Posée sur
  * l'offre Classe, elle en porte toutes les limites, appliquées par le serveur, et se ferme
- * seule à sa date de fin. La réponse suit ce réglage : « Non » tant qu'il est éteint (le
- * défaut), l'essai et sa durée dès que le propriétaire l'active.
+ * seule à sa date de fin. Activée par le propriétaire, la réponse dit l'essai et sa durée.
+ *
+ * ÉTEINTE (le défaut), « OUI POUR LE COURS » (décision du propriétaire, 11 novembre 2026 ; audit de
+ * l'offre du même jour, P1-2 : la réponse disait « Non » alors que le cours s'essaie déjà en classe).
+ * Chaque mot est celui du code :
+ *  · « créez votre compte enseignant » : l'inscription libre, ouverte par défaut
+ *    (services/admin.service.ts, `allowSelfServiceTeachers`) ; fermée dans /admin, le compte ne
+ *    s'ouvre plus qu'avec un code d'invitation (services/auth.service.ts), et la réponse redevient
+ *    « Non » (`inscriptionLibre`) ;
+ *  · « puis une classe » : la création d'une classe du cours ne demande aucune offre
+ *    (services/cours.service.ts, `creerClasse`) ;
+ *  · « le chapitre libre de leur diplôme et son cas pratique, sans offre » : sans offre, une classe
+ *    ouvre les chapitres libres, un par diplôme, et leur cas (services/chapitres-de-la-classe.ts,
+ *    `chapitreOuvertALaClasse`), même libérée chapitre par chapitre (`libereALaClasse`) ;
+ *  · « les parties de classe de l'arène commencent avec Classe, Programme ou Campus » : le refus du
+ *    serveur sans offre de l'arène (services/acces.service.ts, `refusDeLaClasse`).
+ * Garde : tests/architecture/pages-de-l-offre.test.ts.
  */
-export const reponseSurLEssai = (essai: { autorise: boolean; dureeMaxJours: number }): string =>
+export const reponseSurLEssai = (essai: { autorise: boolean; dureeMaxJours: number }, inscriptionLibre = true): string =>
   essai.autorise
     ? `Oui, sur demande et sans paiement : un essai de l'offre ${OFFRES.classe.nom}, ${essai.dureeMaxJours} jours au plus, pour un enseignant et un groupe de ${ELEVES_PAR_CLASSE} élèves au plus, une partie à la fois, une entreprise et un niveau. Demandez-le par le devis ; il s'ouvre après votre demande et se ferme seul à son terme, sans facture ni reconduction.`
-    : `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${LES_OFFRES_DE_L_ARENE}.`;
+    : inscriptionLibre
+      ? `Oui, pour le cours : créez votre compte enseignant, puis une classe ; vos élèves y suivent le chapitre libre de leur diplôme et son cas pratique, sans offre. Les parties de classe de l'arène commencent avec ${LES_OFFRES_DE_L_ARENE}.`
+      : `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${LES_OFFRES_DE_L_ARENE}.`;
 
-/** Les questions de /tarifs, l'essai selon son réglage (/admin/offres). */
-export const questionsDesTarifs = (essai: { autorise: boolean; dureeMaxJours: number }): readonly { q: string; r: string }[] =>
-  QUESTIONS_TARIFS.map((x) => (x.q === QUESTION_DE_L_ESSAI ? { q: x.q, r: reponseSurLEssai(essai) } : x));
+/**
+ * Les questions de /tarifs, l'essai selon son réglage (/admin/offres), et l'inscription libre des
+ * enseignants (/admin) : sans elle, le cours ne s'essaie plus seul.
+ */
+export const questionsDesTarifs = (
+  essai: { autorise: boolean; dureeMaxJours: number },
+  inscriptionLibre = true,
+): readonly { q: string; r: string }[] =>
+  QUESTIONS_TARIFS.map((x) => (x.q === QUESTION_DE_L_ESSAI ? { q: x.q, r: reponseSurLEssai(essai, inscriptionLibre) } : x));
 
 /** Les questions qu'on nous pose avant d'acheter. */
 export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
@@ -1166,7 +1189,8 @@ export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
   },
   {
     q: QUESTION_DE_L_ESSAI,
-    r: `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${LES_OFFRES_DE_L_ARENE}.`,
+    // La réponse par défaut : l'essai de l'arène éteint, l'inscription libre ouverte.
+    r: reponseSurLEssai({ autorise: false, dureeMaxJours: 0 }),
   },
   {
     q: "Les épisodes manager sont-ils inclus ?",
@@ -1253,6 +1277,18 @@ export const CONSEIL_SANS_LICENCE: { niveau: CodeNiveau; pourquoi: string } = {
   pourquoi: POURQUOI_LA_DECOUVERTE,
 };
 
-/** Devant un élève : jamais de message de vente (audit C-02). */
+/**
+ * Devant un élève : jamais de message de vente (audit C-02). Il a souvent suivi le lien de son
+ * groupe, et c'est la licence de la cohorte qui s'est arrêtée : « demandez le lien » le renvoyait à
+ * ce qu'il venait de faire (audit UX du 11 novembre 2026, P2-7 ; la phrase est celle du propriétaire).
+ */
 export const EPISODE_FERME_POUR_L_ELEVE =
-  "Cet épisode n'est pas ouvert sur cet appareil ; demandez le lien à votre enseignant.";
+  "Cet épisode n'est plus ouvert pour votre groupe ; prévenez votre animateur.";
+
+/**
+ * LE DEVIS QU'UN ÉPISODE PAYANT FERMÉ PROPOSE, HORS D'UNE COHORTE (audit UX du 11 novembre 2026,
+ * P2-10 ; décision du propriétaire). Le visiteur du catalogue des épisodes vient le plus souvent de
+ * la page des entreprises : son devis est « pour une entreprise ou un organisme de formation ». Un
+ * enseignant connecté garde celui « en cours ou en école ». Devant un élève, aucun devis.
+ */
+export const lienDuDevisDesEpisodes = (enseignant: boolean): string => lienDuDevis(enseignant ? "episodes" : "entreprise");
