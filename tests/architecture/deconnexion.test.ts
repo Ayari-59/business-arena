@@ -15,7 +15,7 @@ import { describe, expect, it, vi } from "vitest";
  * cette garde tient :
  *  · connecté (une session enseignant : c'est aussi celle du référent d'un établissement et de
  *    l'administrateur ; un élève qui joue par code n'en a pas), « Connexion » devient « Déconnexion »,
- *    un mot, dans la barre et en tête du menu déplié, et le bouton passe par le formulaire de
+ *    un mot, dans la barre et en tête du menu du téléphone, et le bouton passe par le formulaire de
  *    déconnexion et `logoutAction`, comme avant. Non connecté, rien ne change ;
  *  · la barre ne reçoit qu'un booléen, lu au serveur par la mise en page ;
  *  · « Déconnexion » ferme la rangée de l'espace enseignant, sur chacune de ses pages ;
@@ -99,10 +99,22 @@ function formulaireDe(e: Element): string | null {
   return null;
 }
 
+/**
+ * Un élément se voit au repos s'il n'est sous aucun bloc fermé (`hidden`) : les panneaux des mots de
+ * la barre et le menu du téléphone le sont tant qu'on ne les ouvre pas (novembre 2026, la maquette A).
+ */
+function auRepos(e: Element, racine: Document | Element): boolean {
+  for (let p: Node | null = e; p && p !== racine; p = p.parentNode) {
+    if (p.nodeType === 1 && (p as Element).hasAttribute("hidden")) return false;
+  }
+  return true;
+}
+
 /** Les commandes d'un bloc (liens et boutons), dans l'ordre : ce qu'elles affichent, leur nom, leur cible. */
-function commandes(racine: Document | Element) {
+function commandes(racine: Document | Element, { seulementAuRepos = false } = {}) {
   return elements(racine)
     .filter((e) => e.tagName === "a" || e.tagName === "button")
+    .filter((e) => !seulementAuRepos || auRepos(e, racine))
     .map((e) => {
       const vu = propre(texteVu(e));
       return {
@@ -118,12 +130,15 @@ function commandes(racine: Document | Element) {
     .filter((c) => c.vu.length > 0);
 }
 
-/** Les commandes de la barre (sur grand écran) et de la tête du menu déplié. */
+/**
+ * Les commandes de la barre (sur grand écran, ce qu'elle montre au repos : ses mots, ses portes, et
+ * « Menu », qui n'y est que sous lg) et de la tête du menu du téléphone.
+ */
 function barreEtPortes(props: Record<string, unknown>) {
   const doc = rendre(SiteHeader, "/notions", props);
   return {
     doc,
-    barre: commandes(bloc(doc, "aria-label", "Navigation principale")),
+    barre: commandes(bloc(doc, "aria-label", "Navigation principale"), { seulementAuRepos: true }),
     portes: commandes(bloc(doc, "data-portes-du-menu")),
   };
 }
@@ -131,7 +146,7 @@ function barreEtPortes(props: Record<string, unknown>) {
 const MOTS_DE_LA_BARRE = liensDeTete().map((l) => l.libelle);
 
 describe("la barre du site, connecté ou non", () => {
-  it("non connecté, rien ne change : Rejoindre et Connexion, dans la barre et en tête du menu déplié", () => {
+  it("non connecté, rien ne change : Rejoindre et Connexion, dans la barre et en tête du menu du téléphone", () => {
     for (const props of [{}, { connecte: false }]) {
       const { doc, barre, portes } = barreEtPortes(props);
       expect(barre.map((c) => c.vu), JSON.stringify(props)).toEqual([...MOTS_DE_LA_BARRE, "Rejoindre", "Connexion", "Menu"]);
@@ -144,10 +159,10 @@ describe("la barre du site, connecté ou non", () => {
     }
   });
 
-  it("connecté, « Connexion » devient « Déconnexion », à la même place, dans la barre et en tête du menu déplié", () => {
+  it("connecté, « Connexion » devient « Déconnexion », à la même place, dans la barre et en tête du menu du téléphone", () => {
     const { doc, barre, portes } = barreEtPortes({ connecte: true });
     expect(barre.map((c) => c.vu), "la barre d'un enseignant connecté").toEqual([...MOTS_DE_LA_BARRE, "Rejoindre", DECONNEXION, "Menu"]);
-    expect(portes.map((c) => [c.balise, c.vu]), "la tête du menu déplié d'un enseignant connecté").toEqual([
+    expect(portes.map((c) => [c.balise, c.vu]), "la tête du menu du téléphone d'un enseignant connecté").toEqual([
       ["a", "Rejoindre"],
       ["button", DECONNEXION],
     ]);
@@ -167,7 +182,7 @@ describe("la barre du site, connecté ou non", () => {
     }
   });
 
-  it("le bouton a la forme de la porte qu'il remplace, dans la barre comme dans le menu déplié", () => {
+  it("le bouton a la forme de la porte qu'il remplace, dans la barre comme dans le menu du téléphone", () => {
     const avant = barreEtPortes({});
     const apres = barreEtPortes({ connecte: true });
     for (const lieu of ["barre", "portes"] as const) {

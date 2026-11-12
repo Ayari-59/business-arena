@@ -20,10 +20,18 @@ import { describe, expect, it, vi } from "vitest";
  * les CGV et les CGU quittent le menu déplié et les groupes du pied de page pour une seule petite
  * ligne, tout en bas du pied de page.
  *
- * La garde lit le plan (config/navigation.ts), puis ce que la barre, le menu déplié, le pied de
- * page et l'espace enseignant RENDENT : un libellé écrit demain à la main dans un composant y est
- * vu aussi. Ce qui s'affiche tient en un mot ; un bouton peut porter un nom plus long pour une
- * synthèse vocale, à condition qu'il commence par son mot visible (« Rejoindre avec un code »).
+ * Puis la maquette A (12 novembre 2026 : « le menu n'est pas au top visuellement ») : sur grand
+ * écran, chaque mot de la barre ouvre son panneau, où chaque entrée est une carte, son mot et une
+ * ligne qui dit à quoi elle sert ; sur téléphone, « Menu » ouvre la liste des groupes, puis un groupe.
+ * Le mot reste le NOM de l'entrée, celui qu'une synthèse vocale lit ; la ligne en est la description.
+ * Seul le bouton de chaque panneau dit son geste en plusieurs mots (« Voir les diplômes »), comme tout
+ * bouton du site. Les règles des panneaux eux-mêmes : tests/architecture/panneaux-du-menu.test.ts.
+ *
+ * La garde lit le plan (config/navigation.ts), puis ce que la barre, ses panneaux, le menu du
+ * téléphone, le pied de page et l'espace enseignant RENDENT : un libellé écrit demain à la main dans
+ * un composant y est vu aussi. Ce qui se nomme tient en un mot ; un bouton peut porter un nom plus
+ * long pour une synthèse vocale, à condition qu'il commence par son mot visible (« Rejoindre avec un
+ * code »).
  */
 
 let chemin = "/notions";
@@ -95,33 +103,68 @@ function texteVu(e: Node): string {
 /** Espaces, insécables comprises, ramenées à une espace ordinaire. */
 const propre = (s: string) => s.replace(/[\s  ]+/g, " ").trim();
 
-/** Les commandes d'un bloc (liens et boutons), avec ce qu'elles affichent et le nom qu'elles portent. */
-function commandes(racine: Element): { vu: string; nom: string; href: string | null }[] {
+/** Le texte d'un élément du document, par son identifiant (celui que vise `aria-labelledby`). */
+function texteDe(racine: Element, id: string): string {
+  let haut: Node = racine;
+  while (haut.parentNode) haut = haut.parentNode;
+  const cible = elements(haut as Document).find((x) => x.getAttribute("id") === id);
+  if (!cible) throw new Error(`#${id} n'existe pas dans le rendu`);
+  return propre(texteVu(cible));
+}
+
+/**
+ * Les commandes d'un bloc (liens et boutons), avec ce qu'elles affichent, le mot qui les désigne à
+ * l'écran (`mot` : celui que vise `aria-labelledby`, sinon tout ce qu'elles affichent) et le nom
+ * qu'elles portent pour une synthèse vocale.
+ */
+function commandes(racine: Element): { vu: string; mot: string; nom: string; href: string | null; appel: boolean }[] {
   return elements(racine)
     .filter((e) => e.tagName === "a" || e.tagName === "button")
     .map((e) => {
       const vu = propre(texteVu(e));
       // Un attribut absent se lit comme une chaîne vide dans ce document : on demande s'il est là.
+      const nomme = e.hasAttribute("aria-labelledby")
+        ? e.getAttribute("aria-labelledby")!.split(/\s+/).map((id) => texteDe(racine, id)).join(" ")
+        : null;
       return {
         vu,
-        nom: e.hasAttribute("aria-label") ? propre(e.getAttribute("aria-label")!) : vu,
+        mot: nomme ?? vu,
+        nom: nomme ?? (e.hasAttribute("aria-label") ? propre(e.getAttribute("aria-label")!) : vu),
         href: e.hasAttribute("href") ? e.getAttribute("href") : null,
+        appel: e.hasAttribute("data-appel-du-groupe"),
       };
     })
     // Le logo de la barre ne porte pas de texte : son nom est « Accueil ».
     .filter((c) => c.vu.length > 0);
 }
 
+/** Le texte de la barre telle qu'on la voit au repos : sans ce que cachent ses blocs fermés (`hidden`). */
+function texteAuRepos(barre: Element): string {
+  const lire = (n: Node): string => {
+    if (n.nodeType === 3) return n.nodeValue ?? "";
+    if (n.nodeType !== 1 || (n as Element).hasAttribute("hidden")) return "";
+    return Array.from(n.childNodes).map(lire).join(" ");
+  };
+  return propre(lire(barre));
+}
+
 describe("le menu en un mot, rangé par produit", () => {
-  it("la barre et le menu déplié ont les mêmes groupes, dans le même ordre", () => {
-    // La barre pose un mot par groupe (liensDeTete) ; le menu déplié déroule les groupes (NAVIGATION).
-    // Un groupe sans mot dans la barre est un groupe que le grand écran ne montre pas.
+  it("la barre, ses panneaux et le menu du téléphone ont les mêmes groupes, dans le même ordre", () => {
+    // La barre pose un mot par groupe (liensDeTete) ; chaque mot ouvre le panneau de son groupe, et le
+    // menu du téléphone déroule les mêmes groupes (NAVIGATION). Un groupe sans mot dans la barre est un
+    // groupe que le grand écran ne montre pas.
     expect(liensDeTete().map((l) => l.libelle)).toEqual(NAVIGATION.map((g) => g.titre));
-    // Et ce qui est rendu : les mots de la barre, à plat sur grand écran.
-    const barre = bloc(rendre(SiteHeader), "aria-label", "Navigation principale");
-    const aPlat = elements(barre).find((e) => e.tagName === "ul");
-    expect(aPlat, "la barre n'a plus sa rangée de mots").toBeDefined();
-    expect(commandes(aPlat!).map((c) => c.vu)).toEqual(NAVIGATION.map((g) => g.titre));
+    // Et ce qui est rendu : les mots de la barre, à plat sur grand écran, puis leurs panneaux.
+    const doc = rendre(SiteHeader);
+    const barre = bloc(doc, "aria-label", "Navigation principale");
+    const mots = elements(barre).filter((e) => e.hasAttribute("data-mot-de-la-barre"));
+    expect(mots.map((e) => propre(texteVu(e))), "la barre n'a plus sa rangée de mots").toEqual(NAVIGATION.map((g) => g.titre));
+    const panneaux = elements(barre).filter((e) => e.hasAttribute("data-panneau-du-groupe"));
+    expect(panneaux.map((e) => e.getAttribute("data-panneau-du-groupe"))).toEqual(NAVIGATION.map((g) => g.code));
+    // Le menu du téléphone : les mêmes groupes, sous les mêmes mots.
+    const liste = bloc(bloc(doc, "id", "plan-du-site"), "data-liste-des-groupes");
+    const titres = elements(liste).filter((e) => e.hasAttribute("data-titre-du-groupe")).map((e) => propre(texteVu(e)));
+    expect(titres).toEqual(NAVIGATION.map((g) => g.titre));
   });
 
   it("chaque titre de groupe et chaque entrée du plan tiennent en un mot, sans précision à côté", () => {
@@ -140,46 +183,65 @@ describe("le menu en un mot, rangé par produit", () => {
     expect(precisions, `une précision à côté d'un titre : ${precisions.join(", ")}`).toEqual([]);
   });
 
-  it("ce que la barre et le menu déplié affichent tient en un mot ; un nom plus long commence par ce mot", () => {
+  it("ce que la barre, ses panneaux et le menu désignent tient en un mot ; un nom plus long commence par ce mot ; seul le bouton d'un groupe dit son geste", () => {
     // Pour un visiteur, et pour un enseignant connecté (« Déconnexion » à la place de « Connexion »).
+    // Le menu du téléphone est dans la barre (`plan-du-site`) : il est lu avec elle.
     const docs = [rendre(SiteHeader), rendre(SiteHeader, "/notions", { connecte: true })];
-    const lus = docs.flatMap((doc) => [
-      ...commandes(bloc(doc, "aria-label", "Navigation principale")),
-      ...commandes(bloc(doc, "id", "plan-du-site")),
-    ]);
+    const lus = docs.flatMap((doc) => commandes(bloc(doc, "aria-label", "Navigation principale")));
     expect(lus.map((c) => c.vu)).toContain(LIBELLE_DECONNEXION);
     // Le bouton qui ouvre le menu se nomme « Menu » : il est de la barre, et un mot lui aussi.
     expect(lus.map((c) => c.vu)).toContain("Menu");
-    const phrases = lus.filter((c) => !estUnMot(c.vu)).map((c) => c.vu);
+    // Le bouton de chaque groupe, vers sa page, dit son geste : les mots décidés, et eux seuls.
+    const appels = lus.filter((c) => c.appel);
+    expect([...new Set(appels.map((c) => c.nom))].sort()).toEqual(NAVIGATION.map((g) => g.appel).sort());
+    for (const c of appels) expect(c.vu, c.nom).toBe(c.nom);
+    // Tout le reste se désigne d'un mot : une carte par son mot, sa ligne n'étant que sa description.
+    const autres = lus.filter((c) => !c.appel);
+    const phrases = autres.filter((c) => !estUnMot(c.mot)).map((c) => c.mot);
     expect(phrases, `des phrases dans la barre ou le menu : ${phrases.join(" · ")}`).toEqual([]);
-    const noms = lus.filter((c) => !c.nom.startsWith(c.vu)).map((c) => `« ${c.vu} » se nomme « ${c.nom} »`);
+    const noms = autres.filter((c) => !c.nom.startsWith(c.mot)).map((c) => `« ${c.mot} » se nomme « ${c.nom} »`);
     expect(noms, noms.join(", ")).toEqual([]);
+    // Et ce qu'elle affiche commence par ce mot : la ligne vient après lui, jamais avant.
+    const avant = autres.filter((c) => !c.vu.startsWith(c.mot)).map((c) => `« ${c.mot} » affiche « ${c.vu} »`);
+    expect(avant, avant.join(", ")).toEqual([]);
   });
 
-  it("les 3 phrases de la pédagogie sont sous le titre du cours, de l'arène et des épisodes, dans le menu déplié seulement", () => {
+  it("les 3 phrases de la pédagogie sont sous le nom du cours, de l'arène et des épisodes, dans leur panneau et leur groupe du téléphone seulement", () => {
     // Dans le plan : une phrase par groupe qui fait apprendre, aucune pour les offres ni l'aide.
     expect(NAVIGATION.map((g) => [g.code, (g as { phrase?: string }).phrase ?? null])).toEqual(
       NAVIGATION.map((g) => [g.code, PHRASES[g.code] ?? null]),
     );
-    // Dans le menu déplié : chaque phrase dans son groupe, après son titre et avant ses entrées,
-    // en texte (jamais un lien), discret : l'encre grise, et 14 px, la prose de second plan de
-    // l'échelle du site (une phrase ne se lit pas en 12 px : tests/architecture/echelle-typographique.test.ts).
-    const menu = bloc(rendre(SiteHeader), "id", "plan-du-site");
-    for (const [code, phrase] of Object.entries(PHRASES)) {
-      const groupe = bloc(menu, "data-groupe-du-menu", code);
-      const porteuse = elements(groupe).find((e) => propre(texteVu(e)) === phrase && e.tagName !== "a" && e.tagName !== "button");
-      expect(porteuse, `« ${code} » : la phrase manque sous le titre`).toBeDefined();
-      const classe = porteuse!.getAttribute("class") ?? "";
-      expect(classe, `« ${code} » : la phrase n'est pas discrète`).toMatch(/\btext-slate-400\b/);
-      expect(classe, `« ${code} » : la phrase n'est pas en prose de second plan`).toMatch(/\btext-sm\b/);
-      const ordre = elements(groupe);
-      const titre = ordre.findIndex((e) => e.hasAttribute("data-titre-du-groupe"));
-      const premiereEntree = ordre.findIndex((e) => e.tagName === "ul");
-      expect(titre, code).toBeLessThan(ordre.indexOf(porteuse!));
-      expect(ordre.indexOf(porteuse!), code).toBeLessThan(premiereEntree);
+    // Dans le panneau (grand écran) et dans le groupe ouvert (téléphone) : la phrase après le nom du
+    // produit et avant son bouton et ses entrées, en texte (jamais un lien), discrète par l'encre
+    // grise, en prose : 16 px dans le panneau, 14 px au téléphone, jamais 12 (une phrase ne se lit
+    // pas en 12 px : tests/architecture/echelle-typographique.test.ts).
+    const doc = rendre(SiteHeader);
+    for (const [ou, attribut, corps] of [
+      ["le panneau", "data-panneau-du-groupe", "text-base"],
+      ["le groupe du téléphone", "data-groupe-du-plan", "text-sm"],
+    ] as const) {
+      for (const g of NAVIGATION) {
+        const bloc_ = bloc(doc, attribut, g.code);
+        const porteuses = elements(bloc_).filter((e) => e.hasAttribute("data-phrase-du-groupe"));
+        const phrase = PHRASES[g.code];
+        if (!phrase) {
+          expect(porteuses, `« ${g.code} » : une phrase dans ${ou}`).toEqual([]);
+          continue;
+        }
+        expect(porteuses.map((e) => [e.tagName, propre(texteVu(e))]), `« ${g.code} » : la phrase manque dans ${ou}`).toEqual([["p", phrase]]);
+        const classe = porteuses[0]!.getAttribute("class") ?? "";
+        expect(classe, `« ${g.code} » : la phrase n'est pas discrète dans ${ou}`).toMatch(/\btext-slate-400\b/);
+        expect(classe, `« ${g.code} » : la phrase n'est pas en prose dans ${ou}`).toMatch(new RegExp(`\\b${corps}\\b`));
+        const ordre = elements(bloc_);
+        const nom = ordre.findIndex((e) => e.tagName === "p" && propre(texteVu(e)) === g.titre);
+        const bouton = ordre.findIndex((e) => e.hasAttribute("data-appel-du-groupe"));
+        expect(nom, `« ${g.code} » : le nom manque dans ${ou}`).toBeGreaterThanOrEqual(0);
+        expect(nom, g.code).toBeLessThan(ordre.indexOf(porteuses[0]!));
+        expect(ordre.indexOf(porteuses[0]!), g.code).toBeLessThan(bouton);
+      }
     }
-    // Ni dans la barre, ni au pied de page.
-    const barre = propre(texteVu(bloc(rendre(SiteHeader), "aria-label", "Navigation principale")));
+    // Ni dans la barre telle qu'on la voit (panneaux et menu fermés), ni au pied de page.
+    const barre = texteAuRepos(bloc(rendre(SiteHeader), "aria-label", "Navigation principale"));
     const pied = propre(texteVu(bloc(rendre(PiedDePage), "aria-label", "Plan du site")));
     for (const phrase of Object.values(PHRASES)) {
       expect(barre, "une phrase dans la barre").not.toContain(phrase);
@@ -187,30 +249,37 @@ describe("le menu en un mot, rangé par produit", () => {
     }
   });
 
-  it("aucun lien légal dans le menu déplié", () => {
-    const adresses = commandes(bloc(rendre(SiteHeader), "id", "plan-du-site")).map((c) => c.href);
+  it("aucun lien légal dans la barre, ses panneaux ni le menu du téléphone", () => {
+    const adresses = commandes(bloc(rendre(SiteHeader), "aria-label", "Navigation principale")).map((c) => c.href);
     const legaux = LEGALES.filter(([, href]) => adresses.includes(href)).map(([mot]) => mot);
-    expect(legaux, `des liens légaux dans le menu déplié : ${legaux.join(", ")}`).toEqual([]);
+    expect(legaux, `des liens légaux dans le menu : ${legaux.join(", ")}`).toEqual([]);
   });
 
-  it("en tête du menu déplié, rien d'autre que Rejoindre et Connexion, puis les groupes", () => {
-    const menu = commandes(bloc(rendre(SiteHeader), "id", "plan-du-site"));
+  it("en tête du menu du téléphone, rien d'autre que Rejoindre et Connexion, puis les groupes", () => {
+    const menu = commandes(bloc(bloc(rendre(SiteHeader), "id", "plan-du-site"), "data-liste-des-groupes"));
     const portes = liensDAcces();
-    // Les premières commandes du menu déplié sont les deux portes, et elles seules.
+    // Les premières commandes du menu sont les deux portes, et elles seules.
     expect(menu.slice(0, portes.length).map((c) => c.href), "une autre action en tête du menu").toEqual(portes.map((l) => l.href));
     expect(portes.map((l) => l.libelle)).toEqual(["Rejoindre", "Connexion"]);
-    // Juste après les portes : le premier groupe, sous le mot de la barre et vers la même page.
-    expect(menu[portes.length]).toMatchObject({ vu: NAVIGATION[0]!.titre, href: liensDeTete()[0]!.href });
+    // Juste après les portes : les groupes, sous les mots de la barre, chacun ouvrant ses entrées.
+    expect(menu.slice(portes.length).map((c) => [c.nom, c.href])).toEqual(NAVIGATION.map((g) => [g.titre, null]));
   });
 
-  it("le menu déplié marque la page où l'on est, pas une page d'un autre groupe dont l'adresse la préfixe", () => {
-    // Sur le catalogue des épisodes, « Épisodes » (son titre) et « Catalogue » (son entrée) mènent à
-    // la page ; « Métiers » (/entreprises), qui est de l'arène, ne s'allume pas avec eux.
-    const menu = bloc(rendre(SiteHeader, "/entreprises/episode"), "id", "plan-du-site");
-    const marques = elements(menu)
+  it("le menu marque la page où l'on est, pas une page d'un autre groupe dont l'adresse la préfixe", () => {
+    // Sur le catalogue des épisodes, le bouton du groupe (« Voir les épisodes ») et « Catalogue » (son
+    // entrée) mènent à la page, dans le panneau comme au téléphone ; « Métiers » (/entreprises), qui
+    // est de l'arène, ne s'allume pas avec eux. Le mot du groupe garde sa marque dans la barre, comme
+    // sa rangée dans la liste du téléphone.
+    const barre = bloc(rendre(SiteHeader, "/entreprises/episode"), "aria-label", "Navigation principale");
+    const marques = elements(barre)
       .filter((e) => e.getAttribute("aria-current") === "page")
       .map((e) => e.getAttribute("href"));
-    expect(marques).toEqual(["/entreprises/episode", "/entreprises/episode"]);
+    expect(marques).toEqual(["/entreprises/episode", "/entreprises/episode", "/entreprises/episode", "/entreprises/episode"]);
+    const groupes = elements(barre)
+      .filter((e) => e.getAttribute("aria-current") === "true")
+      // Un attribut absent se lit comme une chaîne vide dans ce document : on demande s'il est là.
+      .map((e) => e.getAttribute(e.hasAttribute("data-mot-de-la-barre") ? "data-mot-de-la-barre" : "data-groupe-du-menu"));
+    expect(groupes).toEqual(["episodes", "episodes"]);
   });
 
   it("le pied de page suit les mêmes groupes, sous les mêmes mots, sans phrase ni lien légal", () => {

@@ -19,14 +19,15 @@
  * trois titres portaient une précision (« lycée, BTS, université ») et les
  * entrées étaient des phrases (« Choisir ma simulation »). Il est maintenant
  * rangé par produit : le cours, l'arène, les épisodes, puis les offres et
- * l'aide. Les mêmes 5 mots ouvrent la barre, les groupes du menu déplié et les
- * colonnes du pied de page, et chacun mène à la même page partout.
+ * l'aide. Les mêmes 5 mots ouvrent la barre, les groupes du menu et les
+ * colonnes du pied de page, et chacun mène à la même page partout (depuis le
+ * 12 novembre, par le bouton de son panneau).
  *
  * LA PÉDAGOGIE EN AVANT, LE LÉGAL EN PETIT (le propriétaire, avant la mise en
  * ligne : « les CGV, CGU, RGPD et cie, je ne veux pas que ce soit trop voyant ;
  * le menu horizontal m'a l'air bien ; je veux un menu qui montre la pédagogie
  * et met en avant le produit »). Sous le titre du cours, de l'arène et des
- * épisodes, le menu déplié dit en une phrase ce qu'on y fait apprendre
+ * épisodes, le menu dit en une phrase ce qu'on y fait apprendre
  * (`phrase`, en texte discret : jamais une entrée). Les mentions légales, les
  * CGV et les CGU ne sont plus des entrées : une seule petite ligne, tout en bas
  * du pied de page (`LIENS_LEGAUX`). L'examen, l'intégration, l'aide au choix et
@@ -34,12 +35,23 @@
  * y mènent (tests/architecture/menu-par-produit.test.ts le vérifie, lien par
  * lien).
  *
+ * UN PANNEAU PAR MOT (le propriétaire, 12 novembre 2026 : « le menu n'est pas
+ * au top visuellement » ; il a choisi la maquette A). Sur grand écran, chaque
+ * mot de la barre ouvre le panneau de son groupe : à gauche, le pictogramme du
+ * produit, son nom, sa phrase et un bouton plein vers sa page (`appel`) ; à
+ * droite, chaque entrée en carte, avec son pictogramme et UNE ligne qui dit à
+ * quoi elle sert (`ligne`). Sur téléphone, « Menu » ouvre la liste des groupes,
+ * et un groupe touché montre la même chose, en colonne. Le mot reste le nom de
+ * l'entrée : la ligne la décrit, elle ne la nomme pas.
+ *
  * LES ADRESSES NE CHANGENT PAS. Seuls les libellés et leur rangement bougent :
  * un lien partagé, un signet, un support imprimé restent justes.
  */
 // Les modules légers, hors des épisodes : le menu est lu par des composants client.
 import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/familles-des-episodes";
 import { COMPETENCES } from "@/config/referentiel-des-competences";
+// Le nom d'un pictogramme seulement : la liste fermée des dessins du site.
+import type { NomDIcone } from "@/components/icone";
 
 export interface LienDeMenu {
   href: string;
@@ -55,41 +67,69 @@ export interface LienDeMenu {
   nom?: string;
   /**
    * Les deux portes d'entrée, l'une par public, posées en boutons à droite de
-   * la barre sur grand écran et en tête du menu déplié : un élève cherche où
+   * la barre sur grand écran et en tête du menu du téléphone : un élève cherche où
    * taper son code, un enseignant cherche son espace. Ni l'un ni l'autre n'a à
    * chercher dans un groupe.
    */
   acces?: "enseignant" | "eleve";
 }
 
+/**
+ * UNE ENTRÉE D'UN GROUPE, telle que son panneau la montre (novembre 2026, la
+ * maquette A) : une carte, avec son pictogramme, son mot, et une ligne qui dit
+ * à quoi elle sert. Le compilateur refuse une entrée sans sa ligne ni son
+ * pictogramme.
+ */
+export interface EntreeDeMenu extends LienDeMenu {
+  /**
+   * À quoi sert la page, en UNE ligne courte : sous le mot, sur la carte du
+   * panneau (une à deux lignes à 1 280 px) et dans le groupe ouvert du
+   * téléphone. Elle ne promet rien de plus que l'aide, et ne nomme pas
+   * l'entrée : le mot reste son nom, la ligne la décrit.
+   */
+  ligne: string;
+  /** Son pictogramme, pris dans la liste fermée du site (components/icone.tsx). */
+  icone: NomDIcone;
+}
+
 export interface GroupeDeMenu {
   code: string;
   /**
    * Le titre du groupe : UN MOT, celui du produit. C'est aussi, tel quel, le
-   * mot de la barre et le titre de la colonne du pied de page : rien ne
-   * s'écrit à côté de lui.
+   * mot de la barre, le nom de son panneau et le titre de la colonne du pied
+   * de page : rien ne s'écrit à côté de lui.
    */
   titre: string;
   /**
-   * La page que le titre ouvre, partout où il s'affiche : la barre, le menu
-   * déplié et le pied de page. Sur téléphone, où la barre ne montre pas ses
-   * mots, c'est le titre du groupe dans le menu qui y mène.
+   * La page du groupe : le bouton de son panneau y mène (`appel`), sur grand
+   * écran comme sur téléphone, et le titre de sa colonne au pied de page.
    */
   entree: string;
   /**
-   * Ce que cette page apporte, au survol du titre, quand elle n'est pas une
-   * entrée du groupe : « Arène » ouvre la présentation du simulateur, qui n'a
-   * plus d'entrée à elle. Sinon, l'aide est celle de l'entrée.
+   * Le bouton plein du panneau, vers la page du groupe : « Voir les
+   * diplômes ». Un bouton dit ce qu'il fait ; le mot du groupe, lui, ouvre le
+   * panneau.
+   */
+  appel: string;
+  /** Le pictogramme du produit, en tête de son panneau et dans la liste du téléphone. */
+  icone: NomDIcone;
+  /**
+   * Ce que cette page apporte, quand elle n'est pas une entrée du groupe :
+   * « Arène » ouvre la présentation du simulateur, qui n'a plus d'entrée à
+   * elle. Sinon, l'aide est celle de l'entrée. Le pied de page la dit au
+   * survol de son titre.
    */
   aide?: string;
   /**
-   * Ce que le groupe fait apprendre, en une phrase, sous son titre dans le
-   * menu déplié SEULEMENT, en texte discret : ce n'est pas une entrée, et ni
-   * la barre ni le pied de page ne la disent. Le cours, l'arène et les
-   * épisodes en ont une ; les offres et l'aide n'en ont pas.
+   * Ce que le groupe fait apprendre, en une phrase, sous son nom dans son
+   * panneau et dans le groupe ouvert du téléphone, en texte discret : ce
+   * n'est pas une entrée, et ni la barre ni le pied de page ne la disent. Son
+   * début est la phrase courte de la liste du téléphone (`phraseCourte`). Le
+   * cours, l'arène et les épisodes en ont une ; les offres et l'aide n'en ont
+   * pas.
    */
   phrase?: string;
-  liens: LienDeMenu[];
+  liens: EntreeDeMenu[];
 }
 
 /**
@@ -138,7 +178,7 @@ export const LIEN_MENTIONS: LienDeMenu = {
 
 /**
  * LA PETITE LIGNE LÉGALE, tout en bas du pied de page de chaque page publique,
- * et nulle part ailleurs dans la navigation : ni dans le menu déplié, ni dans
+ * et nulle part ailleurs dans la navigation : ni dans les panneaux du menu, ni dans
  * les groupes du pied de page (« je ne veux pas que ce soit trop voyant »). La
  * loi la veut atteignable sur toutes les pages : elle l'est, en petit.
  */
@@ -153,10 +193,12 @@ export const LIENS_LEGAUX: readonly LienDeMenu[] = [LIEN_MENTIONS, LIEN_CGV, LIE
  *   Offres     Enseignants · Lycées · Écoles · Entreprises · Devis
  *   Aide       Guides · Manuel · Règles · Reprendre · Profil · Contact
  *
- * Le menu déplié montre la pédagogie : sous le titre du cours, de l'arène et
- * des épisodes, une phrase dit ce qu'on y fait (`phrase`). Chaque page n'a
- * qu'une place et qu'un nom. Les deux portes, Rejoindre et Connexion, sont hors
- * des groupes (`PORTES`) ; le légal tient sur sa petite ligne (`LIENS_LEGAUX`).
+ * Le menu montre la pédagogie : dans le panneau du cours, de l'arène et des
+ * épisodes, une phrase dit ce qu'on y fait (`phrase`). Chaque groupe a son
+ * pictogramme et son bouton vers sa page (`icone`, `appel`) ; chaque entrée, son
+ * pictogramme et sa ligne (`icone`, `ligne`). Chaque page n'a qu'une place et
+ * qu'un nom. Les deux portes, Rejoindre et Connexion, sont hors des groupes
+ * (`PORTES`) ; le légal tient sur sa petite ligne (`LIENS_LEGAUX`).
  *
  * SORTIS DU MENU, ET ATTEINTS AUTREMENT : l'examen individuel (/ecoles#evaluer,
  * une section de la page des écoles), l'intégration (/integration, liée depuis
@@ -170,37 +212,49 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     code: "cours",
     titre: "Cours",
     entree: "/cours",
+    appel: "Voir les diplômes",
+    icone: "formation",
     phrase: "Chaque notion se pratique : vous passez l'écriture, et vous voyez ce qu'elle change dans les comptes.",
     liens: [
       {
         href: "/cours",
         libelle: "Diplômes",
+        icone: "formation",
+        ligne: "Du bac STMG au DSCG : les chapitres dans l'ordre où ils s'apprennent.",
         aide: "Votre diplôme d'abord : ses chapitres dans l'ordre d'apprentissage, bloc par bloc du référentiel, chacun sur une entreprise simulée, guidé puis en cas pratique.",
       },
       {
         href: "/notions",
         libelle: "Notions",
+        icone: "idee",
+        ligne: "Les fiches des notions, à relire avant ou après un chapitre.",
         aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
       },
       {
         href: "/parcours",
         libelle: "Référentiels",
+        icone: "fiche",
+        ligne: "Ce que le cours couvre, bloc par bloc, pour chaque diplôme.",
         aide: "Votre référentiel bloc par bloc, pour chaque formation servie, du CAP au DSCG : où chacun se travaille, et ce qui n'est qu'effleuré.",
       },
     ],
   },
   {
-    // L'ARÈNE : le simulateur. Son mot ouvre sa présentation (/fonctionnalites), qui n'a plus
-    // d'entrée à elle ; ses entrées sont ce qu'on y fait.
+    // L'ARÈNE : le simulateur. Le bouton de son panneau ouvre sa présentation (/fonctionnalites),
+    // qui n'a plus d'entrée à elle ; ses entrées sont ce qu'on y fait.
     code: "arene",
     titre: "Arène",
     entree: "/fonctionnalites",
+    appel: "Voir l'arène",
+    icone: "resultats",
     aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos élèves et de vos étudiants.",
     phrase: "Vous dirigez une entreprise en équipe, et le marché répond à vos choix.",
     liens: [
       {
         href: "/jouer",
         libelle: "Solo",
+        icone: "concurrence",
+        ligne: "Une partie tout de suite, seul contre des concurrents simulés.",
         aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
       },
       {
@@ -208,16 +262,22 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         // pas les entreprises clientes, qui ont leur entrée dans les offres.
         href: "/entreprises",
         libelle: "Métiers",
+        icone: "boutique",
+        ligne: "Les entreprises de l'arène : leur marché, leurs contraintes.",
         aide: "Les fiches des entreprises que l'on dirige dans l'arène : leur marché, leurs contraintes, ce qu'on y apprend.",
       },
       {
         href: "/animations",
         libelle: "Ateliers",
+        icone: "planning",
+        ligne: "Des séances prêtes à animer, avec leur grille d'évaluation.",
         aide: "Des déroulés de séance prêts à animer, avec leurs livrables et leur grille d'évaluation.",
       },
       {
         href: "/guide#concours",
         libelle: "Concours",
+        icone: "trophee",
+        ligne: "Un concours entre classes, des inscriptions à la finale.",
         aide: "Comment se déroule un concours entre classes, des inscriptions à la finale ; l'enseignant le crée depuis son espace.",
       },
     ],
@@ -226,32 +286,42 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     code: "episodes",
     titre: "Épisodes",
     entree: "/entreprises/episode",
+    appel: "Voir les épisodes",
+    icone: "ecrire",
     phrase: "Vous décidez en manager, puis vous voyez ce que la décision a coûté.",
     liens: [
       {
         href: "/entreprises/episode",
         libelle: "Catalogue",
+        icone: "ecrire",
+        ligne: "Dans la peau d'un manager, du terrain à la stratégie.",
         aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : ${DECISIONS_PAR_EPISODE} décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
       },
       {
         href: "/enseignants/episodes",
         libelle: "Classe",
+        icone: "equipes",
+        ligne: "Une séance en classe, avec la fiche de l'enseignant.",
         aide: "Un coût marginal, une VAN ou un rachat joué comme une décision, en une séance de deux heures, avec la fiche de l'enseignant.",
       },
     ],
   },
   {
     // LES OFFRES : à qui elles s'adressent, et le devis où elles aboutissent (le site n'encaisse
-    // rien). Leur mot ouvre la page des offres, /tarifs : l'adresse reste, pour les liens partagés
-    // et le référencement.
+    // rien). Le bouton de leur panneau ouvre la page des offres, /tarifs : l'adresse reste, pour les
+    // liens partagés et le référencement.
     code: "offres",
     titre: "Offres",
     entree: "/tarifs",
+    appel: "Voir les offres",
+    icone: "etiquette",
     aide: "Gratuit pour découvrir en solo ; sur mesure et sur devis pour faire cours, et pour les épisodes manager.",
     liens: [
       {
         href: "/enseignants",
         libelle: "Enseignants",
+        icone: "ecran",
+        ligne: "Pourquoi la plateforme apprend à décider, et pas à cliquer.",
         aide: "Découvrir Business Arena : pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
       },
       // « LYCÉES » A SA PLACE ICI, juste après « Enseignants » : { href: "/lycees", libelle: "Lycées" }.
@@ -260,16 +330,22 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/ecoles",
         libelle: "Écoles",
+        icone: "immeuble",
+        ligne: "Du bachelor au master, des compétences pour l'accréditation.",
         aide: `L'arène pour le bachelor, les épisodes manager pour le master et la formation continue, et ${COMPETENCES.length} compétences mesurées à montrer à un jury d'accréditation.`,
       },
       {
         href: "/entreprises/offre",
         libelle: "Entreprises",
+        icone: "accord",
+        ligne: "Les formules pour une entreprise ou un organisme de formation.",
         aide: "Pour une entreprise ou un organisme de formation : les formules, ce qui est inclus, ce qui se chiffre au devis.",
       },
       {
         href: "/devis",
         libelle: "Devis",
+        icone: "courrier",
+        ligne: "Une demande écrite, et une réponse par écrit.",
         aide: "Une demande écrite : l'offre, l'établissement ou l'entreprise, le niveau souhaité, le nombre d'enseignants ou de managers. La réponse vient par écrit.",
       },
     ],
@@ -280,17 +356,23 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     code: "aide",
     titre: "Aide",
     entree: "/guides",
+    appel: "Voir les guides",
+    icone: "document",
     liens: [
-      LIEN_GUIDES,
+      { ...LIEN_GUIDES, icone: "document", ligne: "Un guide par public, avec les écrans réels et sa version PDF." },
       {
         href: "/manuel",
         libelle: "Manuel",
+        icone: "imprimer",
+        ligne: "Le manuel de l'enseignant : comment l'application évalue.",
         aide: "Le manuel de l'enseignant : comment l'application évalue, les situations, les grilles, l'indice et le mérite, dans un document qui s'imprime.",
       },
-      LIEN_REGLES,
+      { ...LIEN_REGLES, icone: "balance", ligne: "Comment se joue un tour, et comment on anime une classe." },
       {
         href: "/reprendre",
         libelle: "Reprendre",
+        icone: "cle",
+        ligne: "Votre code de reprise vous rend votre partie.",
         aide: "Vous avez changé d'appareil, ou le navigateur a oublié qui vous étiez : votre code de reprise vous rend votre partie.",
       },
       {
@@ -298,6 +380,8 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         // cette page et depuis la fin de chaque épisode.
         href: "/profile",
         libelle: "Profil",
+        icone: "personne",
+        ligne: "Vos compétences, vos parties jouées et vos réussites.",
         aide: "Vos compétences, vos parties jouées et vos réussites, sur cet appareil ou sous votre code de reprise.",
       },
       {
@@ -305,6 +389,8 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         // Les pages l'appellent par son verbe (`LIEN_CONTACT`).
         href: "/rendez-vous",
         libelle: "Contact",
+        icone: "telephone",
+        ligne: "Un rendez-vous au téléphone pour parler de votre classe.",
         aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
       },
     ],
@@ -312,8 +398,18 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
 ];
 
 /**
+ * LA PHRASE COURTE D'UN GROUPE, dans la liste du téléphone : le début de sa
+ * phrase, jusqu'au premier « : » ou à la première virgule (« Chaque notion se
+ * pratique »). Elle se lit dans le plan, jamais recopiée : la phrase change,
+ * son début suit. Les offres et l'aide, sans phrase, n'en ont pas.
+ */
+export function phraseCourte(groupe: GroupeDeMenu): string | undefined {
+  return groupe.phrase?.split(/\s*[:,]/)[0]!.trim();
+}
+
+/**
  * LES DEUX PORTES, hors des groupes : en boutons à droite de la barre sur grand
- * écran, et en tête du menu déplié, seules (aucune autre action n'y a sa
+ * écran, et en tête du menu du téléphone, seules (aucune autre action n'y a sa
  * place). Un mot chacune, et un nom plus long pour une synthèse vocale.
  */
 export const PORTES: readonly LienDeMenu[] = [
@@ -353,9 +449,10 @@ export function lienDuPlan(href: string): LienDeMenu {
 
 /**
  * Les mots de la barre, sur grand écran : un par groupe, sous le TITRE du
- * groupe, vers la page que ce titre ouvre. Cinq, par construction : une barre
- * qui affiche tout n'affiche plus rien, et c'est de là que venait
- * l'encombrement.
+ * groupe, avec la page du groupe. Cinq, par construction : une barre qui
+ * affiche tout n'affiche plus rien, et c'est de là que venait l'encombrement.
+ * Dans la barre, le mot ouvre le panneau du groupe, et le bouton du panneau
+ * mène à cette page ; au pied de page, le titre de la colonne y mène.
  */
 export function liensDeTete(): LienDeMenu[] {
   return NAVIGATION.map((g) => ({
@@ -365,7 +462,7 @@ export function liensDeTete(): LienDeMenu[] {
   }));
 }
 
-/** Les portes d'entrée par public, en boutons à droite de la barre et en tête du menu déplié. */
+/** Les portes d'entrée par public, en boutons à droite de la barre et en tête du menu du téléphone. */
 export function liensDAcces(): LienDeMenu[] {
   return [...PORTES];
 }

@@ -10,6 +10,7 @@ import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
 import { espacesOrdinaires } from "../../src/lib/typographie";
+import { NAVIGATION } from "../../src/config/navigation";
 
 /**
  * L'ACCESSIBILITÉ, MESURÉE PAR AXE-CORE DANS UN VRAI NAVIGATEUR (audit UX du 11 novembre 2026, P2-11 ;
@@ -23,7 +24,8 @@ import { espacesOrdinaires } from "../../src/lib/typographie";
  *  · les curseurs qui disaient « 1990 » sans « € » (`aria-valuetext`) : celui d'un chapitre ici, celui du
  *    prix de l'arène dans tests/e2e/mobile.e2e.ts.
  * axe-core est celui que l'audit a employé (4.13, dépendance de développement d'eslint-plugin-jsx-a11y).
- * Le pied de page et la barre du site ne sont pas mesurés ici : ils ont leur propre chantier.
+ * Le pied de page n'est pas mesuré ici : il a son propre chantier. La barre du site et ses panneaux le
+ * sont, depuis la maquette A (12 novembre 2026), en bas de ce fichier.
  */
 
 const AXE = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
@@ -184,6 +186,126 @@ describe("P2-11 · les défauts nets de l'audit, mesurés", () => {
     expect(await dit()).toBe(await montre());
     await ctx.close();
   }, 120_000);
+});
+
+/**
+ * LA BARRE DU SITE ET SES PANNEAUX (le propriétaire, 12 novembre 2026, la maquette A). Le motif
+ * « disclosure navigation » : chaque mot est un bouton qui dit ce qu'il ouvre (`aria-controls`) et
+ * s'il l'a ouvert (`aria-expanded`), le panneau ne porte que des liens, et aucun rôle de menu
+ * d'application. Mesurés par axe-core, panneau par panneau à 1 280 px et groupe par groupe à 390 px ;
+ * puis le focus visible, l'ordre de tabulation et la demande de moins de mouvement.
+ */
+describe("la barre du site, ses panneaux et le menu du téléphone", () => {
+  const REGLES = [
+    "aria-allowed-attr",
+    "aria-prohibited-attr",
+    "aria-valid-attr-value",
+    "aria-hidden-focus",
+    "button-name",
+    "link-name",
+    "list",
+    "listitem",
+    "nested-interactive",
+    "duplicate-id-aria",
+    "color-contrast",
+    "target-size",
+  ];
+  const fondus = (page: Page, selecteur: string) =>
+    page.locator(selecteur).evaluate((e) => Promise.all(e.getAnimations({ subtree: true }).map((a) => a.finished)));
+
+  it("à 1 280 px : chaque panneau ouvert passe axe-core, son mot dit qu'il l'a ouvert, et aucun rôle de menu", async () => {
+    const ctx = await contexte(1280);
+    const page = await ctx.newPage();
+    await aller(page, "/notions");
+    expect(await violations(page, REGLES, "header"), "la barre fermée").toEqual([]);
+    for (const g of NAVIGATION) {
+      await page.locator(`[data-mot-de-la-barre="${g.code}"]`).click();
+      await page.locator(`[data-panneau-du-groupe="${g.code}"]`).waitFor({ state: "visible" });
+      await fondus(page, `[data-panneau-du-groupe="${g.code}"]`);
+      expect(await violations(page, REGLES, "header"), `le panneau « ${g.titre} »`).toEqual([]);
+      const deplies = await page.locator("[data-mot-de-la-barre]").evaluateAll((els) =>
+        els.map((e) => [e.getAttribute("data-mot-de-la-barre"), e.getAttribute("aria-expanded"), e.getAttribute("aria-controls")]),
+      );
+      expect(deplies).toEqual(NAVIGATION.map((x) => [x.code, String(x.code === g.code), `panneau-${x.code}`]));
+    }
+    expect(await page.locator("header [role^='menu']").count(), "un rôle de menu d'application dans la barre").toBe(0);
+    await ctx.close();
+  }, 180_000);
+
+  it("à 390 px : la liste des groupes et chaque groupe ouvert passent axe-core", async () => {
+    const ctx = await contexte(390);
+    const page = await ctx.newPage();
+    await aller(page, "/notions");
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.locator("#plan-du-site [data-liste-des-groupes]").waitFor({ state: "visible" });
+    await fondus(page, "#plan-du-site");
+    expect(await violations(page, REGLES, "header"), "la liste des groupes").toEqual([]);
+    await capturer(page, "menu-liste");
+    for (const g of NAVIGATION) {
+      await page.locator(`#plan-du-site [data-groupe-du-menu="${g.code}"]`).click();
+      await page.locator(`#plan-du-site [data-groupe-du-plan="${g.code}"]`).waitFor({ state: "visible" });
+      await fondus(page, "#plan-du-site");
+      expect(await violations(page, REGLES, "header"), `le groupe « ${g.titre} »`).toEqual([]);
+      await page.locator(`#plan-du-site [data-groupe-du-plan="${g.code}"]`).getByRole("button", { name: /^Retour/ }).click();
+    }
+    await ctx.close();
+  }, 180_000);
+
+  it("au clavier : le focus se voit sur le mot et dans son panneau, et la tabulation suit l'ordre de lecture", async () => {
+    const ctx = await contexte(1280);
+    const page = await ctx.newPage();
+    await aller(page, "/notions");
+    // Le lien d'évitement, le logo, puis les mots dans l'ordre de la barre.
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.getAttribute("href"))).toBe("#main");
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))).toBe("Accueil");
+    const anneau = () =>
+      page.evaluate(() => {
+        const s = getComputedStyle(document.activeElement!);
+        return { style: s.outlineStyle, largeur: parseFloat(s.outlineWidth) };
+      });
+    for (const g of NAVIGATION) {
+      await page.keyboard.press("Tab");
+      expect(await page.evaluate(() => document.activeElement?.getAttribute("data-mot-de-la-barre")), "l'ordre des mots").toBe(g.code);
+      const a = await anneau();
+      expect(a.style, `« ${g.titre} » : pas d'anneau de focus`).not.toBe("none");
+      expect(a.largeur, g.titre).toBeGreaterThanOrEqual(2);
+    }
+    // Ouvert au clavier, le panneau suit son mot : la tabulation y entre, l'anneau s'y voit.
+    await page.locator('[data-mot-de-la-barre="aide"]').focus();
+    await page.keyboard.press("Enter");
+    await page.locator('[data-panneau-du-groupe="aide"]').waitFor({ state: "visible" });
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.hasAttribute("data-appel-du-groupe"))).toBe(true);
+    expect((await anneau()).style, "le bouton du panneau : pas d'anneau de focus").not.toBe("none");
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.hasAttribute("data-entree-du-panneau"))).toBe(true);
+    expect((await anneau()).style, "une carte : pas d'anneau de focus").not.toBe("none");
+    await ctx.close();
+  }, 120_000);
+
+  it("moins de mouvement : le panneau et le menu s'ouvrent sans animation", async () => {
+    const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR", reducedMotion: "reduce" });
+    const page = await ctx.newPage();
+    await aller(page, "/notions");
+    await page.locator('[data-mot-de-la-barre="cours"]').click();
+    const panneau = page.locator('[data-panneau-du-groupe="cours"]');
+    await panneau.waitFor({ state: "visible" });
+    expect(await panneau.evaluate((e) => e.getAnimations({ subtree: true }).length), "le panneau s'anime malgré la demande").toBe(0);
+    expect(
+      await page.locator('[data-mot-de-la-barre="cours"] span').evaluate((e) => getComputedStyle(e).transitionProperty),
+      "le trait du mot glisse malgré la demande",
+    ).toBe("none");
+    await page.keyboard.press("Escape");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.locator("#plan-du-site [data-liste-des-groupes]").waitFor({ state: "visible" });
+    expect(await page.locator("#plan-du-site").evaluate((e) => e.getAnimations({ subtree: true }).length), "le menu s'anime malgré la demande").toBe(0);
+    await page.locator('#plan-du-site [data-groupe-du-menu="aide"]').click();
+    expect(await page.locator("#plan-du-site").evaluate((e) => e.getAnimations({ subtree: true }).length), "le groupe s'anime malgré la demande").toBe(0);
+    await ctx.close();
+  }, 60_000);
 });
 
 /** Un épisode joué jusqu'au bilan, en prenant chaque fois le premier choix proposé. */

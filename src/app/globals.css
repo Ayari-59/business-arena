@@ -47,6 +47,9 @@
     Roboto, sans-serif;
 
   --animate-plan-ouvre: plan-ouvre var(--duree-passage) var(--courbe-passage);
+  /* Le panneau d'un mot de la barre (novembre 2026, la maquette A) : toute la largeur, il descend
+     d'un cran en fondu, sans l'échelle de la carte de coin, qu'une largeur d'écran rendrait visible. */
+  --animate-panneau-ouvre: panneau-ouvre var(--duree-passage) var(--courbe-passage);
 
   /* L'ORANGE AMBRÉ DE L'ACTION, sur le marine du tableau. Pas de pastel : du
      50 au 500, un seul orange, #ff8a1f, pour tout ce qui se touche ou se
@@ -546,6 +549,17 @@
   from {
     opacity: 0;
     transform: translateY(-0.375rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes panneau-ouvre {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
   }
   to {
     opacity: 1;

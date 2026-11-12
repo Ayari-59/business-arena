@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
 import { mesurerContraste } from "./helpers/contraste";
+import { NAVIGATION } from "../../src/config/navigation";
 
 /**
  * La lisibilité du papier et du tableau, mesurée dans un vrai navigateur.
@@ -62,23 +63,55 @@ beforeAll(async () => {
     await aller(page, chemin);
     relever(chemin, await mesurerContraste(page, "clair"));
   }
-  // Le plan du site est replié tant qu'on ne l'ouvre pas : mesuré comme les
-  // autres pages, il ne serait jamais mesuré du tout, alors qu'il porte toute
-  // la navigation et ses phrases d'aide en petits corps.
+  // Le menu est replié tant qu'on ne l'ouvre pas : mesuré comme les autres
+  // pages, il ne serait jamais mesuré du tout, alors qu'il porte toute la
+  // navigation, ses phrases et les lignes de ses entrées en petits corps.
+  // Novembre 2026 (la maquette A) : sur grand écran, chaque mot ouvre son
+  // panneau, mesuré un à un ; sur téléphone, la liste des groupes, puis
+  // chaque groupe.
+  const finDesFondus = (selecteur: string) =>
+    page.locator(selecteur).evaluate((e) => Promise.all(e.getAnimations({ subtree: true }).map((a) => a.finished)));
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await aller(page, "/");
+  for (const g of NAVIGATION) {
+    await page.locator(`[data-mot-de-la-barre="${g.code}"]`).click();
+    await page.locator(`[data-panneau-du-groupe="${g.code}"]`).waitFor({ state: "visible" });
+    await finDesFondus(`[data-panneau-du-groupe="${g.code}"]`);
+    relever(`panneau ${g.code}`, await mesurerContraste(page, "clair"));
+  }
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 390, height: 844 });
   await aller(page, "/");
   await page.getByRole("button", { name: "Menu" }).click();
-  // Ses groupes sont dépliés (novembre 2026) : tout ce qu'il porte est rendu, donc mesuré.
   await page.locator("#plan-du-site [data-titre-du-groupe]").first().waitFor({ state: "visible" });
+  await finDesFondus("#plan-du-site");
   relever("menu", await mesurerContraste(page, "clair"));
-}, 180_000);
+  for (const g of NAVIGATION) {
+    await page.locator(`#plan-du-site [data-groupe-du-menu="${g.code}"]`).click();
+    await page.locator(`#plan-du-site [data-groupe-du-plan="${g.code}"]`).waitFor({ state: "visible" });
+    await finDesFondus("#plan-du-site");
+    relever(`menu ${g.code}`, await mesurerContraste(page, "clair"));
+    await page.locator(`#plan-du-site [data-groupe-du-plan="${g.code}"]`).getByRole("button", { name: /^Retour/ }).click();
+  }
+}, 240_000);
 
 afterAll(async () => {
   await navigateur?.close();
 });
 
 describe("lisibilité du papier et du tableau", () => {
-  it("le site a bien été mesuré", () => {
+  it("le site a bien été mesuré, le menu compris", () => {
     expect(releve.size, "relevé vide, la mesure n'a rien vu").toBeGreaterThan(200);
+    // Chaque panneau et chaque groupe du téléphone ont été lus : leur nom, et leurs lignes.
+    for (const g of NAVIGATION) {
+      for (const ou of [`panneau ${g.code}`, `menu ${g.code}`]) {
+        const lus = [...releve.keys()].filter((cle) => cle.startsWith(`${ou} · `));
+        expect(lus.length, `${ou} n'a pas été mesuré`).toBeGreaterThan(0);
+        for (const l of g.liens) {
+          expect(lus.some((cle) => cle.includes(l.ligne.slice(0, 12))), `${ou} : la ligne de « ${l.libelle} » n'a pas été mesurée`).toBe(true);
+        }
+      }
+    }
   });
 
   it("le bouton qui lance une partie reste lisible", () => {
