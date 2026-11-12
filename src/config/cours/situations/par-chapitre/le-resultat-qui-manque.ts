@@ -9,8 +9,8 @@ import type { Situation } from "../types";
  * RÉSULTAT QUI MANQUE (contrôle de gestion, palier 4).
  *
  * Le président de NOVA présente les comptes du trimestre au conseil : il manque 47 100 €
- * au résultat. Le directeur commercial accuse l'usine (« le chiffre d'affaires tient son budget à
- * 400 € près, l'usine a dépassé le sien de 42 700 € ») ; la directrice de l'usine accuse les
+ * au résultat. La responsable commerciale accuse l'usine (« le chiffre d'affaires tient son budget
+ * à 400 € près, l'usine a dépassé le sien de 42 700 € ») ; le chef d'atelier accuse les
  * ventes (« nous avons fabriqué plus de Salon, qui coûtent plus cher : le dépassement vient des
  * ventes »). Ces accusations sont l'histoire du cas, des hypothèses que l'élève vérifie : le modèle
  * ne connaît que les écarts.
@@ -155,7 +155,7 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
         const s = x.s;
         return [
           `« Jeudi, je présente les comptes du trimestre au conseil de ${s.f.entreprise}. Le résultat devait être de ${eur(x.e.resultatPrevu)} ; il est de ${eur(x.e.resultatReel)}. Il manque ${eur(x.manque)}, et chacun accuse l'autre. »`,
-          `« Le directeur commercial m'écrit : "Le chiffre d'affaires tient son budget à ${eur(-x.commercial.ventes)} près. C'est l'usine qui a dépassé le sien de ${eur(-x.commercial.usine)}." La directrice de l'usine répond : "Nous avons fabriqué ce que les commerciaux ont vendu, et ils ont vendu plus de ${s.salon.nom}, qui coûtent bien plus cher à fabriquer. Le dépassement vient des ventes." »`,
+          `« La responsable commerciale m'écrit : "Le chiffre d'affaires tient son budget à ${eur(-x.commercial.ventes)} près. C'est l'usine qui a dépassé le sien de ${eur(-x.commercial.usine)}." Le chef d'atelier répond : "Nous avons fabriqué ce que les commerciaux ont vendu, et ils ont vendu plus de ${s.salon.nom}, qui coûtent bien plus cher à fabriquer. Le dépassement vient des ventes." »`,
           "« L'usine m'a envoyé son compte rendu d'écarts, mais l'atelier n'a pas encore chiffré la ligne du rendement. Dites-moi ce qui revient à chacun, chiffres à l'appui : c'est ce que je dirai au conseil. »",
           "Pas de cours cette fois : les calculs sont ceux du chapitre. Un écart est le réel moins le prévu ; sur une charge, positif, il est défavorable.",
         ];
@@ -198,7 +198,7 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
       explication: (c) => {
         const x = resultatQuiManque(c);
         return [
-          `La directrice de l'usine a raison pour ${eur(x.s.partDuVolume)} : c'est le coût préétabli de ce qui a été vendu à la place du budget. Mais à production réelle, l'usine a coûté ${eur(x.e.ecartGlobalSurCouts)} de plus que son préétabli : cela, les ventes n'y sont pour rien.`,
+          `Le chef d'atelier a raison pour ${eur(x.s.partDuVolume)} : c'est le coût préétabli de ce qui a été vendu à la place du budget. Mais à production réelle, l'usine a coûté ${eur(x.e.ecartGlobalSurCouts)} de plus que son préétabli : cela, les ventes n'y sont pour rien.`,
         ];
       },
     },
@@ -210,7 +210,7 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
       question: (c) => {
         const x = resultatQuiManque(c);
         const s = x.s;
-        return `La directrice de l'usine reproche aux commerciaux d'avoir vendu trop de ${s.salon.nom}. Faites tourner les ventes : les ${qte(x.mix.total)} enceintes vendues restent en nombre, déplacez seulement le nombre de ${s.salon.nom} parmi elles. Placez le curseur sur le plus petit nombre de ${s.salon.nom} qui aurait fait une marge préétablie au moins égale à celle du budget.`;
+        return `Le chef d'atelier reproche aux commerciaux d'avoir vendu trop de ${s.salon.nom}. Faites tourner les ventes : les ${qte(x.mix.total)} enceintes vendues restent en nombre, déplacez seulement le nombre de ${s.salon.nom} parmi elles. Placez le curseur sur le plus petit nombre de ${s.salon.nom} qui aurait fait une marge préétablie au moins égale à celle du budget.`;
       },
       grandeur: (c) => ({ libelle: `Enceintes ${syntheseDesEcarts(c).salon.nom} vendues`, unite: "enceintes" }),
       cible: (c) => {
@@ -335,7 +335,7 @@ export const LE_RESULTAT_QUI_MANQUE: Situation = {
       notions: ["volume_price_variance", "cost_variance"],
       question: (c) => {
         const x = resultatQuiManque(c);
-        return `Le directeur commercial fait remarquer que sa lecture retombe, elle aussi, sur l'écart : ${eur(x.commercial.ventes)} pour les ventes, ${eur(x.commercial.usine)} pour l'usine, ${eur(x.s.distribution)} pour la distribution, soit ${eur(x.e.ecartDeResultat)}. Sa lecture est-elle juste pour autant ?`;
+        return `La responsable commerciale fait remarquer que sa lecture retombe, elle aussi, sur l'écart : ${eur(x.commercial.ventes)} pour les ventes, ${eur(x.commercial.usine)} pour l'usine, ${eur(x.s.distribution)} pour la distribution, soit ${eur(x.e.ecartDeResultat)}. Sa lecture est-elle juste pour autant ?`;
       },
       options: (c) => {
         const x = resultatQuiManque(c);

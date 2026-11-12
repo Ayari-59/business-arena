@@ -1,4 +1,4 @@
-import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
+import { deuxChemins, eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   MODULE_DE_RESERVATION,
   PRATIQUES_DES_CANAUX,
@@ -163,7 +163,8 @@ export const LE_PARCOURS_CLIENT: Chapitre = {
         const k = moisDuModule(r);
         return [
           { libelle: "Marge moyenne d'une réservation", attendu: m.parReservation, calcul: `${eur(m.margeDUneVente)} × ${pct(m.tauxDAchat * 100)} = ${eur(m.parReservation)}` },
-          { libelle: `Gain du mois avec ${qte(r)} réservations`, attendu: k.gain, calcul: `${qte(r)} × ${eur(m.parReservation)} − ${eur(k.loyer)} = ${eur(k.gain)}` },
+          // L'autre chemin : la marge d'une réservation gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: `Gain du mois avec ${qte(r)} réservations`, ...deuxChemins(k.gain, r * m.margeDUneVente * m.tauxDAchat - k.loyer), calcul: `${qte(r)} × ${eur(m.parReservation)} − ${eur(k.loyer)} = ${eur(k.gain)}` },
         ];
       },
       explication: () => {

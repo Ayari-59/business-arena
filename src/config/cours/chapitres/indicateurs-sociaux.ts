@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { MOIS_DE_L_EXERCICE } from "../monde/exercice-de-nova";
 import {
@@ -124,7 +124,8 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
         const s = indicateursSociaux(c);
         return [
           { libelle: "Effectif moyen de l'année", nature: "grandeur", attendu: s.effectifMoyenAuCentieme, calcul: `${qte(s.moisPayes)} ÷ 12 = ${qte(s.effectifMoyenAuCentieme)}` },
-          { libelle: "Taux de rotation (%)", attendu: s.rotationPct, calcul: `(${s.departs} + ${s.arrivees}) ÷ 2 ÷ ${qte(s.effectifMoyenAuCentieme)} × 100 = ${pct(s.rotationPct)}` },
+          // L'autre chemin : l'effectif moyen gardé avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Taux de rotation (%)", ...deuxChemins(s.rotationPct, ((s.departs + s.arrivees) / 2 / (s.moisPayes / 12)) * 100), calcul: `(${s.departs} + ${s.arrivees}) ÷ 2 ÷ ${qte(s.effectifMoyenAuCentieme)} × 100 = ${pct(s.rotationPct)}` },
         ];
       },
       explication: (c) => {
@@ -179,7 +180,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
       },
       question: (c) => {
         const s = indicateursSociaux(c);
-        return `Au deuxième trimestre, le chiffre d'affaires par salarié ${dE(c.entreprise)} monte de ${pct(s.evolutionDuCaParSalarie)}. Le directeur y voit une équipe plus efficace. Que lui répondez-vous ?`;
+        return `Au deuxième trimestre, le chiffre d'affaires par salarié ${dE(c.entreprise)} monte de ${pct(s.evolutionDuCaParSalarie)}. Le président y voit une équipe plus efficace. Que lui répondez-vous ?`;
       },
       options: (c) => {
         const s = indicateursSociaux(c);

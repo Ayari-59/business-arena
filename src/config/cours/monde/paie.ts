@@ -110,14 +110,14 @@ export function cheminDuNetAuBrut(netAPayer: number, t: TauxDeLaPaie, netPour100
   const [premier, ...suivants] = essais;
   const verse = (e: { brut: number; net: number }) => `${eur(e.brut)} (${eur(e.net)})`;
   const debut = `${eur(netAPayer)} ÷ ${nombreAuCentieme(netPour100)} % = ${eur(depart)}, dont le bulletin verse ${eur(premier!.net)}`;
-  if (suivants.length === 0) return { brut, calcul: debut };
+  if (suivants.length === 0) return { brut, calcul: debut, depart };
   const dernier = suivants[suivants.length - 1]!;
   const descend = dernier.brut < premier!.brut;
   const milieu = suivants.slice(0, -1).map(verse);
   const fin = descend ? `${eur(dernier.brut)} (${eur(dernier.net)}, trop peu)` : verse(dernier);
   // Une phrase par étape, pour rester court : le calcul, les essais au centime, la conclusion.
   const calcul = `${debut}. ${descend ? "Un centime de moins à chaque essai" : "Un centime de plus à chaque essai"} : ${[...milieu, fin].join(", ")}. Le plus petit brut qui verse ${eur(netAPayer)} : ${eur(brut)}`;
-  return { brut, calcul };
+  return { brut, calcul, depart };
 }
 
 /** Le brut qu'il faut pour un net avant impôt donné (au centime supérieur). */

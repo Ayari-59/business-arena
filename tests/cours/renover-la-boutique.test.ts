@@ -72,7 +72,8 @@ describe("rénover la boutique", () => {
     expect(juste(ch, "decider")).toBe(`Investir, et payer sur la trésorerie : il en resterait 74 868,20 €`);
   });
 
-  it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
+  // La garde des textes dépasse les 5 s par défaut sous la suite entière (déjà vrai sur 467c0aa) : elle a sa durée à elle.
+  it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch), 60_000);
 });
 
 describe("le cas : un prêt sur sept ans", () => {
@@ -103,5 +104,5 @@ describe("le cas : un prêt sur sept ans", () => {
     expect(juste(s, "reponse")).toMatch(/^Rénover, avec le prêt sur 5 ans/);
   });
 
-  it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));
+  it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s), 60_000);
 });

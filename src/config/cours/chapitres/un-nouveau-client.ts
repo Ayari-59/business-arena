@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -163,8 +163,9 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
         const k = campagneDuChapitre(c);
         return [
           { libelle: "Marge d'une vente de passant", attendu: k.passants.margeDUneVente, calcul: `${eur(k.passants.marge)} ÷ ${qte(k.passants.tickets)} = ${eur(k.passants.margeDUneVente)}` },
-          { libelle: "Marge des ventes gagnées", attendu: k.marge, calcul: `${qte(k.ventes)} × ${eur(k.passants.margeDUneVente)} = ${eur(k.marge)}` },
-          { libelle: "Ce que la campagne laisse", attendu: k.laisse, calcul: `${eur(k.marge)} − ${eur(k.budget)} = ${eur(k.laisse)}` },
+          // L'autre chemin : la marge d'une vente gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Marge des ventes gagnées", ...deuxChemins(k.marge, (k.ventes * k.passants.marge) / k.passants.tickets), calcul: `${qte(k.ventes)} × ${eur(k.passants.margeDUneVente)} = ${eur(k.marge)}` },
+          { libelle: "Ce que la campagne laisse", ...deuxChemins(k.laisse, (k.ventes * k.passants.marge) / k.passants.tickets - k.budget), calcul: `${eur(k.marge)} − ${eur(k.budget)} = ${eur(k.laisse)}` },
         ];
       },
       explication: (c) => {

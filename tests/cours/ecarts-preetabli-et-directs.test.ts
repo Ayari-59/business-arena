@@ -447,7 +447,7 @@ describe("le cas : le budget dépassé", () => {
 
   it("a la forme d'un cas dédié", () => {
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("Le directeur de l'usine");
+    expect(s.commanditaire).toBe("Le président"); // NOVA a un président, pas de directeur d'usine (audit du 11 novembre, P2-3)
   });
 
   it("refait les calculs du chapitre sur les chiffres du directeur", () => {

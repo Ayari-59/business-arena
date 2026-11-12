@@ -1,4 +1,4 @@
-import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
+import { eur, nombreAuCentieme, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_RESEAU, FIBRE, LIGNE, RAPPORT, VISIO, passerALaFibre } from "../../monde/reseau-d-atlas";
 import type { Situation } from "../types";
 
@@ -50,7 +50,7 @@ export const PASSER_A_LA_FIBRE: Situation = {
       champs: () => {
         const k = passerALaFibre();
         return [
-          { libelle: "Visioconférences en même temps", nature: "quantite", attendu: k.visiosAvecLaFibre, calcul: `${qte(FIBRE.envoiMbits)} × ${qte((1 - LIGNE.partReservee) * 100)} % ÷ ${qte(VISIO.envoiMbits)} = ${qte(k.visiosAvecLaFibre)}` },
+          { libelle: "Visioconférences en même temps", nature: "quantite", attendu: k.visiosAvecLaFibre, calcul: `${qte(FIBRE.envoiMbits)} × ${qte((1 - LIGNE.partReservee) * 100)} % ÷ ${nombreAuCentieme(VISIO.envoiMbits)} = ${qte(k.visiosAvecLaFibre)}` },
           { libelle: "Envoi du rapport (secondes)", nature: "grandeur", attendu: k.rapportAvecLaFibre, calcul: `${qte(RAPPORT.mo)} × 8 ÷ ${qte(FIBRE.envoiMbits)} = ${qte(k.rapportAvecLaFibre)}` },
           { libelle: "Coût en plus sur l'année", attendu: k.parAn, calcul: `${eur(FIBRE.enPlusParMois)} × 12 = ${eur(k.parAn)}` },
         ];

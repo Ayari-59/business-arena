@@ -34,12 +34,14 @@ const LA_PRESIDENTE = /(?<!\p{L})présidentes?(?!\p{L})/iu;
  * directrice générale » et « le directeur général » passaient, et l'élève qui suit NOVA d'un chapitre à
  * l'autre lisait trois dirigeants. Dans un texte qui ne se joue que chez NOVA, son dirigeant est « le
  * président ». Un texte qui se joue aussi ailleurs garde « le dirigeant » ou « la dirigeante » (voir
- * plus haut), mais ne nomme jamais « la dirigeante de NOVA ». Ne désignent pas NOVA : « la directrice
- * générale des services » d'une collectivité, et le cas général, « la dirigeante d'une petite
- * entreprise » (`securiser-les-processus`, une option fausse qui parle de toute entreprise).
+ * plus haut), mais ne nomme jamais « la dirigeante de NOVA ». Ne désigne pas NOVA : « la directrice
+ * générale des services » d'une collectivité.
+ *
+ * « La dirigeante d'une petite entreprise » passait aussi, comme un cas général : c'était un reste du
+ * renommage, dans une question sur le président de NOVA (audit du 11 novembre 2026, P2-4,
+ * `securiser-les-processus`). Chez NOVA seule, aucune « dirigeante » ne passe plus.
  */
-const UN_AUTRE_DIRIGEANT =
-  /(?<!\p{L})(dirigeantes?|directrices?\s+générales?|directeurs?\s+généra(l|ux))(?!\s+des\s+services)(?!\s+d['’]une\s)(?!\p{L})/iu;
+const UN_AUTRE_DIRIGEANT = /(?<!\p{L})(dirigeantes?|directrices?\s+générales?|directeurs?\s+généra(l|ux))(?!\s+des\s+services)(?!\p{L})/iu;
 const LA_DIRIGEANTE_DE_NOVA = /(?<!\p{L})dirigeantes?\s+de\s+NOVA(?!\p{L})/iu;
 
 /**
@@ -97,6 +99,56 @@ function directricesRefusees(texte: string, reprise: boolean): string[] {
 }
 
 /**
+ * CHEZ NOVA SEULE, NI DIRECTRICE, NI DIRECTEUR DE L'USINE, NI DIRECTEUR SANS FONCTION (audit du 11
+ * novembre 2026, P2-3 et P2-4). NOVA a un président, un chef d'atelier, une responsable commerciale et
+ * ses opérateurs (le-controle-de-gestion-dans-l-organisation). La règle précédente laissait passer chez
+ * elle « la directrice financière » et « la directrice de l'usine », restes du renommage de sa
+ * présidente, et la garde ne lisait pas le masculin : « le directeur de l'usine » commandait trois cas,
+ * « Le directeur y voit une équipe plus efficace » parlait de son président.
+ *
+ * Dans un texte qui ne se joue que chez NOVA, la garde refuse donc toute « directrice » (sauf celle des
+ * services d'une collectivité), tout « directeur de l'usine », et tout « directeur » sans fonction
+ * nommée, sauf s'il reprend un directeur que le contenu nomme avec sa fonction (« le directeur de NOVA
+ * DIFFUSION », la filiale ; « le directeur financier »). Les fonctions nommées que la garde tolère encore
+ * au masculin sont ci-dessous ; elles ne désignent pas le dirigeant de NOVA.
+ */
+const FONCTIONS_D_UN_DIRECTEUR = ["financier", "commercial", "de production", "des données", "de NOVA DIFFUSION", "de la filiale", "général des services"] as const;
+
+const UN_DIRECTEUR = /(?<!\p{L})directeurs?(?!\p{L})/giu;
+
+/** La fonction tolérée qui suit un « directeur » (`suite` : le texte juste après le mot), s'il y en a une. */
+function fonctionToleree(suite: string): string | undefined {
+  const s = suite.replace(/’/g, "'");
+  return FONCTIONS_D_UN_DIRECTEUR.find((q) => s.toLowerCase().startsWith(" " + q.toLowerCase()) && !/^\p{L}/u.test(s.slice(q.length + 1)));
+}
+
+/** Le texte nomme-t-il un directeur avec sa fonction, que « le directeur » seul peut ensuite reprendre ? */
+function nommeUnDirecteurQualifie(texte: string): boolean {
+  return [...texte.matchAll(UN_DIRECTEUR)].some((m) => fonctionToleree(texte.slice(m.index + m[0].length)) !== undefined);
+}
+
+/**
+ * Les « directrice » et « directeur » d'un texte joué chez NOVA seule que la garde refuse. `reprise` : le
+ * contenu nomme ailleurs un directeur avec sa fonction, que « le directeur » seul reprend.
+ */
+function directionsRefuseesChezNova(texte: string, reprise: boolean): string[] {
+  const refusees: string[] = [];
+  for (const m of texte.matchAll(UNE_DIRECTRICE)) {
+    if (/^\s+générales?\s+des\s+services(?!\p{L})/iu.test(texte.slice(m.index + m[0].length))) continue;
+    refusees.push(texte.slice(m.index, m.index + m[0].length + 24));
+  }
+  for (const m of texte.matchAll(UN_DIRECTEUR)) {
+    const suite = texte.slice(m.index + m[0].length);
+    // « Directeur général » : la garde du dirigeant le refuse déjà.
+    if (/^\s+généra(l|ux)(?!\p{L})/iu.test(suite) && !/^\s+général\s+des\s+services/iu.test(suite)) continue;
+    if (fonctionToleree(suite)) continue;
+    if (reprise && !/^\s+de\s+l['’]usine(?!\p{L})/iu.test(suite) && !/^\s+(de|d['’]|des|du)\s/iu.test(suite)) continue;
+    refusees.push(texte.slice(m.index, m.index + m[0].length + 24));
+  }
+  return refusees;
+}
+
+/**
  * LISTE D'ATTENTE : vide depuis la fusion du lot 4 des deux décimales, qui a corrigé
  * « chacun-son-levier » et « des-clients-repartis-sans-etre-servis ». Une entrée n'y est tolérée que
  * tant qu'elle a encore une faute : la garde ci-dessous l'exige.
@@ -121,7 +173,7 @@ function parcourir(x: unknown, chemin: string, emettre: (chemin: string, t: stri
 }
 
 /** Ce que l'élève lit de chaque chapitre et de chaque cas joué chez NOVA, servi une seule fois pour les gardes. */
-type TexteServi = { ou: string; code: string; seuleNova: boolean; repriseDUneDirectrice: boolean; texte: string };
+type TexteServi = { ou: string; code: string; seuleNova: boolean; repriseDUneDirectrice: boolean; repriseDUnDirecteur: boolean; texte: string };
 let servis: TexteServi[] | undefined;
 function textesChezNova() {
   return (servis ??= servirLesTextesDeNova());
@@ -140,7 +192,7 @@ function servirLesTextesDeNova() {
     if (commanditaire) parcourir(commanditaire, "", (_, t) => sesMots.push(t));
     const repriseDUneDirectrice = sesMots.some(nommeUneDirectriceQualifiee);
     const emettre = (chemin: string, texte: string) =>
-      sortie.push({ ou: `${ch.code} ${chemin}`, code: ch.code, seuleNova, repriseDUneDirectrice, texte });
+      sortie.push({ ou: `${ch.code} ${chemin}`, code: ch.code, seuleNova, repriseDUneDirectrice, repriseDUnDirecteur: false, texte });
     emettre("titre", ch.titre);
     emettre("accroche", ch.accroche ?? "");
     for (const [i, o] of ch.objectifs.entries()) emettre(`objectifs[${i}]`, o);
@@ -150,7 +202,9 @@ function servirLesTextesDeNova() {
     parcourir(reste, "", emettre);
     etapes.forEach((e, i) => parcourir(e, `e${i + 1}:${e.id}`, emettre));
   }
-  return sortie;
+  // Un contenu qui nomme un directeur avec sa fonction peut ensuite dire « le directeur » seul.
+  const nommentUnDirecteur = new Set(sortie.filter((t) => nommeUnDirecteurQualifie(t.texte)).map((t) => t.code));
+  return sortie.map((t) => ({ ...t, repriseDUnDirecteur: nommentUnDirecteur.has(t.code) }));
 }
 
 describe("NOVA est une SAS : aucun mot de la SARL dans ce qui se lit chez elle", () => {
@@ -214,7 +268,7 @@ describe("NOVA a un président : ni « dirigeante », ni « directrice général
     expect(UN_AUTRE_DIRIGEANT.test("Le directeur général veut garder la ligne")).toBe(true);
     expect(UN_AUTRE_DIRIGEANT.test("LA DIRECTRICE GÉNÉRALE")).toBe(true);
     expect(UN_AUTRE_DIRIGEANT.test("la directrice générale des services")).toBe(false);
-    expect(UN_AUTRE_DIRIGEANT.test("la dirigeante d'une petite entreprise")).toBe(false);
+    expect(UN_AUTRE_DIRIGEANT.test("la dirigeante d'une petite entreprise")).toBe(true);
     expect(UN_AUTRE_DIRIGEANT.test("Le dirigeant veut savoir")).toBe(false);
     expect(UN_AUTRE_DIRIGEANT.test("Le président veut savoir")).toBe(false);
     expect(LA_DIRIGEANTE_DE_NOVA.test("La dirigeante de NOVA choisit le fournisseur")).toBe(true);
@@ -263,5 +317,39 @@ describe("NOVA a un président : jamais « la directrice » seule pour le désig
     expect(nommeUneDirectriceQualifiee("Le président")).toBe(false);
     expect(directricesRefusees("Votre réponse au président", false)).toEqual([]);
     expect(directricesRefusees("La direction veut savoir", false)).toEqual([]);
+  });
+});
+
+describe("NOVA a un président : chez elle seule, ni directrice, ni directeur de l'usine, ni directeur sans fonction", () => {
+  it("chaque « directrice » et chaque « directeur » lu chez NOVA seule a une fonction qu'elle a, ou reprend celui que le contenu nomme", () => {
+    const textes = textesChezNova();
+    expect(textes.filter((t) => t.seuleNova).length).toBeGreaterThan(3_000);
+    const fautes = textes
+      .filter((t) => t.seuleNova)
+      .flatMap((t) => directionsRefuseesChezNova(t.texte, t.repriseDUnDirecteur).map((d) => `${t.ou} : « ${d}… » (chez NOVA seule, « le président »)`));
+    expect(fautes).toEqual([]);
+  }, 240_000);
+
+  it("la garde voit les directions que NOVA n'a pas", () => {
+    expect(directionsRefuseesChezNova("La directrice financière veut savoir", false)).toHaveLength(1);
+    expect(directionsRefuseesChezNova("Répondre à la directrice de l'usine", false)).toHaveLength(1);
+    expect(directionsRefuseesChezNova("Le directeur de l'usine veut primer le chef d'atelier", false)).toHaveLength(1);
+    expect(directionsRefuseesChezNova("Le directeur de l'usine veut primer le chef d'atelier", true)).toHaveLength(1);
+    expect(directionsRefuseesChezNova("Le directeur y voit une équipe plus efficace", false)).toHaveLength(1);
+    expect(directionsRefuseesChezNova("Les directeurs en parlent", false)).toHaveLength(1);
+    // Un directeur seul ne reprend que la fonction que le contenu nomme, pas une autre qu'il ajouterait.
+    expect(directionsRefuseesChezNova("Votre réponse au directeur de l'atelier", true)).toHaveLength(1);
+  });
+
+  it("la garde laisse passer les fonctions nommées, leur reprise, et la directrice des services d'une collectivité", () => {
+    for (const q of FONCTIONS_D_UN_DIRECTEUR) expect(directionsRefuseesChezNova(`La demande du directeur ${q}.`, false), q).toEqual([]);
+    expect(directionsRefuseesChezNova("Le directeur de NOVA DIFFUSION veut 30 %", false)).toEqual([]);
+    expect(directionsRefuseesChezNova("Part demandée par le directeur", true)).toEqual([]);
+    expect(directionsRefuseesChezNova("sous l'autorité de la directrice générale des services", false)).toEqual([]);
+    expect(directionsRefuseesChezNova("Votre réponse au président", false)).toEqual([]);
+    expect(directionsRefuseesChezNova("La direction veut savoir", false)).toEqual([]);
+    expect(nommeUnDirecteurQualifie("Le directeur financier")).toBe(true);
+    expect(nommeUnDirecteurQualifie("Le directeur de l'usine")).toBe(false);
+    expect(nommeUnDirecteurQualifie("Le directeur")).toBe(false);
   });
 });

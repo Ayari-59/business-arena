@@ -1,4 +1,4 @@
-import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
+import { deuxChemins, eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas, StockDuTrimestre } from "../cas";
 import { dateDuCours as date, moisEtJour } from "../dates";
 import { auCentime } from "../monde/amortissement";
@@ -119,6 +119,17 @@ export function arrete(c: Cas) {
 
 export type ArreteDuTrimestre = ReturnType<typeof arrete>;
 
+/**
+ * L'AUTRE CHEMIN DE L'INVENTAIRE (décision du propriétaire, 11 novembre 2026 : accepter les deux
+ * chemins ; pedagogy/cours/deux-decimales.ts) : le coût moyen pondéré gardé avec tous ses chiffres,
+ * l'arrondi à la fin. L'énoncé l'arrondit au centime ; l'élève qui ne l'arrondit pas est accepté aussi.
+ */
+export function arreteSansArrondi(a: ArreteDuTrimestre) {
+  const cump = (a.initial.valeur + a.achats.ht) / (a.initial.quantite + a.achats.quantite);
+  const final = a.final.quantite * cump;
+  return { final, coutDAchatDesVendues: a.initial.valeur + a.achats.ht - final };
+}
+
 /** Le coût d'achat des marchandises vendues et le stock final pour un nombre d'unités vendues quelconque, au coût moyen du trimestre. */
 export function venteAuCurseur(a: ArreteDuTrimestre, vendues: number) {
   const stockFinal = auCentime((a.initial.quantite + a.achats.quantite - vendues) * a.cump);
@@ -172,6 +183,20 @@ export function ficheDuMois(x: LeMois, prix2 = x.prix2, livraison2 = x.livraison
       { date: { jour: j.ventes2, mois: x.numero }, libelle: `Ventes jusqu'au ${j.ventes2}`, sens: "sortie", quantite: x.vente },
     ],
   };
+}
+
+/**
+ * L'AUTRE CHEMIN DE LA FICHE AU COÛT MOYEN APRÈS CHAQUE ENTRÉE (décision du propriétaire, 11 novembre
+ * 2026 : accepter les deux chemins) : les coûts moyens, les sorties et les stocks gardés avec tous leurs
+ * chiffres, l'arrondi à la fin. Les mouvements dans l'ordre de la fiche : livraison, ventes, livraison, ventes.
+ */
+export function moisSansArrondi(x: LeMois) {
+  const f = ficheDuMois(x);
+  const apresLivraison1 = f.initial.valeur + x.livraison * x.prix1;
+  const sortie1 = (x.vente * apresLivraison1) / (f.initial.quantite + x.livraison);
+  const apresLivraison2 = apresLivraison1 - sortie1 + x.livraison * x.prix2;
+  const quantite2 = f.initial.quantite + 2 * x.livraison - x.vente;
+  return { sortie1, final: apresLivraison2 - (x.vente * apresLivraison2) / quantite2 };
 }
 
 /** Le mois valorisé par une méthode, les coûts moyens arrondis au centime comme dans les énoncés : le stock final, les sorties, la marge. */
@@ -481,10 +506,10 @@ export const LES_STOCKS: Chapitre = {
             attendu: a.cump,
             calcul: `(${eur(a.initial.valeur)} + ${eur(a.achats.ht)}) ÷ (${qte(a.initial.quantite)} + ${qte(a.achats.quantite)}) = ${eur(a.cump)}`,
           },
-          { libelle: "Valeur du stock final", attendu: a.final.valeur, calcul: `${qte(a.final.quantite)} × ${eur(a.cump)} = ${eur(a.final.valeur)}` },
+          { libelle: "Valeur du stock final", ...deuxChemins(a.final.valeur, arreteSansArrondi(a).final), calcul: `${qte(a.final.quantite)} × ${eur(a.cump)} = ${eur(a.final.valeur)}` },
           {
             libelle: "Coût d'achat des marchandises vendues",
-            attendu: a.coutDAchatDesVendues,
+            ...deuxChemins(a.coutDAchatDesVendues, arreteSansArrondi(a).coutDAchatDesVendues),
             calcul: `${eur(a.initial.valeur)} + ${eur(a.achats.ht)} − ${eur(a.final.valeur)} = ${eur(a.coutDAchatDesVendues)}`,
           },
         ];
@@ -838,13 +863,21 @@ export const LES_STOCKS: Chapitre = {
             attendu: v.coutApres1,
             calcul: `(${eur(f.initial.valeur)} + ${qte(x.livraison)} × ${eur(x.prix1)}) ÷ (${qte(f.initial.quantite)} + ${qte(x.livraison)}) = ${eur(v.coutApres1)}`,
           },
-          { libelle: `Sortie du ${x.jours.ventes1}`, attendu: v.sortie1, calcul: `${qte(x.vente)} × ${eur(v.coutApres1)} = ${eur(v.sortie1)}` },
+          {
+            libelle: `Sortie du ${x.jours.ventes1}`,
+            ...deuxChemins(v.sortie1, moisSansArrondi(x).sortie1),
+            calcul: `${qte(x.vente)} × ${eur(v.coutApres1)} = ${eur(v.sortie1)} ; il reste ${eur(f.initial.valeur)} + ${qte(x.livraison)} × ${eur(x.prix1)} − ${eur(v.sortie1)} = ${eur(l[1]!.stock.valeur)} en stock`,
+          },
           {
             libelle: `Coût moyen après la livraison du ${x.jours.livraison2}`,
             attendu: v.coutApres2,
             calcul: `(${eur(l[1]!.stock.valeur)} + ${qte(x.livraison)} × ${eur(x.prix2)}) ÷ (${qte(l[1]!.stock.quantite)} + ${qte(x.livraison)}) = ${eur(v.coutApres2)}`,
           },
-          { libelle: "Stock final, au coût moyen après chaque entrée", attendu: v.final.valeur, calcul: `${eur(l[2]!.stock.valeur)} − ${qte(x.vente)} × ${eur(v.coutApres2)} = ${eur(v.final.valeur)}` },
+          {
+            libelle: "Stock final, au coût moyen après chaque entrée",
+            ...deuxChemins(v.final.valeur, moisSansArrondi(x).final),
+            calcul: `${eur(l[1]!.stock.valeur)} + ${qte(x.livraison)} × ${eur(x.prix2)} − ${qte(x.vente)} × ${eur(v.coutApres2)} = ${eur(v.final.valeur)}`,
+          },
         ];
       },
       explication: (c) => {

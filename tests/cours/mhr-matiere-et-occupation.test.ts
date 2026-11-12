@@ -193,7 +193,8 @@ function casDedie(s: Situation, ch: Chapitre) {
   expect(s.palier).toBe(ch.palier);
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
-  expect(s.libre).toBe(false);
+  // Libre avec son chapitre quand c'est le chapitre libre d'un diplôme (config/cours/chapitres-libres.ts), réservé sinon.
+  expect(s.libre).toBe(ch.libre);
   expect(s.blocs).toEqual([]);
   expect(s.code).not.toBe(ch.code);
   expect(s.commanditaire.length).toBeGreaterThan(3);
@@ -238,7 +239,8 @@ describe("les deux chapitres et leur place au programme", () => {
       expect(PROGRAMME.mhr[2]).toContain(ch.titre);
       expect(ch.parcours).toBe("mhr");
       expect(ch.palier).toBe(2);
-      expect(ch.libre).toBe(false);
+      // « Le coût matière » est le chapitre libre du BTS MHR (liste du 11 novembre 2026, config/cours/chapitres-libres.ts).
+      expect(ch.libre).toBe(ch === LE_COUT_MATIERE);
       expect(ch.entreprises!.pourquoi).toMatch(/\.$/);
     }
     expect(LE_COUT_MATIERE.code).toBe("le-cout-matiere");

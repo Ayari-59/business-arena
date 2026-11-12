@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   COURBE_DES_LIENS,
@@ -635,8 +635,9 @@ export const LE_SITE_QUI_VEND: Chapitre = {
           { libelle: "Heures de panne, serveur mutualisé", nature: "grandeur", attendu: mu!.indisponibilite, calcul: `${qte(h.heures)} × (1 − ${pct(mu!.disponibilite)}) = ${qte(mu!.indisponibilite)} heures` },
           { libelle: "Heures de panne, serveur dédié", nature: "grandeur", attendu: de!.indisponibilite, calcul: `${qte(h.heures)} × (1 − ${pct(de!.disponibilite)}) = ${qte(de!.indisponibilite)} heure` },
           { libelle: "Marge du site en une heure", attendu: h.margeParHeure, calcul: `${qte(x.t.commandes)} × ${eur(x.m.marge)} ÷ ${qte(h.heures)} = ${eur(h.margeParHeure)}` },
-          { libelle: "Coût du trimestre, serveur mutualisé", attendu: mu!.total, calcul: `3 × ${eur(mu!.prixParMois)} + ${qte(mu!.indisponibilite)} × ${eur(h.margeParHeure)} = ${eur(mu!.prix)} + ${eur(mu!.margePerdue)} = ${eur(mu!.total)}` },
-          { libelle: "Coût du trimestre, serveur dédié", attendu: de!.total, calcul: `3 × ${eur(de!.prixParMois)} + ${qte(de!.indisponibilite)} × ${eur(h.margeParHeure)} = ${eur(de!.prix)} + ${eur(de!.margePerdue)} = ${eur(de!.total)}` },
+          // L'autre chemin : la marge d'une heure gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Coût du trimestre, serveur mutualisé", ...deuxChemins(mu!.total, 3 * mu!.prixParMois + (mu!.indisponibilite * x.t.commandes * x.m.marge) / h.heures), calcul: `3 × ${eur(mu!.prixParMois)} + ${qte(mu!.indisponibilite)} × ${eur(h.margeParHeure)} = ${eur(mu!.prix)} + ${eur(mu!.margePerdue)} = ${eur(mu!.total)}` },
+          { libelle: "Coût du trimestre, serveur dédié", ...deuxChemins(de!.total, 3 * de!.prixParMois + (de!.indisponibilite * x.t.commandes * x.m.marge) / h.heures), calcul: `3 × ${eur(de!.prixParMois)} + ${qte(de!.indisponibilite)} × ${eur(h.margeParHeure)} = ${eur(de!.prix)} + ${eur(de!.margePerdue)} = ${eur(de!.total)}` },
         ];
       },
       explication: (c) => {

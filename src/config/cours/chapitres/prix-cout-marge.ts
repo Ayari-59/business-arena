@@ -99,14 +99,14 @@ export const PRIX_COUT_MARGE: Chapitre = {
     "Ce qu'une unité vendue rapporte, ce qu'elle coûte, ce qui reste entre les deux : la marge. Et pourquoi une belle marge ne suffit pas toujours à gagner de l'argent.",
   objectifs: [
     "Calculer le coût d'une unité et la marge qu'elle laisse",
-    "Calculer le taux de marge et le taux de marque",
+    "Calculer le taux de marge et le taux de marge sur coût variable",
     "Passer de la marge par unité à la marge du mois, puis au résultat",
     "Mesurer l'effet d'une baisse de prix sur la marge",
     "Dire pourquoi la marge se calcule hors taxes",
   ],
-  // Libre : le premier chapitre du parcours du BTS CG et du DCG (décision du propriétaire, novembre 2026 ;
-  // config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {
@@ -149,23 +149,25 @@ export const PRIX_COUT_MARGE: Chapitre = {
       id: "les-taux",
       objectifs: [1],
       type: "montants",
-      titre: "Taux de marge, taux de marque",
+      titre: "Deux taux pour une même marge",
       notions: ["margin_rates", "markup_coefficient"],
       question: (c) => {
         const m = prixCoutMarge(c);
-        return `La marge de ${eur(m.marge)} se compare au coût, ou au prix. Le taux de marge la rapporte au coût, le taux de marque au prix de vente. Calculez les deux, en pourcentage, à deux décimales.`;
+        return `La marge de ${eur(m.marge)} se compare au coût, ou au prix. Le taux de marge la rapporte au coût ; le taux de marge sur coût variable la rapporte au prix de vente. Calculez les deux, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const m = prixCoutMarge(c);
         return [
           { libelle: "Taux de marge (%)", attendu: m.tauxDeMarge, calcul: `${eur(m.marge)} ÷ ${eur(m.cout)} × 100 = ${pct(m.tauxDeMarge)}` },
-          { libelle: "Taux de marque (%)", attendu: m.tauxDeMarque, calcul: `${eur(m.marge)} ÷ ${eur(m.prix)} × 100 = ${pct(m.tauxDeMarque)}` },
+          { libelle: "Taux de marge sur coût variable (%)", attendu: m.tauxDeMarque, calcul: `${eur(m.marge)} ÷ ${eur(m.prix)} × 100 = ${pct(m.tauxDeMarque)}` },
         ];
       },
       explication: (c) => {
         const m = prixCoutMarge(c);
         return [
-          `Même marge, deux taux : ${pct(m.tauxDeMarge)} du coût, ${pct(m.tauxDeMarque)} du prix. Le taux de marque est toujours le plus petit, parce que le prix est plus grand que le coût. Un commerçant dit souvent « je marge à tant » : demandez-lui s'il parle du coût ou du prix.`,
+          `Même marge, deux taux : ${pct(m.tauxDeMarge)} du coût, ${pct(m.tauxDeMarque)} du prix. Le taux rapporté au prix est toujours le plus petit, parce que le prix est plus grand que le coût. Un commerçant dit souvent « je marge à tant » : demandez-lui s'il parle du coût ou du prix.`,
+          // Le mot du référentiel du BTS CG et des chapitres du seuil (audit du 11 novembre 2026, P2-6).
+          `Le coût d'${accord(c, "un")} ${c.unite}, ici, est ce qui varie avec chaque vente : c'est pourquoi le taux rapporté au prix s'appelle le taux de marge sur coût variable, comme au chapitre du seuil de rentabilité. Un commerce qui revend sans transformer rapporte de même sa marge au prix : il l'appelle le taux de marque.`,
         ];
       },
     },
@@ -358,7 +360,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
         ];
       },
       repere: () =>
-        "Marge = prix − coût (hors taxes). Taux de marge = marge ÷ coût. Taux de marque = marge ÷ prix. Une baisse de prix se prend tout entière sur la marge.",
+        "Marge = prix − coût (hors taxes). Taux de marge = marge ÷ coût. Taux de marge sur coût variable = marge ÷ prix. Une baisse de prix se prend tout entière sur la marge.",
     },
   ],
 };

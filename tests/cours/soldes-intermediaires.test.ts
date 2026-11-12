@@ -168,7 +168,8 @@ function casDedie(s: Situation, ch: Chapitre) {
   expect(s.palier).toBe(ch.palier);
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
-  expect(s.libre).toBe(false);
+  // Libre avec son chapitre quand c'est le chapitre libre d'un diplôme (config/cours/chapitres-libres.ts), réservé sinon.
+  expect(s.libre).toBe(ch.libre);
   expect(s.blocs).toEqual([]);
   expect(s.etapes[0]!.type).toBe("lecture");
   expect(s.etapes[0]!.tableau).toBeDefined();
@@ -431,7 +432,7 @@ describe("le cas : quand le taux de l'emprunt monte", () => {
 
   it("tient la forme d'un cas dédié", () => {
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("La directrice financière");
+    expect(s.commanditaire).toBe("Le président"); // NOVA a un président, pas de directrice financière (audit du 11 novembre, P2-4)
     expect([HAUSSE_DU_TAUX, PERTE_DE_RESULTAT_TOLEREE]).toEqual([0.02, 2_000]);
   });
 

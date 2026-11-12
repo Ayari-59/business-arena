@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas, StockDuTrimestre } from "../cas";
 import {
   fournisseurDe,
@@ -297,7 +297,8 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         const x = stockDeLaBoutique(c);
         return [
           { libelle: "Rotation du stock", nature: "grandeur", attendu: x.rotation, calcul: `${eur(x.s.coutDAchatDesVendues)} ÷ ${eur(x.s.stockMoyen)} = ${deux(x.rotation)}` },
-          { libelle: "Durée moyenne de stockage (jours)", nature: "grandeur", attendu: x.duree, calcul: `${qte(x.f.joursDuMois)} ÷ ${deux(x.rotation)} = ${qte(x.duree)}` },
+          // L'autre chemin : la rotation gardée avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Durée moyenne de stockage (jours)", nature: "grandeur", ...deuxChemins(x.duree, (x.f.joursDuMois * x.s.stockMoyen) / x.s.coutDAchatDesVendues), calcul: `${qte(x.f.joursDuMois)} ÷ ${deux(x.rotation)} = ${qte(x.duree)}` },
         ];
       },
       explication: (c) => {

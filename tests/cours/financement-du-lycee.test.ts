@@ -27,7 +27,7 @@ import {
  * Refait à la main sur le premier exercice de NOVA : la capacité d'autofinancement (79 225,96 € de
  * résultat, 26 071,11 € de dotations), l'emprunt de 68 000 €, les capitaux propres de 229 225,96 €,
  * les ressources durables de 323 297,07 € ; l'impôt au barème du cours (15 % jusqu'à 42 500 €, 25 %
- * au-delà, arrondi à l'euro) ; 23 564 enceintes vendues, 21 € de marge chacune (59 € moins 38 €).
+ * au-delà, arrondi à l'euro) ; 23 609 enceintes vendues, 21 € de marge chacune (59 € moins 38 €).
  */
 
 const f = exerciceDe("nova");
@@ -73,23 +73,24 @@ describe("les ratios de la banque au 31 décembre", () => {
 });
 
 describe("l'année suivante, rejouée : moins de ventes, des intérêts en plus", () => {
-  it("15 % de ventes en moins et 100 000 € empruntés : 3,84 ans et 54,2 %, dans les règles", () => {
-    const q = Math.round(23_564 * 0.85);
-    expect(q).toBe(20_029);
-    const rai = c(99_967.96 - (23_564 - q) * 21 - 100_000 * 0.05);
-    expect(rai).toBe(20_732.96);
-    expect(impot(rai)).toBe(3_110);
-    const caf = c(rai - 3_110 + 26_071.11);
+  it("15 % de ventes en moins et 100 000 € empruntés : 3,85 ans et 54,2 %, dans les règles", () => {
+    // 15 % des 23 609 enceintes livrées (audit du 11 novembre, P2-2 : 23 564 avant), la remise de Sonora gardée.
+    const q = Math.round(23_609 * 0.85);
+    expect(q).toBe(20_068);
+    const rai = c(99_967.96 - (23_609 - q) * 21 - 100_000 * 0.05);
+    expect(rai).toBe(20_606.96);
+    expect(impot(rai)).toBe(3_091);
+    const caf = c(rai - 3_091 + 26_071.11);
     const s = structureFinanciere(f, { emprunt: 100_000, baisseDesVentes: 0.15 });
     expect(s.quantite).toBe(q);
     expect(s.caf).toBe(caf);
-    expect(s.caf).toBe(43_694.07);
+    expect(s.caf).toBe(43_587.07);
     expect(s.dettesFinancieres).toBe(168_000);
     expect(s.ressourcesDurables).toBe(c(RD + 100_000));
-    expect(s.capaciteDeRemboursement).toBeCloseTo(168_000 / caf, 12); // 3,84
+    expect(s.capaciteDeRemboursement).toBeCloseTo(168_000 / caf, 12); // 3,85
     expect(s.independance).toBeCloseTo(CP / (RD + 100_000), 12); // 0,542
     expect(dansLesRegles(s)).toBe(true);
-    // 10 000 € de plus : 4,11 ans, hors de la règle.
+    // 10 000 € de plus : 4,12 ans, hors de la règle.
     expect(dansLesRegles(structureFinanciere(f, { emprunt: 110_000, baisseDesVentes: 0.15 }))).toBe(false);
   });
 

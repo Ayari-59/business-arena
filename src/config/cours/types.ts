@@ -103,6 +103,16 @@ export interface EtapeChoix extends Base {
 export interface ChampDeMontant {
   libelle: string;
   attendu: number;
+  /**
+   * L'AUTRE CHEMIN (décision du propriétaire, 11 novembre 2026 ; audit pédagogique, P1-1) : le résultat du
+   * même calcul mené par l'autre chemin, accepté comme l'attendu, à la même tolérance. Le corrigé arrondit
+   * chaque ligne ; l'élève qui garde tous les chiffres et n'arrondit qu'à la fin trouve ce résultat-ci,
+   * hors de la tolérance quand un résultat arrondi est repris et multiplié (quand le corrigé garde tous
+   * les chiffres, c'est l'inverse). Absent : les deux chemins tombent dans la tolérance de l'attendu. Il se
+   * pose par `deuxChemins` (pedagogy/cours/deux-decimales.ts) ; tests/architecture/deux-chemins.test.ts
+   * refait chaque corrigé sans arrondi intermédiaire et vérifie que son résultat est accepté.
+   */
+  autreChemin?: number;
   /** Comment on le calcule : se lit après la réponse. */
   calcul: string;
   /**

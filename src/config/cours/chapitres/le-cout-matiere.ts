@@ -252,7 +252,9 @@ export const LE_COUT_MATIERE: Chapitre = {
     "Calculer le ratio coût matière d'un trimestre et de l'année",
     "Chiffrer ce que coûtent les plats préparés et non servis",
   ],
-  libre: false,
+  // Libre : le chapitre libre du BTS MHR, options B et C comprises
+  // (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: CUISINES,
     pourquoi: "le coût matière est celui des denrées qu'une cuisine transforme en plats, et elle n'a pas de cuisine.",

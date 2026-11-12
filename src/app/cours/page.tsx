@@ -80,7 +80,7 @@ const CHAPITRES_PAR_DIPLOME = new Map(
  * mot-clé (`?q=`) le complète. Aucune adresse ne change.
  *
  * UN CHAPITRE LIBRE PAR DIPLÔME (décision du propriétaire, novembre 2026 ;
- * config/cours/chapitres-libres.ts) : le premier de son parcours, avec son cas pratique. La vue
+ * config/cours/chapitres-libres.ts) : celui de la liste du 11 novembre, avec son cas pratique. La vue
  * d'un diplôme le met en tête, sous son nom ; le bandeau « Pour essayer » le reprend, avec le choix
  * de l'entreprise. Sans diplôme, l'essai par défaut. La suite est réservée aux établissements sous
  * licence.

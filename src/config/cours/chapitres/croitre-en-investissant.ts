@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, donneeTelleQuelle, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeDeProduction, hausseQuiAnnuleLaVan, machineDe, machineEnPlus, margeUnitaire, planDEmprunt } from "../monde/capacite";
 import { CAPACITES_DU_COURS, type CodeDeMachine, type FicheDeLaCapacite } from "../monde/nova-capacite";
@@ -250,7 +250,7 @@ export function tableauDesMachines(c: Pick<Cas, "code">, codes: readonly CodeDeM
       { libelle: "Prix", valeurs: ms.map((m) => eur(m.prix)) },
       { libelle: `Capacité d'outil en plus, par trimestre (${f.unites})`, valeurs: ms.map((m) => qte(m.capaciteEnPlus)) },
       { libelle: "Opérateurs à embaucher", valeurs: ms.map((m) => qte(m.embauches)) },
-      { libelle: `Heures de travail d'une ${f.unite} montée dessus`, valeurs: ms.map((m) => qte(m.heuresParEnceinte)) },
+      { libelle: `Heures de travail d'une ${f.unite} montée dessus`, valeurs: ms.map((m) => donneeTelleQuelle(m.heuresParEnceinte)) },
       { libelle: "Entretien par an", valeurs: ms.map((m) => eur(m.entretienParAn)) },
       { libelle: "Durée d'utilisation (ans)", valeurs: ms.map((m) => qte(m.dureeEnAnnees)) },
     ],
@@ -297,9 +297,9 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     "Calculer les flux, la VAN et le délai de récupération d'un investissement, et dire pourquoi les intérêts n'y entrent pas",
     "Remonter de la VAN nulle aux ventes et à la hausse de la demande qu'elle exige, et critiquer un ratio qui n'est pas une rentabilité",
   ],
-  // Libre : le premier chapitre du parcours du DSCG (décision du propriétaire, novembre 2026 ;
-  // config/cours/chapitres-libres.ts).
-  libre: true,
+  // Libre du 9 au 11 novembre 2026, comme premier d'un parcours ; réservé depuis la liste des chapitres
+  // libres (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_LA_CROISSANCE,
     pourquoi:
@@ -495,7 +495,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
       question: (c) => {
         const x = croissance(c);
         const o = x.f.operateurs;
-        return `Le poste ajoute ${qte(x.machine.capaciteEnPlus)} ${x.f.unites} à l'outil (${qte(x.f.ligne.capaciteParTrimestre)} aujourd'hui). Un opérateur travaille ${qte(o.heuresParMois)} heures par mois, à ${qte(x.machine.heuresParEnceinte)} heure l'${x.f.unite} : ${qte(x.enceintesParOperateur / 3)} par mois, ${qte(x.enceintesParOperateur)} par trimestre. Calculez la capacité de l'outil avec le poste, les ventes gagnées sur l'année sans embauche (l'équipe reste à ${qte(x.sans.trimestres[0]!.capaciteEquipe)}), la capacité de l'équipe avec l'opérateur de plus, puis les ventes gagnées avec lui.`;
+        return `Le poste ajoute ${qte(x.machine.capaciteEnPlus)} ${x.f.unites} à l'outil (${qte(x.f.ligne.capaciteParTrimestre)} aujourd'hui). Un opérateur travaille ${qte(o.heuresParMois)} heures par mois, à ${donneeTelleQuelle(x.machine.heuresParEnceinte)} heure l'${x.f.unite} : ${qte(x.enceintesParOperateur / 3)} par mois, ${qte(x.enceintesParOperateur)} par trimestre. Calculez la capacité de l'outil avec le poste, les ventes gagnées sur l'année sans embauche (l'équipe reste à ${qte(x.sans.trimestres[0]!.capaciteEquipe)}), la capacité de l'équipe avec l'opérateur de plus, puis les ventes gagnées avec lui.`;
       },
       champs: (c) => {
         const x = croissance(c);

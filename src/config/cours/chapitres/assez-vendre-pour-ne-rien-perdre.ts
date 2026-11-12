@@ -1,4 +1,4 @@
-import { eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { donneesDuMois, seuilDeRentabilite } from "../monde/couts-et-budgets";
 import { AUTRES_COUTS_PAR_ENCEINTE, CHARGES_FIXES_DU_MOIS, COMPOSANTS_PAR_ENCEINTE, NOVA_GESTION } from "../monde/nova-gestion";
@@ -144,7 +144,8 @@ export const ASSEZ_VENDRE_POUR_NE_RIEN_PERDRE: Chapitre = {
         return [
           { libelle: "Taux de marge sur coût variable (%)", attendu: taux, calcul: `${eur(s.margeUnitaire)} ÷ ${eur(s.prix)} × 100 = ${pct(taux)}` },
           { libelle: "Seuil en enceintes", nature: "quantite", attendu: s.seuilQuantite!, calcul: `${eur(s.chargesFixes)} ÷ ${eur(s.margeUnitaire)} = ${qte(s.seuilExact!)}, arrondi à l'unité supérieure : ${qte(s.seuilQuantite!)} enceintes (${qte(s.seuilQuantite! - 1)} laisseraient une perte)` },
-          { libelle: "Seuil en chiffre d'affaires", attendu: s.seuilValeur!, calcul: `${eur(s.chargesFixes)} ÷ ${pct(s.tauxDeMargePct)} = ${eur(s.seuilValeur!)}` },
+          // L'autre chemin : le taux de marge gardé avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Seuil en chiffre d'affaires", ...deuxChemins(s.seuilValeur!, (s.chargesFixes * s.prix) / s.margeUnitaire), calcul: `${eur(s.chargesFixes)} ÷ ${pct(s.tauxDeMargePct)} = ${eur(s.seuilValeur!)}` },
         ];
       },
       explication: () => {

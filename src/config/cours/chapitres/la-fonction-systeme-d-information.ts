@@ -234,7 +234,7 @@ export const LA_FONCTION_SYSTEME_D_INFORMATION: Chapitre = {
       champs: () => {
         const k = tableauDeBordDeMars();
         return [
-          { libelle: "Taux de disponibilité (%)", attendu: k.disponibilitePct, calcul: `(${qte(k.heures)} − ${qte(MARS.heuresDArret)}) ÷ ${qte(k.heures)} × 100 = ${pct(k.disponibilitePct)}` },
+          { libelle: "Taux de disponibilité (%)", attendu: k.disponibilitePct, calcul: `(${qte(k.heures)} − ${nombreAuCentieme(MARS.heuresDArret)}) ÷ ${qte(k.heures)} × 100 = ${pct(k.disponibilitePct)}` },
           { libelle: "Délai moyen de résolution (heures)", nature: "grandeur", attendu: k.delaiMoyen, calcul: `${qte(MARS.heuresDeResolution)} ÷ ${qte(MARS.incidents)} = ${heures(k.delaiMoyen)}` },
           { libelle: "Incidents résolus en moins de 4 heures (%)", attendu: k.partEn4HeuresPct, calcul: `${qte(MARS.resolusEnMoinsDe4Heures)} ÷ ${qte(MARS.incidents)} × 100 = ${pct(k.partEn4HeuresPct)}` },
         ];

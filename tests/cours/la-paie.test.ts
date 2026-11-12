@@ -197,7 +197,8 @@ function casDedie(s: Situation, ch: Chapitre, cas: Cas) {
   expect(s.palier).toBe(ch.palier);
   expect(s.parcours).toBe(ch.parcours);
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
-  expect(s.libre).toBe(false);
+  // Libre comme son chapitre, le chapitre libre du BTS SAM (liste du 11 novembre 2026, config/cours/chapitres-libres.ts).
+  expect(s.libre).toBe(ch.libre);
   expect(s.etapes[0]!.type).toBe("lecture");
   expect(s.etapes[0]!.tableau).toBeDefined();
   expect(s.etapes.slice(1).filter((e) => e.type === "lecture")).toHaveLength(0);
@@ -219,10 +220,11 @@ describe("la paie : les taux du cours, et le chapitre au gabarit de l'étalon", 
     expect(K).toBeCloseTo(0.76383015, 10);
   });
 
-  it("est réservé, au palier 3, dans le registre, avec des étapes uniques ; trois temps, deux curseurs, un laboratoire, des montants d'expert à trois champs", () => {
+  it("est libre, le chapitre libre du BTS SAM, au palier 3, dans le registre, avec des étapes uniques ; trois temps, deux curseurs, un laboratoire, des montants d'expert à trois champs", () => {
     expect(CHAPITRES).toContain(LA_PAIE);
     expect(SITUATIONS).toContain(LA_PRIME_EXCEPTIONNELLE);
-    expect(LA_PAIE.libre).toBe(false);
+    // La liste des chapitres libres du 11 novembre 2026 (config/cours/chapitres-libres.ts).
+    expect(LA_PAIE.libre).toBe(true);
     expect(LA_PAIE.palier).toBe(3);
     expect(LA_PAIE.entreprises).toBeUndefined();
     expect(new Set(LA_PAIE.etapes.map((e) => e.id)).size).toBe(LA_PAIE.etapes.length);

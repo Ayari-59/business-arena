@@ -375,7 +375,9 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     "Lire le partage de la valeur ajoutée et retraiter le crédit-bail, le personnel extérieur et la participation",
     "Dire ce qu'un choix de financement, d'amortissement ou de location fait à chaque solde",
   ],
-  libre: false,
+  // Libre : le chapitre libre du DCG
+  // (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   entreprises: {
     codes: ENTREPRISES_DES_SOLDES,
     pourquoi:

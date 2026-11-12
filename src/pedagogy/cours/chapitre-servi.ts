@@ -214,8 +214,28 @@ export function lireLeCurseur(etape: EtapeCurseur, cas: Cas, quantite: number): 
   return typographier({ lignes: etape.lecture(cas, quantite), produit: d.produit(quantite), cout: d.cout(quantite) });
 }
 
-/** La position de départ du curseur : au quart de sa course. */
-const departDuCurseur = (c: { min: number; max: number }) => Math.round(c.min + (c.max - c.min) / 4);
+/**
+ * L'ÉCART LE PLUS PETIT ENTRE LE DÉPART DU CURSEUR ET SA RÉPONSE, en pas (audit pédagogique du
+ * 11 novembre 2026, P2-1) : dix-huit curseurs partaient au quart de leur course, à un pas de la
+ * réponse, et l'élève la validait presque sans chercher.
+ */
+export const ECART_DU_DEPART = 5;
+
+/**
+ * La position de départ du curseur : au quart de sa course, sauf si elle tombe à moins de
+ * `ECART_DU_DEPART` pas de la réponse ; elle s'en écarte alors d'autant, du côté du quart si la borne
+ * le permet, sinon de l'autre, et sur la borne la plus loin quand la course est trop courte.
+ */
+export function departDuCurseur(c: { min: number; max: number; attendu: number }): number {
+  const quart = Math.round(c.min + (c.max - c.min) / 4);
+  if (Math.abs(quart - c.attendu) >= ECART_DU_DEPART) return quart;
+  const dessous = c.attendu - ECART_DU_DEPART;
+  const dessus = c.attendu + ECART_DU_DEPART;
+  const cotes = quart <= c.attendu ? [dessous, dessus] : [dessus, dessous];
+  const possible = cotes.find((x) => x >= c.min && x <= c.max);
+  if (possible !== undefined) return possible;
+  return c.attendu - c.min >= c.max - c.attendu ? c.min : c.max;
+}
 
 export function lireLeLaboratoire(etape: EtapeSimulation, cas: Cas, position: Readonly<Record<string, number>>): LectureDuLaboratoire {
   const lignes = [...etape.lecture(cas, position)];
@@ -352,7 +372,7 @@ function servirSansTypographie(source: Chapitre, cas: Cas, competences?: Pick<Co
       case "curseur": {
         const { attendu, max, min = 0 } = e.cible(cas);
         const d = e.droites(cas);
-        const depart = departDuCurseur({ min, max });
+        const depart = departDuCurseur({ min, max, attendu });
         return {
           ...base,
           type: "curseur",

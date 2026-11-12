@@ -267,10 +267,12 @@ describe("les acteurs de l'organisation et le partage de la valeur", () => {
   });
 
   it("le cas des clients : 5 % de prix en moins, 5 % d'enceintes en plus ; les associés paient", () => {
-    const enceintes = Math.round(23_564 * 1.05);
-    const ventes = c(c(59 * 0.95) * enceintes);
+    // 5 % de plus sur les 23 609 enceintes livrées ; Sonora garde sa remise de 5 % sur ses 900 (audit du 11 novembre, P2-2).
+    const enceintes = Math.round(23_609 * 1.05);
+    const ventes = c(c(59 * 0.95) * enceintes - 900 * c(59 * 0.95) * 0.05);
     const a = attendus(LES_CLIENTS_DEMANDENT_UNE_BAISSE, "ecarts");
-    expect(a.slice(0, 2)).toEqual([c(ventes - 1_390_276), (enceintes - 23_564) * 38]);
+    expect(a.slice(0, 2)).toEqual([c(ventes - 1_390_276), (enceintes - 23_609) * 38]);
+    expect(a.slice(0, 2)).toEqual([-3_374.8, 44_840]);
     expect(juste(LES_CLIENTS_DEMANDENT_UNE_BAISSE, "reponse")).toEqual(["Les associés la paieraient surtout, l'État pour une part"]);
   });
 });

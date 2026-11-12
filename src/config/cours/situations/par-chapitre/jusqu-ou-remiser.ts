@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_PROMOTION, ficheDe } from "../../chapitres/promotion-qui-paie";
 import { coutVariable, promotion, referenceDe } from "../../monde/boutique";
@@ -242,7 +242,8 @@ export const JUSQU_OU_REMISER: Situation = {
         return [
           { libelle: "Prix plancher, toutes taxes comprises", attendu: x.plancherTtc, calcul: `${eur(x.prixPlancher)} × ${qte(1 + x.r.tauxTva)} = ${eur(x.plancherTtc)}` },
           { libelle: "Remise affichée à l'étiquette ronde (%)", attendu: e.remise, calcul: `l'euro au-dessus du plancher, ${eur(e.ttc)} : (1 − ${eur(e.ttc)} ÷ ${eur(x.r.prixTtc)}) × 100 = ${pct(e.remise)}` },
-          { libelle: "Marge du mois à l'étiquette ronde", attendu: e.marge, calcul: `${eur(e.ttc)} ÷ ${qte(1 + x.r.tauxTva)} = ${eur(e.ht)} hors taxes ; ${qte(x.volume)} × (${eur(e.ht)} − ${eur(x.cv)}) = ${eur(e.marge)}` },
+          // L'autre chemin : le prix hors taxes gardé avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Marge du mois à l'étiquette ronde", ...deuxChemins(e.marge, x.volume * (e.ttc / (1 + x.r.tauxTva) - x.cv)), calcul: `${eur(e.ttc)} ÷ ${qte(1 + x.r.tauxTva)} = ${eur(e.ht)} hors taxes ; ${qte(x.volume)} × (${eur(e.ht)} − ${eur(x.cv)}) = ${eur(e.marge)}` },
         ];
       },
       explication: (c) => {

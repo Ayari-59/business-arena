@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  *
  * Le centre de montage de l'usine a coûté 11 000 € de plus que le coût préétabli de la production
  * réelle. Son responsable l'explique par le surcroît d'heures : le centre a tourné au-delà de son
- * activité normale. Le directeur de l'usine veut savoir, avant de valider cette explication, ce que
+ * activité normale. Le président veut savoir, avant de valider cette explication, ce que
  * le volume explique vraiment. L'élève décompose l'écart (budget, activité, rendement), puis croise
  * l'activité et le rendement : sans une seule heure perdue, que resterait-il du dépassement ? La
  * réponse demande un jugement : le volume a joué pour le centre, pas contre lui. Un curseur sur les
@@ -50,15 +50,15 @@ export const LE_CENTRE_QUI_A_TROP_TOURNE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["les-ecarts-sur-charges-indirectes"],
-  commanditaire: "Le directeur de l'usine",
+  commanditaire: "Le président",
   titre: "Le centre qui a trop tourné",
   accroche:
-    "Le centre de montage a dépassé son coût préétabli, et son responsable met le dépassement sur le compte des heures en plus. Avant de valider l'explication, le directeur veut savoir ce que le volume explique vraiment.",
+    "Le centre de montage a dépassé son coût préétabli, et son responsable met le dépassement sur le compte des heures en plus. Avant de valider l'explication, le président veut savoir ce que le volume explique vraiment.",
   objectifs: [
     "Calculer l'activité préétablie de la production réelle et les heures perdues",
     "Décomposer l'écart d'un centre en écart sur budget, sur activité et sur rendement",
     "Croiser l'écart sur activité et l'écart sur rendement pour isoler ce que le volume explique",
-    "Répondre au directeur, chiffres à l'appui",
+    "Répondre au président, chiffres à l'appui",
   ],
   libre: false,
   entreprises: {
@@ -213,9 +213,9 @@ export const LE_CENTRE_QUI_A_TROP_TOURNE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au directeur",
+      titre: "Votre réponse au président",
       notions: ["cost_variance", "fixed_costs"],
-      question: () => "Le volume explique-t-il le dépassement du centre ? Quelle réponse rendez-vous au directeur ?",
+      question: () => "Le volume explique-t-il le dépassement du centre ? Quelle réponse rendez-vous au président ?",
       options: (c) => {
         const k = centreQuiATropTourne(c);
         const x = k.x;

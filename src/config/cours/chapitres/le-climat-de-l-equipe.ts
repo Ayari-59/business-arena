@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   HEURES_COMPLEMENTAIRES_POSSIBLES,
@@ -169,10 +169,10 @@ export const LE_CLIMAT_DE_L_EQUIPE: Chapitre = {
         const k = x.k;
         return [
           { libelle: "Coût d'une heure complémentaire", attendu: k.heureComplementaire, calcul: `${eur(BRUT_HORAIRE_DU_RENFORT)} × ${qte(1 + MAJORATION_DES_HEURES_COMPLEMENTAIRES)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(k.heureComplementaire)}` },
-          { libelle: "Coût du remplacement", attendu: k.remplacement, calcul: `${h(k.remplacees)} × ${eur(k.heureComplementaire)} = ${eur(k.remplacement)}` },
+          { libelle: "Coût du remplacement", ...deuxChemins(k.remplacement, k.sansArrondi.remplacement), calcul: `${h(k.remplacees)} × ${eur(k.heureComplementaire)} = ${eur(k.remplacement)}` },
           { libelle: "Marge perdue", attendu: k.margePerdue, calcul: `${h(k.nonRemplacees)} non remplacées × ${eur(k.margeDUnPassage)} = ${eur(k.margePerdue)}` },
-          { libelle: "Coût du mois", attendu: k.total, calcul: `${eur(k.remplacement)} + ${eur(k.margePerdue)} = ${eur(k.total)}` },
-          { libelle: "Coût de l'année", attendu: k.parAn, calcul: `${eur(k.total)} × 12 = ${eur(k.parAn)}` },
+          { libelle: "Coût du mois", ...deuxChemins(k.total, k.sansArrondi.total), calcul: `${eur(k.remplacement)} + ${eur(k.margePerdue)} = ${eur(k.total)}` },
+          { libelle: "Coût de l'année", ...deuxChemins(k.parAn, k.sansArrondi.parAn), calcul: `${eur(k.total)} × 12 = ${eur(k.parAn)}` },
         ];
       },
       explication: (c) => {

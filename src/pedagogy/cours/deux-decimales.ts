@@ -11,7 +11,19 @@
  * ON ARRONDIT CHAQUE LIGNE. Chaque résultat intermédiaire est arrondi à deux décimales (`arrondi2`),
  * et le corrigé suit le même chemin que l'élève sur sa copie : la ligne suivante part du nombre
  * arrondi, pas du nombre exact. La tolérance d'un montant, d'un pourcentage ou d'une grandeur est
- * d'un centième (0,01), pour l'élève qui n'arrondit qu'à la fin.
+ * d'un centième (0,01).
+ *
+ * L'ÉLÈVE QUI N'ARRONDIT QU'À LA FIN EST ACCEPTÉ AUSSI (décision du propriétaire, 11 novembre 2026 :
+ * « accepter les deux chemins » ; audit pédagogique, P1-1). Le plus souvent, garder tous les chiffres
+ * ne change le résultat que d'un centime, que la tolérance couvre. Mais un résultat arrondi repris et
+ * multiplié (1,88 compte × 28 560 € au lieu de 1,875) écarte les deux chemins de plus d'un centième :
+ * sur le code du 11 novembre, 73 champs servis, dans 37 contenus, refusaient alors l'élève rigoureux,
+ * de 0,02 € à 142,80 € (et 376,98 € dans l'essai l-augmentation-generale, que la garde ne lisait pas
+ * jusqu'au bout). Ces champs portent l'autre chemin,
+ * le calcul exact arrondi à la fin (`autreChemin`, posé par `deuxChemins`), accepté comme l'attendu ;
+ * le corrigé garde le chemin ligne par ligne. La garde tests/architecture/deux-chemins.test.ts refait
+ * sans arrondi intermédiaire la chaîne de calcul de chaque corrigé et vérifie que son résultat est
+ * accepté. Comme l'attendu, l'autre chemin se calcule au serveur et ne part qu'avec l'étape servie.
  *
  * LA NATURE D'UN CHAMP SE DÉDUIT, SAUF QUAND ELLE SE DÉCLARE (`natureDuChamp`). Un champ dont le
  * libellé porte « (%) » ou « en % », ou une cellule en « % », est un pourcentage ; une cellule dans une
@@ -65,6 +77,17 @@ export const taux2 = (part: number, base: number) => arrondi2((part / base) * 10
 /** Un pourcentage (en points : 12,35) d'une base, au centime : 13 629 € × 60 % = 8 177,40 €. */
 export const partDe2 = (base: number, pourcentage: number) => arrondi2((base * pourcentage) / 100);
 
+/**
+ * LES DEUX CHEMINS D'UN CHAMP (voir l'en-tête) : l'attendu, celui du corrigé, et le résultat de l'autre
+ * chemin, arrondi à la fin, quand il tombe hors de la tolérance d'un centième. Se pose à la place de
+ * l'attendu : `{ libelle, ...deuxChemins(r.stockFinal, r.stockFinalSansArrondi), calcul }`. Les deux
+ * chemins confondus (dans une entreprise, pas dans une autre), le champ ne porte que l'attendu.
+ */
+export function deuxChemins(attendu: number, autre: number): { attendu: number; autreChemin?: number } {
+  const a = arrondi2(autre);
+  return Math.abs(a - attendu) > 0.01 + 1e-9 ? { attendu, autreChemin: a } : { attendu };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // L'ÉCRITURE DU CORRIGÉ : deux décimales pour un nombre qui n'est pas entier.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,6 +114,19 @@ export const qte = (n: number) => {
   return n < 0 && aLUnite(n) !== 0 ? `−${ecrit}` : ecrit;
 };
 
+/**
+ * UNE DONNÉE DE L'ÉNONCÉ, ÉCRITE TELLE QUE LE CALCUL LA PREND (audit pédagogique du 11 novembre 2026,
+ * P0-1) : deux décimales au moins pour un nombre qui n'est pas entier (« 0,25 », « 0,50 »), et toutes
+ * celles qu'il a, jusqu'au dix-millième (« 0,125 heure »). Écrite au centième, la ligne automatisée
+ * du cas libre du DSCG montait une enceinte en « 0,13 heure » quand le calcul en prenait 0,125 :
+ * l'élève qui suivait l'énoncé trouvait 10 661 au lieu de 10 800. Un résultat, lui, reste au centième.
+ */
+export function donneeTelleQuelle(x: number): string {
+  const v = arrondi(x, 4);
+  const ecrit = Math.abs(v).toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(v) ? 0 : 2, maximumFractionDigits: 4 });
+  return v < 0 ? `−${ecrit}` : ecrit;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // LA NATURE D'UN CHAMP, ET CE QUE LA RÈGLE EN DEMANDE.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -99,6 +135,8 @@ export const qte = (n: number) => {
 export interface NombreACalculer {
   libelle: string;
   attendu: number;
+  /** Le résultat de l'autre chemin, accepté comme l'attendu (voir l'en-tête). */
+  autreChemin?: number;
   calcul?: string;
   tolerance?: number;
   nature?: NatureDuNombre;
@@ -148,6 +186,11 @@ export function fautesAuxDeuxDecimales(c: NombreACalculer): string[] {
   const fautes: string[] = [];
   const ecritTolerance = String(tolerance).replace(".", ",");
   if (!Number.isFinite(c.attendu)) return [`${nature} : l'attendu n'est pas un nombre`];
+  if (c.autreChemin !== undefined) {
+    if (nature === "quantite" || nature === "coefficient") fautes.push(`${nature} : un autre chemin n'est accepté que pour un montant, un pourcentage ou une grandeur`);
+    else if (!Number.isFinite(c.autreChemin) || !multipleDe(c.autreChemin, CENTIEME)) fautes.push(`${nature} : autre chemin ${String(c.autreChemin).replace(".", ",")}, pas au centième`);
+    else if (Math.abs(c.autreChemin - c.attendu) <= tolerance + PRES) fautes.push(`${nature} : l'autre chemin tombe déjà dans la tolérance de l'attendu`);
+  }
   if (nature === "montant" || nature === "pourcentage" || nature === "grandeur") {
     if (Math.abs(tolerance - CENTIEME) > PRES) fautes.push(`${nature} : tolérance de ${ecritTolerance} au lieu d'un centième`);
     if (!multipleDe(c.attendu, CENTIEME)) fautes.push(`${nature} : attendu ${String(c.attendu).replace(".", ",")}, pas au centième`);

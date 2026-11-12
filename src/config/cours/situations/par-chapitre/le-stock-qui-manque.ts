@@ -1,6 +1,6 @@
-import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
+import { deuxChemins, eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
-import { arrete } from "../../chapitres/les-stocks";
+import { arrete, arreteSansArrondi } from "../../chapitres/les-stocks";
 import { dateDuCours as date } from "../../dates";
 import { auCentime } from "../../monde/amortissement";
 import type { Situation } from "../types";
@@ -144,10 +144,10 @@ export const LE_STOCK_QUI_MANQUE: Situation = {
             attendu: r.cump,
             calcul: `(${eur(r.initial.valeur)} + ${eur(r.achats.ht)}) ÷ (${qte(r.initial.quantite)} + ${qte(r.achats.quantite)}) = ${eur(r.cump)}`,
           },
-          { libelle: "Valeur du stock théorique", attendu: r.final.valeur, calcul: `${qte(r.theorique)} × ${eur(r.cump)} = ${eur(r.final.valeur)}` },
+          { libelle: "Valeur du stock théorique", ...deuxChemins(r.final.valeur, arreteSansArrondi(r).final), calcul: `${qte(r.theorique)} × ${eur(r.cump)} = ${eur(r.final.valeur)}` },
           {
             libelle: "Marge théorique",
-            attendu: r.margeTheorique,
+            ...deuxChemins(r.margeTheorique, r.ventes.ht - arreteSansArrondi(r).coutDAchatDesVendues),
             calcul: `${eur(r.ventes.ht)} − (${eur(r.initial.valeur)} + ${eur(r.achats.ht)} − ${eur(r.final.valeur)}) = ${eur(r.margeTheorique)}`,
           },
         ];

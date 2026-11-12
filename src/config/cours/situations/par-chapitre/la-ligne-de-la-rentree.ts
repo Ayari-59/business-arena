@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints, qte as entier } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct as enPoints, qte as entier } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_PLATEAU, plateauDuCabinet } from "../../chapitres/le-plateau-de-teleacteurs";
 import {
@@ -209,15 +209,18 @@ export const LA_LIGNE_DE_LA_RENTREE: Situation = {
       champs: (c) => {
         const r = rentreeDuPlateau(c);
         const p = r.cinquieme;
+        const margeSansArrondi = auCentime(p.rendezVous) * (auCentime(r.x.tdb.tauxDHonoration * 100) / 100) * r.x.valeurDUnRendezVousHonore;
         return [
           { libelle: "Créneaux de prospection, avec un téléacteur de plus", nature: "quantite", attendu: p.creneaux, calcul: `${qte(r.teleacteurs + 1)} × ${qte(CRENEAUX_D_UN_TELEACTEUR)} − ${qte(r.a80.creneauxNecessaires)} = ${qte(p.creneaux)}` },
           { libelle: "Rendez-vous pris dans le mois, avec un téléacteur de plus", nature: "grandeur", attendu: auCentime(p.rendezVous), calcul: `${qte(p.heures)} heures × ${qte(p.appelsParHeure)} × ${pct(p.joignabilite)} × ${pct(tauxDeRendezVousDeN())} = ${qte(auCentime(p.rendezVous))}` },
           {
             libelle: "Marge de ces rendez-vous, la première année",
-            attendu: r.valeurDuCinquieme,
+            // L'autre chemin : la marge d'un rendez-vous pris gardée avec tous ses chiffres, sur le taux
+            // d'honoration écrit, l'arrondi à la fin.
+            ...deuxChemins(r.valeurDuCinquieme, margeSansArrondi),
             calcul: `${qte(auCentime(p.rendezVous))} × ${pct(r.x.tdb.tauxDHonoration)} × ${eur(r.x.valeurDUnRendezVousHonore)} = ${qte(auCentime(p.rendezVous))} × ${eur(r.valeurDUnRendezVousPris)} = ${eur(r.valeurDuCinquieme)}`,
           },
-          { libelle: "Ce que rapporte le téléacteur de plus", attendu: r.gainDuCinquieme, calcul: `${eur(r.valeurDuCinquieme)} − ${eur(r.x.cout.parMois)} = ${eur(r.gainDuCinquieme)}` },
+          { libelle: "Ce que rapporte le téléacteur de plus", ...deuxChemins(r.gainDuCinquieme, margeSansArrondi - r.x.cout.parMois), calcul: `${eur(r.valeurDuCinquieme)} − ${eur(r.x.cout.parMois)} = ${eur(r.gainDuCinquieme)}` },
         ];
       },
       explication: (c) => {

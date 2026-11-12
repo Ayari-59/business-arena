@@ -1,4 +1,4 @@
-import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
+import { arrondi2 as auCentime, deuxChemins, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SEUIL, seuilDeLaBoutique } from "../../chapitres/seuil-du-point-de-vente";
 import { seuilDuPointDeVente as seuilDuMois } from "../../monde/boutique";
@@ -138,7 +138,8 @@ export const FERME_POUR_TRAVAUX: Situation = {
         return [
           { libelle: "Marge sur coût variable du mois", attendu: s.marge, calcul: `${eur(s.chiffreDAffaires)} − ${eur(s.coutsVariables)} = ${eur(s.marge)}` },
           { libelle: "Taux de marge sur coût variable (%)", attendu: r.tauxEnPourcent, calcul: `${eur(s.marge)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pct(r.tauxEnPourcent)}` },
-          { libelle: "Seuil de rentabilité", attendu: s.seuil, calcul: `${eur(s.chargesFixes)} ÷ ${pct(r.tauxEnPourcent)} = ${eur(s.seuil)}` },
+          // L'autre chemin : le taux de marge gardé avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Seuil de rentabilité", ...deuxChemins(s.seuil, (s.chargesFixes * s.chiffreDAffaires) / s.marge), calcul: `${eur(s.chargesFixes)} ÷ ${pct(r.tauxEnPourcent)} = ${eur(s.seuil)}` },
           { libelle: "Point mort (jour du mois)", nature: "quantite", attendu: s.pointMort!, calcul: `${eur(s.seuil)} ÷ ${eur(s.chiffreDAffaires)} × ${qte(r.jours)} = ${qte(r.pointMortExact)} : le seuil est franchi dans la journée du ${qte(s.pointMort!)}` },
         ];
       },

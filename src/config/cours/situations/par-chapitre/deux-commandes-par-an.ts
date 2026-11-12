@@ -1,4 +1,4 @@
-import { eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
+import { deuxChemins, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_APPROVISIONNEMENT } from "../../chapitres/approvisionner-au-moindre-cout";
 import { COUT_DE_PASSATION, POSSESSION, PRIX_DU_JEU, TARIF_DEGRESSIF, coutTotalDApprovisionnement, tableauDesTranches, type TrancheDuTarif } from "../../monde/approvisionnement-de-nova";
@@ -95,11 +95,13 @@ export const DEUX_COMMANDES_PAR_AN: Situation = {
       question: () => "Calculez, pour l'offre : le coût de possession d'un jeu par an à son prix, l'achat de l'année, la gestion du stock (passation et possession) et le coût total d'approvisionnement.",
       champs: () => {
         const { offre } = deuxCommandes();
+        const gestionSansArrondi = offre.commandes * COUT_DE_PASSATION + offre.stockMoyen * (POSSESSION.taux * offre.prix + POSSESSION.physiqueParJeu);
         return [
           { libelle: "Coût de possession d'un jeu par an", attendu: offre.cs, calcul: `${pct(POSSESSION.taux)} × ${eur(offre.prix)} + ${eur(POSSESSION.physiqueParJeu)} = ${eur(offre.cs)}` },
           { libelle: "Achat de l'année", attendu: offre.achat, calcul: `${qte(offre.D)} × ${eur(offre.prix)} = ${eur(offre.achat)}` },
-          { libelle: "Gestion du stock", attendu: offre.total, calcul: `${qte(offre.commandes)} × ${eur(COUT_DE_PASSATION)} + ${qte(offre.stockMoyen)} × ${eur(offre.cs)} = ${eur(offre.total)}` },
-          { libelle: "Coût total d'approvisionnement", attendu: offre.totalDApprovisionnement, calcul: `${eur(offre.achat)} + ${eur(offre.total)} = ${eur(offre.totalDApprovisionnement)}` },
+          // L'autre chemin : le coût de possession d'un jeu gardé avec tous ses chiffres, l'arrondi à la fin.
+          { libelle: "Gestion du stock", ...deuxChemins(offre.total, gestionSansArrondi), calcul: `${qte(offre.commandes)} × ${eur(COUT_DE_PASSATION)} + ${qte(offre.stockMoyen)} × ${eur(offre.cs)} = ${eur(offre.total)}` },
+          { libelle: "Coût total d'approvisionnement", ...deuxChemins(offre.totalDApprovisionnement, offre.achat + gestionSansArrondi), calcul: `${eur(offre.achat)} + ${eur(offre.total)} = ${eur(offre.totalDApprovisionnement)}` },
         ];
       },
       explication: () => {

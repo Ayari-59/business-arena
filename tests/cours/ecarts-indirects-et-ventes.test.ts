@@ -392,7 +392,7 @@ describe("les écarts sur charges indirectes : le centre de montage", () => {
   it("le cas : le volume n'explique pas le dépassement", () => {
     const s = LE_CENTRE_QUI_A_TROP_TOURNE;
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("Le directeur de l'usine");
+    expect(s.commanditaire).toBe("Le président"); // NOVA a un président, pas de directeur d'usine (audit du 11 novembre, P2-3)
     expect(attendus(s, "les-heures")).toEqual({ "Activité préétablie de la production réelle": hp, "Heures-machine perdues": hr - hp });
     expect(attendus(s, "les-trois-ecarts")).toEqual({ "Écart sur budget": budget, "Écart sur activité": activite, "Écart sur rendement": rendement });
     // Le croisement : aux seules heures de la production, avec la même dépense au-delà du budget flexible.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COMMUNICATION, COMMUNICATIONS, communication } from "../../src/config/cours/chapitres/communication";
+import { COMMUNICATION, COMMUNICATIONS, budgetQueLeTrimestrePeutPayer, communication } from "../../src/config/cours/chapitres/communication";
 import { anneeDuMarche } from "../../src/config/cours/monde/attractivite";
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { PROGRAMME } from "../../src/config/cours/registre";
@@ -56,11 +56,21 @@ describe("ce que rapporte la communication", () => {
     expect([e.droites(NOVA).produit(191), e.droites(NOVA).produit(190)]).toEqual([191 * 21, 190 * 21]);
   });
 
-  it("le laboratoire : zéro, seul budget de 0 € à 8 000 € qui laisse le meilleur résultat ; 1 000 € ne font gagner que 33 ventes", () => {
-    const e = gardeDuLaboratoire(COMMUNICATION, "le-laboratoire-du-budget");
-    expect(e.defi(NOVA).solution).toEqual({ budget: 0 });
+  it("1 000 € ne font gagner que 33 ventes : le meilleur budget est zéro, que l'étape 1 donne et que l'étape 4 demande", () => {
     expect(ventes(1_000) - ventes(0)).toBe(33);
     expect(33 * 21).toBeLessThan(1_000);
+  });
+
+  // Audit pédagogique du 11 novembre 2026, P2-9 : le laboratoire redemandait ce meilleur budget. Il fait
+  // chercher ce qu'une campagne de lancement peut coûter quand ses ventes ne la paient pas.
+  it("le laboratoire : 6 000 €, le plus gros budget qui ne fait pas perdre d'argent au trimestre, seule solution", () => {
+    const e = gardeDuLaboratoire(COMMUNICATION, "le-laboratoire-du-budget");
+    expect(e.defi(NOVA).solution).toEqual({ budget: 6_000 });
+    const resultat = (budget: number) => e.lecture(NOVA, { budget }).find((l) => l.libelle === "Résultat du trimestre")!.montant;
+    // 103 761 € de marge à 6 000 € ; à 7 000 €, 104 097 € ne couvrent plus les charges du trimestre.
+    expect([resultat(6_000), resultat(7_000)]).toEqual([212, -452]);
+    expect([0, 1_000, 2_000, 3_000, 4_000, 5_000, 7_000, 8_000].map((budget) => e.defi(NOVA).atteint({ budget }))).toEqual(Array(8).fill(false));
+    expect(budgetQueLeTrimestrePeutPayer(NOVA).budget).toBe(6_000);
   });
 });
 

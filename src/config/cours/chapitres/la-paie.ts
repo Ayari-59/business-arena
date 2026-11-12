@@ -1,4 +1,4 @@
-import { arrondi, eur } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi, deuxChemins, eur } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { dateDuCours as date } from "../dates";
 import { TAUX_DE_LA_PAIE } from "../monde/exercice-de-nova";
@@ -241,7 +241,9 @@ export const LA_PAIE: Chapitre = {
     "Distinguer ce qui coûte à l'entreprise de ce qui se retient sur le salaire",
     "Remonter du net au brut, et d'un coût employeur au brut et au net",
   ],
-  libre: false,
+  // Libre : le chapitre libre du BTS SAM
+  // (liste validée par le propriétaire, 11 novembre 2026 ; config/cours/chapitres-libres.ts).
+  libre: true,
   etapes: [
     {
       id: "intro",
@@ -251,7 +253,7 @@ export const LA_PAIE: Chapitre = {
       texte: (c) => {
         const p = paieDeJanvier(c);
         return [
-          `Ce chapitre se joue dans la simulation du cours. En janvier, les ${qte(p.effectif)} salariés ${dE(c.entreprise)} ont gagné ${eur(p.brut)} bruts. Le premier chapitre a passé la paie en trois écritures : les salaires, les cotisations patronales, le virement du net.`,
+          `Ce chapitre se joue dans la simulation du cours. En janvier, les ${qte(p.effectif)} salariés ${dE(c.entreprise)} ont gagné ${eur(p.brut)} bruts. Le chapitre « De la création au premier bilan » a passé la paie en trois écritures : les salaires, les cotisations patronales, le virement du net.`,
           "Un bulletin de paie en dit plus. Les cotisations ne vont pas toutes au même endroit : l'URSSAF recouvre la sécurité sociale, la CSG et l'assurance chômage ; la caisse de retraite complémentaire perçoit sa part. L'impôt sur le revenu du salarié est prélevé par l'employeur, qui le reverse à l'État. Et un salarié peut avoir reçu un acompte en cours de mois.",
           `Ce que la simulation suppose : des taux d'un salarié non cadre, les mêmes dans toutes les entreprises du cours (${pct(T.salarialUrssaf + T.salarialRetraite)} de cotisations salariales, ${pct(T.patronalUrssaf + T.patronalRetraite)} de cotisations patronales) ; un taux moyen de prélèvement à la source de ${pct(T.prelevementALaSource)} pour l'équipe ; un acompte égal à la quinzaine d'un salarié, arrondi à la centaine. Un vrai bulletin compte aussi la prévoyance, la mutuelle et des plafonds ; le cours s'en passe.`,
           "Ce chapitre ne suit que la paie : le journal ne porte que ses écritures, et la banque n'y montre que ce que la paie fait sortir. Ensuite, vous remonterez le bulletin à l'envers.",
@@ -384,7 +386,7 @@ export const LA_PAIE: Chapitre = {
       explication: (c) => {
         const p = paieDeJanvier(c);
         return [
-          `La charge reste le brut, ${eur(p.brut)}, au débit du 641, comme dans le premier chapitre. Ce qui change, c'est le crédit : cinq destinataires au lieu de deux.`,
+          `La charge reste le brut, ${eur(p.brut)}, au débit du 641, comme dans « De la création au premier bilan ». Ce qui change, c'est le crédit : cinq destinataires au lieu de deux.`,
           `L'acompte est repris au crédit du 425 : la créance sur le salarié est soldée, et il ne reste à virer aux salariés que ${eur(p.b.netAPayer)} au total.`,
         ];
       },
@@ -509,7 +511,7 @@ export const LA_PAIE: Chapitre = {
           {
             texte: `${eur(p.b.coutEmployeur)} : le brut et les cotisations patronales.`,
             juste: true,
-            retour: "C'est cela : 641 et 645 réunis, le même coût que dans le premier chapitre. Le détail du bulletin change à qui l'argent va, pas ce que le personnel coûte.",
+            retour: "C'est cela : 641 et 645 réunis, le même coût que dans « De la création au premier bilan ». Le détail du bulletin change à qui l'argent va, pas ce que le personnel coûte.",
           },
         ];
       },
@@ -650,7 +652,10 @@ export const LA_PAIE: Chapitre = {
           },
           {
             libelle: "Prime brute par salarié",
-            attendu: x.primeBrute,
+            // Deux chemins (audit pédagogique du 11 novembre 2026, P1-4) : le plus petit brut que le bulletin
+            // arrondi ligne par ligne fait verser, et le résultat de la méthode du chapitre, la division par
+            // ce qu'un euro brut laisse au salarié.
+            ...deuxChemins(x.primeBrute, cheminDuNetAuBrut(NET_PROMIS, T, x.netPour100).depart),
             calcul: cheminDuNetAuBrut(NET_PROMIS, T, x.netPour100).calcul,
           },
           {

@@ -598,6 +598,9 @@ export function bilanDUnEvenement(e: { cout: number; contacts: number; rendezVou
     coutParCompte: auCentime(e.cout / comptes),
     valeurCreee,
     gain: auCentime(valeurCreee - e.cout),
+    // L'autre chemin (pedagogy/cours/deux-decimales.ts, `deuxChemins`) : les comptes attendus gardés
+    // avec tous leurs chiffres, l'arrondi à la fin.
+    sansArrondi: { coutParCompte: e.cout / e.comptes, gain: e.comptes * valeurDUnCompte - e.cout },
   };
 }
 

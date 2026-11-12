@@ -1,4 +1,4 @@
-import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
+import { arrondi2, deuxChemins, eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutDeLAvance } from "../monde/facture";
 import {
@@ -495,7 +495,8 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           { libelle: "Coût du retard sur l'année", attendu: r.coutDuRetardParAn, calcul: `${r.facturesParAn} × ${eur(r.coutDuRetardParFacture)} = ${eur(r.coutDuRetardParAn)}` },
           {
             libelle: "Réclamable sur l'année",
-            attendu: r.reclamableParAn,
+            // L'autre chemin : les pénalités d'une facture gardées avec tous leurs chiffres, l'arrondi à la fin.
+            ...deuxChemins(r.reclamableParAn, r.facturesParAn * ((k.fct.ttc * r.tauxDesPenalites * r.joursDeRetard) / JOURS_DE_L_ANNEE_CIVILE + r.indemniteParFacture)),
             calcul: `${r.facturesParAn} × (${eur(r.penalitesParFacture)} + ${eur(r.indemniteParFacture)}) = ${eur(r.penalitesParAn)} + ${eur(r.indemnitesParAn)} = ${eur(r.reclamableParAn)}`,
           },
         ];
