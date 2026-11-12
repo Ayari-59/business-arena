@@ -89,7 +89,8 @@ describe("les conditions générales de vente", () => {
   it("se lisent depuis /tarifs, /devis et le pied de page", () => {
     expect(lire("src/components/page-des-tarifs.tsx")).toMatch(/href="\/cgv"/);
     expect(lire("src/app/devis/page.tsx")).toMatch(/href="\/cgv"/);
-    expect(NAVIGATION.find((g) => g.code === "offres")!.liens.map((l) => l.href)).toContain("/cgv");
+    // Les CGV sont une entrée de l'aide, au menu comme au pied de page (menu par produit, novembre 2026).
+    expect(NAVIGATION.find((g) => g.code === "aide")!.liens.map((l) => l.href)).toContain("/cgv");
     expect(lire("src/app/sitemap.ts")).toMatch(/"\/cgv"/);
   });
 });
@@ -101,7 +102,7 @@ describe("la page commerciale des entreprises", () => {
     const t = lire(page);
     expect(t).toMatch(/\/devis\?offre=entreprise/);
     expect(t).not.toMatch(/Qualiopi|OPCO/);
-    expect(NAVIGATION.find((g) => g.code === "entreprises")!.liens.map((l) => l.href)).toContain("/entreprises/offre");
+    expect(NAVIGATION.find((g) => g.code === "offres")!.liens.map((l) => l.href)).toContain("/entreprises/offre");
     expect(lire("src/app/sitemap.ts")).toMatch(/"\/entreprises\/offre"/);
   });
 });

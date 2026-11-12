@@ -7,16 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { InstallButton } from "@/components/install-button";
 import { bouton } from "@/components/bouton";
 import { SiteLogo } from "@/components/site-logo";
-import {
-  ACTION_PRINCIPALE,
-  GROUPE_OUVERT,
-  LIEN_MENTIONS,
-  LIENS_TRANSVERSES,
-  liensDAcces,
-  liensDeTete,
-  NAVIGATION,
-  type LienDeMenu,
-} from "@/config/navigation";
+import { liensDAcces, liensDeTete, NAVIGATION, type LienDeMenu } from "@/config/navigation";
 
 /**
  * La barre de navigation.
@@ -27,18 +18,17 @@ import {
  * et donc plus rien, chaque page ayant exactement la même importance que la
  * suivante.
  *
- * Sur grand écran, les liens de tête s'affichent À PLAT : un menu horizontal
- * direct, sans détour par un panneau. En dessous, ils se replient — la barre
- * d'un téléphone ne tient pas une rangée de liens. À toutes les largeurs, un
- * bouton « Menu » déplie le plan COMPLET, lu du registre : c'est lui qui
- * garantit qu'aucune page ne redevienne inatteignable, sur téléphone comme sur
- * grand écran, le jour où l'on en ajoutera une. L'orientation n'a plus son
- * bouton dédié dans la barre ; elle reste en tête de ce plan.
+ * Sur grand écran, les mots de la barre s'affichent À PLAT : un menu
+ * horizontal direct, sans détour par un panneau. En dessous, ils se replient,
+ * la barre d'un téléphone ne tient pas une rangée de liens. À toutes les
+ * largeurs, un bouton « Menu » déplie le plan COMPLET, lu du registre : c'est
+ * lui qui garantit qu'aucune page ne redevienne inatteignable, sur téléphone
+ * comme sur grand écran, le jour où l'on en ajoutera une.
  *
  * LA LISIBILITÉ PASSE AVANT LE VERRE TEINTÉ. La barre a vécu à 55 % d'opacité
  * et le panneau à 85 % : sur un fond clair, sur une image, sur un tableau
  * dense, le texte du menu devenait illisible par endroits, et seulement par
- * endroits — le pire des défauts, celui qu'on ne reproduit pas à volonté. La
+ * endroits, le pire des défauts, celui qu'on ne reproduit pas à volonté. La
  * barre reste donc translucide mais franchement opaque, et le panneau est
  * plein : une carte de menu se lit par-dessus n'importe quoi. Le flou et le
  * voile de lumière suffisent à la décoller du fond.
@@ -49,54 +39,44 @@ import {
  * pour elle seule : ses classes, écrites pour un fond sombre, s'y lisent
  * telles quelles, et le logo y prend sa version blanche.
  *
- * LES LIENS À PLAT SONT LES PUBLICS DU PLAN : Enseignants · Établissements ·
- * Entreprises · Aide · Offres, chacun vers la présentation de son public, et
- * chacun portant EXACTEMENT le titre du groupe que le menu déplie sous le même
- * mot. Un visiteur qui lit la barre sait donc ce qu'il trouvera dans le menu,
- * et inversement. À droite, deux portes, une par public : le code d'une partie
- * et l'espace enseignant, pour que ni l'élève ni l'enseignant n'ait à ouvrir
- * le menu.
+ * LA BARRE ET LE MENU DÉPLIÉ ONT LES MÊMES GROUPES (décision du propriétaire,
+ * novembre 2026 : un menu par produit, un mot par entrée). La barre dit
+ * Cours · Arène · Épisodes · Offres · Aide, chaque mot vers la page de son
+ * produit ; le menu déplié pose les mêmes 5 mots, vers les mêmes pages, et
+ * sous chacun ses entrées, d'un mot elles aussi. Le menu d'avant comptait un
+ * groupe de plus que la barre (« Élèves »), et un accordéon y cachait les
+ * entrées : sur téléphone, où la barre ne montre pas ses mots, la page d'un
+ * groupe qui n'est pas une de ses entrées (la présentation de l'arène, les
+ * offres) n'aurait plus été atteignable. Les groupes sont donc dépliés, et
+ * leur titre est le lien. À droite de la barre, et en tête du menu déplié,
+ * deux portes, une par public : Rejoindre (le code d'une partie) et Connexion
+ * (l'espace enseignant), pour que ni l'élève ni l'enseignant n'ait à chercher.
  */
 export function SiteHeader() {
   const chemin = useCheminDeLaPage();
   const [ouvert, setOuvert] = useState(false);
-  // Les groupes du plan sont repliés, sauf le premier, orientation et contact,
-  // qui porte l'action principale : à l'ouverture, le menu tient sur ses deux
-  // entrées et trois en-têtes. On déplie ce qu'on veut.
-  const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(
-    () => new Set([GROUPE_OUVERT]),
-  );
   const cadre = useRef<HTMLElement>(null);
   // Dans l'arène, la page est plus large (1 400 px) : la barre s'aligne sur
   // ses bords, sinon le logo et le menu flottent en retrait sur grand écran.
   const enJeu = chemin?.startsWith("/arena/") ?? false;
   // LA PROJECTION N'A PAS DE BARRE DU SITE. C'est l'écran qu'on montre à la
-  // classe : « Pour les enseignants », « Ateliers » ou « Espace enseignant »
-  // n'y disent rien aux élèves et prennent le haut de l'image. La page porte
-  // sa propre navigation, dont le retour au pilotage.
+  // classe : les mots du site ou la connexion n'y disent rien aux élèves et
+  // prennent le haut de l'image. La page porte sa propre navigation, dont le
+  // retour au pilotage.
   // Le code d'une cohorte projeté (/teacher/cohortes/…/projection) suit la même règle, comme celui
   // d'une classe du cours (/teacher/cours/…/code ; audit UX du 11 novembre 2026, P2-9).
   const enProjection = /^\/teacher\/(?:(?:games|cohortes)\/[^/]+\/projection|cours\/[^/]+\/code)(\/|$)/.test(
     chemin ?? "",
   );
   const largeur = enJeu ? "max-w-[1400px]" : "max-w-6xl";
-
-  const basculerGroupe = (code: string) =>
-    setGroupesOuverts((etat) => {
-      const suivant = new Set(etat);
-      if (suivant.has(code)) suivant.delete(code);
-      else suivant.add(code);
-      return suivant;
-    });
+  // Les mots de la barre : un par groupe, et les mêmes, vers les mêmes pages, en tête des
+  // groupes du menu déplié.
+  const mots = liensDeTete();
 
   // Un menu qui reste ouvert derrière la page qu'on vient d'appeler masque
   // cette page. On le referme donc au changement d'adresse, à la touche
   // d'échappement, et au clic à côté.
   useEffect(() => setOuvert(false), [chemin]);
-  // Menu refermé : on replie les groupes, pour rouvrir sur un plan court.
-  useEffect(() => {
-    if (!ouvert) setGroupesOuverts(new Set([GROUPE_OUVERT]));
-  }, [ouvert]);
   useEffect(() => {
     if (!ouvert) return;
     const auClavier = (e: KeyboardEvent) => {
@@ -138,7 +118,17 @@ export function SiteHeader() {
     };
   }, [ouvert]);
 
+  // Dans la barre, un mot se marque sur sa page et sur les pages sous elle : « Épisodes » sur le
+  // profil des épisodes. Ses 5 adresses ne se recouvrent pas.
   const estCourant = (href: string) => chemin === href || chemin.startsWith(`${href}/`);
+  // Dans le menu déplié, seule l'adresse la PLUS PRÉCISE se marque : sur le catalogue des épisodes
+  // (/entreprises/episode), « Catalogue » et non aussi « Métiers » (/entreprises), qui est d'un
+  // autre groupe. Une ancre ne se marque jamais : le chemin de la page n'en porte pas.
+  const laPlusPrecise = [...mots, ...liensDAcces(), ...NAVIGATION.flatMap((g) => g.liens)]
+    .map((l) => l.href)
+    .filter(estCourant)
+    .sort((a, b) => b.length - a.length)[0];
+  const estCourantDansLeMenu = (href: string) => href === laPlusPrecise;
 
   return (
     <header
@@ -172,22 +162,21 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        {/* Les liens de tête, à plat sur grand écran : un menu horizontal
+        {/* Les mots de la barre, à plat sur grand écran : un menu horizontal
             direct. Sous lg, ils se replient dans le panneau « Menu », qui reste
             le plan COMPLET à toutes les largeurs. L'installation y vit aussi ;
-            le thème, lui, est remonté dans la barre — on ne choisit pas une
+            le thème, lui, est remonté dans la barre : on ne choisit pas une
             apparence derrière un panneau qui cache la page. */}
         {/* EN PARTIE, LA VITRINE S'EFFACE.
-            L'élève jouait avec « Pour les enseignants · Ateliers · Entreprises
-            · Espace enseignant » au-dessus de la tête : quatre sorties qui ne
-            le concernent pas, sur l'écran où il doit décider. Dans l'arène, la
-            barre ne garde que le logo et le plan complet — celui-ci reste, il
+            L'élève jouait avec quatre sorties qui ne le concernent pas
+            au-dessus de la tête, sur l'écran où il doit décider. Dans l'arène,
+            la barre ne garde que le logo et le plan complet : celui-ci reste, il
             est la garantie qu'aucune page ne devienne inatteignable. L'état de
             la partie, lui, est porté par le bandeau de jeu de la page. */}
         <div className="flex items-center justify-end gap-1.5">
           {enJeu ? null : (
           <ul className="hidden items-center gap-0.5 lg:flex">
-            {liensDeTete().map((lien) => (
+            {mots.map((lien) => (
               <li key={lien.href}>
                 <Link
                   href={lien.href}
@@ -202,7 +191,7 @@ export function SiteHeader() {
                   {lien.libelle}
                   {/* La page courante porte un trait plein ; les autres le
                       font naître du centre au survol. Une pastille pleine
-                      alourdissait une barre qui en compte trois. Le trait dit
+                      alourdissait une barre qui en compte cinq. Le trait dit
                       une POSITION : gris clair, jamais l'orange (lot P1). */}
                   <span
                     aria-hidden
@@ -218,37 +207,15 @@ export function SiteHeader() {
           </ul>
           )}
 
-          {/* Les deux portes d'entrée, une par public : deux boutons
-              SECONDAIRES de la maison (lot P1). L'enseignant a été un contour
-              orange écrit à la main, l'élève un dégradé clair : deux formes de
-              plus, et un orange qui disputait l'œil à l'action de la page. Un
-              filet les sépare de ce qui ne fait qu'informer. */}
+          {/* Les deux portes d'entrée, une par public : un filet les sépare de
+              ce qui ne fait qu'informer. */}
           {enJeu ? null : (
             <span aria-hidden className="mx-1 hidden h-5 w-px bg-white/10 lg:block" />
           )}
           {enJeu ? null : (
           <div className="hidden items-center gap-1.5 lg:flex">
             {liensDAcces().map((lien) => (
-              <Link
-                key={lien.href}
-                href={lien.href}
-                title={lien.aide}
-                aria-current={estCourant(lien.href) ? "page" : undefined}
-                className={
-                  // LOT P2 : UN SEUL CADRE D'ACTION DANS LA BARRE. Les deux
-                  // portes étaient deux boutons secondaires côte à côte, plus
-                  // le menu : trois cadres pour une barre. L'élève qui a un
-                  // code garde le filet (« J'ai un code ») ; l'espace
-                  // enseignant devient un lien souligné, comme les rubriques à
-                  // sa gauche. Le seul bouton plein du premier écran reste
-                  // « Tester le simulateur » (lot P6), dans le héros.
-                  lien.acces === "eleve"
-                    ? bouton({ variante: "secondaire", taille: "m" })
-                    : `${bouton({ variante: "lien", taille: "m" })} px-2`
-                }
-              >
-                {lien.libelle}
-              </Link>
+              <Porte key={lien.href} lien={lien} courant={estCourant(lien.href)} />
             ))}
           </div>
           )}
@@ -320,71 +287,47 @@ export function SiteHeader() {
             aria-hidden
             className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent"
           />
-          {/* CE QUI SERT À TOUS, EN TÊTE DU PLAN : choisir sa simulation et prendre
-              rendez-vous n'appartiennent à aucun public (config/navigation.ts,
-              LIENS_TRANSVERSES). Les mentions légales ferment le plan, plus bas. */}
-          <div data-liens-transverses="" className="mb-2 space-y-0.5 border-b border-white/10 pb-2">
-            {LIENS_TRANSVERSES.filter((l) => l.href !== LIEN_MENTIONS.href).map((lien) => (
-              <Entree key={lien.href} lien={lien} courant={estCourant(lien.href)} />
+          {/* LES DEUX PORTES EN TÊTE, ET RIEN D'AUTRE : le code de l'élève et
+              l'espace enseignant, les mêmes boutons qu'à droite de la barre.
+              Sur téléphone, c'est le seul endroit où ils sont. */}
+          <div data-portes-du-menu="" className="grid grid-cols-2 gap-2 border-b border-white/10 pb-3">
+            {liensDAcces().map((lien) => (
+              <Porte key={lien.href} lien={lien} courant={estCourantDansLeMenu(lien.href)} className="w-full pointer-coarse:min-h-11" />
             ))}
           </div>
-          <div className="space-y-1">
-            {NAVIGATION.map((groupe) => {
-              const ouvertGroupe = groupesOuverts.has(groupe.code);
+          {/* LES CINQ GROUPES, dépliés : le mot de la barre en titre, vers la
+              même page, et sous lui ses entrées, d'un mot chacune. Le filet
+              occupe ce que le titre laisse : c'est ce qui distingue un groupe
+              d'une entrée, sans l'écrire. */}
+          <div className="mt-2 space-y-2">
+            {NAVIGATION.map((groupe, i) => {
+              const titre = mots[i]!;
               return (
-                <div key={groupe.code}>
-                  <button
-                    type="button"
-                    onClick={() => basculerGroupe(groupe.code)}
-                    aria-expanded={ouvertGroupe}
-                    aria-controls={`groupe-${groupe.code}`}
-                    className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-white/5 pointer-coarse:min-h-11"
-                  >
-                    <span
-                      className={`shrink-0 text-sm font-semibold transition-colors ${
-                        ouvertGroupe ? "text-slate-50" : "text-slate-400 group-hover:text-slate-200"
+                <div key={groupe.code} data-groupe-du-menu={groupe.code}>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      id={`menu-${groupe.code}`}
+                      href={titre.href}
+                      title={titre.aide}
+                      data-titre-du-groupe=""
+                      aria-current={estCourantDansLeMenu(titre.href) ? "page" : undefined}
+                      className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-50 underline-offset-4 transition duration-[var(--duree-passage)] hover:bg-white/5 motion-reduce:transition-none pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center ${
+                        estCourantDansLeMenu(titre.href) ? "underline decoration-slate-300" : ""
                       }`}
                     >
-                      {groupe.titre}
-                      {/* Ce que le mot ne dit pas seul (« lycée, BTS, université »),
-                          en petit et en gris : le titre reste celui de la barre. */}
-                      {groupe.precision ? (
-                        <>
-                          {" "}
-                          <span className="text-xs font-normal text-slate-400">{groupe.precision}</span>
-                        </>
-                      ) : null}
-                    </span>
-                    {/* Le filet occupe ce que le titre laisse : c'est ce qui
-                        distingue une rubrique d'un lien, sans l'écrire. */}
-                    <span
-                      aria-hidden
-                      className={`h-px flex-1 transition-colors ${ouvertGroupe ? "bg-slate-300" : "bg-white/10"}`}
-                    />
-                    <svg
-                      aria-hidden
-                      viewBox="0 0 10 6"
-                      className={`h-1.5 w-2.5 shrink-0 transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
-                        ouvertGroupe ? "rotate-180 text-slate-200" : "text-slate-400"
-                      }`}
-                    >
-                      <path
-                        d="M1 1l4 4 4-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  {ouvertGroupe ? (
-                    <div id={`groupe-${groupe.code}`} className="mt-0.5 space-y-0.5 pb-1">
-                      {groupe.liens.map((lien) => (
-                        <Entree key={lien.href} lien={lien} courant={estCourant(lien.href)} />
-                      ))}
-                    </div>
-                  ) : null}
+                      {titre.libelle}
+                    </Link>
+                    <span aria-hidden className="h-px flex-1 bg-white/10" />
+                  </div>
+                  {/* La liste porte le nom de son groupe : « Profil » se lit
+                      « Arène » ou « Épisodes » pour une synthèse vocale. */}
+                  <ul aria-labelledby={`menu-${groupe.code}`} className="flex flex-wrap gap-x-1 gap-y-0.5">
+                    {groupe.liens.map((lien) => (
+                      <li key={lien.href}>
+                        <Entree lien={lien} courant={estCourantDansLeMenu(lien.href)} />
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               );
             })}
@@ -392,8 +335,8 @@ export function SiteHeader() {
 
           {/* L'installation, et rien d'autre : le réglage d'apparence est monté
               dans la barre, et une rubrique « Réglages » qui n'aurait plus
-              qu'une ligne — absente la plupart du temps, puisque l'invite
-              d'installation ne se montre que sur certains appareils — était un
+              qu'une ligne (absente la plupart du temps, puisque l'invite
+              d'installation ne se montre que sur certains appareils) était un
               titre au-dessus du vide. Le bouton se nomme lui-même.
 
               `empty:hidden` : le composant ne rend rien quand l'appareil ne
@@ -401,17 +344,6 @@ export function SiteHeader() {
           <div className="mt-3 border-t border-white/10 px-3 pt-3 empty:hidden">
             <InstallButton />
           </div>
-          <p className="mt-2 px-3 text-xs">
-            <Link
-              href={LIEN_MENTIONS.href}
-              title={LIEN_MENTIONS.aide}
-              aria-current={estCourant(LIEN_MENTIONS.href) ? "page" : undefined}
-              className="text-slate-400 underline-offset-4 hover:text-slate-200 hover:underline pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
-            >
-              {LIEN_MENTIONS.libelle}
-            </Link>
-          </p>
-
         </div>
       </div>
     </header>
@@ -419,48 +351,55 @@ export function SiteHeader() {
 }
 
 /**
- * Une entrée du plan : son nom, rien d'autre.
+ * Une porte d'entrée : à droite de la barre et en tête du menu déplié, la même.
+ * Deux boutons SECONDAIRES de la maison (lot P1) au départ, puis UN SEUL CADRE
+ * D'ACTION DANS LA BARRE (lot P2) : l'élève qui a un code garde le filet,
+ * l'enseignant un lien souligné, comme les mots à sa gauche. Le seul bouton
+ * plein du premier écran reste « Tester le simulateur » (lot P6), dans le
+ * héros. Le mot se voit ; le nom (`nom`), plus long, se lit à la synthèse
+ * vocale, et commence par le mot.
+ */
+function Porte({ lien, courant, className = "" }: { lien: LienDeMenu; courant: boolean; className?: string }) {
+  return (
+    <Link
+      href={lien.href}
+      title={lien.aide}
+      aria-label={lien.nom}
+      aria-current={courant ? "page" : undefined}
+      className={`${
+        lien.acces === "eleve"
+          ? bouton({ variante: "secondaire", taille: "m" })
+          : `${bouton({ variante: "lien", taille: "m" })} px-2`
+      } ${className}`}
+    >
+      {lien.libelle}
+    </Link>
+  );
+}
+
+/**
+ * Une entrée du plan : son mot, rien d'autre.
  *
  * Chaque entrée portait sous son nom une phrase qui disait ce qu'on trouve
- * sur la page. Le plan en devenait un texte à lire plutôt qu'une liste à
- * parcourir : il est revenu aux seuls noms. La phrase reste dans le plan du
- * site (config/navigation.ts) et s'affiche au survol, pour qui hésite entre
- * deux entrées.
+ * sur la page, puis une phrase en guise de nom. Le plan en devenait un texte à
+ * lire plutôt qu'une liste à parcourir : il est revenu à un mot par entrée. La
+ * phrase reste dans le plan du site (config/navigation.ts) et s'affiche au
+ * survol, pour qui hésite entre deux entrées. La page courante porte le filet
+ * gris clair d'une POSITION.
  */
 function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
-  // L'action principale se distingue : c'est la seule entrée du plan qui dit
-  // par où commencer, et elle doit se voir sans se lire. Lot P1 : par un filet
-  // franc et l'encre forte, comme un bouton secondaire, et non plus par
-  // l'orange ; l'entrée de la page courante, une position, prend le gris clair.
-  const principale = lien.href === ACTION_PRINCIPALE.href;
   return (
     <Link
       href={lien.href}
       title={lien.aide}
       aria-current={courant ? "page" : undefined}
-      className={`group block rounded-lg px-3 py-2 transition duration-[var(--duree-passage)] motion-reduce:transition-none ${
-        principale
-          ? "border border-white/25 hover:border-white/50 hover:bg-white/5"
-          : `border-l-2 hover:bg-white/5 ${
-              courant ? "border-slate-300 bg-white/5" : "border-transparent hover:border-white/35"
-            }`
+      className={`block rounded-lg border-l-2 px-3 py-1.5 text-sm font-medium transition duration-[var(--duree-passage)] hover:bg-white/5 motion-reduce:transition-none pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center ${
+        courant
+          ? "border-slate-300 bg-white/5 text-slate-50"
+          : "border-transparent text-slate-200 hover:border-white/35 hover:text-slate-50"
       }`}
     >
-      <span
-        className={`flex items-center justify-between gap-3 text-sm ${principale ? "font-semibold text-slate-50" : "font-medium text-slate-100"}`}
-      >
-        {lien.libelle}
-        {/* La flèche de l'entrée principale avance d'un cheveu au survol :
-            c'est le seul mouvement du plan, et il dit où l'on va. */}
-        {principale ? (
-          <span
-            aria-hidden
-            className="translate-x-0 text-slate-200 transition-transform duration-[var(--duree-passage)] group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none"
-          >
-            →
-          </span>
-        ) : null}
-      </span>
+      {lien.libelle}
     </Link>
   );
 }

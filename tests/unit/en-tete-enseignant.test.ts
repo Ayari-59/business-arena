@@ -16,20 +16,21 @@ describe("l'en-tête enseignant", () => {
       createElement(EnTeteEnseignant, { titre: "Mes scénarios", actif: "scenarios" }),
     );
     expect(html).toContain("Espace enseignant");
+    // Le titre de la page reste « Mes scénarios » ; sa pastille n'en dit que le mot (novembre 2026).
     expect(html).toContain("Mes scénarios");
-    expect(html).toMatch(/aria-current="page"[^>]*>Mes scénarios/);
-    for (const lien of ["Mes parties", "Carnet d&#x27;usage", "Aide"]) expect(html).toContain(lien);
+    expect(html).toMatch(/aria-current="page"[^>]*>Scénarios</);
+    for (const lien of [">Parties<", ">Usage<", ">Aide<"]) expect(html).toContain(lien);
     // L'aide mène au guide de prise en main de l'enseignant ; le manuel n'a plus
     // de pastille (il se lit depuis le guide et depuis le menu du site).
     expect(html).toContain('href="/guides/enseignant"');
     expect(html).not.toContain("/teacher/manuel");
-    // Dans l'ordre d'usage : parties, examens, cohortes, scénarios, carnet, aide.
+    // Dans l'ordre d'usage : parties, examens, cohortes, classes, scénarios, usage, aide.
     const nav = html.slice(html.indexOf("<nav"));
-    const ordre = ["Mes parties", "Mes examens", "Mes cohortes", "Mes scénarios", "Carnet d&#x27;usage", "Aide"].map((l) => nav.indexOf(`>${l}<`));
+    const ordre = ["Parties", "Examens", "Cohortes", "Classes", "Scénarios", "Usage", "Aide"].map((l) => nav.indexOf(`>${l}<`));
     expect(ordre.every((i) => i >= 0)).toBe(true);
     expect([...ordre].sort((a, b) => a - b)).toEqual(ordre);
     // pas d'établissement ni d'administration sans le droit
-    expect(html).not.toContain("Mon établissement");
+    expect(html).not.toContain(">Établissement<");
     expect(html).not.toContain("Administration");
     // L'onglet « Progression » a été retiré : il affichait 0 % pour toutes les
     // équipes, toujours, faute d'étape d'apprentissage que quoi que ce soit

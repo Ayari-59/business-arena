@@ -67,11 +67,8 @@ beforeAll(async () => {
   // la navigation et ses phrases d'aide en petits corps.
   await aller(page, "/");
   await page.getByRole("button", { name: "Menu" }).click();
-  // Le plan est un accordéon : on déplie ses groupes pour que les phrases
-  // d'aide en petits corps soient réellement rendues, donc mesurées.
-  const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
-  for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
-  await page.locator("#plan-du-site a").first().waitFor({ state: "visible" });
+  // Ses groupes sont dépliés (novembre 2026) : tout ce qu'il porte est rendu, donc mesuré.
+  await page.locator("#plan-du-site [data-titre-du-groupe]").first().waitFor({ state: "visible" });
   relever("menu", await mesurerContraste(page, "clair"));
 }, 180_000);
 

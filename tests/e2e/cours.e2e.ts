@@ -697,14 +697,15 @@ describe("la classe autour de son diplôme", () => {
     expect(await prof.locator("[data-tableau-glisser]").isVisible()).toBe(false);
 
     // LE CODE À PROJETER (P2-9) : lisible au mur, sans nom d'élève.
-    expect(await prof.getByRole("link", { name: "Espace enseignant" }).first().isVisible()).toBe(true);
+    // La porte de la barre du site (« Connexion », nommée « Connexion à l'espace enseignant ») se voit.
+    expect(await prof.getByRole("link", { name: "Connexion à l'espace enseignant" }).first().isVisible()).toBe(true);
     await prof.locator("[data-projeter-le-code]").click();
     await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}\/code$/, { timeout: 60_000 });
     expect((await prof.locator("[data-code-projete]").innerText()).trim()).toBe(code);
     expect(await prof.locator("[data-eleves-projetes]").getAttribute("data-eleves-projetes")).toBe("2");
     expect(await prof.locator("main").innerText()).not.toContain("Léa");
     // Comme la projection d'une partie ou d'une cohorte : pas de barre du site au mur.
-    expect(await prof.getByRole("link", { name: "Espace enseignant" }).first().isVisible()).toBe(false);
+    expect(await prof.getByRole("link", { name: "Connexion à l'espace enseignant" }).first().isVisible()).toBe(false);
     await ctxProf.close();
     await lea1.context().close();
     await lea2.context().close();

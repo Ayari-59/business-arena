@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
-import { GROUPE_OUVERT, NAVIGATION } from "../../src/config/navigation";
+import { NAVIGATION } from "../../src/config/navigation";
 
 /**
  * LE SITE PUBLIC, AU POUCE.
  *
  * Six largeurs de téléphone, sans scroll horizontal ; un menu rangé par
- * intention, aux zones tactiles de 44 px ; des fiches qui se replient sur
+ * produit, un mot par entrée, aux zones tactiles de 44 px ; des fiches qui se replient sur
  * téléphone et restent à plat sur grand écran ; un parcours d'orientation en
  * étapes ; une barre d'action basse qui se tait quand le bouton est déjà là.
  */
@@ -82,32 +82,63 @@ describe("aucun scroll horizontal, aux six largeurs", () => {
   }
 });
 
-describe("le menu, rangé par public", () => {
-  it("les publics, des groupes d'au moins 44 px", async () => {
+describe("le menu, rangé par produit", () => {
+  it("les deux portes en tête, puis les 5 groupes dépliés, d'au moins 44 px au doigt", async () => {
     const { contexte, page } = await telephone();
     await ouvrir(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    // Les groupes sont ceux du plan, dans son ordre, sous leurs titres : un par public.
-    const groupes = page.locator("#plan-du-site button[aria-controls^='groupe-']");
-    await groupes.first().waitFor({ state: "visible" });
-    expect(await groupes.evaluateAll((b) => b.map((x) => x.getAttribute("aria-controls")))).toEqual(
-      NAVIGATION.map((g) => `groupe-${g.code}`),
+    const menu = page.locator("#plan-du-site");
+    // En tête, Rejoindre et Connexion, et rien d'autre : la barre du téléphone ne les montre pas.
+    const portes = menu.locator("[data-portes-du-menu] a");
+    await portes.first().waitFor({ state: "visible" });
+    expect(await portes.evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()))).toEqual(["Rejoindre", "Connexion"]);
+    // Puis les groupes du plan, dans son ordre, chacun sous le mot de la barre et vers la même page :
+    // sur téléphone, c'est par eux qu'on atteint la présentation de l'arène et les offres.
+    expect(await menu.locator("[data-groupe-du-menu]").evaluateAll((els) => els.map((e) => e.getAttribute("data-groupe-du-menu")))).toEqual(
+      NAVIGATION.map((g) => g.code),
     );
     for (const g of NAVIGATION) {
-      const groupe = page.locator(`#plan-du-site button[aria-controls='groupe-${g.code}']`);
-      expect((await groupe.innerText()).trim().startsWith(g.titre), `groupe « ${g.titre} »`).toBe(true);
-      const boite = (await groupe.boundingBox())!;
-      expect(boite.height, `groupe « ${g.titre} » trop bas`).toBeGreaterThanOrEqual(43); // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7)
-      // Seul « Élèves » est déplié à l'ouverture ; les autres se déplient à la demande.
-      expect(await groupe.getAttribute("aria-expanded"), `groupe « ${g.titre} »`).toBe(g.code === GROUPE_OUVERT ? "true" : "false");
+      const titre = menu.locator(`[data-groupe-du-menu="${g.code}"] [data-titre-du-groupe]`);
+      expect((await titre.innerText()).trim(), g.code).toBe(g.titre);
+      expect(await titre.getAttribute("href"), g.code).toBe(g.entree);
     }
-    // « Élèves » est ouvert d'office : on joue sans chercher.
-    // Dans le menu : la barre d'action basse porte aussi « Jouer en solo ».
-    await page
-      .locator("#plan-du-site")
-      .getByRole("link", { name: /Jouer en solo/ })
-      .waitFor({ state: "visible" });
+    // Tout ce qui se touche fait 44 px de haut : les portes, les titres, les entrées.
+    const hauteurs = await menu.locator("a").evaluateAll((els) =>
+      els.map((e) => ({ mot: (e.textContent ?? "").trim(), haut: e.getBoundingClientRect().height })),
+    );
+    expect(hauteurs.length).toBeGreaterThan(NAVIGATION.length + 2);
+    // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7).
+    for (const h of hauteurs) expect(h.haut, `« ${h.mot} » trop bas`).toBeGreaterThanOrEqual(43);
+    // Le solo se voit sans rien déplier ; la barre d'action basse le propose aussi, sous son verbe.
+    await menu.getByRole("link", { name: "Solo", exact: true }).waitFor({ state: "visible" });
     await contexte.close();
+  });
+
+  it("le menu déplié ne déborde pas, aux six largeurs", async () => {
+    const fautes: string[] = [];
+    for (const largeur of LARGEURS) {
+      const { contexte, page } = await telephone(largeur);
+      await ouvrir(page, "/");
+      await page.getByRole("button", { name: "Menu" }).click();
+      await page.locator("#plan-du-site [data-titre-du-groupe]").first().waitFor({ state: "visible" });
+      const m = await page.evaluate(() => {
+        const carte = document.querySelector("#plan-du-site .carte")!;
+        const r = carte.getBoundingClientRect();
+        return {
+          page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          carte: carte.scrollWidth - carte.clientWidth,
+          dehors: [...carte.querySelectorAll("a")]
+            .filter((a) => {
+              const b = a.getBoundingClientRect();
+              return b.left < r.left - 0.5 || b.right > r.right + 0.5;
+            })
+            .map((a) => (a.textContent ?? "").trim()),
+        };
+      });
+      if (m.page > 0 || m.carte > 0 || m.dehors.length > 0) fautes.push(`${largeur} px : ${JSON.stringify(m)}`);
+      await contexte.close();
+    }
+    expect(fautes).toEqual([]);
   });
 });
 

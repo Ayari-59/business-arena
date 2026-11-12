@@ -161,7 +161,8 @@ describe("il n'envoie pas chercher ce qui n'existe pas", () => {
     // La pastille « Manuel » de l'espace enseignant a cédé la place à « Aide »
     // (le guide de prise en main) : le manuel reste à un clic, depuis le guide
     // et depuis le menu du site.
-    expect(lire("src/config/navigation.ts")).toMatch(/href: "\/manuel",\s*libelle: "Manuel de l'enseignant"/);
+    // Dans le menu par produit (novembre 2026), son mot est « Manuel ».
+    expect(lire("src/config/navigation.ts")).toMatch(/href: "\/manuel",\s*libelle: "Manuel"/);
     expect(lire("src/config/guides/enseignant.ts")).toContain('href: "/manuel"');
   });
 

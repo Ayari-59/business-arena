@@ -144,7 +144,7 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     // La page est dans la navigation de l'espace, à côté des parties.
     await aller(prof, "/teacher/cohortes");
     expect(
-      await prof.getByRole("link", { name: "Mes cohortes" }).first().getAttribute("aria-current"),
+      await prof.getByRole("navigation", { name: "Espace enseignant" }).getByRole("link", { name: "Cohortes", exact: true }).getAttribute("aria-current"),
     ).toBe("page");
     expect(await prof.locator("[data-cohortes-sans-licence]").count()).toBe(0);
     // Aucune cohorte : le formulaire est ouvert, et un seul bouton plein se voit.
@@ -178,7 +178,7 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     expect((await prof.locator("[data-code-projete]").textContent())!.trim()).toBe(code);
     expect(await prof.getByText("Personne n'a encore rejoint.").count()).toBe(1);
     // Comme la projection d'une partie : pas de barre du site au mur.
-    expect(await prof.getByRole("link", { name: "Espace enseignant" }).first().isVisible()).toBe(false);
+    expect(await prof.getByRole("link", { name: "Connexion à l'espace enseignant" }).first().isVisible()).toBe(false);
 
     // L'élève, sans compte, suit le lien copié.
     const ctxEleve = await contexte();
