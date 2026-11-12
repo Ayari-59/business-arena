@@ -7,6 +7,7 @@ import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, BrowserContext, Page } from "playwright-core";
 import { aller, BASE, ouvrirNavigateur, texte } from "./helpers/browser";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * LES INSCRITS ET LES NOUVEAUTÉS, DANS UN VRAI NAVIGATEUR, SUR LE BUILD DE PRODUCTION.
@@ -291,7 +292,8 @@ describe("la gestion des inscriptions : l'administrateur de la plateforme", () =
     const p = await pageAdmin();
     await aller(p, `/admin/inscrits?q=${TAG}`);
     const reglages = p.locator("[data-reglages-inscriptions]");
-    expect(await reglages.innerText()).toMatch(/Inscription libre : (ouverte|fermée)/);
+    // Le résumé tel que la typographie le pose au rendu (898c238) : insécable avant « : ».
+    expect(await reglages.innerText()).toMatch(/Inscription libre\u00a0: (ouverte|fermée)/);
     await reglages.locator("summary").click();
     expect(await p.locator('textarea[name="domainesBloques"]').isVisible()).toBe(true);
     expect(await p.locator("[data-codes-invitation]").isVisible()).toBe(true);
@@ -417,7 +419,10 @@ describe("les codes d'invitation et l'inscription libre : l'administrateur de la
     await p.locator('input[name="inscriptionLibre"][value="non"]').check();
     await p.getByRole("button", { name: "Enregistrer les réglages" }).click();
     await p.waitForURL(/fait=reglages/, { timeout: 30_000 });
-    expect(await p.locator("[data-reglages-inscriptions] summary").innerText()).toContain("Inscription libre : fermée");
+    // Le résumé tel que la typographie le pose au rendu (898c238) : insécable avant « : ».
+    expect(await p.locator("[data-reglages-inscriptions] summary").innerText()).toContain(
+      insecables("Inscription libre : fermée"),
+    );
     await aller(p, "/admin");
     expect(await texte(p)).toContain("Inscription des enseignants (sur code seulement)");
 
@@ -481,7 +486,9 @@ describe("les codes d'invitation et l'inscription libre : l'administrateur de la
     await p.locator('input[name="inscriptionLibre"][value="oui"]').check();
     await p.getByRole("button", { name: "Enregistrer les réglages" }).click();
     await p.waitForURL(/fait=reglages/, { timeout: 30_000 });
-    expect(await p.locator("[data-reglages-inscriptions] summary").innerText()).toContain("Inscription libre : ouverte");
+    expect(await p.locator("[data-reglages-inscriptions] summary").innerText()).toContain(
+      insecables("Inscription libre : ouverte"),
+    );
     const journal = p.locator("[data-journal-inscrits]");
     for (const geste of ["reglages", "code-cree", "code-revoque", "desactivation", "reactivation", "rattachement"]) {
       expect(await journal.locator(`[data-geste="${geste}"]`).count(), geste).toBeGreaterThan(0);

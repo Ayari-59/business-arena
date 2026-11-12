@@ -375,9 +375,10 @@ describe("choisir son entreprise", () => {
     await page.locator('[data-carte-entreprise="bistrot"]').focus();
     await page.keyboard.press("Enter");
     expect(await page.locator('[data-carte-entreprise="bistrot"]').getAttribute("aria-pressed")).toBe("true");
-    // Le résumé dit ce qu'on lance, et porte LE bouton, en bas de l'écran.
+    // Le résumé dit ce qu'on lance, et porte LE bouton, en bas de l'écran. La page s'ouvre au
+    // niveau 1, comme elle le conseille (audit UX du 29 octobre 2026, P1-8, ec53396).
     const resume = page.locator("[data-resume-de-lancement]");
-    expect(await resume.innerText()).toContain("LA TABLE D'AUGUSTIN · Niveau 3");
+    expect(await resume.innerText()).toContain("LA TABLE D'AUGUSTIN · Niveau 1");
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(200);
     const boite = (await resume.boundingBox())!;
