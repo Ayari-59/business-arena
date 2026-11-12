@@ -5,6 +5,7 @@ import { aller, BASE, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { mesurerContraste } from "./helpers/contraste";
 import { imprimerEnA4 } from "./helpers/impression";
+import { insecables } from "../../src/lib/typographie";
 import { GRILLES, GRILLES_VERSION_3, GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
 import {
   competencesEvaluees,
@@ -170,8 +171,19 @@ describe("sans le module de l'examen", () => {
     const message = p.locator("[data-examens-sans-module]");
     expect(await message.textContent()).toMatch(/L'examen individuel est inclus dans l'offre Campus/);
     expect(await message.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
+    // Sans le module, la création reste repliée et grisée sous le message (audit UX du
+    // 29 octobre 2026, P0-1, ec53396) : on l'ouvre, on la constate grisée, puis on la dégrise
+    // à la main, comme une page restée ouverte, pour voir le serveur refuser quand même.
+    const creation = p.locator("#nouvel-examen");
+    if ((await creation.getAttribute("open")) === null) await creation.locator(":scope > summary").click();
+    const formulaire = p.locator("#nouvel-examen fieldset[data-formulaire-sans-offre]");
+    expect(await formulaire.count()).toBe(1);
+    expect(await p.getByLabel("Nom de l'examen").isDisabled()).toBe(true);
+    const creer = p.getByRole("button", { name: "Créer l'examen" });
+    expect(await creer.isDisabled()).toBe(true);
+    await formulaire.evaluate((f) => f.removeAttribute("disabled"));
     await p.getByLabel("Nom de l'examen").fill("Sans module");
-    await p.getByRole("button", { name: "Créer l'examen" }).click();
+    await creer.click();
     await p.waitForURL(/refus=licence/);
     expect(await p.locator('[data-refus-d-examen="licence"]').count()).toBe(1);
     await ctx.close();
@@ -193,7 +205,8 @@ describe("un examen, de la création à la publication", () => {
     await prof.getByLabel("Niveau").selectOption("1");
     await prof.getByLabel("Nombre de tours").fill("2");
     await prof.getByLabel("Durée maximale d'un tour (minutes)").fill("30");
-    await prof.getByLabel(/Montrer le « Résultat estimé »/).uncheck();
+    // Le libellé tel que la typographie le pose au rendu (898c238) : insécables dans les guillemets.
+    await prof.getByLabel(/Montrer le «\u00a0Résultat estimé\u00a0»/).uncheck();
     await prof.getByLabel(/Un lot de \d+ marchés d'égale difficulté/).check();
     await capture(prof, "examen-creation-1280");
     await prof.getByRole("button", { name: "Créer l'examen" }).click();
@@ -283,8 +296,9 @@ describe("un examen, de la création à la publication", () => {
     expect(await prof.locator('[data-etat="notee"]').count()).toBe(2);
     expect(await prof.locator("[data-histogramme]").count()).toBe(1);
     expect(await prof.locator("[data-competences-de-la-promotion] li").count()).toBe(6);
+    // Le texte tel que la typographie le pose au rendu (898c238) : insécable avant « : ».
     expect(await prof.locator("[data-comparaison-nationale]").textContent()).toBe(
-      "Comparaison nationale : disponible à partir de 5 établissements.",
+      insecables("Comparaison nationale : disponible à partir de 5 établissements."),
     );
     expect(await pleinsVisibles(prof)).toEqual(["Publier les résultats"]);
     await sansTexteIllisible(prof);
@@ -332,7 +346,8 @@ describe("un examen, de la création à la publication", () => {
   it("publiés : chaque candidat voit sa note et son relevé", async () => {
     const a = await ctxA.newPage();
     await aller(a, `/examen/${code}/resultat`);
-    expect(await a.getByRole("heading", { level: 1 }).textContent()).toMatch(/^Votre note : [\d,]+ sur 100$/);
+    // Le titre tel que la typographie le pose au rendu (898c238) : insécable avant « : ».
+    expect(await a.getByRole("heading", { level: 1 }).textContent()).toMatch(/^Votre note\u00a0: [\d,]+ sur 100$/);
     expect(await a.locator("[data-releve-des-competences] li").count()).toBe(6);
     // Une ligne par ligne active de la grille (questions éteintes : sans les diagnostics).
     expect(await a.locator("[data-detail-de-la-note] li").count()).toBe(GRILLE_BUSINESS_ARENA_2026.lignes.filter((x) => !x.siQuestions).length);
