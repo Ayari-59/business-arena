@@ -4,6 +4,9 @@ import { BASE, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
 import { coursDeLEpisode } from "../../src/pedagogy/cours/suites";
+import { EPISODES_DE_DEMO } from "../../src/config/episodes/demos";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * L'ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT DANS UN VRAI NAVIGATEUR.
@@ -330,4 +333,155 @@ describe("les niveaux de difficulté", () => {
     expect(await page.locator("main").innerText()).not.toMatch(/undefined|NaN/);
     await page.close();
   }, 120_000);
+});
+
+/**
+ * UN ÉPISODE REPREND AU MÊME ÉCRAN APRÈS UN RECHARGEMENT, ET L'ATTENTE NE VIDE PLUS LA PAGE (audit UX du
+ * 11 novembre 2026, P1-6, P2-3, P2-4, P2-5 ; décisions du propriétaire). Sur un téléphone, sous licence :
+ *  · le badge dit « Données fictives », sans « Démonstration » ;
+ *  · une prévision hors de sa plage le dit sous le champ, « Entre 0 et 100 % » ;
+ *  · pendant 1,5 s d'attente du serveur, la page garde sa hauteur, et l'en-tête n'avance qu'avec la
+ *    réponse ; les phrases d'attente restent ;
+ *  · un rechargement, à la conséquence, à l'étape suivante, puis au bilan, rend le même écran : le
+ *    serveur rejoue la partie à partir de ses faits, gardés dans l'onglet, rien de la vue avec eux.
+ * Avec E2E_CAPTURES, chaque écran est photographié à 390 px.
+ */
+describe("l'épisode repris au même écran, et l'attente qui garde la page", () => {
+  const capturer = async (page: Page, nom: string) => {
+    const dossier = process.env.E2E_CAPTURES;
+    if (!dossier) return;
+    mkdirSync(dossier, { recursive: true });
+    await page.screenshot({ path: join(dossier, `${nom}-390.png`) });
+  };
+  const espaces = (t: string) => t.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
+  const ralentir = (page: Page) =>
+    page.route("**/api/episodes/partie", async (route) => {
+      await new Promise((r) => setTimeout(r, 1500));
+      await route.continue();
+    });
+  const hauteur = (page: Page) => page.evaluate(() => document.documentElement.scrollHeight);
+  const moment = (page: Page) => page.locator("[data-moment-de-l-episode]").innerText().then(espaces);
+  const titre = (page: Page) => page.getByRole("heading", { level: 1 }).textContent().then((t) => espaces(t ?? ""));
+  // Les chiffres du verdict montent depuis zéro (components/chiffre-qui-arrive.tsx) : on les lit arrivés.
+  const chiffresArrives = (page: Page) =>
+    page.waitForFunction(() => !document.documentElement.hasAttribute("data-chiffres-arrivent"), undefined, { timeout: 15_000 });
+  // La phrase d'attente se lit à l'écran : dans la fenêtre, et sous ce qui se colle en haut dans le pire cas,
+  // l'en-tête du site montré (il revient quand la page remonte) et la ligne du tableau de bord dessous.
+  const aLEcran = (page: Page, texte: string) =>
+    page.evaluate((t) => {
+      const p = [...document.querySelectorAll("[role=status]")].find((e) => e.textContent?.includes(t));
+      if (!p) return false;
+      const r = p.getBoundingClientRect();
+      const enTete = document.querySelector("body > header")?.getBoundingClientRect().height ?? 0;
+      const ligne = document.querySelector("[data-ligne-du-tableau]")?.getBoundingClientRect().height ?? 0;
+      return r.bottom - 8 > enTete + ligne && r.bottom <= window.innerHeight;
+    }, texte);
+
+  it("sous licence, sur un téléphone : badge, plage de la prévision, attente, et reprise à chaque écran", async () => {
+    // Sans le service worker du site : il relaie les appels à l'API, et une route posée par le test ne les
+    // verrait plus passer une fois qu'il contrôle la page (le ralenti ne ralentirait rien).
+    // Mouvement réduit : la scène remonte d'un coup à son haut (le défilement doux laisserait la photo
+    // entre deux positions), et les chiffres du verdict s'écrivent arrivés.
+    const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR", serviceWorkers: "block", reducedMotion: "reduce" });
+    await enseignantSousLicence(contexte, { episodes: true });
+    await contexte.addInitScript(() => localStorage.setItem("install-prompt-ferme-le", String(Date.now())));
+    const page = await contexte.newPage();
+    await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
+    expect(espaces(await page.locator("[data-badge-de-l-episode]").innerText())).toBe("Données fictives");
+
+    // « Le trimestre se prépare… » : la page garde la hauteur de l'introduction, l'en-tête attend.
+    await ralentir(page);
+    const avantDeCommencer = await hauteur(page);
+    await bouton(page, "Commencer l'épisode").click();
+    await page.getByText("Le trimestre se prépare…").waitFor();
+    expect(await hauteur(page)).toBeGreaterThanOrEqual(avantDeCommencer - 2);
+    expect(await moment(page)).toBe("Avant de commencer");
+    await expect.poll(() => aLEcran(page, "Le trimestre se prépare…")).toBe(true);
+    await capturer(page, "episode-le-trimestre-se-prepare");
+    await expect.poll(() => titre(page), { timeout: 15_000 }).toBe("La transformation décroche");
+    await page.unroute("**/api/episodes/partie");
+
+    await bouton(page, "Enquêter").click();
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    // Une prévision hors de sa plage : la plage se dit sous le champ, et la décision attend.
+    await choisir(page, "Réaffecter le portefeuille de Karim");
+    await page.getByRole("spinbutton").fill("1100");
+    await expect.poll(() => page.locator("[data-prevision-hors-plage]").innerText().then(espaces)).toBe("Entre 0 et 100 %");
+    expect(await bouton(page, "Valider la décision").isDisabled()).toBe(true);
+    await page.locator("[data-prevision-hors-plage]").scrollIntoViewIfNeeded();
+    await capturer(page, "episode-prevision-hors-plage");
+    await page.getByRole("spinbutton").fill("34");
+    expect(await page.locator("[data-prevision-hors-plage]").count()).toBe(0);
+
+    // « Les semaines passent… » : la page garde sa hauteur, l'en-tête reste à la décision jusqu'à la réponse.
+    await ralentir(page);
+    const avantDeValider = await hauteur(page);
+    const momentDeLaDecision = await moment(page);
+    await bouton(page, "Valider la décision").click();
+    await page.getByText("Les semaines passent…").waitFor();
+    expect(await hauteur(page)).toBeGreaterThanOrEqual(avantDeValider - 2);
+    expect(await moment(page)).toBe(momentDeLaDecision);
+    expect(await page.locator('[data-avancement] li[aria-label="Décision 1, prise"]').count()).toBe(0);
+    await expect.poll(() => aLEcran(page, "Les semaines passent…")).toBe(true);
+    await capturer(page, "episode-les-semaines-passent");
+    await expect.poll(() => moment(page), { timeout: 15_000 }).toMatch(/^Fin de semaine \d+$/);
+    expect(await page.locator('[data-avancement] li[aria-label="Décision 1, prise"]').count()).toBe(1);
+    await page.unroute("**/api/episodes/partie");
+
+    // Rechargé à la conséquence : le même verdict, le même en-tête.
+    const consequence = page.getByRole("region", { name: "Conséquence de votre décision" });
+    await chiffresArrives(page);
+    const verdict = espaces(await consequence.innerText());
+    const finDeSemaine = await moment(page);
+    await page.reload();
+    await expect.poll(() => consequence.count(), { timeout: 15_000 }).toBe(1);
+    await chiffresArrives(page);
+    expect(espaces(await consequence.innerText())).toBe(verdict);
+    expect(await moment(page)).toBe(finDeSemaine);
+    await capturer(page, "episode-repris-apres-rechargement");
+    // Ce que l'onglet garde : des faits, rien de la vue du serveur.
+    const garde = (await page.evaluate(() => sessionStorage.getItem("episode:trimestre-qui-derape:partie")))!;
+    expect(Object.keys(JSON.parse(garde)).sort()).toEqual(
+      ["v", "code", "graine", "cle", "niveau", "ecran", "etape", "phase", "decisions", "consultes", "jours", "diagnostic", "reevaluation", "prevision", "choix", "precedente"].sort(),
+    );
+    expect(garde).not.toMatch(/verdict|bilan|tableau|semaines/);
+
+    // Rechargé à l'étape suivante : la même étape.
+    await bouton(page, "Continuer").click();
+    await expect.poll(() => titre(page)).toBe("Les artisans veulent être livrés demain");
+    await page.reload();
+    await expect.poll(() => titre(page), { timeout: 15_000 }).toBe("Les artisans veulent être livrés demain");
+
+    // Jusqu'au bilan, puis rechargé au bilan : le même bilan.
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, "Décider").click();
+    await decider(page, "Garantir la livraison le lendemain");
+    for (const option of ["Confier six de ses comptes à Thomas", "Proposer un escompte", "Contre-proposer 4 %", "Relancer tous les devis"]) {
+      await bouton(page, "Décider").click();
+      await decider(page, option);
+    }
+    await expect.poll(() => page.getByText("Votre axe de travail").count(), { timeout: 15_000 }).toBe(1);
+    const bilan = await titre(page);
+    await page.reload();
+    await expect.poll(() => page.getByText("Votre axe de travail").count(), { timeout: 15_000 }).toBe(1);
+    expect(await titre(page)).toBe(bilan);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    // « Recommencer » vide l'onglet : un rechargement ramène à l'introduction.
+    await bouton(page, /^Recommencer$/).click();
+    await page.reload();
+    await expect.poll(() => moment(page), { timeout: 15_000 }).toBe("Avant de commencer");
+    await contexte.close();
+  }, 240_000);
+
+  it("hors licence, une démonstration dit « Démonstration · données fictives »", async () => {
+    const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    const page = await contexte.newPage();
+    await page.goto(`${BASE}/entreprises/episode/${EPISODES_DE_DEMO[0]}`);
+    expect(espaces(await page.locator("[data-badge-de-l-episode]").innerText())).toBe("Démonstration · données fictives");
+    await contexte.close();
+  }, 60_000);
 });

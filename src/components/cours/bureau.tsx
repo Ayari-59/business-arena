@@ -18,7 +18,7 @@ import type {
   RetourDuBureau,
 } from "@/pedagogy/cours/bureau-servi";
 import type { CorrectionDuTableau, TableauACompleter } from "@/pedagogy/cours/tableau-a-completer";
-import { montantInsecable } from "@/pedagogy/cours/aides-du-guide";
+import { montantInsecable, verdictDuRetour } from "@/pedagogy/cours/aides-du-guide";
 import { montantEcrit } from "@/pedagogy/cours/correcteur";
 import { Calculatrice } from "./calculatrice";
 import { PieceDeLaPile } from "./piece-du-bureau";
@@ -448,9 +448,10 @@ export function EtapeDeReponse({ etape, suivi, noter, envoyer }: PropsDEtape<Rep
                       {o.texte}
                     </button>
                     {r?.texte === o.texte && (
-                      <p className={`${r.juste ? "encadre-gain" : "encadre-perte"} rounded-lg px-4 py-2 text-sm`}>
-                        <strong className="font-semibold">{r.juste ? "Juste · " : "Non · "}</strong>
-                        {r.retour}
+                      // Un seul « Non » : celui du texte, quand il le dit déjà (audit UX du 11 novembre 2026, P2-5).
+                      <p className={`${r.juste ? "encadre-gain" : "encadre-perte"} rounded-lg px-4 py-2 text-sm`} data-retour-de-l-option="">
+                        <strong className="font-semibold">{verdictDuRetour(r.juste, r.retour).verdict}</strong>
+                        {verdictDuRetour(r.juste, r.retour).suite}
                       </p>
                     )}
                   </div>

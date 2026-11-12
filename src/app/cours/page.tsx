@@ -40,6 +40,8 @@ import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { classeDeLEleve, coursOuvert, liberationDeLEleve } from "@/services/cours.service";
+import { codeDeRepriseDuProfil } from "@/services/cohortes.service";
+import { AIDE_CODE_DE_REPRISE_COURS, formaterCodeDeReprise } from "@/config/reprise";
 import { chapitreDuParcoursDeLaClasse, libereALaClasse } from "@/services/chapitres-de-la-classe";
 import { ENTREPRISES } from "./entreprises";
 import { quitterClasseAction } from "./actions";
@@ -105,6 +107,9 @@ async function CoursPage({
   // « MA CLASSE » (audit UX du 11 novembre 2026, P1-1) : les chapitres ouverts à la classe, et celui à
   // commencer, lus par la règle de l'élève (services/cours.service.ts, `coursOuvert`).
   const maClasse = classe && userId ? await chapitresDeMaClasse(userId, classe.parcours) : null;
+  // LE CODE DE REPRISE DE L'ÉLÈVE (audit UX du 11 novembre 2026, P1-5) : celui de son profil, le
+  // mécanisme des épisodes, posé ici à sa première venue dans « Ma classe ».
+  const codeDeReprise = classe && userId ? await codeDeRepriseDuProfil(userId, true) : null;
   const aCommencer = maClasse?.aCommencer ?? essaiDeLaClasse?.chapitre ?? pilote;
   const diplomeDeLaClasse = formationDuParcours(classe?.parcours) ?? undefined;
   // Les entreprises où l'essai se joue (un chapitre peut n'en garder que certaines).
@@ -145,6 +150,10 @@ async function CoursPage({
                 <p role="status" className="text-sm font-semibold text-emerald-300">
                   Inscription enregistrée.
                 </p>
+              ) : annonce === "reprise" ? (
+                <p role="status" className="text-sm font-semibold text-emerald-300" data-place-reprise="">
+                  Votre place est reprise : votre progression revient sur cet appareil.
+                </p>
               ) : null}
               <h1 id="ma-classe" className="text-[clamp(1.75rem,6vw,2.5rem)] font-bold leading-[1.1] text-slate-50">
                 Ma classe : « {classe.classe} »
@@ -170,6 +179,7 @@ async function CoursPage({
                   lien={(c) => lienDuChapitre(c, imposee?.code, diplomeDeLaClasse)}
                 />
               ) : null}
+              {codeDeReprise ? <MonCodeDeReprise code={codeDeReprise} /> : null}
               <form action={quitterClasseAction}>
                 <SubmitButton pendingLabel="Départ…" className={bouton({ variante: "lien", taille: "s" })}>
                   Quitter la classe
@@ -200,6 +210,10 @@ async function CoursPage({
               de classe ?{" "}
               <Link href="/cours/rejoindre" className="underline underline-offset-4 hover:text-slate-200">
                 Rejoindre une classe
+              </Link>
+              . Déjà dans une classe, sur un autre appareil ?{" "}
+              <Link href="/cours/reprendre" className="underline underline-offset-4 hover:text-slate-200" data-lien-reprendre-sa-place="">
+                Reprendre ma place
               </Link>
             </p>
           )}
@@ -662,6 +676,28 @@ function ChapitresDeMaClasse({ lignes, aCommencer, lien }: { lignes: readonly Li
 }
 
 /**
+ * LE CODE DE REPRISE DE L'ÉLÈVE, SOUS « MA CLASSE » (décision du propriétaire du 11 novembre 2026 ; audit
+ * UX du même jour, P1-5). Replié : c'est une clé, pas une affiche, et l'écran d'un élève se lit souvent
+ * par-dessus son épaule. Il se saisit sur /cours/reprendre, depuis un autre appareil.
+ */
+function MonCodeDeReprise({ code }: { code: string }) {
+  return (
+    <details className="group rounded-lg border border-white/10 px-3 py-2 text-sm" data-code-de-reprise-en-classe="">
+      {/* Le triangle du navigateur, comme « Voir les autres » plus haut : replié, on voit qu'il s'ouvre. */}
+      <summary className="min-h-6 cursor-pointer font-semibold text-slate-200">
+        Mon code de reprise, pour changer d&apos;appareil
+      </summary>
+      <div className="mt-2 grid gap-1.5">
+        <p className="whitespace-nowrap font-mono text-2xl tracking-etiquette text-slate-50" data-code-de-reprise="">
+          {formaterCodeDeReprise(code)}
+        </p>
+        <p className="max-w-prose leading-relaxed text-slate-300">{AIDE_CODE_DE_REPRISE_COURS}</p>
+      </div>
+    </details>
+  );
+}
+
+/**
  * CE QUI EST OUVERT À CE VISITEUR, parmi les chapitres montrés : la règle d'accès du cours
  * (services/cours.service.ts, `coursOuvert`), lue une fois par ensemble de parcours qui
  * ouvrent un chapitre, et non une fois par chapitre. Un visiteur sans compte ni classe n'a
@@ -775,7 +811,7 @@ function ChapitreDuParcours({
         ) : null}
         <CasDuChapitre chapitre={c.code} imposee={imposee} diplome={diplome} />
         <details className="group text-xs" data-objectifs="">
-          <summary className="cursor-pointer list-none text-slate-300 [&::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-6 w-fit cursor-pointer list-none items-center text-slate-300 [&::-webkit-details-marker]:hidden">
             <span aria-hidden className="mr-1 inline-block transition-transform group-open:rotate-90">
               ▸
             </span>
@@ -864,6 +900,11 @@ function ListeDeChapitres({
 /**
  * LE CAS PRATIQUE DU CHAPITRE, sous son titre : la même notion, sans guide, sur
  * une question neuve. Chaque chapitre a le sien (garde du catalogue).
+ *
+ * DES CIBLES D'AU MOINS 24 PX (audit UX du 11 novembre 2026, P2-11 ; critère 2.5.8 de WCAG 2.2) : ces
+ * liens en petits caractères, les uns sous les autres, mesuraient 16 px de haut ; 202 cibles trop
+ * petites sur la page du bac STMG, 149 sur celle du BTS CG, avec le résumé « Objectifs » de chaque
+ * chapitre. Chacun prend 24 px de haut, sans changer sa taille de texte.
  */
 function CasDuChapitre({ chapitre, imposee, diplome }: { chapitre: string; imposee?: string; diplome?: string }) {
   const cas = casDuChapitre(chapitre);
@@ -873,7 +914,7 @@ function CasDuChapitre({ chapitre, imposee, diplome }: { chapitre: string; impos
       <Link
         href={lienDuChapitre(cas, imposee, diplome)}
         data-cas-du-chapitre={cas.code}
-        className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+        className="flex min-h-6 w-fit items-center text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
       >
         Cas pratique : {cas.titre}
       </Link>
@@ -883,7 +924,7 @@ function CasDuChapitre({ chapitre, imposee, diplome }: { chapitre: string; impos
           key={b.code}
           href={lienDuBureau(b)}
           data-bureau-du-chapitre={b.code}
-          className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+          className="flex min-h-6 w-fit items-center text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
         >
           Cas pratique : {b.titre}
         </Link>
@@ -894,7 +935,7 @@ function CasDuChapitre({ chapitre, imposee, diplome }: { chapitre: string; impos
           key={e.code}
           href={lienDeLEnquete(e)}
           data-enquete-du-chapitre={e.code}
-          className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+          className="flex min-h-6 w-fit items-center text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
         >
           Cas pratique : {e.titre}
         </Link>
@@ -905,7 +946,7 @@ function CasDuChapitre({ chapitre, imposee, diplome }: { chapitre: string; impos
           key={x.code}
           href={lienDuScenario(x)}
           data-scenario-du-chapitre={x.code}
-          className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+          className="flex min-h-6 w-fit items-center text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
         >
           {x.titre}
         </Link>

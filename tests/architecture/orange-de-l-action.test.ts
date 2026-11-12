@@ -469,7 +469,9 @@ describe("les titres se posent (lot P1)", () => {
 
   it("la couche de base pose les titres droits, en casse de phrase, dans la voix des titres", () => {
     const css = readFileSync(join(SRC, "app/globals.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-    expect(css).toMatch(/--font-titre:\s*var\(--font-brand-sans\)/);
+    // La voix des titres est la police du texte ; seule la fine des milliers la précède, qui ne porte que
+    // U+202F (audit UX du 11 novembre 2026, P2-1 ; scripts/police-des-milliers.ts).
+    expect(css).toMatch(/--font-titre:\s*(?:"Espace des milliers",\s*)?var\(--font-brand-sans\)/);
     const base = css.slice(css.indexOf("@layer base {"), css.indexOf("@layer components {"));
     expect(base, "la couche de base des titres a disparu").toMatch(/h1,\s*h2,\s*h3,\s*h4 \{/);
     expect(base).toMatch(/font-family: var\(--font-titre\)/);

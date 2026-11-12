@@ -20,6 +20,11 @@ import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitresDeLaNotion, suitesDuChapitre } from "../../src/pedagogy/cours/suites";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
+import { explicationDeLaSolutionMontree, phraseDeReprise } from "../../src/pedagogy/cours/aides-du-guide";
+import { enTeteDuChapitre } from "../../src/config/cours/en-tete-du-chapitre";
+import { formaterCodeDeReprise } from "../../src/config/reprise";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { cellulesASaisir, libelleDeCellule, valeurASaisir } from "../../src/pedagogy/cours/tableau-a-completer";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
 
@@ -319,11 +324,16 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
       await expect.poll(() => page.locator("details", { hasText: "Vos essais" }).locator("li").count()).toBe(n);
     }
     await montrer.click();
-    await expect.poll(() => page.locator("[data-resultat-du-laboratoire]").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toContain(espacesOrdinaires(explication[0]!).slice(0, 40));
+    // La solution montrée se dit « Solution montrée », pas avec le texte de la réussite (audit UX du
+    // 11 novembre 2026, P2-5) : la même explication, sous une autre ouverture.
+    const montree = espacesOrdinaires(explicationDeLaSolutionMontree(explication)[0]!).slice(0, 60);
+    expect(montree).toMatch(/^Solution montrée : /);
+    await expect.poll(() => page.locator("[data-resultat-du-laboratoire]").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toContain(montree);
+    expect(await page.locator("[data-resultat-du-laboratoire]").innerText()).not.toContain("Défi relevé");
     for (const l of labo.leviers(cas).filter((x) => !x.choix)) expect(await page.getByLabel(l.libelle, { exact: true }).inputValue()).toBe(String(solution[l.code]));
     // Au rechargement, la position montrée se relit au serveur, explication comprise.
     await page.reload();
-    await expect.poll(() => page.locator("[data-resultat-du-laboratoire]").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toContain(espacesOrdinaires(explication[0]!).slice(0, 40));
+    await expect.poll(() => page.locator("[data-resultat-du-laboratoire]").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toContain(montree);
     await ctx.close();
   }, 120_000);
 
@@ -1920,6 +1930,293 @@ describe("un chapitre qui ne vaut pas pour toutes les entreprises", () => {
     expect(await note.innerText().then(espacesOrdinaires)).toContain(cas.entreprise);
     await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(chapitre.etapes[0]!.titre);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await ctx.close();
+  }, 120_000);
+});
+
+/**
+ * PROGRESSION, REPRISE ET LISIBILITÉ (audit UX du 11 novembre 2026, chantier 4 ; décisions du propriétaire) :
+ *  · P1-5 : la progression d'un élève de classe se relit au serveur quand l'appareil n'en a pas, et ne
+ *    recule jamais ; son code de reprise le rend à lui-même sur un autre appareil, sans second élève ;
+ *  · P2-2 : sur téléphone, la calculatrice est un bandeau bas, repliable d'un geste avec sa valeur, et
+ *    Échap rend le focus à son bouton ;
+ *  · P2-5 : « valeur » pour un taux, « Arrondissez à 2 décimales », un seul « Non », « Solution montrée » ;
+ *  · P2-1 : la fine des milliers a la chasse d'une espace ; P2-12 : l'en-tête porte le diplôme de l'adresse.
+ * Avec E2E_CAPTURES, chaque écran est photographié à 390 px.
+ */
+describe("progression, reprise et lisibilité", () => {
+  const capturer = async (page: Page, nom: string, pleine = false) => {
+    if (!process.env.E2E_CAPTURES) return;
+    mkdirSync(process.env.E2E_CAPTURES, { recursive: true });
+    await page.screenshot({ path: join(process.env.E2E_CAPTURES, `${nom}-390.png`), fullPage: pleine });
+  };
+  const telephone = () => navigateur.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2, locale: "fr-FR" });
+
+  /** Le chapitre pilote, joué juste jusqu'à l'étape `jusqua` (exclue). */
+  async function jouerJusqua(page: Page, code: string, jusqua: number) {
+    const cas = casDeLEntreprise(code);
+    const ordonne = chapitreDuCas(CHAPITRES[0]!, cas);
+    for (const [i, etape] of ordonne.etapes.slice(0, jusqua).entries()) {
+      await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
+      if (etape.type === "ecriture") {
+        for (const [k, l] of enSaisie(etape.ecriture(cas)).entries()) {
+          await page.getByLabel(`Compte, ligne ${k + 1}`, { exact: true }).fill(l.compte);
+          if (l.debit) await page.getByLabel(`Débit, ligne ${k + 1}`, { exact: true }).fill(l.debit);
+          if (l.credit) await page.getByLabel(`Crédit, ligne ${k + 1}`, { exact: true }).fill(l.credit);
+        }
+        await page.getByRole("button", { name: "Valider l'écriture" }).click();
+        await expect.poll(() => page.getByText("Écriture juste.").count()).toBe(1);
+      } else if (etape.type !== "lecture") {
+        throw new Error(`jouerJusqua ne sait pas jouer l'étape ${i} (${etape.type})`);
+      }
+      await page.getByRole("button", { name: "Étape suivante" }).click();
+    }
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(ordonne.etapes[jusqua]!.titre);
+  }
+
+  it("l'élève de classe : sa progression revient du serveur, ne recule jamais, et son code le rend à lui-même ailleurs", async () => {
+    const ctxProf = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctxProf);
+    const prof = await ctxProf.newPage();
+    await aller(prof, "/teacher/cours");
+    await prof.getByLabel("Nom de la classe").fill("Reprise e2e");
+    await prof.getByLabel("Parcours du cours").selectOption(chapitre.parcours);
+    await prof.getByLabel("Entreprise du cas").selectOption("nova");
+    await prof.getByRole("button", { name: "Créer la classe" }).click();
+    await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
+    const codeDeClasse = (await prof.locator("[data-code-de-classe]").innerText().then(espacesOrdinaires)).trim();
+    const pageDeLaClasse = new URL(prof.url()).pathname;
+    const etapeDeLea = async () => {
+      await aller(prof, pageDeLaClasse);
+      const ligne = prof.locator("[data-resume-des-eleves] [data-resume-eleve]");
+      return { noms: await ligne.evaluateAll((ls) => ls.map((l) => l.getAttribute("data-resume-eleve"))), etape: await ligne.first().locator("[data-etape-du-resume]").innerText() };
+    };
+
+    // Léa rejoint sur son téléphone : « Ma classe » lui donne son code de reprise, replié.
+    const ctxA = await telephone();
+    const eleve = await ctxA.newPage();
+    await aller(eleve, `/cours/rejoindre?code=${encodeURIComponent(codeDeClasse)}`);
+    await eleve.getByLabel("Prénom ou pseudonyme").fill("Léa");
+    await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();
+    await eleve.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });
+    const tiroir = eleve.locator("[data-code-de-reprise-en-classe]");
+    expect(await tiroir.evaluate((d) => (d as HTMLDetailsElement).open)).toBe(false);
+    await tiroir.locator("summary").click();
+    const code = (await tiroir.locator("[data-code-de-reprise]").innerText()).trim();
+    expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    expect(code).toBe(formaterCodeDeReprise(code));
+    await tiroir.scrollIntoViewIfNeeded();
+    await capturer(eleve, "code-de-reprise-en-classe");
+
+    // Elle avance jusqu'à la 4e étape ; chaque geste remonte.
+    await aller(eleve, chemin("nova"));
+    await jouerJusqua(eleve, "nova", 3);
+    const titreDeLa4e = chapitreDuCas(chapitre, casDeLEntreprise("nova")).etapes[3]!.titre;
+    await expect.poll(async () => (await etapeDeLea()).etape, { timeout: 30_000 }).toBe(`4 sur ${chapitreDuCas(chapitre, casDeLEntreprise("nova")).etapes.length}`);
+    const avant = (await etapeDeLea()).etape;
+
+    // SON NAVIGATEUR OUBLIE TOUT : la progression revient du serveur, à la même étape.
+    await eleve.evaluate(() => window.localStorage.clear());
+    await eleve.reload();
+    await expect.poll(() => eleve.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(titreDeLa4e);
+
+    // UN APPAREIL EN RETARD NE FAIT PAS RECULER L'ENSEIGNANTE : une progression plus ancienne sur
+    // l'appareil, un geste, et le suivi dit toujours où Léa en était.
+    await eleve.evaluate((cle) => window.localStorage.setItem(cle, JSON.stringify({ index: 0, etapes: {} })), `cours:${chapitre.code}:nova`);
+    await eleve.reload();
+    await expect.poll(() => eleve.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(chapitreDuCas(chapitre, casDeLEntreprise("nova")).etapes[0]!.titre);
+    await eleve.getByRole("button", { name: "Étape suivante" }).click();
+    await expect.poll(() => eleve.locator("h1").innerText().then(espacesOrdinaires)).toBe(chapitreDuCas(chapitre, casDeLEntreprise("nova")).etapes[1]!.titre);
+    await new Promise((r) => setTimeout(r, 1500));
+    expect((await etapeDeLea()).etape).toBe(avant);
+
+    // SUR UN AUTRE APPAREIL, SON CODE LA REND À ELLE-MÊME : sa classe, sa progression, et une seule Léa.
+    const ctxB = await telephone();
+    const ailleurs = await ctxB.newPage();
+    await aller(ailleurs, "/cours/rejoindre");
+    await ailleurs.locator("[data-lien-reprendre-sa-place] a").click();
+    await ailleurs.waitForURL(/\/cours\/reprendre$/, { timeout: 60_000 });
+    await ailleurs.getByLabel("Votre code de reprise").fill(code.toLowerCase());
+    await capturer(ailleurs, "reprendre-ma-place");
+    await ailleurs.getByRole("button", { name: "Reprendre ma place" }).click();
+    await ailleurs.waitForURL(/\/cours\?classe=reprise/, { timeout: 60_000 });
+    expect(await ailleurs.locator("[data-place-reprise]").innerText().then(espacesOrdinaires)).toContain("Votre place est reprise");
+    expect(await ailleurs.locator("[data-classe-du-cours]").innerText().then(espacesOrdinaires)).toContain("Léa");
+    await capturer(ailleurs, "place-reprise");
+    await aller(ailleurs, chemin("nova"));
+    await expect.poll(() => ailleurs.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(titreDeLa4e);
+    expect((await etapeDeLea()).noms).toEqual(["Léa"]);
+
+    // Un code faux est refusé, sans rien dire de ce qui existe.
+    const ctxC = await telephone();
+    const intrus = await ctxC.newPage();
+    await aller(intrus, "/cours/reprendre");
+    await intrus.getByLabel("Votre code de reprise").fill("ZZZZ-ZZZZ");
+    await intrus.getByRole("button", { name: "Reprendre ma place" }).click();
+    await expect.poll(() => intrus.locator("[role=alert]").first().innerText().then(espacesOrdinaires), { timeout: 30_000 }).toContain("Ce code ne correspond à aucun élève d'une classe");
+    for (const c of [ctxProf, ctxA, ctxB, ctxC]) await c.close();
+  }, 300_000);
+
+  it("la calculatrice sur téléphone : un bandeau bas réduit, replié d'un geste avec sa valeur ; Échap rend le focus", async () => {
+    const ctx = await telephone();
+    const code = "taux-de-marque-et-coefficient";
+    const enonce = chapitreParCode(code)!;
+    const entreprise = enonce.entreprises?.codes[0] ?? "boutique";
+    await ctx.addInitScript(([cle]) => {
+      if (!window.localStorage.getItem(cle as string)) window.localStorage.setItem(cle as string, JSON.stringify({ index: 2, etapes: {} }));
+    }, [`cours:${code}:${entreprise}`] as const);
+    const page = await ctx.newPage();
+    await aller(page, `/cours/${code}?entreprise=${entreprise}&diplome=bts-mco`);
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe("Taux de marque, taux de marge");
+    // L'énoncé et ses chiffres, rappelés sur l'étape : c'est ce que la calculatrice couvrait.
+    await page.locator("[data-rappel-enonce] > summary").tap();
+    await page.locator("[data-tableau-du-cas]").first().waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "Calculatrice" }).click();
+    const bandeau = page.locator("[data-bandeau-de-la-calculatrice]");
+    await bandeau.waitFor({ state: "visible" });
+    const boite = (await bandeau.boundingBox())!;
+    // Collé au bas de l'écran, sur toute sa largeur, et bien moins haut que les 46 % d'avant.
+    expect(Math.round(boite.y + boite.height)).toBe(844);
+    expect(boite.width).toBeGreaterThan(380);
+    expect(boite.height / 844).toBeLessThan(0.4);
+    // La page lui laisse sa hauteur en bas : tout l'énoncé se fait défiler au-dessus.
+    const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("main")!).paddingBottom));
+    expect(marge).toBeGreaterThanOrEqual(boite.height);
+    // Le tableau de l'énoncé en haut de l'écran, sous la barre : il reste lisible au-dessus du bandeau.
+    await page.locator("[data-tableau-du-cas]").first().evaluate((e) => {
+      e.scrollIntoView({ block: "start" });
+      window.scrollBy(0, -96);
+    });
+    const tableau = (await page.locator("[data-tableau-du-cas]").first().boundingBox())!;
+    expect(tableau.y + Math.min(tableau.height, 120)).toBeLessThan(844 - boite.height);
+    await capturer(page, "calculatrice-ouverte-sur-un-enonce");
+    // Un calcul sur ses touches, puis replier : la valeur reste.
+    for (const t of ["7", "5", "0", "0", "÷", "4"]) await bandeau.getByRole("button", { name: t, exact: true }).tap();
+    await bandeau.getByRole("button", { name: "Égal" }).tap();
+    await expect.poll(() => page.getByLabel("Calcul", { exact: true }).inputValue()).toBe("1875");
+    await page.getByRole("button", { name: "Replier" }).tap();
+    const repliee = (await bandeau.boundingBox())!;
+    expect(repliee.height).toBeLessThan(80);
+    expect(await page.getByLabel("Calcul", { exact: true }).inputValue()).toBe("1875");
+    await capturer(page, "calculatrice-repliee");
+    await page.getByRole("button", { name: "Déplier" }).tap();
+    expect(((await bandeau.boundingBox())!).height).toBeGreaterThan(150);
+    // Échap la ferme et rend le focus à son bouton (il tombait sur « Aller au contenu »).
+    await page.getByLabel("Calcul", { exact: true }).focus();
+    await page.keyboard.press("Escape");
+    await expect.poll(() => bandeau.count()).toBe(0);
+    expect(await page.evaluate(() => document.activeElement?.hasAttribute("data-bouton-calculatrice") ?? false)).toBe(true);
+    await ctx.close();
+  }, 120_000);
+
+  it("les retours disent ce qui s'est passé : « valeur », « Arrondissez à 2 décimales », un seul « Non », « Solution montrée »", async () => {
+    const ctx = await telephone();
+    const code = "taux-de-marque-et-coefficient";
+    const enonce = chapitreParCode(code)!;
+    const entreprise = enonce.entreprises?.codes[0] ?? "boutique";
+    const cas = casDeLEntreprise(entreprise);
+    const ordonne = chapitreDuCas(enonce, cas);
+    const etape = ordonne.etapes[2]!;
+    if (etape.type !== "montants") throw new Error("l'étape 3 du taux de marque n'est plus une étape de montants");
+    const [taux, marge] = etape.champs(cas, etatAvant(ordonne, cas, 2));
+    await ctx.addInitScript(([cle]) => {
+      if (!window.localStorage.getItem(cle as string)) window.localStorage.setItem(cle as string, JSON.stringify({ index: 2, etapes: {} }));
+    }, [`cours:${code}:${entreprise}`] as const);
+    const page = await ctx.newPage();
+    await aller(page, `/cours/${code}?entreprise=${entreprise}&diplome=bts-mco`);
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
+    const message = page.locator("[data-reprise-des-montants]");
+    // Le bon calcul arrêté à une décimale : « Arrondissez à 2 décimales », et « valeur » pour un taux.
+    await page.getByLabel(taux!.libelle, { exact: true }).fill(String(Math.floor(taux!.attendu * 10) / 10).replace(".", ","));
+    await page.getByLabel(marge!.libelle, { exact: true }).fill(virgule(marge!.attendu));
+    await page.getByRole("button", { name: "Vérifier", exact: true }).tap();
+    await expect.poll(() => message.innerText().then(espacesOrdinaires)).toBe("Une valeur ne convient pas encore. Arrondissez à 2 décimales.");
+    await capturer(page, "arrondissez-a-2-decimales");
+    // Un calcul faux : on le reprend, dans les mots d'une valeur.
+    await page.getByLabel(taux!.libelle, { exact: true }).fill("50");
+    await page.getByRole("button", { name: "Vérifier", exact: true }).tap();
+    await expect
+      .poll(() => message.innerText().then(espacesOrdinaires))
+      .toBe(phraseDeReprise([{ libelle: taux!.libelle, nature: "pourcentage", imprecis: false }], etape.vue));
+    expect(espacesOrdinaires(await message.innerText())).toMatch(/^Une valeur ne convient pas encore\. Reprenez-les/);
+
+    // Un seul « Non » devant une option fausse : celui du texte. La première question dont une option
+    // fausse s'ouvre elle-même sur « Non » (« Le taux de marque moyen »).
+    const choix = ordonne.etapes.findIndex(
+      (e, i) => e.type === "choix" && e.options(cas, etatAvant(ordonne, cas, i)).some((o) => !o.juste && /^Non\b/.test(o.retour)),
+    );
+    expect(choix).toBeGreaterThan(0);
+    await page.evaluate(([cle, i]) => window.localStorage.setItem(cle as string, JSON.stringify({ index: i, etapes: {} })), [`cours:${code}:${entreprise}`, choix] as const);
+    await page.reload();
+    const question = ordonne.etapes[choix]!;
+    if (question.type !== "choix") throw new Error("pas de choix");
+    const fausse = question.options(cas, etatAvant(ordonne, cas, choix)).find((o) => !o.juste && /^Non\b/.test(o.retour))!;
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(question.titre);
+    await page.getByRole("radio", { name: fausse.texte, exact: true }).tap();
+    const retour = page.locator("[data-retour-de-l-option]").first();
+    await expect.poll(() => retour.innerText().then(espacesOrdinaires)).toMatch(/^Non : /);
+    expect(espacesOrdinaires(await retour.innerText())).not.toMatch(/^Non\W+Non\b/);
+    await retour.scrollIntoViewIfNeeded();
+    await capturer(page, "un-seul-non");
+
+    // « Solution montrée » : le laboratoire du chapitre pilote, deux positions validées, puis la solution.
+    const pilote = chapitreDuCas(chapitre, casDeLEntreprise("nova"));
+    const labo = pilote.etapes.findIndex((e) => e.type === "simulation");
+    await page.evaluate(([cle, i]) => window.localStorage.setItem(cle as string, JSON.stringify({ index: i, etapes: {} })), [`cours:${chapitre.code}:nova`, labo] as const);
+    await aller(page, chemin("nova"));
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(pilote.etapes[labo]!.titre);
+    for (let n = 1; n <= 2; n++) {
+      await page.getByRole("button", { name: "Valider cette position" }).tap();
+      await expect.poll(() => page.locator("details", { hasText: "Vos essais" }).locator("li").count()).toBe(n);
+    }
+    const etapeLabo = pilote.etapes[labo]!;
+    if (etapeLabo.type !== "simulation") throw new Error("pas de laboratoire");
+    await page.getByRole("button", { name: etapeLabo.montrer ?? "Montrer une solution" }).tap();
+    const resultat = page.locator("[data-resultat-du-laboratoire]");
+    await expect.poll(() => resultat.innerText().then(espacesOrdinaires), { timeout: 15_000 }).toMatch(/^Solution montrée : /);
+    expect(await resultat.innerText()).not.toContain("Défi relevé");
+    await resultat.scrollIntoViewIfNeeded();
+    await capturer(page, "solution-montree");
+    await ctx.close();
+  }, 180_000);
+
+  it("la fine des milliers a la chasse d'une espace, et l'en-tête du chapitre porte le diplôme de l'adresse", async () => {
+    const ctx = await telephone();
+    const page = await ctx.newPage();
+    const essaiTc = essaiDuDiplome("but-tc")!;
+    await aller(page, `/cours/${essaiTc.chapitre.code}?entreprise=${essaiTc.chapitre.entreprises?.codes[0] ?? "nova"}&diplome=but-tc`);
+    await expect.poll(() => page.locator("main").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toContain(enTeteDuChapitre(essaiTc.chapitre, "but-tc").toUpperCase());
+    await capturer(page, "en-tete-du-chapitre-depuis-le-but-tc");
+    // Un montant à milliers de la page : la fine mesurée dans le texte rendu, contre un chiffre.
+    // L'étape des apports : « 150 000 € », un montant à milliers.
+    const pilote = chapitreDuCas(chapitre, casDeLEntreprise("nova"));
+    await page.evaluate((cle) => window.localStorage.setItem(cle, JSON.stringify({ index: 1, etapes: {} })), `cours:${chapitre.code}:nova`);
+    await aller(page, chemin("nova"));
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(pilote.etapes[1]!.titre);
+    const mesure = await page.evaluate(() => {
+      const marcheur = document.createTreeWalker(document.querySelector("main")!, NodeFilter.SHOW_TEXT);
+      for (let n = marcheur.nextNode(); n; n = marcheur.nextNode()) {
+        const t = n.textContent ?? "";
+        const i = t.search(/\d \d{3}/);
+        if (i < 0) continue;
+        const largeur = (debut: number) => {
+          const r = document.createRange();
+          r.setStart(n, debut);
+          r.setEnd(n, debut + 1);
+          return r.getBoundingClientRect().width;
+        };
+        const corps = parseFloat(getComputedStyle(n.parentElement!).fontSize);
+        n.parentElement!.setAttribute("data-montant-mesure", "");
+        return { texte: t.slice(Math.max(0, i - 6), i + 12), fine: largeur(i + 1), chiffre: largeur(i), corps };
+      }
+      return null;
+    });
+    expect(mesure, "un montant à milliers dans la page").not.toBeNull();
+    // Avant : 1,4 px pour un corps de 14 px (un dixième de cadratin). Désormais, un cinquième.
+    expect(mesure!.fine / mesure!.corps).toBeGreaterThanOrEqual(0.18);
+    expect(mesure!.fine / mesure!.chiffre).toBeGreaterThan(0.3);
+    await page.locator("[data-montant-mesure]").first().scrollIntoViewIfNeeded();
+    await capturer(page, "montant-a-milliers");
     await ctx.close();
   }, 120_000);
 });

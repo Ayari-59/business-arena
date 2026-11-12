@@ -710,6 +710,8 @@ describe("pendant une partie", () => {
     await champ.fill("60");
     await page.waitForTimeout(200);
     expect(Number(await curseur.inputValue())).toBe(60);
+    // Et il dit sa valeur avec son unité : « 60 €/… », pas « 60 » (audit UX du 11 novembre 2026, P2-11).
+    expect(await curseur.getAttribute("aria-valuetext")).toMatch(/^60 €\//);
     // Plus de boutons − et +.
     expect(await page.getByRole("button", { name: /Augmenter|Diminuer/ }).count()).toBe(0);
   });

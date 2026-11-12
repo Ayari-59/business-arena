@@ -40,6 +40,9 @@ afterAll(async () => {
 async function jouer(page: Page, code: string) {
   const ep = episodeParCode(code)!;
   await page.goto(`${BASE}/entreprises/episode/${code}?hasard=7`);
+  // Sous la licence de la cohorte, la partie compte au profil : ce n'est pas une démonstration (audit UX
+  // du 11 novembre 2026, P2-4 : le badge disait « Démonstration · données fictives »).
+  expect(await page.locator("[data-badge-de-l-episode]").innerText()).toBe("Données fictives");
   await page.getByRole("button", { name: "Commencer l'épisode" }).click();
   for (let pas = 0; pas < 120; pas += 1) {
     if ((await page.getByText("Votre axe de travail").count()) > 0) break;

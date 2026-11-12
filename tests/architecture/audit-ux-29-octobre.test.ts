@@ -234,8 +234,10 @@ describe("P1-10 · un bilan de fin de chapitre honnête", () => {
 
 describe("P2-2 · le message des montants faux ne renvoie plus au journal", () => {
   it("la paie (sans vue) renvoie à l'énoncé", () => {
-    expect(phraseDeReprise(2, undefined)).toBe("Des montants ne conviennent pas encore. Reprenez-les à partir des données de l'énoncé.");
-    expect(phraseDeReprise(1, "tva")).toMatch(/^Un montant ne convient pas encore\. .*comptes affichés/);
+    // La phrase reçoit les champs refusés depuis l'audit du 11 novembre 2026 (P2-5 : « valeur » pour un taux).
+    const montant = { libelle: "Salaire net", nature: "montant" as const, imprecis: false };
+    expect(phraseDeReprise([montant, montant], undefined)).toBe("Des montants ne conviennent pas encore. Reprenez-les à partir des données de l'énoncé.");
+    expect(phraseDeReprise([montant], "tva")).toMatch(/^Un montant ne convient pas encore\. .*comptes affichés/);
     expect(lire("components/cours/chapitre-guide.tsx")).not.toContain("à partir du journal");
   });
 });

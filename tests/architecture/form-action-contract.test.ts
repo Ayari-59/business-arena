@@ -49,6 +49,11 @@ interface FormContract {
 
 const CONTRACTS: FormContract[] = [
   {
+    nom: "reprise de sa place dans sa classe du cours (/cours/reprendre)",
+    action: { file: "src/app/cours/actions.ts", fn: "reprendreSaPlaceAction" },
+    sources: ["src/components/cours/formulaire-reprise-en-classe.tsx"],
+  },
+  {
     nom: "demande de simulation (/orientation)",
     action: { file: "src/app/orientation/actions.ts", fn: "envoyerDemandeOrientationAction" },
     sources: ["src/components/orientation-form.tsx"],

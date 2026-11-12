@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "./theme-clair.css";
+/* LES MILLIERS LISIBLES (audit UX du 11 novembre 2026, P2-1) : la fine qui sépare les milliers prend la
+   chasse de l'espace insécable, à l'affichage seulement (scripts/police-des-milliers.ts). Sa famille se
+   pose en tête de chaque famille de texte du site, ci-dessous. */
+@import "./police-des-milliers.css";
 
 /* ---------------------------------------------------------------------------
  * Identité « L'arène ».
@@ -28,10 +32,10 @@
   --animate-carte-entre: carte-entre var(--duree-passage) var(--courbe-passage);
   --animate-carte-fondu: carte-fondu var(--duree-passage) var(--courbe-passage);
   --font-sans:
-    var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Espace des milliers", var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, sans-serif;
   --font-display:
-    var(--font-brand-display), "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+    "Espace des milliers", var(--font-brand-display), "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
   /* LA VOIX DES TITRES (lot P1). Les titres ont parlé en condensé extra-gras,
      italique et capitales : une affiche de match. Ils passent à la grotesque de
      lecture, droite, en casse de phrase (voir « LES TITRES PARLENT D'UNE VOIX
@@ -39,7 +43,7 @@
      surtitre. Un jeton à part, et non `--font-sans` directement : la voix des
      titres se règle d'un endroit, sans toucher à celle du texte. */
   --font-titre:
-    var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Espace des milliers", var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, sans-serif;
 
   --animate-plan-ouvre: plan-ouvre var(--duree-passage) var(--courbe-passage);
@@ -2753,6 +2757,14 @@ a.carte {
   main:has([data-calculatrice]) ~ footer {
     padding-right: calc(1.5rem + env(safe-area-inset-right, 0px));
   }
+  /* OUVERTE, UN BANDEAU BAS (audit UX du 11 novembre 2026, P2-2) : la page lui laisse sa hauteur en
+     bas, pour que tout l'énoncé se fasse défiler au-dessus ; repliée, sa seule ligne de calcul. */
+  main:has([data-calculatrice][data-ouverte]) {
+    padding-bottom: calc(20rem + env(safe-area-inset-bottom, 0px));
+  }
+  main:has([data-calculatrice][data-ouverte][data-repliee]) {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ===========================================================================
@@ -4402,7 +4414,7 @@ main[data-ecran-de-jeu] {
   --encre-tenue: #4a4c52;
   --papier: #e6e5e0;
   --filet-de-presse: #7a7b7d;
-  font-family: var(--font-journal-texte), Georgia, "Times New Roman", serif;
+  font-family: "Espace des milliers", var(--font-journal-texte), Georgia, "Times New Roman", serif;
   color: var(--encre);
   background-color: var(--papier);
   background-image:
@@ -4418,7 +4430,7 @@ main[data-ecran-de-jeu] {
   text-align: center;
 }
 .coupure-de-presse .coupure-journal {
-  font-family: var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
+  font-family: "Espace des milliers", var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
   font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.05;
@@ -4446,7 +4458,7 @@ main[data-ecran-de-jeu] {
    grotesque des titres. Ici, c'est un titre de presse : la didone, grasse et
    serrée, l'interligne d'une manchette. */
 .papier.coupure-de-presse .coupure-titre {
-  font-family: var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
+  font-family: "Espace des milliers", var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
   font-size: 1.5rem;
   font-weight: 800;
   line-height: 1.1;
@@ -4486,7 +4498,7 @@ main[data-ecran-de-jeu] {
    CSS seul : le texte reste entier pour les lecteurs d'écran. Là où
    `initial-letter` manque, une lettre flottante de même hauteur. */
 .coupure-de-presse .coupure-premier::first-letter {
-  font-family: var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
+  font-family: "Espace des milliers", var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
   font-weight: 800;
   color: var(--encre);
   initial-letter: 2;
