@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { tousLesLiens } from "@/config/navigation";
+import { NAVIGATION, liensDeTete } from "@/config/navigation";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/tarifs" }));
 // Le formulaire de devis tire son action, et l'action la base : on ne rend que l'écran.
@@ -317,8 +317,9 @@ describe("la grille tarifaire", () => {
         "/rendez-vous",
         "/integration",
         "/orientation",
-        // Le pied de page déroule tout le plan du site, sauf la page où l'on est.
-        ...tousLesLiens().map((l) => l.href).filter((h) => h !== "/tarifs"),
+        // Le pied de page déroule les groupes du plan (leur mot, puis leurs entrées), sauf la page
+        // où l'on est. Les deux portes sont dans la barre et le menu, pas au pied.
+        ...[...liensDeTete(), ...NAVIGATION.flatMap((g) => g.liens)].map((l) => l.href).filter((h) => h !== "/tarifs"),
       ]),
     );
     expect(TEXTE).toContain("Tester le simulateur");

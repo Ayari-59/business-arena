@@ -90,7 +90,9 @@ describe("l'espace enseignant et l'établissement", () => {
     await aller(prof, "/teacher");
     const nav = prof.getByRole("navigation", { name: "Espace enseignant" });
     expect(await libelles(nav)).toEqual(NAVIGATION_ENSEIGNANT.map((p) => p.libelle));
-    expect(await nav.locator('a[aria-current="page"]').innerText()).toBe("Mes parties");
+    // Un mot par pastille (novembre 2026) ; la page garde son titre, « Mes parties ».
+    expect(await nav.locator('a[aria-current="page"]').innerText()).toBe("Parties");
+    expect(await prof.getByRole("heading", { level: 1 }).innerText()).toBe("Mes parties");
     expect(await nav.getByRole("link", { name: "Aide", exact: true }).getAttribute("href")).toBe("/guides/enseignant");
     // Sans le droit : ni établissement ni administration.
     expect(await nav.getByRole("link", { name: LIEN_ETABLISSEMENT.libelle }).count()).toBe(0);

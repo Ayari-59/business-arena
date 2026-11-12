@@ -89,8 +89,11 @@ describe("plan du site", () => {
   it("chaque lien mène à une page qui existe, ancre comprise", () => {
     // Le défaut le plus bête et le plus visible : une entrée de menu qui rend
     // une erreur. Elle ne se voit qu'en cliquant, donc jamais en développant.
+    // Les mots de la barre comptent aussi : « Arène » et « Offres » ouvrent des pages qui ne
+    // sont l'entrée d'aucun groupe.
     const liens = [
       ...tousLesLiens(),
+      ...liensDeTete(),
       ...NAVIGATION_ARENE,
       ...PASTILLES.flatMap(([, p]) => p),
     ];
@@ -109,10 +112,11 @@ describe("plan du site", () => {
     const adresses = tousLesLiens().map((l) => l.href);
     expect(adresses.length, "plan vide").toBeGreaterThan(5);
     expect([...new Set(adresses)].sort()).toEqual([...adresses].sort());
-    // Les mêmes mots partout : la page des fiches s'appelle « Fiches notions »
-    // dans le menu, dans le pied de page et dans l'arène, jamais autrement.
-    // Une ancre est une section, qui a son propre nom (« Examen individuel »
-    // vise /ecoles#evaluer, « Présentation » la page entière).
+    // Les mêmes mots partout : la page des fiches s'appelle « Notions » dans le
+    // menu, dans le pied de page et dans l'arène, jamais autrement. Une ancre
+    // est une section, qui a son propre nom (« Examen » vise /ecoles#evaluer,
+    // « Écoles » la page entière). Le mot de la barre nomme le GROUPE : « Cours »
+    // ouvre la page que le groupe appelle « Diplômes ».
     const noms = new Map<string, Set<string>>();
     for (const l of [...tousLesLiens(), ...NAVIGATION_ARENE, ...NAVIGATION_ETUDIANT]) {
       noms.set(l.href, (noms.get(l.href) ?? new Set()).add(l.libelle));
@@ -121,18 +125,21 @@ describe("plan du site", () => {
     expect(doubles, `une page, plusieurs noms :\n${doubles.join("\n")}`).toEqual([]);
   });
 
-  it("les cas d'entreprise se rangent chez les élèves, pas chez les entreprises clientes (novembre 2026)", () => {
-    const eleves = NAVIGATION.find((g) => g.code === "eleves")!;
-    expect(eleves.liens.find((l) => l.href === "/entreprises")?.libelle).toBe("Les cas d'entreprise");
-    const clientes = NAVIGATION.find((g) => g.code === "entreprises")!;
-    expect(clientes.liens.map((l) => l.href)).not.toContain("/entreprises");
-    expect(clientes.entree).toBe("/entreprises/offre");
+  it("les métiers de l'arène ne sont pas les entreprises clientes (novembre 2026)", () => {
+    // Les entreprises qu'on dirige en jouant sont les « Métiers » de l'arène ; les entreprises
+    // clientes, une offre parmi les autres.
+    const arene = NAVIGATION.find((g) => g.code === "arene")!;
+    expect(arene.liens.find((l) => l.href === "/entreprises")?.libelle).toBe("Métiers");
+    const offres = NAVIGATION.find((g) => g.code === "offres")!;
+    expect(offres.liens.map((l) => l.href)).not.toContain("/entreprises");
+    expect(offres.liens.find((l) => l.href === "/entreprises/offre")?.libelle).toBe("Entreprises");
   });
 
   it("chaque entrée dit ce qu'on y trouve", () => {
-    // « Parcours », « Guide » et « Notions » ne se distinguent pas pour qui
-    // découvre le site : sans la phrase d'aide, on ouvre les trois.
-    for (const lien of tousLesLiens()) {
+    // « Référentiels », « Règles » et « Notions » ne se distinguent pas pour qui
+    // découvre le site : sans la phrase d'aide, on ouvre les trois. Un mot seul en
+    // dit moins qu'une phrase : l'aide, au survol, dit le reste.
+    for (const lien of [...tousLesLiens(), ...liensDeTete()]) {
       expect(lien.libelle.trim().length, `${lien.href} : libellé vide`).toBeGreaterThan(2);
       expect(lien.aide.trim().length, `${lien.href} : aide trop courte`).toBeGreaterThan(40);
     }
@@ -141,42 +148,44 @@ describe("plan du site", () => {
     }
   });
 
-  it("parle français : un mot par public, pas d'anglais ni de jargon", () => {
+  it("parle français : pas d'anglais ni de jargon", () => {
     const mots = [
-      ...NAVIGATION.flatMap((g) => [g.titre, g.precision ?? "", ...g.liens.map((l) => l.libelle)]),
+      ...NAVIGATION.flatMap((g) => [g.titre, ...g.liens.map((l) => l.libelle)]),
+      ...liensDAcces().flatMap((l) => [l.libelle, l.nom ?? ""]),
       ...NAVIGATION_ARENE.map((l) => l.libelle),
       ...PASTILLES.flatMap(([, p]) => p.map((x) => x.libelle)),
       LIBELLE_QUITTER_LA_PARTIE,
     ];
     const fautes = mots.filter((m) => ANGLAIS.test(m));
     expect(fautes, `des mots d'une autre langue dans le plan : ${fautes.join(", ")}`).toEqual([]);
-    // Un mot par public, dans le titre des groupes : la précision va à côté.
-    for (const g of NAVIGATION) expect(g.titre.split(/\s+/), `« ${g.titre} » n'est pas un mot`).toHaveLength(1);
-    // « Guide » au singulier ne désigne plus que les règles du jeu, sous leur nom.
+    // « Guide » au singulier ne désigne aucune entrée : les règles du jeu sont « Règles », et
+    // leur page garde son titre.
     expect(mots).not.toContain("Guide");
-    expect(LIEN_REGLES).toMatchObject({ href: "/guide", libelle: "Règles du jeu" });
+    expect(LIEN_REGLES).toMatchObject({ href: "/guide", libelle: "Règles" });
     expect(lire("src/app/guide/page.tsx")).toMatch(/title: "Règles du jeu"/);
   });
 
-  it("la barre et le menu portent les mêmes titres", () => {
-    // Un visiteur qui lit « Enseignants » dans la barre ouvre, dans le menu, le
-    // groupe « Enseignants » : la rangée à plat est la liste des groupes qui ont
-    // une entrée, sous leur titre, dans leur ordre.
-    const groupesDEntree = NAVIGATION.filter((g) => g.entree);
-    expect(liensDeTete().map((l) => l.libelle)).toEqual(groupesDEntree.map((g) => g.titre));
-    expect(liensDeTete().map((l) => l.href)).toEqual(groupesDEntree.map((g) => g.entree));
-    // L'entrée d'un groupe est une page DU groupe (sa présentation).
-    for (const g of groupesDEntree) {
-      expect(g.liens.map((l) => l.href), `« ${g.titre} » : l'entrée ${g.entree} n'est pas dans le groupe`).toContain(g.entree);
-    }
-    // Tous les groupes sauf « Élèves » sont dans la barre : ses portes sont les boutons.
-    expect(NAVIGATION.filter((g) => !g.entree).map((g) => g.code)).toEqual(["eleves"]);
+  it("la barre et le menu portent les mêmes titres, vers les mêmes pages", () => {
+    // Un visiteur qui lit « Arène » dans la barre trouve, dans le menu déplié, le
+    // groupe « Arène » sous le même mot, vers la même page : la rangée à plat est
+    // la liste des groupes, sous leur titre, dans leur ordre.
+    expect(liensDeTete().map((l) => l.libelle)).toEqual(NAVIGATION.map((g) => g.titre));
+    expect(liensDeTete().map((l) => l.href)).toEqual(NAVIGATION.map((g) => g.entree));
+    // La page d'un titre est d'ordinaire une entrée du groupe (« Cours » ouvre « Diplômes »).
+    // Deux ne le sont pas, et le propriétaire l'a voulu : la présentation du simulateur, qui
+    // n'a plus d'entrée à elle, et la page des offres. Leur groupe dit alors leur aide.
+    const horsDesEntrees = NAVIGATION.filter((g) => !g.liens.some((l) => l.href === g.entree));
+    expect(horsDesEntrees.map((g) => [g.titre, g.entree])).toEqual([
+      ["Arène", "/fonctionnalites"],
+      ["Offres", "/tarifs"],
+    ]);
+    for (const g of horsDesEntrees) expect(g.aide?.trim().length, `« ${g.titre} » : sans aide`).toBeGreaterThan(40);
   });
 
   it("la barre ne remet pas tout le plan à plat", () => {
     // C'est l'encombrement d'origine : une rangée qui affiche tout n'affiche
-    // plus rien. Les ancres hors du menu restent une minorité, et l'entrée
-    // principale n'en fait pas partie puisqu'elle est tenue à part.
+    // plus rien. Les ancres hors du menu restent une minorité, et l'aide au
+    // choix n'en fait pas partie : elle est une entrée de l'aide.
     const total = NAVIGATION.flatMap((g) => g.liens).length;
     expect(liensDeTete().length).toBeGreaterThan(0);
     expect(liensDeTete().length + liensDAcces().length).toBeLessThan(total / 2 + 1);
@@ -193,15 +202,15 @@ describe("plan du site", () => {
     // qu'on trouve par Google et jamais depuis le site : c'était le cas de
     // /integration, /reprendre, /examen et /profile.
     //
-    // Deux exceptions, et pourquoi : l'accueil (le logo de la barre y mène, sur
-    // toutes les pages) et le devis (/devis), qui est l'action de la page des
-    // offres et non une page à lire. Les pages par code (ateliers, guides,
-    // concours) sont les enfants d'une page du plan : un clic de plus.
+    // Une exception, et pourquoi : l'accueil (le logo de la barre y mène, sur
+    // toutes les pages). Le devis, qui en était une, est une entrée des offres
+    // depuis novembre 2026. Les pages par code (ateliers, guides, concours) sont
+    // les enfants d'une page du plan : un clic de plus. Les mots de la barre
+    // comptent : ils sont aussi les titres du menu déplié, sur téléphone.
     const EXCEPTIONS: Record<string, string> = {
       "/": "le logo de la barre",
-      "/devis": "l'action de la page des offres (/tarifs)",
     };
-    const pages = tousLesLiens().map((l) => l.href.split("#")[0]!);
+    const pages = [...tousLesLiens(), ...liensDeTete()].map((l) => l.href.split("#")[0]!);
     const absentes = PAGES_PUBLIQUES.filter((p) => !pages.includes(p) && !(p in EXCEPTIONS));
     expect(absentes, `pages du sitemap introuvables depuis le plan : ${absentes.join(", ")}`).toEqual([]);
     for (const p of Object.keys(EXCEPTIONS)) expect(PAGES_PUBLIQUES).toContain(p);
@@ -219,7 +228,7 @@ describe("plan du site", () => {
       ["l'en-tête de l'administration", "src/components/en-tete-admin.tsx", "NAVIGATION_ADMIN"],
       ["le menu de l'arène", "src/components/menu-de-l-arene.tsx", "NAVIGATION_ARENE"],
     ];
-    const liens = [...tousLesLiens(), ...NAVIGATION_ARENE, ...PASTILLES.flatMap(([, p]) => p)];
+    const liens = [...tousLesLiens(), ...liensDeTete(), ...NAVIGATION_ARENE, ...PASTILLES.flatMap(([, p]) => p)];
     for (const [nom, fichier, lecture] of BLOCS) {
       const bloc = lire(fichier);
       expect(bloc, `${nom} n'importe pas le plan`).toContain(lecture);
@@ -257,16 +266,28 @@ describe("plan du site", () => {
   });
 
   it("les pastilles des espaces sont dans l'ordre d'usage, et la page courante se marque", () => {
+    // Un mot par pastille dans l'espace enseignant (novembre 2026) ; les pages gardent leur titre.
     expect(NAVIGATION_ENSEIGNANT.map((p) => p.libelle)).toEqual([
-      "Mes parties",
-      "Mes examens",
-      "Mes cohortes",
-      "Mes classes du cours",
-      "Mes scénarios",
-      "Carnet d'usage",
+      "Parties",
+      "Examens",
+      "Cohortes",
+      "Classes",
+      "Scénarios",
+      "Usage",
       "Aide",
     ]);
+    expect([LIEN_ETABLISSEMENT.libelle, LIEN_ADMINISTRATION.libelle]).toEqual(["Établissement", "Administration"]);
     expect(NAVIGATION_ENSEIGNANT.find((p) => p.code === "aide")?.href).toBe("/guides/enseignant");
+    for (const [page, titre] of [
+      ["src/app/teacher/page.tsx", 'titre="Mes parties"'],
+      ["src/app/teacher/examens/page.tsx", 'titre="Mes examens"'],
+      ["src/app/teacher/cohortes/page.tsx", 'titre="Mes cohortes"'],
+      ["src/app/teacher/cours/page.tsx", 'titre="Mes classes du cours"'],
+      ["src/app/teacher/scenarios/page.tsx", 'titre="Mes scénarios"'],
+      ["src/app/teacher/usage/page.tsx", 'titre="Carnet d\'usage"'],
+    ] as const) {
+      expect(lire(page), `${page} a perdu son titre`).toContain(titre);
+    }
     expect(NAVIGATION_ADMIN.map((p) => p.libelle)).toEqual([
       "Plateforme",
       "Inscrits",
@@ -289,7 +310,7 @@ describe("plan du site", () => {
   });
 
   it("l'arène cite les pages publiques sous leur nom du plan, et ferme sur « Quitter la partie »", () => {
-    expect(NAVIGATION_ARENE.map((l) => l.libelle)).toEqual(["Guide de l'élève", "Fiches notions", "Mon profil"]);
+    expect(NAVIGATION_ARENE.map((l) => l.libelle)).toEqual(["Guide de l'élève", "Notions", "Profil"]);
     const menu = lire("src/components/menu-de-l-arene.tsx");
     expect(menu).toContain("LIBELLE_QUITTER_LA_PARTIE");
     expect(menu, "le lien vers le guide de l'étudiant garde sa prise (tests/e2e/guides.e2e.ts)").toContain(

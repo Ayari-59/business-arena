@@ -4,34 +4,28 @@ import Link from "next/link";
 // Le chemin normalisé : `/index` (régénération de l'accueil sur Vercel) vaut `/`.
 import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
 import { BrandMark } from "@/components/brand-mark";
-import {
-  ACTION_PRINCIPALE,
-  LIEN_GUIDES,
-  LIENS_TRANSVERSES,
-  NAVIGATION,
-  type GroupeDeMenu,
-  type LienDeMenu,
-} from "@/config/navigation";
+import { LIEN_GUIDES, NAVIGATION, liensDeTete, type LienDeMenu } from "@/config/navigation";
 import { VENDEUR } from "@/config/editeur";
 
 /**
  * LE PIED DE PAGE, SUR TOUTES LES PAGES PUBLIQUES.
  *
  * Il n'existait que sur l'accueil. Les dix autres pages publiques s'arrêtaient
- * net sur leur dernière section, et « Mentions légales & RGPD » n'y était
- * atteignable que par le panneau « Menu » : un lien que la loi veut visible,
+ * net sur leur dernière section, et les mentions légales n'y étaient
+ * atteignables que par le panneau « Menu » : un lien que la loi veut visible,
  * rangé derrière un bouton qui recouvre la page.
  *
- * LE PLAN, EN QUATRE COLONNES (décision du propriétaire, octobre 2026). Sa
- * version précédente ne proposait que quatre liens, par crainte de redire le
- * menu ; mais un pied de page qui déroule le plan rangé par public est la
- * carte du site, celle qu'on lit en bas d'une page quand on n'a pas trouvé.
- * Il LIT le plan (config/navigation.ts), groupe par groupe, sous les mêmes
- * titres que la barre et le menu : jamais une copie qui dérivera. Cinq
- * colonnes sur grand écran, Élèves / Enseignants / Établissements / Entreprises /
- * Aide, puis les offres sur une ligne, et ce qui sert à tous (choisir sa
- * simulation, le rendez-vous, les mentions légales) sur une dernière ;
- * empilées sur téléphone.
+ * LE PLAN, PAR PRODUIT, SOUS LES MOTS DU MENU (décision du propriétaire,
+ * novembre 2026 : un menu par produit, un mot par entrée). Un pied de page qui
+ * déroule le plan est la carte du site, celle qu'on lit en bas d'une page
+ * quand on n'a pas trouvé. Il LIT le plan (config/navigation.ts), groupe par
+ * groupe : une colonne par produit, Cours · Arène · Épisodes · Offres · Aide,
+ * sous le mot de la barre et vers la même page, puis ses entrées, d'un mot.
+ * Jamais une copie qui dérivera. Le plan d'avant comptait 5 colonnes, une ligne
+ * pour les offres et une pour ce qui sert à tous, et une précision à côté de
+ * trois titres : les 5 groupes suffisent, les mentions légales sont dans
+ * « Aide ». Cinq colonnes sur grand écran, trois sur tablette, deux sur
+ * téléphone : des mots seuls tiennent à deux de front.
  *
  * IL SE POSE HORS DU `<main>`, en frère de celui-ci. C'est ce qui en fait un
  * repère « contentinfo » pour une synthèse vocale ; imbriqué dans le contenu,
@@ -62,28 +56,9 @@ export function PiedDePage() {
   // se corrige toute seule au lieu de vieillir avec le dernier déploiement.
   const annee = new Date().getFullYear();
 
-  // CINQ COLONNES ET UNE LIGNE. Le plan se déroulait en quatre colonnes dont
-  // la deuxième empilait les trois publics : une colonne de trente lignes à
-  // côté de trois colonnes de cinq, et un pied de page mal calibré, long d'un
-  // côté, vide de l'autre. Les cinq premiers groupes prennent maintenant
-  // chacun leur colonne, dans l'ordre du plan : Élèves, Enseignants,
-  // Établissements, Entreprises, Aide. Le sixième, les offres, se lit sur une
-  // seule ligne sous les cinq, comme la ligne de contact d'un courrier. Trois
-  // colonnes sur tablette, une pile sur téléphone. Lus du plan par leur code :
-  // un groupe ajouté demain prend sa colonne ici sans qu'on l'écrive.
-  const groupe = (code: string): GroupeDeMenu => {
-    const g = NAVIGATION.find((x) => x.code === code);
-    if (!g) throw new Error(`pied de page : le groupe « ${code} » n'est pas dans le plan`);
-    return g;
-  };
-  const colonnes: GroupeDeMenu[] = [
-    groupe("eleves"),
-    groupe("enseignants"),
-    groupe("etablissements"),
-    groupe("entreprises"),
-    groupe("aide"),
-  ];
-  const ligne = groupe("offres");
+  // Le titre d'une colonne est le mot de la barre, vers la même page.
+  const mots = liensDeTete();
+  const courant = (href: string) => chemin === href.split("#")[0];
 
   return (
     <footer className="border-t border-white/10">
@@ -100,68 +75,28 @@ export function PiedDePage() {
           </div>
         </div>
 
+        {/* UNE COLONNE PAR GROUPE, dans l'ordre du plan, lues du plan par leur
+            code : un groupe ajouté demain prend sa colonne ici sans qu'on
+            l'écrive. */}
         <nav
           aria-label="Plan du site"
           data-plan-du-pied=""
-          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-5"
+          className="mt-12 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-5"
         >
-          {colonnes.map((g) => (
+          {NAVIGATION.map((g, i) => (
             <div key={g.code} data-groupe-du-pied={g.code}>
-              <p className="font-display text-sm font-semibold tracking-etiquette text-slate-200">
-                {g.titre}
-                {g.precision ? (
-                  <>
-                    {" "}
-                    <span className="font-sans text-xs font-normal tracking-normal text-slate-400">
-                      {g.precision}
-                    </span>
-                  </>
-                ) : null}
-              </p>
-              <ul className="mt-3 space-y-2 text-sm">
+              <Titre id={`pied-${g.code}`} lien={mots[i]!} courant={courant(mots[i]!.href)} />
+              {/* La liste porte le nom de sa colonne : « Profil » se lit « Arène »
+                  ou « Épisodes » pour une synthèse vocale. */}
+              <ul aria-labelledby={`pied-${g.code}`} className="mt-3 space-y-2 text-sm">
                 {g.liens.map((lien) => (
                   <li key={lien.href}>
-                    <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
+                    <Entree lien={lien} courant={courant(lien.href)} />
                   </li>
                 ))}
               </ul>
             </div>
           ))}
-          <div
-            data-groupe-du-pied={ligne.code}
-            className="flex flex-wrap items-baseline gap-x-6 gap-y-2 sm:col-span-3 lg:col-span-5"
-          >
-            <p className="font-display text-sm font-semibold tracking-etiquette text-slate-200">
-              {ligne.titre}
-              {ligne.precision ? (
-                <>
-                  {" "}
-                  <span className="font-sans text-xs font-normal tracking-normal text-slate-400">
-                    {ligne.precision}
-                  </span>
-                </>
-              ) : null}
-            </p>
-            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              {ligne.liens.map((lien) => (
-                <li key={lien.href}>
-                  <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
-                </li>
-              ))}
-            </ul>
-          </div>
-          {/* CE QUI SERT À TOUS (config/navigation.ts, LIENS_TRANSVERSES) : choisir sa
-              simulation, prendre rendez-vous, et les mentions légales, qui restent au pied
-              de page. Une dernière ligne, sous les offres. */}
-          <div data-liens-transverses="" className="sm:col-span-3 lg:col-span-5">
-            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              {LIENS_TRANSVERSES.map((lien) => (
-                <li key={lien.href}>
-                  <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
-                </li>
-              ))}
-            </ul>
-          </div>
         </nav>
 
         {/* Le filet ferme le plan : le gris bleuté des cartes, plein, le même
@@ -181,15 +116,26 @@ export function PiedDePage() {
   );
 }
 
-/**
- * Une entrée du plan, dans sa colonne. L'action principale se distingue par
- * son encre forte, son soulignement et sa flèche, parce qu'un pied de page où
- * tout se ressemble ne propose rien ; elle a porté l'orange, qui ne dit plus
- * que l'action d'un bouton (lot P1). La page courante est du texte, pas un
- * lien.
- */
+/** Le titre d'une colonne : le mot du groupe, vers sa page ; en texte sur cette page. */
+function Titre({ id, lien, courant }: { id: string; lien: LienDeMenu; courant: boolean }) {
+  // La même boîte, lien ou texte : un titre courant ne remonte pas au-dessus de ses voisins.
+  const classe = "block w-fit font-display text-sm font-semibold tracking-etiquette";
+  if (courant) {
+    return (
+      <span id={id} aria-current="page" className={`${classe} text-slate-50`}>
+        {lien.libelle}
+      </span>
+    );
+  }
+  return (
+    <Link id={id} href={lien.href} title={lien.aide} className={`${classe} text-slate-200 transition-colors hover:text-white`}>
+      {lien.libelle}
+    </Link>
+  );
+}
+
+/** Une entrée du plan, dans sa colonne. La page courante est du texte, pas un lien. */
 function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
-  const principale = lien.href === ACTION_PRINCIPALE.href;
   if (courant) {
     return (
       <span aria-current="page" className="text-slate-200">
@@ -197,22 +143,10 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
       </span>
     );
   }
-  if (principale) {
-    return (
-      <Link
-        href={lien.href}
-        className="group font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
-      >
-        {lien.libelle}
-        <span aria-hidden className="ml-1.5 inline-block transition-transform group-hover:translate-x-1">
-          →
-        </span>
-      </Link>
-    );
-  }
   return (
     <Link
       href={lien.href}
+      title={lien.aide}
       // L'aide, sur toutes les pages publiques : les guides de prise en main (tests/e2e/guides.e2e.ts).
       {...(lien.href === LIEN_GUIDES.href ? { "data-lien-des-guides": "" } : {})}
       className="text-slate-400 transition-colors hover:text-slate-200"

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 // Le chemin normalisé : `/index` (régénération de l'accueil sur Vercel) vaut `/`.
 import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
-import { ACTION_PRINCIPALE, NAVIGATION } from "@/config/navigation";
+import { ACTION_PRINCIPALE, APPEL_JOUER } from "@/config/navigation";
 import { bouton } from "@/components/bouton";
 
 /**
@@ -23,7 +23,10 @@ import { bouton } from "@/components/bouton";
  * hauteur est réservé en bas de page : rien n'est masqué derrière elle.
  *
  * Les adresses et les libellés viennent du plan du site (config/navigation) :
- * il n'y a qu'un seul endroit qui dit où mène « Choisir ma simulation ».
+ * il n'y a qu'un seul endroit qui dit où mène « Choisir ma simulation ». Le
+ * menu nomme ces pages d'un mot (« Solo », « Orientation ») ; un bouton dit ce
+ * qu'il fait, et la barre les appelle donc sous leur verbe (`APPEL_JOUER`,
+ * `ACTION_PRINCIPALE`).
  */
 
 /** Les pages publiques où la barre a un sens, et ce qu'elle propose à droite. */
@@ -104,18 +107,16 @@ export function BarreDActionMobile() {
   const actif = !fermee && !boutonVisible;
   // L'appel de la page : jouer, sur les pages générales (c'est celui de leur
   // héros et de leur bande finale) ; choisir sa simulation, côté enseignants.
-  const jouer = NAVIGATION.flatMap((g) => g.liens).find((l) => l.href === "/jouer");
   // LOT P6 : SUR LA VITRINE, LA BARRE REDIT LE BOUTON DU HÉROS. Elle prend le
   // relais de « Tester le simulateur » quand il quitte l'écran ; elle le dit
-  // donc avec ses mots, pas avec ceux du menu (« Jouer en solo », qui reste
-  // le libellé des autres pages générales).
+  // donc avec ses mots (« Jouer en solo » reste l'appel des autres pages
+  // générales).
   const appel =
     quoi === "enseignant"
       ? ACTION_PRINCIPALE
-      : jouer && chemin === "/"
-        ? { ...jouer, libelle: LIBELLE_DE_LA_VITRINE }
-        : jouer;
-  if (!appel) return null;
+      : chemin === "/"
+        ? { ...APPEL_JOUER, libelle: LIBELLE_DE_LA_VITRINE }
+        : APPEL_JOUER;
 
   const fermer = () => {
     try {

@@ -863,7 +863,7 @@ describe("pendant une partie", () => {
   it("le menu de la partie ne propose plus d'apparence : le site n'en a qu'une", async () => {
     await page.getByRole("button", { name: "Menu de la partie" }).click();
     await page
-      .getByRole("link", { name: "Fiches notions" })
+      .getByRole("link", { name: "Notions", exact: true })
       .first()
       .waitFor({ state: "visible" });
     expect(await page.getByRole("button", { name: /^Thème / }).count()).toBe(0);
