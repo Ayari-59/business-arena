@@ -12,7 +12,9 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Client } from "pg";
 import { CHAPITRES } from "../../src/config/cours/registre";
-import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "../../src/config/cours/parcours-de-formation";
+import { CE_QU_EST_UN_PARCOURS, codesDesGroupes, libelleDuParcours } from "../../src/config/cours/parcours-a-choisir";
+import { PARCOURS_DU_DEVIS } from "../../src/config/cours/devis-du-cours";
+import { espacesOrdinaires } from "../../src/lib/typographie";
 import { chapitrePropose } from "../../src/config/formations-proposees";
 import { lienDuDevisDuCours } from "../../src/config/parametrage-du-devis";
 
@@ -305,13 +307,15 @@ describe("la demande de devis, de la carte à la confirmation", () => {
 
 /**
  * LE DEVIS VENU DU COURS (audit produit du 10 novembre 2026, P1-4), sur un téléphone : le chapitre
- * réservé mène au devis de l'offre Classe, le parcours du chapitre prérempli ; l'entreprise et le
- * niveau ne sont pas exigés, et la demande enregistrée garde le parcours.
+ * réservé mène au devis de l'offre Classe, le parcours prérempli ; l'entreprise et le niveau ne sont
+ * pas exigés, et la demande enregistrée garde le parcours. Depuis la page d'un diplôme, ce parcours
+ * est le cours de ce diplôme (décision du 11 novembre 2026), et la liste est rangée par diplôme, le
+ * cours du diplôme en premier, chaque entrée avec son nombre de chapitres.
  */
 describe("le devis venu d'un chapitre réservé", () => {
   const chapitre = CHAPITRES.find((c) => c.parcours === "stmg-gf" && !c.libre && chapitrePropose(c))!;
 
-  it("à 390 px : le parcours prérempli, ni entreprise ni niveau exigés, la demande garde le parcours", async () => {
+  it("à 390 px : le cours du diplôme prérempli, la liste rangée par diplôme, ni entreprise ni niveau exigés, la demande garde le parcours", async () => {
     const contexte = await navigateur.newContext({
       ...devices["iPhone 13"],
       viewport: { width: 390, height: 844 },
@@ -321,28 +325,49 @@ describe("le devis venu d'un chapitre réservé", () => {
     const page = await contexte.newPage();
     await aller(page, `/cours/${chapitre.code}?diplome=stmg`);
     const lien = page.locator('main a[href^="/devis?"]');
-    expect(await lien.getAttribute("href")).toBe(lienDuDevisDuCours("stmg-gf"));
+    expect(await lien.getAttribute("href")).toBe(lienDuDevisDuCours("bac-stmg"));
     await lien.click();
-    await page.waitForURL(/\/devis\?offre=classe&source=cours&parcours=stmg-gf$/);
+    await page.waitForURL(/\/devis\?offre=classe&source=cours&parcours=bac-stmg$/);
     await page.waitForLoadState("networkidle");
 
     const formulaire = page.locator("[data-formulaire-devis]");
     expect(await page.locator('select[name="offre"]').inputValue()).toBe("classe");
-    expect(await page.locator('select[name="parcours"]').inputValue()).toBe("stmg-gf");
-    expect(await page.locator('select[name="parcours"] option:checked').innerText()).toBe(titreDuParcours("stmg-gf"));
+    expect(await page.locator('select[name="parcours"]').inputValue()).toBe("bac-stmg");
+    expect(espacesOrdinaires(await page.locator('select[name="parcours"] option:checked').innerText())).toBe(libelleDuParcours("bac-stmg"));
+    expect(libelleDuParcours("bac-stmg")).toMatch(/^Bac STMG · Le cours du diplôme · \d+ chapitres$/);
     expect((await formulaire.textContent())!.replace(/\s+/g, " ")).toContain("Le diplôme ou le parcours");
     // Sous Classe, venue du cours, le parcours est exigé (décision du propriétaire du 11 novembre 2026).
     expect(await page.locator('select[name="parcours"]').getAttribute("required")).not.toBeNull();
     expect(await page.locator('select[name="entreprise"]').getAttribute("required")).toBeNull();
     expect(await page.locator('select[name="niveau"]').getAttribute("required")).toBeNull();
-    // Les options, dans l'ordre que l'enseignant voit en créant sa classe.
+    // Les options, rangées par diplôme comme celles que l'enseignant voit en créant sa classe : un
+    // groupe par diplôme, le cours du diplôme en premier, les matières à la fin.
     const options = await page.locator('select[name="parcours"] option').evaluateAll((xs) => xs.map((o) => (o as HTMLOptionElement).value));
-    expect(options).toEqual(["", ...PARCOURS_PROPOSES_A_CHOISIR.map((p) => p.code)]);
+    expect(options).toEqual(["", ...codesDesGroupes(PARCOURS_DU_DEVIS)]);
+    const groupes = await page.locator('select[name="parcours"] optgroup').evaluateAll((gs) =>
+      gs.map((g) => ({ libelle: g.getAttribute("label") ?? "", options: [...g.querySelectorAll("option")].map((o) => o.textContent ?? "") })),
+    );
+    expect(groupes.map((g) => espacesOrdinaires(g.libelle))).toEqual(PARCOURS_DU_DEVIS.map((g) => g.libelle));
+    for (const [k, g] of groupes.entries()) expect(g.options.map(espacesOrdinaires), g.libelle).toEqual(PARCOURS_DU_DEVIS[k]!.parcours.map((p) => p.libelle));
+    // Le bac STMG en tête de la liste, son cours du diplôme en premier.
+    expect(espacesOrdinaires(groupes[0]!.libelle)).toBe("STMG");
+    expect(espacesOrdinaires(groupes[0]!.options[0]!)).toBe(libelleDuParcours("bac-stmg"));
+    // Chaque entrée dit son nombre de chapitres ; une matière, les diplômes qu'elle sert.
+    for (const g of groupes) for (const o of g.options) expect(espacesOrdinaires(o)).toMatch(/· \d+ chapitres?( · |$)/);
+    // Sous la liste, ce qu'est un parcours.
+    expect(espacesOrdinaires(await page.locator("[data-ce-qu-est-un-parcours]").innerText())).toBe(CE_QU_EST_UN_PARCOURS);
+    expect(await page.locator('select[name="parcours"]').getAttribute("aria-describedby")).toContain("ce-qu-est-un-parcours");
     const debord = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(debord, "défilement de côté").toBeLessThanOrEqual(0);
     if (process.env.E2E_CAPTURES) {
       mkdirSync(process.env.E2E_CAPTURES, { recursive: true });
       await page.screenshot({ path: join(process.env.E2E_CAPTURES, "devis-depuis-un-chapitre-390.png"), fullPage: true });
+      // La liste dépliée, pour la regarder : le menu natif d'une liste ne se photographie pas, la
+      // capture la montre en zone de liste, le temps de la photo.
+      const liste = page.locator('select[name="parcours"]');
+      await liste.evaluate((s) => ((s as HTMLSelectElement).size = 18));
+      await liste.screenshot({ path: join(process.env.E2E_CAPTURES, "liste-des-parcours-du-devis-390.png") });
+      await liste.evaluate((s) => ((s as HTMLSelectElement).size = 0));
     }
 
     const email = unique("devis-cours");
@@ -357,7 +382,7 @@ describe("le devis venu d'un chapitre réservé", () => {
     await base.connect();
     try {
       const { rows } = await base.query("select offre, parcours, entreprise, niveau from demandes_de_devis where email = $1", [email]);
-      expect(rows).toEqual([{ offre: "classe", parcours: "stmg-gf", entreprise: null, niveau: null }]);
+      expect(rows).toEqual([{ offre: "classe", parcours: "bac-stmg", entreprise: null, niveau: null }]);
     } finally {
       await base.end();
     }

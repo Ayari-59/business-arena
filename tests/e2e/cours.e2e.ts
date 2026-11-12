@@ -13,7 +13,9 @@ import { parcoursDuContenu } from "../../src/config/cours/devis-du-contenu";
 import { lienDuDevisDuCours } from "../../src/config/parametrage-du-devis";
 import { formationsAvecUnePage } from "../../src/config/couverture";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
-import { coursDuDiplome, couvertureDuCoursEnClair } from "../../src/config/cours/par-diplome";
+import { chapitresDuParcoursDansLOrdre, coursDuDiplome, couvertureDuCoursEnClair } from "../../src/config/cours/par-diplome";
+import { CE_QU_EST_UN_PARCOURS, parcoursRangesParDiplome } from "../../src/config/cours/parcours-a-choisir";
+import { annonceursDe, parcoursQuiOuvrent } from "../../src/config/cours/parcours-de-formation";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitresDeLaNotion, suitesDuChapitre } from "../../src/pedagogy/cours/suites";
@@ -351,6 +353,10 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     expect(code).toMatch(/^BTSCG1-/);
     const pageDeLaClasse = new URL(prof.url()).pathname;
     expect(await prof.locator("[data-calculatrice-de-la-classe]").getAttribute("data-calculatrice-de-la-classe")).toBe("permise");
+    // Le suivi s'ouvre sur le premier chapitre du parcours de la classe, dans l'ordre d'apprentissage
+    // (audit UX du 11 novembre 2026, P1-2 : c'était le premier du registre, pour toutes les classes).
+    const premierDuParcours = chapitresDuParcoursDansLOrdre(chapitre.parcours)[0]!;
+    expect(await prof.locator(`[data-chapitre-de-la-liste="${premierDuParcours.code}"] a`).getAttribute("aria-current")).toBe("page");
 
     const eleve = await nouvellePage();
     // Une seule porte : le code de classe tapé dans « Rejoindre une partie » mène à la classe du cours.
@@ -384,6 +390,22 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await eleve.getByRole("button", { name: "Valider l'écriture" }).click();
     await expect.poll(() => eleve.locator("main").innerText().then(espacesOrdinaires)).toContain("se passe au débit");
 
+    // Le suivi du chapitre de l'élève : son titre, dans la classe élève par élève, y mène.
+    await aller(prof, pageDeLaClasse);
+    const ligneDeCamille = prof.locator("[data-resume-des-eleves] [data-resume-eleve='Camille']");
+    await expect
+      .poll(
+        async () => {
+          await prof.reload();
+          return (await ligneDeCamille.count()) === 1 ? ligneDeCamille.innerText().then(espacesOrdinaires) : "";
+        },
+        { timeout: 30_000 },
+      )
+      .toContain(espacesOrdinaires(chapitre.titre));
+    expect(await ligneDeCamille.locator("[data-etape-du-resume]").innerText()).toMatch(/^\d+ sur \d+$/);
+    expect(await ligneDeCamille.locator("a").getAttribute("href")).toBe(`${pageDeLaClasse}?chapitre=${chapitre.code}`);
+    await ligneDeCamille.locator("a").click();
+    await prof.waitForURL(new RegExp(`\\?chapitre=${chapitre.code}$`), { timeout: 60_000 });
     await expect
       .poll(
         async () => {
@@ -460,6 +482,254 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await ctxProf.close();
     await eleve.context().close();
   }, 240_000);
+});
+
+/**
+ * LA CLASSE AUTOUR DE SON DIPLÔME (audit du 11 novembre 2026, chantier 1), sous l'offre Classe :
+ *  · la liste des parcours rangée par diplôme, le cours du diplôme en premier, chaque entrée avec son
+ *    nombre de chapitres, et ce qu'est un parcours sous la liste (UX P1-4, P2-12) ;
+ *  · le formulaire de classe qui dit toutes ses erreurs sous les champs et garde la saisie (P2-6) ;
+ *  · une classe du BTS CG qui libère chapitre par chapitre, d'un clic sur la case de chaque chapitre ;
+ *    sa liste ne montre que son parcours et les chapitres libres, et « à libérer » n'est pas « hors de
+ *    votre offre » (P1-3) ; un chapitre libéré ouvre les prérequis qu'il annonce ;
+ *  · « Ma classe », titre de la page de l'élève, avec ses chapitres ouverts, et « Commencer » sur le
+ *    dernier libéré (P1-1) ;
+ *  · le suivi ouvert sur ce chapitre, la classe élève par élève en tête, les homonymes numérotés,
+ *    « pas commencé » pour l'élève qui n'a rien ouvert (P1-2, P2-9) ;
+ *  · deux phrases devant un chapitre fermé, sans « réservé » (P2-8) ; le code à projeter (P2-9).
+ */
+describe("la classe autour de son diplôme", () => {
+  const PARCOURS_DE_LA_CLASSE = "bts-cg";
+  const NOM_DE_CLASSE = "BTS CG 1 · groupe A";
+  const duParcours = chapitresDuParcoursDansLOrdre(PARCOURS_DE_LA_CLASSE);
+  const aLiberer = duParcours.filter((c) => !c.libre);
+  // Libérés dans cet ordre ; « Le déficit reporté » annonce « L'impôt sur les sociétés » en prérequis.
+  const premier = aLiberer[0]!;
+  const dernier = chapitreParCode("le-deficit-reporte")!;
+  const annonce = chapitreParCode("l-impot-sur-les-societes")!;
+  // Un chapitre du parcours que rien n'ouvre encore, et un chapitre hors du programme de la classe.
+  const pasEncore = aLiberer.find((c) => c !== premier && c !== dernier && annonceursDe(c.code).size === 0)!;
+  const horsProgramme = CHAPITRES.find((c) => !c.libre && chapitrePropose(c) && !parcoursQuiOuvrent(c).includes(PARCOURS_DE_LA_CLASSE))!;
+  const libresEnPlus = CHAPITRES.filter((c) => c.libre && chapitrePropose(c) && !duParcours.includes(c));
+  const lignesDeLaListe = (p: Page) =>
+    p.locator("details[data-chapitres-de-la-classe] [data-chapitre-de-la-liste]").evaluateAll((ls) =>
+      ls.map((l) => ({
+        code: l.getAttribute("data-chapitre-de-la-liste")!,
+        etat: l.getAttribute("data-etat")!,
+        enClair: l.querySelector("[data-etat-en-clair]")?.textContent ?? "",
+      })),
+    );
+  const avant = (p: Page, a: string, b: string) =>
+    p.evaluate(([x, y]) => Boolean(document.querySelector(x!)!.compareDocumentPosition(document.querySelector(y!)!) & Node.DOCUMENT_POSITION_FOLLOWING), [a, b]);
+
+  it("sous Classe : la liste par diplôme, le formulaire qui garde la saisie, la libération d'un clic, « Ma classe » et le suivi élève par élève", async () => {
+    expect(duParcours).toContain(dernier);
+    expect(duParcours).toContain(annonce);
+    expect(annonceursDe(annonce.code).has(dernier.code)).toBe(true);
+    expect(pasEncore && horsProgramme).toBeTruthy();
+
+    const ctxProf = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctxProf, { arene: "classe" });
+    const prof = await ctxProf.newPage();
+    await aller(prof, "/teacher/cours");
+
+    // LA LISTE DES PARCOURS, RANGÉE PAR DIPLÔME (P1-4) : la même que celle du devis.
+    const formulaire = prof.locator("[data-nouvelle-classe]");
+    const groupes = await formulaire.locator('select[name="parcours"] optgroup').evaluateAll((gs) =>
+      gs.map((g) => ({
+        libelle: g.getAttribute("label") ?? "",
+        options: [...g.querySelectorAll("option")].map((o) => ({ code: o.value, texte: o.textContent ?? "" })),
+      })),
+    );
+    const attendus = parcoursRangesParDiplome();
+    expect(groupes.map((g) => espacesOrdinaires(g.libelle))).toEqual(attendus.map((g) => g.libelle));
+    for (const [k, g] of groupes.entries()) {
+      expect(g.options.map((o) => o.code), g.libelle).toEqual(attendus[k]!.parcours.map((p) => p.code));
+      expect(g.options.map((o) => espacesOrdinaires(o.texte)), g.libelle).toEqual(attendus[k]!.parcours.map((p) => p.libelle));
+    }
+    const duBtsCg = groupes.find((g) => espacesOrdinaires(g.libelle) === "BTS CG")!;
+    expect(duBtsCg.options[0]!.code).toBe(PARCOURS_DE_LA_CLASSE);
+    expect(espacesOrdinaires(duBtsCg.options[0]!.texte)).toBe(`BTS CG · Le cours du diplôme · ${duParcours.length} chapitres`);
+    expect(espacesOrdinaires(await formulaire.locator("[data-ce-qu-est-un-parcours]").innerText())).toBe(CE_QU_EST_UN_PARCOURS);
+    expect(espacesOrdinaires(await formulaire.locator("#parcours-de-la-classe-aide").innerText())).toContain("première classe créée sous la licence");
+
+    // LE FORMULAIRE DIT SES ERREURS SOUS LES CHAMPS, TOUTES D'UN COUP, ET GARDE LA SAISIE (P2-6).
+    expect(await formulaire.getAttribute("novalidate")).not.toBeNull();
+    const adresse = prof.url();
+    await prof.getByRole("button", { name: "Créer la classe" }).click();
+    await formulaire.locator('[data-erreur-du-champ="parcours"]').waitFor({ state: "visible", timeout: 30_000 });
+    expect(espacesOrdinaires(await formulaire.locator('[data-erreur-du-champ="nom"]').innerText())).toContain("Donnez un nom à la classe");
+    expect(espacesOrdinaires(await formulaire.locator('[data-erreur-du-champ="parcours"]').innerText())).toBe(
+      "Choisissez le parcours du cours de la classe dans la liste.",
+    );
+    expect(prof.url()).toBe(adresse);
+    expect(await prof.getByLabel("Nom de la classe").getAttribute("aria-invalid")).toBe("true");
+    await expect.poll(() => prof.evaluate(() => document.activeElement?.id)).toBe("nom-de-la-classe");
+    await prof.getByLabel("Nom de la classe").fill(NOM_DE_CLASSE);
+    await prof.getByLabel(/Libérer chapitre par chapitre/).check();
+    await prof.getByRole("button", { name: "Créer la classe" }).click();
+    await expect.poll(() => formulaire.locator('[data-erreur-du-champ="nom"]').count(), { timeout: 30_000 }).toBe(0);
+    expect(await formulaire.locator('[data-erreur-du-champ="parcours"]').count()).toBe(1);
+    expect(await prof.getByLabel("Nom de la classe").inputValue()).toBe(NOM_DE_CLASSE);
+    expect(await prof.getByLabel(/Libérer chapitre par chapitre/).isChecked()).toBe(true);
+    await expect.poll(() => prof.evaluate(() => document.activeElement?.id)).toBe("parcours-de-la-classe");
+    await prof.getByLabel("Parcours du cours").selectOption(PARCOURS_DE_LA_CLASSE);
+    await prof.getByRole("button", { name: "Créer la classe" }).click();
+    await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}\?creee=1$/, { timeout: 60_000 });
+    const pageDeLaClasse = new URL(prof.url()).pathname;
+    const code = (await prof.locator("[data-code-de-classe]").innerText()).trim();
+    expect(await prof.locator("[data-liberation]").getAttribute("data-liberation")).toBe("chapitre");
+    expect(await prof.locator("[data-parcours-de-la-classe]").getAttribute("data-parcours-de-la-classe")).toBe(PARCOURS_DE_LA_CLASSE);
+
+    // LA LISTE DE LIBÉRATION (P1-3) : dépliée, le parcours de la classe dans l'ordre, puis les chapitres
+    // libres ; chaque chapitre du parcours « à libérer », chaque chapitre libre toujours ouvert.
+    const liste = prof.locator("details[data-chapitres-de-la-classe]");
+    expect(await liste.getAttribute("open")).not.toBeNull();
+    const auDepart = await lignesDeLaListe(prof);
+    expect(auDepart.map((l) => l.code)).toEqual([...duParcours, ...libresEnPlus].map((c) => c.code));
+    for (const l of auDepart) {
+      const c = chapitreParCode(l.code)!;
+      expect(l.etat, l.code).toBe(c.libre ? "libre" : "a-liberer");
+      expect(espacesOrdinaires(l.enClair), l.code).toBe(c.libre ? "libre, toujours ouvert" : "à libérer");
+    }
+    // Le suivi s'ouvre sur le premier chapitre du parcours, faute de chapitre libéré (P1-2).
+    expect(await liste.locator(`[data-chapitre-de-la-liste="${duParcours[0]!.code}"] a`).getAttribute("aria-current")).toBe("page");
+
+    // Libérer d'un clic sur la case, puis un second chapitre.
+    const caseDe = (c: { code: string }) => liste.locator(`[data-liberer-le-chapitre="${c.code}"] [data-case-de-liberation]`);
+    expect(await caseDe(premier).getAttribute("aria-checked")).toBe("false");
+    await caseDe(premier).click();
+    await prof.waitForURL(/fait=libere/, { timeout: 60_000 });
+    await expect.poll(() => caseDe(premier).getAttribute("aria-checked")).toBe("true");
+    await caseDe(dernier).click();
+    await expect.poll(() => caseDe(dernier).getAttribute("aria-checked"), { timeout: 30_000 }).toBe("true");
+    // Le prérequis que le chapitre libéré annonce s'ouvre avec lui : pas de case, la raison en clair.
+    const ligneDeLAnnonce = liste.locator(`[data-chapitre-de-la-liste="${annonce.code}"]`);
+    expect(await ligneDeLAnnonce.getAttribute("data-etat")).toBe("avec");
+    expect(espacesOrdinaires(await ligneDeLAnnonce.locator("[data-etat-en-clair]").innerText())).toBe(
+      `ouvert avec « ${espacesOrdinaires(dernier.titre)} », qui l'annonce en prérequis`,
+    );
+    expect(await ligneDeLAnnonce.locator("[data-case-de-liberation]").count()).toBe(0);
+    // Sans chapitre demandé, le suivi s'ouvre sur le dernier libéré.
+    await aller(prof, pageDeLaClasse);
+    expect(await liste.locator(`[data-chapitre-de-la-liste="${dernier.code}"] a`).getAttribute("aria-current")).toBe("page");
+
+    // Deux élèves sous le même prénom.
+    const rejoindre = async () => {
+      const p = await nouvellePage();
+      await aller(p, `/cours/rejoindre?code=${code}`);
+      await p.getByLabel("Prénom ou pseudonyme").fill("Léa");
+      await p.getByRole("button", { name: "Rejoindre la classe" }).click();
+      await p.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });
+      return p;
+    };
+    const lea1 = await rejoindre();
+    const lea2 = await rejoindre();
+
+    // « MA CLASSE » (P1-1) : le titre de la page de l'élève, avant celui de la vitrine ; les chapitres
+    // libérés dans l'ordre du parcours, puis les chapitres libres du parcours ; « Commencer » sur le
+    // dernier libéré.
+    const titre = lea1.locator("h1");
+    expect(await titre.count()).toBe(1);
+    expect(await titre.getAttribute("id")).toBe("ma-classe");
+    expect(espacesOrdinaires(await titre.innerText())).toBe(`Ma classe : « ${NOM_DE_CLASSE} »`);
+    expect(await avant(lea1, "#ma-classe", "[data-vitrine-du-cours]")).toBe(true);
+    const ouverts = await lea1
+      .locator("[data-chapitres-de-ma-classe] [data-chapitre-de-ma-classe]")
+      .evaluateAll((ls) => ls.map((l) => l.getAttribute("data-chapitre-de-ma-classe")));
+    expect(ouverts).toEqual([premier, dernier, ...duParcours.filter((c) => c.libre)].map((c) => c.code));
+    const commencer = lea1.locator("[data-commencer-en-classe]");
+    expect(await commencer.getAttribute("data-commencer-en-classe")).toBe(dernier.code);
+    expect(espacesOrdinaires(await commencer.innerText())).toBe(`Commencer : ${espacesOrdinaires(dernier.titre)}`);
+    expect(await commencer.getAttribute("href")).toMatch(new RegExp(`^/cours/${dernier.code}\\?entreprise=[a-z-]+&diplome=bts-cg$`));
+    await commencer.click();
+    await lea1.waitForURL(new RegExp(`/cours/${dernier.code}\\?`), { timeout: 60_000 });
+    await expect.poll(() => lea1.locator("[data-en-classe]").innerText().then(espacesOrdinaires)).toContain("Léa");
+    await lea1.getByRole("button", { name: "Étape suivante" }).click();
+
+    // DEVANT UN CHAPITRE FERMÉ (P2-8) : « pas encore ouvert » pour un chapitre du parcours, « hors du
+    // programme » sinon ; jamais « réservé ».
+    const ferme = lea2.locator("[data-chapitre-ferme-a-l-eleve]");
+    await aller(lea2, `/cours/${pasEncore.code}`);
+    expect(await ferme.getAttribute("data-chapitre-ferme-a-l-eleve")).toBe("pas-encore-ouvert");
+    expect(espacesOrdinaires(await ferme.innerText())).toContain(`n'est pas encore ouvert pour votre classe, « ${NOM_DE_CLASSE} »`);
+    expect(await ferme.innerText()).not.toMatch(/réserv/);
+    await aller(lea2, `/cours/${horsProgramme.code}`);
+    expect(await ferme.getAttribute("data-chapitre-ferme-a-l-eleve")).toBe("hors-programme");
+    expect(espacesOrdinaires(await ferme.innerText())).toContain(`est hors du programme de votre classe, « ${NOM_DE_CLASSE} »`);
+    expect(await ferme.innerText()).not.toMatch(/réserv|Parlez-en à votre enseignant/);
+    // Sur la page du diplôme de la classe, le cadenas d'un chapitre fermé dit « pas encore ouvert ».
+    await aller(lea2, "/cours?diplome=bts-cg");
+    const cadenas = await lea2.locator('[data-programme="bts-cg"] [data-cadenas]').evaluateAll((xs) => xs.map((x) => x.getAttribute("data-cadenas")));
+    expect(cadenas.length).toBeGreaterThan(0);
+    expect([...new Set(cadenas)]).toEqual(["pas-encore-ouvert"]);
+
+    // LA CLASSE, ÉLÈVE PAR ÉLÈVE, EN TÊTE DU SUIVI (P1-2) : le chapitre en cours, l'étape, la dernière
+    // activité ; deux homonymes numérotés ; « pas commencé » pour l'élève qui n'a rien ouvert.
+    await aller(prof, pageDeLaClasse);
+    const resume = prof.locator("[data-resume-des-eleves]");
+    const ligneDe = (nom: string) => resume.locator(`[data-resume-eleve="${nom}"]`);
+    await expect
+      .poll(
+        async () => {
+          await prof.reload();
+          return (await ligneDe("Léa n°1").count()) === 1 ? ligneDe("Léa n°1").innerText().then(espacesOrdinaires) : "";
+        },
+        { timeout: 30_000 },
+      )
+      .toContain(espacesOrdinaires(dernier.titre));
+    expect(await resume.locator("[data-resume-eleve]").evaluateAll((ls) => ls.map((l) => l.getAttribute("data-resume-eleve")))).toEqual(["Léa n°1", "Léa n°2"]);
+    expect(await ligneDe("Léa n°1").locator("[data-etape-du-resume]").innerText()).toBe(`2 sur ${dernier.etapes.length}`);
+    expect(espacesOrdinaires(await ligneDe("Léa n°1").innerText())).toMatch(/à l'instant|il y a \d+ min/);
+    expect(await ligneDe("Léa n°2").locator("[data-etape-du-resume]").innerText()).toBe("pas commencé");
+    expect(await avant(prof, "[data-eleves-de-la-classe]", "[data-code-de-classe]")).toBe(true);
+    // Le tableau du chapitre suivi, le dernier libéré : il s'atteint au clavier ; l'indice « faites
+    // glisser » ne se montre que sur téléphone.
+    const suivi = prof.locator("[data-eleves-du-cours]");
+    expect(await suivi.locator('[data-eleve="Léa n°1"] [data-etape-de-l-eleve]').innerText()).toBe(`2 sur ${dernier.etapes.length}`);
+    expect(await suivi.locator('[data-eleve="Léa n°2"] [data-etape-de-l-eleve]').innerText()).toBe("pas commencé");
+    const zone = prof.locator("[data-tableau-qui-defile]");
+    expect(await zone.getAttribute("tabindex")).toBe("0");
+    expect(await zone.getAttribute("role")).toBe("region");
+    expect(espacesOrdinaires((await zone.getAttribute("aria-label")) ?? "")).toBe(
+      `${espacesOrdinaires(dernier.titre)} : où en est chaque élève, tableau qui défile de côté`,
+    );
+    expect(await prof.locator("[data-tableau-glisser]").isVisible()).toBe(false);
+
+    // LE CODE À PROJETER (P2-9) : lisible au mur, sans nom d'élève.
+    expect(await prof.getByRole("link", { name: "Espace enseignant" }).first().isVisible()).toBe(true);
+    await prof.locator("[data-projeter-le-code]").click();
+    await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}\/code$/, { timeout: 60_000 });
+    expect((await prof.locator("[data-code-projete]").innerText()).trim()).toBe(code);
+    expect(await prof.locator("[data-eleves-projetes]").getAttribute("data-eleves-projetes")).toBe("2");
+    expect(await prof.locator("main").innerText()).not.toContain("Léa");
+    // Comme la projection d'une partie ou d'une cohorte : pas de barre du site au mur.
+    expect(await prof.getByRole("link", { name: "Espace enseignant" }).first().isVisible()).toBe(false);
+    await ctxProf.close();
+    await lea1.context().close();
+    await lea2.context().close();
+  }, 300_000);
+
+  it("sans offre, la liste dit « hors de votre offre », sans case, à côté des chapitres libres", async () => {
+    const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctx, { licence: false });
+    const page = await ctx.newPage();
+    await aller(page, "/teacher/cours");
+    await page.getByLabel("Nom de la classe").fill("BTS CG sans licence");
+    await page.getByLabel("Parcours du cours").selectOption(PARCOURS_DE_LA_CLASSE);
+    await page.getByLabel(/Libérer chapitre par chapitre/).check();
+    await page.getByRole("button", { name: "Créer la classe" }).click();
+    await page.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}\?creee=1$/, { timeout: 60_000 });
+    const lignes = await lignesDeLaListe(page);
+    expect(lignes.map((l) => l.code)).toEqual([...duParcours, ...libresEnPlus].map((c) => c.code));
+    for (const l of lignes) {
+      const c = chapitreParCode(l.code)!;
+      expect(l.etat, l.code).toBe(c.libre ? "libre" : "hors-offre");
+      expect(espacesOrdinaires(l.enClair), l.code).toBe(c.libre ? "libre, toujours ouvert" : "Fermé à vos élèves : hors de votre offre");
+    }
+    expect(await page.locator("[data-case-de-liberation]").count()).toBe(0);
+    await ctx.close();
+  }, 120_000);
 });
 
 describe("le seuil de rentabilité, chapitre libre du BTS MHR", () => {

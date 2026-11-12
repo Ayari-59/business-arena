@@ -15,7 +15,8 @@ import { insecables } from "../../src/lib/typographie";
  * espace, copie le lien ; un élève sans compte le suit, rejoint, et joue un épisode NON
  * démo de la cohorte jusqu'au bilan, mais pas un épisode hors cohorte ; l'enseignant le
  * voit dans la vue de l'animateur, projette le code, puis clôt la cohorte, qui refuse
- * alors un nouveau venu. Sans licence, la page se montre, le formulaire est grisé, et
+ * alors un nouveau venu ; la page de la cohorte renvoie à la fiche enseignant de chaque épisode.
+ * Sans licence, la page se montre, le formulaire est grisé, et
  * le serveur refuse la création forcée, avec le lien vers les tarifs. Depuis une fiche
  * d'épisode, le bouton arrive avec l'épisode coché. À 390 px, rien ne déborde.
  */
@@ -159,6 +160,12 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     expect(lien).toBe(`${BASE}/entreprises/episode/rejoindre?code=${code}`);
     expect(await prof.locator("[data-episodes-de-la-cohorte] li").count()).toBe(1);
     expect(await pleinsVisibles(prof)).toEqual(["Copier le lien"]);
+    // Chaque épisode de la cohorte renvoie à sa fiche enseignant (audit UX du 11 novembre 2026, P2-9).
+    expect(FICHES.some((f) => f.code === DANS_LA_COHORTE)).toBe(true);
+    const versLaFiche = prof.locator(`[data-episodes-de-la-cohorte] [data-fiche-de-l-episode="${DANS_LA_COHORTE}"]`);
+    expect(await versLaFiche.getAttribute("href")).toBe(`/enseignants/episodes/${DANS_LA_COHORTE}`);
+    expect((await versLaFiche.innerText()).trim()).toBe("La fiche enseignant de l'épisode");
+    expect((await ctxProf.request.get(`${BASE}/enseignants/episodes/${DANS_LA_COHORTE}`)).status()).toBe(200);
 
     // Copier le lien : le presse-papiers porte bien le lien affiché.
     await prof.getByRole("button", { name: "Copier le lien" }).click();

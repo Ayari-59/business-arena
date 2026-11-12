@@ -23,6 +23,11 @@ export interface ProgressionLue {
   etapes: Record<string, SuiviDEtape>;
   erreurs: Record<string, string[]>;
   majLe: Date;
+  /**
+   * L'élève a-t-il ouvert ce chapitre ? Faux pour celui qui a rejoint la classe sans l'ouvrir : il est
+   * « pas commencé », et n'a atteint aucune étape (audit UX du 11 novembre 2026, P2-9). Absent : oui.
+   */
+  commence?: boolean;
 }
 
 /** Combien de remarques fréquentes l'enseignant voit par étape. */
@@ -33,8 +38,10 @@ export const duPremierCoup = (s: SuiviDEtape | undefined) => !!s && s.reussi && 
 export interface LigneDEleve {
   eleve: string;
   entreprise: string;
-  /** L'étape où il en est (0 : pas commencé) ; égale au nombre d'étapes : fini. */
+  /** L'étape où il en est ; égale au nombre d'étapes : fini. */
   etape: number;
+  /** Faux : il n'a pas encore ouvert le chapitre. */
+  commence: boolean;
   fini: boolean;
   premierCoup: number;
   aidees: number;
@@ -76,18 +83,20 @@ export interface VueDeLaClasse {
 
 export function vueDeLaClasse(chapitre: Chapitre, progressions: readonly ProgressionLue[]): VueDeLaClasse {
   const n = chapitre.etapes.length;
+  const commence = (p: ProgressionLue) => p.commence !== false;
   const eleves = progressions
     .map((p): LigneDEleve => {
       const cases = chapitre.etapes.map((e, i) => {
         const s = p.etapes[e.id];
         if (s?.reussi) return s.aide ? "aidee" : duPremierCoup(s) || e.type === "lecture" ? "premier-coup" : "reussie";
-        return i === p.etape ? "en-cours" : "a-venir";
+        return i === p.etape && commence(p) ? "en-cours" : "a-venir";
       });
       const notees = chapitre.etapes.filter((e) => e.type !== "lecture");
       return {
         eleve: p.eleve,
         entreprise: p.entreprise,
         etape: Math.min(p.etape, n),
+        commence: commence(p),
         fini: p.etape >= n,
         premierCoup: notees.filter((e) => duPremierCoup(p.etapes[e.id])).length,
         aidees: notees.filter((e) => p.etapes[e.id]?.aide).length,
@@ -109,7 +118,7 @@ export function vueDeLaClasse(chapitre: Chapitre, progressions: readonly Progres
       id: e.id,
       titre: e.titre,
       notee: e.type !== "lecture",
-      atteinte: progressions.filter((p) => p.etape >= i || p.etapes[e.id]).length,
+      atteinte: progressions.filter((p) => commence(p) && (p.etape >= i || p.etapes[e.id])).length,
       premierCoup: progressions.filter((p) => duPremierCoup(p.etapes[e.id])).length,
       aidees: progressions.filter((p) => p.etapes[e.id]?.aide).length,
       remarques,

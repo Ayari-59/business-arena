@@ -3,6 +3,7 @@ import { formationParCode, formationProposee, type Formation } from "../formatio
 import { CHAPITRES_PROPOSES } from "../formations-proposees";
 import { dureeDuChapitre } from "./duree";
 import { couverteEnEntier } from "./matieres-en-entier";
+import { parcoursDeFormationParCode } from "./parcours-a-choisir";
 import { approfondissementsALaFin, pourAllerPlusLoin } from "./pour-aller-plus-loin";
 import { CHAPITRES } from "./registre";
 import { themeDuChapitre } from "./themes";
@@ -132,6 +133,24 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
   });
   if (autres.length > 0) blocs.push({ bloc: null, enCours: false, chapitres: autres });
   return { formation, blocs, premier: lignes[0] ?? null };
+}
+
+/**
+ * LES CHAPITRES D'UN PARCOURS QU'UNE CLASSE A CHOISI, DANS L'ORDRE D'APPRENTISSAGE (audit UX du
+ * 11 novembre 2026, P1-1 à P1-3) : « Ma classe », le suivi de l'enseignant et sa liste de libération
+ * les lisent dans cet ordre, et s'ouvrent sur le premier quand rien n'est libéré. Le cours d'un
+ * diplôme suit l'ordre de sa page (`coursDuDiplome`, le rang) ; un parcours du registre, l'ordre
+ * d'apprentissage de ses chapitres (`ordreDApprentissage`), retirés compris : une classe garde ce
+ * qu'elle avait. Vide sans parcours.
+ */
+export function chapitresDuParcoursDansLOrdre(code: string | null | undefined): Chapitre[] {
+  if (!code) return [];
+  const diplome = parcoursDeFormationParCode(code)?.formation;
+  if (diplome) {
+    const cours = coursDuDiplome(diplome);
+    return cours ? cours.blocs.flatMap((b) => b.chapitres).sort((a, b) => a.rang - b.rang).map((l) => l.chapitre) : [];
+  }
+  return ordreDApprentissage(CHAPITRES.filter((c) => c.parcours === code));
 }
 
 /**

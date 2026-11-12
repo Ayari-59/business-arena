@@ -13,6 +13,7 @@ import { motsDuContenu } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
+import { chapitreDuParcoursDeLaClasse } from "@/services/chapitres-de-la-classe";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 import { competencesAffichees, diplomeDeLAdresse } from "@/config/cours/competences-affichees";
 import { chapitreOuvert, diaporamaPermis } from "../acces";
@@ -82,7 +83,14 @@ async function ChapitrePage({
     // L'ÉLÈVE D'UNE CLASSE ne lit pas de vente (audit UX du 29 octobre 2026, P1-1) : ni « Voir
     // les offres » ni « Demander un devis », mais à qui en parler. Un enseignant connecté
     // garde la page commerciale, même sur un appareil qui porte une classe d'élève.
-    const eleve = classeDeLEleveLue && !(await getSession()) ? { classe: classeDeLEleveLue.classe } : null;
+    // Du parcours de sa classe (pas encore ouvert) ou hors de son programme (audit UX du 11 novembre 2026, P2-8).
+    const eleve =
+      classeDeLEleveLue && !(await getSession())
+        ? {
+            classe: classeDeLEleveLue.classe,
+            dansLeParcours: classeDeLEleveLue.parcours === null || chapitreDuParcoursDeLaClasse(classeDeLEleveLue.parcours, chapitre),
+          }
+        : null;
     return (
       <>
         <ChapitreReserve

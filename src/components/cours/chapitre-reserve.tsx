@@ -32,20 +32,33 @@ export function ChapitreReserve({
   reserve: string;
   /** Le chapitre libre à proposer : celui du diplôme d'où l'on vient, sinon l'essai par défaut. */
   essai: LienDEssai;
-  /** L'élève d'une classe du cours, s'il en est un : sa classe. */
-  eleve: { classe: string } | null;
+  /**
+   * L'élève d'une classe du cours, s'il en est un : sa classe, et si le contenu est de son parcours
+   * (services/chapitres-de-la-classe.ts, `chapitreDuParcoursDeLaClasse`) ; absent, il l'est.
+   */
+  eleve: { classe: string; dansLeParcours?: boolean } | null;
   /** L'adresse du devis, le parcours du contenu prérempli (`lienDuDevisDuCours`). */
   devis?: string;
 }) {
   if (eleve) {
+    // DEUX RAISONS, DEUX PHRASES (audit UX du 11 novembre 2026, P2-8) : un contenu du parcours de la
+    // classe que l'enseignant n'a pas encore ouvert, ou un contenu hors de son programme, que
+    // l'enseignant ne peut pas ouvrir. Ni l'une ni l'autre ne dit « réservé », le mot de la vente.
+    const ceContenu = reserve.replace(/ est réservé$/, "");
+    const dansLeParcours = eleve.dansLeParcours !== false;
+    const libre = `le chapitre libre${essai.sigle ? ` en ${essai.sigle}` : ""}, « ${essai.titre} », et son cas pratique`;
     return (
-      <main id="main" className="mx-auto grid max-w-2xl gap-4 px-6 py-16" data-chapitre-ferme-a-l-eleve="">
+      <main
+        id="main"
+        className="mx-auto grid max-w-2xl gap-4 px-6 py-16"
+        data-chapitre-ferme-a-l-eleve={dansLeParcours ? "pas-encore-ouvert" : "hors-programme"}
+      >
         <p className="surtitre">Le cours par la simulation</p>
         <h1 className="text-3xl font-bold text-slate-50">{titre}</h1>
         <p className="text-base text-slate-300">
-          Ce chapitre n&apos;est pas encore ouvert pour votre classe, « {eleve.classe} ». Parlez-en à votre enseignant :
-          c&apos;est lui qui peut l&apos;ouvrir. En attendant, le chapitre libre{essai.sigle ? ` en ${essai.sigle}` : ""}, « {essai.titre} », et son
-          cas pratique restent à votre portée.
+          {dansLeParcours
+            ? `${ceContenu} n'est pas encore ouvert pour votre classe, « ${eleve.classe} ». Parlez-en à votre enseignant : c'est lui qui peut l'ouvrir. En attendant, ${libre} restent à votre portée.`
+            : `${ceContenu} est hors du programme de votre classe, « ${eleve.classe} » : il n'est pas de son parcours, et il ne s'ouvre pas pour elle. Votre classe suit les chapitres de son parcours ; ${libre} restent à votre portée.`}
         </p>
         <p className="flex flex-wrap gap-3">
           <Link href={essai.href} className={bouton({ taille: "m" })}>

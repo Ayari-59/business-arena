@@ -106,6 +106,12 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/teacher/page.tsx", "src/components/economic-params.tsx"],
   },
   {
+    // Le formulaire client de /teacher/cours (audit UX du 11 novembre 2026, P2-6).
+    nom: "création d'une classe du cours (enseignant)",
+    action: { file: "src/app/teacher/cours/actions.ts", fn: "creerClasseAction" },
+    sources: ["src/components/nouvelle-classe-du-cours.tsx"],
+  },
+  {
     nom: "création d'une cohorte (enseignant)",
     action: { file: "src/app/teacher/cohortes/actions.ts", fn: "creerCohorteAction" },
     sources: ["src/app/teacher/cohortes/page.tsx", "src/components/choix-des-episodes.tsx"],
