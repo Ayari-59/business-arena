@@ -188,14 +188,19 @@ const serialiser = (e: EtatDuCatalogue): EtatSerialise => ({
 });
 
 /**
- * La lecture en cache, créée au premier usage (un test peut remplacer `next/cache`). La clé
- * porte la VERSION de la forme lue : le cache de données de Next survit aux redémarrages
- * et aux déploiements, une forme nouvelle prend donc une clé nouvelle. Une migration qui
- * réécrit le catalogue aussi (v3 : migration 0049), sans quoi l'ancien resterait affiché.
+ * LA DERNIÈRE MIGRATION QUI TOUCHE LE CATALOGUE (« catalogue_offres »). Le cache de données de
+ * Next survit aux redémarrages et aux déploiements : la clé de la lecture en cache porte ce
+ * numéro, pour qu'une migration qui réécrit le catalogue ne laisse pas l'ancien affiché (la
+ * migration 0059 l'avait fait, sous l'ancienne clé « catalogue-v3 »). Une forme lue nouvelle
+ * prend aussi une clé nouvelle. La garde tests/architecture/cache-du-catalogue.test.ts vérifie
+ * que c'est bien la dernière migration du dossier drizzle/ qui touche le catalogue.
  */
+export const DERNIERE_MIGRATION_DU_CATALOGUE = "0059";
+
+/** La lecture en cache, créée au premier usage (un test peut remplacer `next/cache`). */
 let lectureEnCache: (() => Promise<EtatSerialise>) | null = null;
 function lireEnCache(): Promise<EtatSerialise> {
-  lectureEnCache ??= cacheDeNext.unstable_cache(async () => serialiser(await lireLEtatSansCache()), ["catalogue-v3"], {
+  lectureEnCache ??= cacheDeNext.unstable_cache(async () => serialiser(await lireLEtatSansCache()), [`catalogue-${DERNIERE_MIGRATION_DU_CATALOGUE}`], {
     tags: [ETIQUETTE_DU_CATALOGUE],
   });
   return lectureEnCache();
