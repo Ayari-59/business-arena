@@ -1,6 +1,11 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// La rangée finit par « Déconnexion » (novembre 2026), qui importe l'action de déconnexion :
+// ce test ne lit que le rendu, l'action est remplacée, sans la base.
+vi.mock("@/app/teacher/actions", () => ({ logoutAction: async () => undefined }));
+
 import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { FriseDesTours } from "@/components/frise-des-tours";
 

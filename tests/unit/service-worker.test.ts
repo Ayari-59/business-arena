@@ -155,10 +155,15 @@ describe("déconnexion : purge du hors ligne côté navigateur", () => {
   const lire = (f: string) => readFileSync(join(process.cwd(), f), "utf8");
 
   it("les formulaires de déconnexion enseignant et élève appellent la purge", () => {
-    for (const f of ["src/app/teacher/page.tsx", "src/app/teacher/compte/page.tsx"]) {
+    // « Déconnexion » (la barre du site et la rangée de l'espace : un seul bouton) et « Se
+    // déconnecter partout » (« Mon compte ») passent par le formulaire qui purge (novembre 2026).
+    for (const [f, action] of [
+      ["src/components/bouton-de-deconnexion.tsx", "logoutAction"],
+      ["src/app/teacher/compte/page.tsx", "logoutEverywhereAction"],
+    ] as const) {
       const s = lire(f);
       expect(s, f).not.toMatch(/<form action=\{logout/);
-      expect(s, f).toMatch(/<FormulaireDeDeconnexion action=\{logoutAction\}>/);
+      expect(s, f).toMatch(new RegExp(`<FormulaireDeDeconnexion action=\\{${action}\\}>`));
     }
     expect(lire("src/components/formulaire-de-deconnexion.tsx")).toMatch(/onSubmit=\{\(\) => void purgerLeHorsLigne\(\)\}/);
     expect(lire("src/components/identite-de-lappareil.tsx")).toMatch(/onSubmit=\{\(\) => void purgerLeHorsLigne\(\)\}/);

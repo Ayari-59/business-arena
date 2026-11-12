@@ -5,6 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 // La mise en page lit la configuration de la plateforme pour le thème
 // d'ouverture. Ce test ne lit que `viewport` : il n'a pas besoin de la base.
 vi.mock("@/services/admin.service", () => ({ getPlatformConfig: vi.fn() }));
+// Elle lit aussi la session, pour la barre (« Déconnexion », novembre 2026), dont le bouton importe
+// l'action de déconnexion : même raison, même remplacement.
+vi.mock("@/lib/session", () => ({ estConnecte: vi.fn() }));
+vi.mock("@/app/teacher/actions", () => ({ logoutAction: vi.fn() }));
 
 /**
  * ACCESSIBILITÉ DE BASE : ZOOM LIBRE, TEXTES LISIBLES, LIEN D'ÉVITEMENT.

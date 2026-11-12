@@ -32,11 +32,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: () => undefined, replace: () => undefined, refresh: () => undefined, prefetch: () => undefined }),
   useSearchParams: () => new URLSearchParams(),
 }));
+// « Déconnexion » (novembre 2026) : la barre et la rangée de l'espace enseignant importent l'action
+// de déconnexion. Cette garde ne lit que leur rendu : l'action est remplacée, sans la base.
+vi.mock("@/app/teacher/actions", () => ({ logoutAction: async () => undefined }));
 
 import { SiteHeader } from "@/components/site-header";
 import { PiedDePage } from "@/components/pied-de-page";
 import { NavigationEnseignant } from "@/components/en-tete-enseignant";
 import {
+  LIBELLE_DECONNEXION,
   LIEN_ADMINISTRATION,
   LIEN_ETABLISSEMENT,
   NAVIGATION,
@@ -128,6 +132,7 @@ describe("le menu en un mot, rangé par produit", () => {
       ...NAVIGATION_ENSEIGNANT.map((p) => p.libelle),
       LIEN_ETABLISSEMENT.libelle,
       LIEN_ADMINISTRATION.libelle,
+      LIBELLE_DECONNEXION,
     ];
     const phrases = mots.filter((m) => !estUnMot(m));
     expect(phrases, `des entrées en plusieurs mots : ${phrases.join(" · ")}`).toEqual([]);
@@ -136,11 +141,13 @@ describe("le menu en un mot, rangé par produit", () => {
   });
 
   it("ce que la barre et le menu déplié affichent tient en un mot ; un nom plus long commence par ce mot", () => {
-    const doc = rendre(SiteHeader);
-    const lus = [
+    // Pour un visiteur, et pour un enseignant connecté (« Déconnexion » à la place de « Connexion »).
+    const docs = [rendre(SiteHeader), rendre(SiteHeader, "/notions", { connecte: true })];
+    const lus = docs.flatMap((doc) => [
       ...commandes(bloc(doc, "aria-label", "Navigation principale")),
       ...commandes(bloc(doc, "id", "plan-du-site")),
-    ];
+    ]);
+    expect(lus.map((c) => c.vu)).toContain(LIBELLE_DECONNEXION);
     // Le bouton qui ouvre le menu se nomme « Menu » : il est de la barre, et un mot lui aussi.
     expect(lus.map((c) => c.vu)).toContain("Menu");
     const phrases = lus.filter((c) => !estUnMot(c.vu)).map((c) => c.vu);
@@ -234,10 +241,16 @@ describe("le menu en un mot, rangé par produit", () => {
     expect(commandes(surLesCgv).map((c) => c.vu)).toEqual(["Mentions", "CGU"]);
   });
 
-  it("le menu de l'espace enseignant tient en un mot, sorties comprises", () => {
+  it("le menu de l'espace enseignant tient en un mot, sorties et déconnexion comprises", () => {
     const doc = rendre(NavigationEnseignant, "/teacher", { actif: "parties", liens: { etablissement: true, administration: true } });
     const lus = commandes(bloc(doc, "aria-label", "Espace enseignant")).map((c) => c.vu);
-    expect(lus).toEqual([...NAVIGATION_ENSEIGNANT.map((p) => p.libelle), LIEN_ETABLISSEMENT.libelle, LIEN_ADMINISTRATION.libelle]);
+    // « Déconnexion » ferme la rangée (novembre 2026) : tests/architecture/deconnexion.test.ts.
+    expect(lus).toEqual([
+      ...NAVIGATION_ENSEIGNANT.map((p) => p.libelle),
+      LIEN_ETABLISSEMENT.libelle,
+      LIEN_ADMINISTRATION.libelle,
+      LIBELLE_DECONNEXION,
+    ]);
     const phrases = lus.filter((m) => !estUnMot(m));
     expect(phrases, `des phrases dans l'espace enseignant : ${phrases.join(" · ")}`).toEqual([]);
   });

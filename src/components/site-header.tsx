@@ -6,6 +6,7 @@ import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
 import { useEffect, useRef, useState } from "react";
 import { InstallButton } from "@/components/install-button";
 import { bouton } from "@/components/bouton";
+import { BoutonDeDeconnexion } from "@/components/bouton-de-deconnexion";
 import { SiteLogo } from "@/components/site-logo";
 import { liensDAcces, liensDeTete, NAVIGATION, type LienDeMenu } from "@/config/navigation";
 // Les phrases des groupes s'écrivent avec des espaces ordinaires : l'insécable se pose au rendu.
@@ -56,8 +57,17 @@ import { insecables } from "@/lib/typographie";
  * leur titre est le lien. À droite de la barre, et en tête du menu déplié,
  * deux portes, une par public : Rejoindre (le code d'une partie) et Connexion
  * (l'espace enseignant), pour que ni l'élève ni l'enseignant n'ait à chercher.
+ *
+ * UNE FOIS CONNECTÉ, « CONNEXION » DEVIENT « DÉCONNEXION » (le propriétaire,
+ * novembre 2026 : « Il me faut un bouton déconnexion quand je suis connecté »),
+ * à la même place, dans la barre et en tête du menu déplié. « Connecté » veut
+ * dire une session enseignant, qui est aussi celle du référent d'un
+ * établissement et de l'administrateur ; un élève qui joue par code n'en a pas.
+ * La barre ne sait que cela, en un booléen lu au serveur par la mise en page
+ * (`estConnecte`, lib/session.ts) : ni l'identifiant ni le nom ne lui
+ * parviennent.
  */
-export function SiteHeader() {
+export function SiteHeader({ connecte = false }: { connecte?: boolean }) {
   const chemin = useCheminDeLaPage();
   const [ouvert, setOuvert] = useState(false);
   const cadre = useRef<HTMLElement>(null);
@@ -220,7 +230,7 @@ export function SiteHeader() {
           {enJeu ? null : (
           <div className="hidden items-center gap-1.5 lg:flex">
             {liensDAcces().map((lien) => (
-              <Porte key={lien.href} lien={lien} courant={estCourant(lien.href)} />
+              <Porte key={lien.href} lien={lien} courant={estCourant(lien.href)} connecte={connecte} />
             ))}
           </div>
           )}
@@ -297,7 +307,13 @@ export function SiteHeader() {
               Sur téléphone, c'est le seul endroit où ils sont. */}
           <div data-portes-du-menu="" className="grid grid-cols-2 gap-2 border-b border-white/10 pb-3">
             {liensDAcces().map((lien) => (
-              <Porte key={lien.href} lien={lien} courant={estCourantDansLeMenu(lien.href)} className="w-full pointer-coarse:min-h-11" />
+              <Porte
+                key={lien.href}
+                lien={lien}
+                courant={estCourantDansLeMenu(lien.href)}
+                connecte={connecte}
+                className="w-full pointer-coarse:min-h-11"
+              />
             ))}
           </div>
           {/* LES CINQ GROUPES, dépliés : le mot de la barre en titre, vers la
@@ -371,19 +387,35 @@ export function SiteHeader() {
  * plein du premier écran reste « Tester le simulateur » (lot P6), dans le
  * héros. Le mot se voit ; le nom (`nom`), plus long, se lit à la synthèse
  * vocale, et commence par le mot.
+ *
+ * Une fois connecté, la porte de l'enseignant est la sortie : « Déconnexion »,
+ * sous la même forme et à la même place (components/bouton-de-deconnexion.tsx).
+ * La porte de l'élève ne change pas.
  */
-function Porte({ lien, courant, className = "" }: { lien: LienDeMenu; courant: boolean; className?: string }) {
+function Porte({
+  lien,
+  courant,
+  connecte,
+  className = "",
+}: {
+  lien: LienDeMenu;
+  courant: boolean;
+  connecte: boolean;
+  className?: string;
+}) {
+  const forme = `${
+    lien.acces === "eleve"
+      ? bouton({ variante: "secondaire", taille: "m" })
+      : `${bouton({ variante: "lien", taille: "m" })} px-2`
+  } ${className}`;
+  if (connecte && lien.acces === "enseignant") return <BoutonDeDeconnexion className={forme} />;
   return (
     <Link
       href={lien.href}
       title={lien.aide}
       aria-label={lien.nom}
       aria-current={courant ? "page" : undefined}
-      className={`${
-        lien.acces === "eleve"
-          ? bouton({ variante: "secondaire", taille: "m" })
-          : `${bouton({ variante: "lien", taille: "m" })} px-2`
-      } ${className}`}
+      className={forme}
     >
       {lien.libelle}
     </Link>

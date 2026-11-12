@@ -189,6 +189,32 @@ export async function getSession(): Promise<{ userId: string; role: SessionRole 
   return { userId: p.id, role: p.role };
 }
 
+/**
+ * UNE SESSION EST-ELLE OUVERTE SUR CET APPAREIL ? (la barre du site, novembre 2026)
+ *
+ * La barre dit « Déconnexion » à qui est connecté : un enseignant, et donc aussi le référent d'un
+ * établissement et l'administrateur, qui ont cette session ; un élève qui joue par code, ou connecté
+ * par son établissement, a l'identité invitée, pas celle-ci. Le cookie ne se lit qu'au serveur
+ * (httpOnly) : la mise en page le lit ici, avec la vérification des pages de l'espace (signature,
+ * expiration, version du compte), et ne passe à la barre qu'un booléen ; ni l'identifiant ni le nom
+ * ne quittent le serveur.
+ *
+ * Sans cookie, la réponse est « non » sans interroger la base : c'est le cas du visiteur ordinaire.
+ * Une base qui ne répond pas ne fait pas tomber la page : la barre dit alors « Connexion ». La
+ * lecture des cookies reste hors du `try` : ce qu'elle lève au prérendu est le signal par lequel
+ * Next rend la page à la demande, pas une panne.
+ */
+export async function estConnecte(): Promise<boolean> {
+  const store = await cookies();
+  if (!store.has(COOKIE)) return false;
+  try {
+    return (await getSession()) !== null;
+  } catch (e) {
+    console.error("[session] la barre du site n'a pas pu vérifier la session :", e);
+    return false;
+  }
+}
+
 export async function clearSession(): Promise<void> {
   const store = await cookies();
   store.delete(COOKIE);

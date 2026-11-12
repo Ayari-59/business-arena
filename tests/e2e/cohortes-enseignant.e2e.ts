@@ -177,8 +177,10 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     await prof.waitForURL(/\/projection$/);
     expect((await prof.locator("[data-code-projete]").textContent())!.trim()).toBe(code);
     expect(await prof.getByText("Personne n'a encore rejoint.").count()).toBe(1);
-    // Comme la projection d'une partie : pas de barre du site au mur.
-    expect(await prof.getByRole("link", { name: "Connexion à l'espace enseignant" }).first().isVisible()).toBe(false);
+    // Comme la projection d'une partie : pas de barre du site au mur. Connecté, sa porte dirait
+    // « Déconnexion » (novembre 2026) : c'est la barre elle-même qu'on cherche.
+    expect(await prof.locator("header[data-en-tete-du-site]").isVisible()).toBe(false);
+    expect(await prof.getByRole("button", { name: "Déconnexion", exact: true }).first().isVisible()).toBe(false);
 
     // L'élève, sans compte, suit le lien copié.
     const ctxEleve = await contexte();
