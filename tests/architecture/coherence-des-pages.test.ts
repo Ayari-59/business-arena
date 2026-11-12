@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { NAVIGATION } from "@/config/navigation";
+import { NAVIGATION, liensDAcces, tousLesLiens } from "@/config/navigation";
 
 /**
  * CE QUE LES PAGES PROMETTENT, CONTRE CE QUE LE CODE FAIT (audit d'octobre 2026).
@@ -70,15 +70,16 @@ describe("un nom par chose, et les bons comptes", () => {
   });
 });
 
-describe("le menu range chaque page chez son public", () => {
-  it("l'élève a une seule porte pour tous les codes, concours compris ; l'explication est chez les enseignants", () => {
-    // Novembre 2026 : « J'ai un code » (/join) conduit un code de concours à /compete
-    // (services/rejoindre.service.ts) ; l'entrée séparée du concours quitte le menu.
+describe("le menu range chaque page à sa place", () => {
+  it("l'élève a une seule porte pour tous les codes, concours compris ; l'explication est dans l'arène", () => {
+    // Novembre 2026 : « Rejoindre » (/join), une des deux portes de la barre, conduit un code de
+    // concours à /compete (services/rejoindre.service.ts) ; l'entrée séparée du concours quitte
+    // le menu, et « Concours » dit, dans l'arène, comment il se déroule.
     const groupe = (code: string) => NAVIGATION.find((g) => g.code === code)!.liens.map((l) => l.href);
-    expect(groupe("eleves")).toContain("/join");
-    expect(NAVIGATION.flatMap((g) => g.liens.map((l) => l.href))).not.toContain("/compete");
+    expect(liensDAcces().map((l) => l.href)).toContain("/join");
+    expect(tousLesLiens().map((l) => l.href)).not.toContain("/compete");
     expect(lire("src/services/rejoindre.service.ts")).toContain("`/compete?code=");
-    expect(groupe("enseignants")).toContain("/guide#concours");
+    expect(groupe("arene")).toContain("/guide#concours");
   });
 });
 

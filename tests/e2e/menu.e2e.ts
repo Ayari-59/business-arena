@@ -1,15 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
-import {
-  ACTION_PRINCIPALE,
-  GROUPE_OUVERT,
-  NAVIGATION,
-  lienDuPlan,
-  liensDAcces,
-  liensDeTete,
-  tousLesLiens,
-} from "../../src/config/navigation";
+import { LIENS_LEGAUX, NAVIGATION, lienDuPlan, liensDAcces, liensDeTete, tousLesLiens } from "../../src/config/navigation";
 
 /**
  * La navigation, à la largeur d'un téléphone comme à celle d'un vidéoprojecteur.
@@ -28,6 +20,13 @@ const LARGEURS = [
   { nom: "téléphone", taille: { width: 390, height: 780 } },
   { nom: "grand écran", taille: { width: 1280, height: 900 } },
 ];
+
+/**
+ * Toutes les adresses du plan : les mots de la barre, qui sont aussi les titres des groupes du
+ * menu déplié, les entrées des groupes et les deux portes. Sur téléphone, la barre ne montre pas
+ * ses mots : c'est le menu déplié qui doit tout porter.
+ */
+const ADRESSES = [...new Set([...liensDeTete(), ...tousLesLiens()].map((l) => l.href))];
 
 let navigateur: Browser;
 let page: Page;
@@ -51,33 +50,33 @@ describe("le menu du site", () => {
       expect(await bouton.isVisible(), `pas de bouton de menu sur ${largeur.nom}`).toBe(true);
       await bouton.click();
 
-      // Le plan est un accordéon, et UN de ses groupes s'ouvre déjà déplié —
-      // celui de l'orientation et du contact, par décision de `navigation.ts`.
-      // Cliquer sur tous les boutons le REFERMAIT donc, et ses deux entrées
-      // étaient comptées injoignables alors qu'elles s'affichaient à l'écran :
-      // c'est le test qui avait pris du retard sur le produit. On ne déplie
-      // que ce qui est replié.
-      const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
-      for (let i = 0; i < (await groupes.count()); i += 1) {
-        const bouton = groupes.nth(i);
-        if ((await bouton.getAttribute("aria-expanded")) === "false") await bouton.click();
-      }
-
+      // Les groupes sont dépliés (novembre 2026) : il n'y a rien à ouvrir pour
+      // atteindre une entrée. Une page peut s'y lire deux fois (le titre
+      // « Cours » et l'entrée « Diplômes » mènent à /cours) : chaque lien doit
+      // se voir.
       const invisibles: string[] = [];
-      for (const lien of tousLesLiens()) {
-        const cible = page.locator(`#plan-du-site a[href="${lien.href}"]`);
-        if ((await cible.count()) !== 1 || !(await cible.first().isVisible())) {
-          invisibles.push(`${lien.libelle} (${lien.href})`);
+      for (const href of ADRESSES) {
+        const cibles = page.locator(`#plan-du-site a[href="${href}"]`);
+        const n = await cibles.count();
+        if (n === 0) {
+          invisibles.push(`${href} (absent)`);
           continue;
         }
-        // « Visible » au sens du document ne suffit pas : une entrée posée
-        // sous le bas de l'écran est présente et hors d'atteinte. On la fait
-        // donc défiler, puis on vérifie qu'elle occupe RÉELLEMENT une place
-        // dans la fenêtre.
-        await cible.scrollIntoViewIfNeeded();
-        const boite = await cible.boundingBox();
-        if (!boite || boite.y + boite.height <= 0 || boite.y >= largeur.taille.height) {
-          invisibles.push(`${lien.libelle} (${lien.href}, hors écran)`);
+        for (let i = 0; i < n; i += 1) {
+          const cible = cibles.nth(i);
+          if (!(await cible.isVisible())) {
+            invisibles.push(`${href} (masqué)`);
+            continue;
+          }
+          // « Visible » au sens du document ne suffit pas : une entrée posée
+          // sous le bas de l'écran est présente et hors d'atteinte. On la fait
+          // donc défiler, puis on vérifie qu'elle occupe RÉELLEMENT une place
+          // dans la fenêtre.
+          await cible.scrollIntoViewIfNeeded();
+          const boite = await cible.boundingBox();
+          if (!boite || boite.y + boite.height <= 0 || boite.y >= largeur.taille.height) {
+            invisibles.push(`${href} (hors écran)`);
+          }
         }
       }
       expect(invisibles, `injoignable sur ${largeur.nom} : ${invisibles.join(", ")}`).toEqual([]);
@@ -96,6 +95,34 @@ describe("le menu du site", () => {
       });
       expect(debord, `la barre déborde de ${debord} px sur ${largeur.nom}`).toBeLessThanOrEqual(0);
     });
+
+    it(`le menu déplié tient dans sa carte sur ${largeur.nom}`, async () => {
+      // Un mot par entrée : les entrées passent à la ligne, et aucune ne sort de
+      // la carte ni ne fait défiler la page de côté.
+      await page.setViewportSize(largeur.taille);
+      await aller(page, "/");
+      await page.getByRole("button", { name: "Menu" }).click();
+      await page.locator("#plan-du-site [data-titre-du-groupe]").first().waitFor({ state: "visible" });
+      const mesure = await page.evaluate(() => {
+        const carte = document.querySelector("#plan-du-site .carte")!;
+        const r = carte.getBoundingClientRect();
+        const dehors = [...carte.querySelectorAll("a")]
+          .filter((a) => {
+            const b = a.getBoundingClientRect();
+            return b.left < r.left - 0.5 || b.right > r.right + 0.5;
+          })
+          .map((a) => a.textContent?.trim());
+        return {
+          page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          carte: carte.scrollWidth - carte.clientWidth,
+          dehors,
+        };
+      });
+      expect(mesure.page, JSON.stringify(mesure)).toBeLessThanOrEqual(0);
+      expect(mesure.carte, JSON.stringify(mesure)).toBeLessThanOrEqual(0);
+      expect(mesure.dehors, JSON.stringify(mesure)).toEqual([]);
+      await page.keyboard.press("Escape");
+    });
   }
 
   it("se referme à la touche d'échappement", async () => {
@@ -103,18 +130,15 @@ describe("le menu du site", () => {
     await page.setViewportSize(LARGEURS[0]!.taille);
     await aller(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    const entree = page.locator(`#plan-du-site a[href="${ACTION_PRINCIPALE.href}"]`);
+    const entree = page.locator(`#plan-du-site a[href="${liensDAcces()[0]!.href}"]`);
     expect(await entree.isVisible()).toBe(true);
     await page.keyboard.press("Escape");
     await expect.poll(() => entree.isVisible()).toBe(false);
   });
 
   it("conduit à la page demandée, et se referme en arrivant", async () => {
-    const lien = tousLesLiens().find((l) => l.href === "/notions")!;
+    const lien = lienDuPlan("/notions");
     await page.getByRole("button", { name: "Menu" }).click();
-    // Déplier les groupes de l'accordéon pour atteindre le lien voulu.
-    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
-    for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
     await page.locator(`#plan-du-site a[href="${lien.href}"]`).click();
     await page.waitForURL(new RegExp(`${lien.href}$`), { timeout: 30_000 });
     await expect
@@ -124,72 +148,83 @@ describe("le menu du site", () => {
 
   it("signale la page où l'on se trouve", async () => {
     // Sans ce repère, le menu est une liste de départs sans point de départ.
-    // Le repère vit dans le menu (la navigation n'est plus dans la barre) : on
-    // l'ouvre et on déplie les groupes pour retrouver la page courante marquée.
     await page.setViewportSize(LARGEURS[1]!.taille);
     await aller(page, "/entreprises");
     await page.getByRole("button", { name: "Menu" }).click();
-    // Seuls les groupes fermés : « Élèves », déplié à l'ouverture, se refermerait.
-    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"][aria-expanded="false"]');
-    while ((await groupes.count()) > 0) await groupes.first().click();
-    await expect
-      .poll(() =>
-        page.locator('#plan-du-site a[href="/entreprises"][aria-current="page"]').count(),
-      )
-      .toBeGreaterThan(0);
+    const courante = page.locator('#plan-du-site a[href="/entreprises"][aria-current="page"]');
+    await courante.waitFor({ state: "visible" });
+    expect((await courante.innerText()).trim()).toBe(lienDuPlan("/entreprises").libelle);
+    await page.keyboard.press("Escape");
   });
 });
 
 /**
- * UN SEUL PLAN PAR PUBLIC, LES MÊMES MOTS PARTOUT (octobre 2026).
+ * UN MENU PAR PRODUIT, UN MOT PAR ENTRÉE (novembre 2026).
  *
- * La barre, le menu et le pied de page lisent le même registre : ces gardes
- * vérifient, dans un vrai navigateur, que les trois disent la même chose, que
- * la page courante se marque dans chacun, et que le pied de page tient en
- * cinq colonnes et une ligne sur grand écran et en une pile sur téléphone.
+ * La barre, le menu déplié et le pied de page lisent le même registre : ces
+ * gardes vérifient, dans un vrai navigateur, que les trois disent les mêmes
+ * mots, vers les mêmes pages, que la page courante se marque dans chacun, et
+ * que le pied de page tient en cinq colonnes sur grand écran et en deux sur
+ * téléphone.
  */
 describe("la barre, le menu et le pied de page lisent le même plan", () => {
-  const titres = (locator: ReturnType<Page["locator"]>) =>
+  const textes = (locator: ReturnType<Page["locator"]>) =>
     locator.evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()));
+  const adresses = (locator: ReturnType<Page["locator"]>) =>
+    locator.evaluateAll((els) => els.map((e) => e.getAttribute("href")));
 
-  it("sur grand écran, la barre porte les titres des groupes, et les deux portes", async () => {
+  it("sur grand écran, la barre porte les mots des groupes et les deux portes ; le menu, les mêmes", async () => {
     await page.setViewportSize(LARGEURS[1]!.taille);
-    await aller(page, "/enseignants");
+    await aller(page, "/tarifs");
     const barre = page.getByRole("navigation", { name: "Navigation principale" });
     const aPlat = barre.locator("ul li a");
-    expect(await titres(aPlat)).toEqual(liensDeTete().map((l) => l.libelle));
-    expect(await aPlat.evaluateAll((els) => els.map((e) => e.getAttribute("href")))).toEqual(
-      liensDeTete().map((l) => l.href),
-    );
+    expect(await textes(aPlat)).toEqual(liensDeTete().map((l) => l.libelle));
+    expect(await adresses(aPlat)).toEqual(liensDeTete().map((l) => l.href));
+    // Les portes : un mot à l'écran, un nom plus long qui commence par lui.
     for (const l of liensDAcces()) {
-      expect(await barre.getByRole("link", { name: l.libelle, exact: true }).isVisible(), l.libelle).toBe(true);
+      const porte = barre.getByRole("link", { name: l.nom ?? l.libelle, exact: true });
+      expect(await porte.isVisible(), l.libelle).toBe(true);
+      expect((await porte.innerText()).trim()).toBe(l.libelle);
+      expect(l.nom ?? l.libelle).toMatch(new RegExp(`^${l.libelle}`));
     }
-    // La page courante se marque dans la barre : « Enseignants » sur /enseignants.
-    expect(await barre.locator('ul li a[aria-current="page"]').innerText()).toBe("Enseignants");
+    // La page courante se marque dans la barre : « Offres » sur /tarifs.
+    expect(await barre.locator('ul li a[aria-current="page"]').innerText()).toBe("Offres");
 
-    // Le menu déplie les mêmes groupes, sous les mêmes titres, et marque la page.
+    // Le menu déplié : les deux portes en tête, puis les mêmes mots, vers les
+    // mêmes pages, dans le même ordre, et la page courante marquée.
     await page.getByRole("button", { name: "Menu" }).click();
-    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
-    const titresDuMenu = (await titres(groupes)).map((t) => t.split(/\s+/)[0]!);
-    expect(titresDuMenu).toEqual(NAVIGATION.map((g) => g.titre.split(/\s+/)[0]!));
-    expect(titresDuMenu.filter((t) => liensDeTete().some((l) => l.libelle === t))).toEqual(
-      liensDeTete().map((l) => l.libelle),
-    );
-    // Seul « Élèves » est déplié à l'ouverture.
-    expect(await groupes.evaluateAll((b) => b.map((x) => x.getAttribute("aria-expanded")))).toEqual(
-      NAVIGATION.map((g) => (g.code === GROUPE_OUVERT ? "true" : "false")),
-    );
-    await page.locator('#plan-du-site button[aria-controls="groupe-enseignants"]').click();
-    const courante = page.locator('#plan-du-site a[aria-current="page"]');
-    await courante.waitFor({ state: "visible" });
-    expect(await courante.getAttribute("href")).toBe("/enseignants");
-    expect(await courante.innerText()).toBe(lienDuPlan("/enseignants").libelle);
+    const portes = page.locator("#plan-du-site [data-portes-du-menu] a");
+    await portes.first().waitFor({ state: "visible" });
+    expect(await textes(portes)).toEqual(liensDAcces().map((l) => l.libelle));
+    expect(await adresses(portes)).toEqual(liensDAcces().map((l) => l.href));
+    const titres = page.locator("#plan-du-site [data-titre-du-groupe]");
+    expect(await textes(titres)).toEqual(NAVIGATION.map((g) => g.titre));
+    expect(await adresses(titres)).toEqual(liensDeTete().map((l) => l.href));
+    expect(await adresses(page.locator('#plan-du-site a[aria-current="page"]'))).toEqual(["/tarifs"]);
+    // Sous chaque titre, sa phrase s'il en a une (la pédagogie, en texte discret), puis ses entrées,
+    // d'un mot.
+    for (const g of NAVIGATION) {
+      const groupe = page.locator(`#plan-du-site [data-groupe-du-menu="${g.code}"]`);
+      const phrase = groupe.locator("[data-phrase-du-groupe]");
+      if (g.phrase) {
+        expect(await phrase.isVisible(), g.titre).toBe(true);
+        expect((await phrase.innerText()).replace(/[\u00a0\u202f]/g, " ").trim(), g.titre).toBe(g.phrase);
+      } else {
+        expect(await phrase.count(), g.titre).toBe(0);
+      }
+      expect(await textes(groupe.locator("ul a")), g.titre).toEqual(g.liens.map((l) => l.libelle));
+    }
+    // Le légal n'est pas dans le menu déplié : il tient sur une petite ligne, au pied de page.
+    for (const l of LIENS_LEGAUX) {
+      expect(await page.locator(`#plan-du-site a[href="${l.href}"]`).count(), l.href).toBe(0);
+    }
     await page.keyboard.press("Escape");
   });
 
-  it("les règles du jeu portent leur nom, sous leur adresse d'origine", async () => {
+  it("les règles du jeu : « Règles » au menu, sous leur adresse d'origine ; la page garde son titre", async () => {
     await aller(page, "/guide");
-    expect(await page.getByRole("heading", { level: 1 }).innerText()).toBe(lienDuPlan("/guide").libelle);
+    expect(lienDuPlan("/guide").libelle).toBe("Règles");
+    expect(await page.getByRole("heading", { level: 1 }).innerText()).toBe("Règles du jeu");
     expect(await page.title()).toContain("Règles du jeu");
   });
 
@@ -199,35 +234,52 @@ describe("la barre, le menu et le pied de page lisent le même plan", () => {
       await aller(page, "/notions");
       const pied = page.locator("footer [data-plan-du-pied]");
       await pied.scrollIntoViewIfNeeded();
-      // Un bloc par groupe, sous le titre du groupe, dans l'ordre du plan.
+      // Un bloc par groupe, dans l'ordre du plan, sous le mot de la barre, vers la même page.
       const blocs = pied.locator("[data-groupe-du-pied]");
       expect(await blocs.evaluateAll((els) => els.map((e) => e.getAttribute("data-groupe-du-pied")))).toEqual(
         NAVIGATION.map((g) => g.code),
       );
-      // Chaque lien du plan y est, sauf la page où l'on est, posée en texte et marquée.
-      for (const lien of tousLesLiens()) {
+      for (const [i, g] of NAVIGATION.entries()) {
+        const titre = blocs.nth(i).locator(":scope > :first-child");
+        expect((await titre.innerText()).trim(), g.code).toBe(g.titre);
+        expect(await titre.getAttribute("href"), g.code).toBe(g.entree);
+      }
+      // Chaque entrée y est, sauf la page où l'on est, posée en texte et marquée.
+      for (const lien of NAVIGATION.flatMap((g) => g.liens)) {
         if (lien.href === "/notions") {
           expect(await pied.locator('[aria-current="page"]').innerText()).toBe(lien.libelle);
           continue;
         }
-        const a = pied.locator(`a[href="${lien.href}"]`);
+        const a = pied.locator(`ul a[href="${lien.href}"]`);
         expect(await a.count(), `${lien.href} manque au pied de page`).toBe(1);
-        expect(await a.innerText(), lien.href).toContain(lien.libelle);
+        expect((await a.innerText()).trim(), lien.href).toBe(lien.libelle);
       }
       expect(await pied.locator('a[href="/notions"]').count(), "le pied propose la page où l'on est").toBe(0);
-      // Cinq colonnes et deux lignes (les offres, puis ce qui sert à tous) sur grand écran,
-      // une pile sur téléphone.
-      const cases = await pied.locator(":scope > div").evaluateAll((els) =>
+      // Ni phrase ni lien légal dans les colonnes ; le légal, en petit, tout en bas : Mentions · CGV · CGU.
+      for (const g of NAVIGATION.filter((x) => x.phrase)) expect(await pied.innerText()).not.toContain(g.phrase!.slice(0, 20));
+      for (const l of LIENS_LEGAUX) expect(await pied.locator(`a[href="${l.href}"]`).count(), l.href).toBe(0);
+      const ligne = page.locator("footer [data-ligne-legale]");
+      await ligne.scrollIntoViewIfNeeded();
+      expect(await ligne.isVisible()).toBe(true);
+      expect(await textes(ligne.locator("a"))).toEqual(LIENS_LEGAUX.map((l) => l.libelle));
+      expect(await adresses(ligne.locator("a"))).toEqual(LIENS_LEGAUX.map((l) => l.href));
+      const corps = await ligne.locator("a").first().evaluate((a) => parseFloat(getComputedStyle(a).fontSize));
+      expect(corps, "la ligne légale n'est pas en petit").toBeLessThanOrEqual(12.5);
+      const basDuPlan = (await pied.boundingBox())!;
+      const haut = (await ligne.boundingBox())!;
+      expect(haut.y, "la ligne légale n'est pas sous le plan").toBeGreaterThan(basDuPlan.y + basDuPlan.height);
+      // Cinq colonnes sur une rangée sur grand écran ; deux colonnes sur trois rangées sur téléphone.
+      const cases = await blocs.evaluateAll((els) =>
         els.map((e) => {
           const r = e.getBoundingClientRect();
           return { gauche: Math.round(r.left), haut: Math.round(r.top) };
         }),
       );
-      expect(cases).toHaveLength(7);
+      expect(cases).toHaveLength(5);
       const colonnes = new Set(cases.map((c) => c.gauche)).size;
       const rangees = new Set(cases.map((c) => c.haut)).size;
-      expect(colonnes, `colonnes à ${cases.map((c) => c.gauche).join(", ")}`).toBe(largeur.nom === "téléphone" ? 1 : 5);
-      expect(rangees, `rangées à ${cases.map((c) => c.haut).join(", ")}`).toBe(largeur.nom === "téléphone" ? 7 : 3);
+      expect(colonnes, `colonnes à ${cases.map((c) => c.gauche).join(", ")}`).toBe(largeur.nom === "téléphone" ? 2 : 5);
+      expect(rangees, `rangées à ${cases.map((c) => c.haut).join(", ")}`).toBe(largeur.nom === "téléphone" ? 3 : 1);
       // L'adresse de contact, en texte, et aucun débordement.
       expect((await page.locator("footer [data-contact-pied]").innerText()).trim().length).toBeGreaterThan(3);
       const debord = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

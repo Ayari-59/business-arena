@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { tousLesLiens } from "@/config/navigation";
+import { LIENS_LEGAUX, NAVIGATION, liensDeTete } from "@/config/navigation";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/tarifs" }));
 // Le formulaire de devis tire son action, et l'action la base : on ne rend que l'écran.
@@ -316,9 +316,11 @@ describe("la grille tarifaire", () => {
         "/devis?offre=entreprise",
         "/rendez-vous",
         "/integration",
-        "/orientation",
-        // Le pied de page déroule tout le plan du site, sauf la page où l'on est.
-        ...tousLesLiens().map((l) => l.href).filter((h) => h !== "/tarifs"),
+        // L'aide au choix (/orientation) n'est plus au menu ni au pied de page (novembre 2026) :
+        // /tarifs n'y mène pas ; la page des enseignants et celle du rendez-vous, si.
+        // Le pied de page déroule les groupes du plan (leur mot, puis leurs entrées), puis la petite
+        // ligne légale, sauf la page où l'on est. Les deux portes sont dans la barre et le menu.
+        ...[...liensDeTete(), ...NAVIGATION.flatMap((g) => g.liens), ...LIENS_LEGAUX].map((l) => l.href).filter((h) => h !== "/tarifs"),
       ]),
     );
     expect(TEXTE).toContain("Tester le simulateur");

@@ -178,17 +178,20 @@ describe("le site mène aux tarifs", () => {
     await contexte.close();
   });
 
-  it("le menu porte « Offres »", async () => {
-    const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+  it("le menu porte « Offres », vers /tarifs, sur téléphone aussi", async () => {
+    // Sur téléphone, la barre ne montre pas ses mots : « Offres », titre de son groupe dans le menu
+    // déplié (config/navigation.ts), y mène comme dans la barre.
+    const contexte = await navigateur.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR" });
     const page = await contexte.newPage();
     await aller(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    // Le groupe s'appelle « Offres » (config/navigation.ts) : le contact est au pied de page.
-    const groupe = page.locator('#plan-du-site button[aria-controls^="groupe-"]', { hasText: "Offres" });
-    if ((await groupe.getAttribute("aria-expanded")) === "false") await groupe.click();
-    const lien = page.locator('#plan-du-site a[href="/tarifs"]');
+    const lien = page.locator('#plan-du-site [data-groupe-du-menu="offres"] [data-titre-du-groupe]');
     await lien.waitFor({ state: "visible" });
-    expect(await lien.innerText()).toContain("Offres");
+    expect((await lien.innerText()).trim()).toBe("Offres");
+    expect(await lien.getAttribute("href")).toBe("/tarifs");
+    await lien.click();
+    await page.waitForURL(/\/tarifs$/);
+    expect(await page.locator("main h1").innerText()).toBe("Offres");
     await contexte.close();
   });
 });
@@ -200,8 +203,10 @@ describe("« Tarifs » se trouve sans ouvrir le menu (audit C-07)", () => {
       const page = await contexte.newPage();
       await aller(page, "/enseignants");
       const enTete = page.locator("header").first();
-      const lien = enTete.locator('a[href="/tarifs"]');
+      // Le mot de la barre : le menu déplié porte le même lien, sous le même mot, caché tant qu'il est fermé.
+      const lien = enTete.getByRole("navigation", { name: "Navigation principale" }).locator('a[href="/tarifs"]');
       expect(await lien.isVisible()).toBe(true);
+      expect((await lien.innerText()).trim()).toBe("Offres");
       const mesure = await enTete.evaluate((h) => {
         const barre = h.getBoundingClientRect();
         const enfants = [...h.querySelectorAll("a, button")].filter((e) => (e as HTMLElement).offsetParent);

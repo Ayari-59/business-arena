@@ -12,17 +12,27 @@
  * soit atteignable d'un côté et introuvable de l'autre, ou qu'une même page
  * porte deux noms selon l'endroit d'où l'on y va.
  *
- * UN SEUL PLAN PAR PUBLIC, LES MÊMES MOTS PARTOUT (décision du propriétaire,
- * octobre 2026 : « repenser et harmoniser les différents menus, les rendre
- * plus lisibles, plus logiques »). Le plan précédent mêlait les publics
- * (« Formations » portait aussi l'espace enseignant et le déploiement,
- * « Entreprises » vivait dans « Ressources »), dispersait l'aide en cinq
- * entrées (« Guide » et « Guides » côte à côte), parlait anglais
- * (« Championship ») et laissait quatre pages publiques introuvables
- * (/integration, /reprendre, /examen, /profile). Il est maintenant rangé par
- * public, un mot par public, et chaque groupe de la barre est le même que
- * celui du menu : « Enseignants » dans la barre ouvre la présentation, et
- * « Enseignants » dans le menu déplie tout ce qui s'adresse à eux.
+ * UN MENU PAR PRODUIT, UN MOT PAR ENTRÉE (décision du propriétaire, novembre
+ * 2026 : « un menu plus cohérent et plus simple, avec à chaque fois un seul mot
+ * et pas plusieurs »). Le plan d'avant était rangé par public : la barre
+ * montrait 5 groupes et le menu déplié 6 (« Élèves » n'était que dans le menu),
+ * trois titres portaient une précision (« lycée, BTS, université ») et les
+ * entrées étaient des phrases (« Choisir ma simulation »). Il est maintenant
+ * rangé par produit : le cours, l'arène, les épisodes, puis les offres et
+ * l'aide. Les mêmes 5 mots ouvrent la barre, les groupes du menu déplié et les
+ * colonnes du pied de page, et chacun mène à la même page partout.
+ *
+ * LA PÉDAGOGIE EN AVANT, LE LÉGAL EN PETIT (le propriétaire, avant la mise en
+ * ligne : « les CGV, CGU, RGPD et cie, je ne veux pas que ce soit trop voyant ;
+ * le menu horizontal m'a l'air bien ; je veux un menu qui montre la pédagogie
+ * et met en avant le produit »). Sous le titre du cours, de l'arène et des
+ * épisodes, le menu déplié dit en une phrase ce qu'on y fait apprendre
+ * (`phrase`, en texte discret : jamais une entrée). Les mentions légales, les
+ * CGV et les CGU ne sont plus des entrées : une seule petite ligne, tout en bas
+ * du pied de page (`LIENS_LEGAUX`). L'examen, l'intégration, l'aide au choix et
+ * le profil décisionnel des épisodes quittent aussi le menu : des pages du plan
+ * y mènent (tests/architecture/menu-par-produit.test.ts le vérifie, lien par
+ * lien).
  *
  * LES ADRESSES NE CHANGENT PAS. Seuls les libellés et leur rangement bougent :
  * un lien partagé, un signet, un support imprimé restent justes.
@@ -33,13 +43,21 @@ import { COMPETENCES } from "@/config/referentiel-des-competences";
 
 export interface LienDeMenu {
   href: string;
+  /** Le mot du menu : UN SEUL (tests/architecture/menu-en-un-mot.test.ts). */
   libelle: string;
-  /** Ce que la page apporte, dit au visiteur avant qu'il ne clique. */
+  /** Ce que la page apporte, dit au visiteur avant qu'il ne clique (au survol). */
   aide: string;
   /**
+   * Le nom que lit une synthèse vocale, quand le mot seul en dit trop peu :
+   * « Rejoindre avec un code ». Il COMMENCE par le mot affiché, pour que
+   * celui qui dicte ce qu'il voit soit compris (WCAG 2.5.3).
+   */
+  nom?: string;
+  /**
    * Les deux portes d'entrée, l'une par public, posées en boutons à droite de
-   * la barre sur grand écran : un enseignant cherche son espace, un élève
-   * cherche où taper son code. Ni l'un ni l'autre n'a à ouvrir le menu.
+   * la barre sur grand écran et en tête du menu déplié : un élève cherche où
+   * taper son code, un enseignant cherche son espace. Ni l'un ni l'autre n'a à
+   * chercher dans un groupe.
    */
   acces?: "enseignant" | "eleve";
 }
@@ -47,276 +65,218 @@ export interface LienDeMenu {
 export interface GroupeDeMenu {
   code: string;
   /**
-   * Le titre du groupe : UN MOT, celui du public. C'est aussi, tel quel, le
-   * libellé du lien à plat dans la barre sur grand écran (voir `entree`), et
-   * le titre de la colonne du pied de page.
+   * Le titre du groupe : UN MOT, celui du produit. C'est aussi, tel quel, le
+   * mot de la barre et le titre de la colonne du pied de page : rien ne
+   * s'écrit à côté de lui.
    */
   titre: string;
   /**
-   * Ce que le mot ne dit pas seul, en petit à côté du titre dans le menu :
-   * « lycée, BTS, université » sous « Enseignants ». Jamais dans la barre, où
-   * la place manque et où le mot suffit.
+   * La page que le titre ouvre, partout où il s'affiche : la barre, le menu
+   * déplié et le pied de page. Sur téléphone, où la barre ne montre pas ses
+   * mots, c'est le titre du groupe dans le menu qui y mène.
    */
-  precision?: string;
+  entree: string;
   /**
-   * La page que le titre ouvre depuis la barre : la présentation du public.
-   * Un groupe sans `entree` n'a pas de lien à plat (« Élèves » : ses portes
-   * sont les boutons et l'action principale).
+   * Ce que cette page apporte, au survol du titre, quand elle n'est pas une
+   * entrée du groupe : « Arène » ouvre la présentation du simulateur, qui n'a
+   * plus d'entrée à elle. Sinon, l'aide est celle de l'entrée.
    */
-  entree?: string;
+  aide?: string;
+  /**
+   * Ce que le groupe fait apprendre, en une phrase, sous son titre dans le
+   * menu déplié SEULEMENT, en texte discret : ce n'est pas une entrée, et ni
+   * la barre ni le pied de page ne la disent. Le cours, l'arène et les
+   * épisodes en ont une ; les offres et l'aide n'en ont pas.
+   */
+  phrase?: string;
   liens: LienDeMenu[];
 }
 
 /**
- * L'entrée principale.
- *
- * C'est la seule page qui répond à la question que se pose un enseignant qui
- * arrive : par où commencer. Elle reste l'action principale du pied de page
- * et de la barre d'action du téléphone sur les pages enseignantes, et vit
- * hors des groupes (LIENS_TRANSVERSES), en tête du menu.
- */
-export const ACTION_PRINCIPALE: LienDeMenu = {
-  href: "/orientation",
-  libelle: "Choisir ma simulation",
-  aide: "Quatre questions, et le réglage qui convient à votre classe s'écrit à mesure, avec ses raisons.",
-};
-
-/** Le groupe qui s'affiche déplié à l'ouverture du menu. */
-export const GROUPE_OUVERT = "eleves";
-
-/**
- * De quoi joindre quelqu'un.
- *
- * C'est le seul lien du plan qui mette une personne au bout du fil, et des
- * pages le citent depuis leur corps (les tarifs, le devis, les parcours). Il
- * est donc nommé ici : deux endroits qui l'écrivent sont deux endroits qui se
- * désaccorderont le jour où le libellé change.
- */
-export const LIEN_CONTACT: LienDeMenu = {
-  href: "/rendez-vous",
-  libelle: "Prendre rendez-vous",
-  aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
-};
-
-/**
- * LES OFFRES. Le titre du groupe dans la barre, et la première entrée du groupe.
- * L'aide ne nomme pas les offres (leurs noms vivent dans config/tarifs.ts, qui tire le
- * registre des scénarios ; ce plan est lu par le menu, côté navigateur). Décision du
- * propriétaire (octobre 2026) : « J'aimerais retirer les prix. Les offres se font sur
- * mesure et aboutissent à une demande de devis. » Le libellé est « Offres » ; l'adresse
- * /tarifs reste (liens partagés, référencement).
- */
-export const LIEN_TARIFS_DU_MENU: LienDeMenu = {
-  href: "/tarifs",
-  libelle: "Offres",
-  aide: "Gratuit pour découvrir en solo ; sur mesure et sur devis pour faire cours, et pour les épisodes manager.",
-};
-
-/**
  * LES GUIDES DE PRISE EN MAIN (/guides) : un guide par public, avec les écrans réels et
- * une version PDF. C'est l'entrée du groupe « Aide », celle que la barre ouvre : on
- * cherche l'aide là où l'on bute, c'est-à-dire n'importe où.
+ * une version PDF. C'est la page que « Aide » ouvre : on cherche l'aide là où l'on bute,
+ * c'est-à-dire n'importe où.
  */
 export const LIEN_GUIDES: LienDeMenu = {
   href: "/guides",
-  libelle: "Guides de prise en main",
+  libelle: "Guides",
   aide: "Un guide par public (enseignant, élève, référent établissement, formateur), les étapes dans l'ordre avec les écrans réels, et sa version PDF.",
 };
 
 /**
  * LES RÈGLES DU JEU (/guide) : comment on joue, comment on anime, les concours, le
- * courrier, le score. « Guide » au singulier ne désigne plus que cette page, et sous ce
- * nom : à côté des « Guides de prise en main », un « Guide » tout court obligeait à
- * ouvrir les deux pour savoir laquelle on cherchait.
+ * courrier, le score. « Guide » au singulier ne désigne aucune entrée du menu : à côté
+ * des « Guides », un « Guide » tout court obligeait à ouvrir les deux pour savoir
+ * laquelle on cherchait. La page garde son titre, « Règles du jeu ».
  */
 export const LIEN_REGLES: LienDeMenu = {
   href: "/guide",
-  libelle: "Règles du jeu",
+  libelle: "Règles",
   aide: "Comment se joue un tour, comment on anime une classe, les concours, le courrier et le score, réunis au même endroit.",
 };
 
 /** Les conditions générales de vente (/cgv) : ce que signe un acheteur. */
 export const LIEN_CGV: LienDeMenu = {
   href: "/cgv",
-  libelle: "Conditions générales de vente",
-  aide: "La commande, les prix, le paiement, la durée, la responsabilité et le droit applicable.",
+  libelle: "CGV",
+  aide: "Les conditions générales de vente : la commande, les prix, le paiement, la durée, la responsabilité et le droit applicable.",
 };
 
 /** Les conditions générales d'utilisation (/cgu) : les règles qui valent pour tous les utilisateurs. */
 export const LIEN_CGU: LienDeMenu = {
   href: "/cgu",
-  libelle: "Conditions générales d'utilisation",
-  aide: "Qui utilise le service, les comptes et les codes, le bon usage, la disponibilité et le droit applicable.",
+  libelle: "CGU",
+  aide: "Les conditions générales d'utilisation : qui utilise le service, les comptes et les codes, le bon usage, la disponibilité et le droit applicable.",
 };
 
 /** Les mentions que la loi impose, discrètes mais jamais absentes. */
 export const LIEN_MENTIONS: LienDeMenu = {
   href: "/mentions-legales",
-  libelle: "Mentions légales et RGPD",
-  aide: "Qui édite le site, quelles données sont conservées, combien de temps et comment les faire effacer.",
+  libelle: "Mentions",
+  aide: "Les mentions légales et le RGPD : qui édite le site, quelles données sont conservées, combien de temps et comment les faire effacer.",
 };
 
 /**
- * LES GROUPES SONT LES PUBLICS DU SITE.
+ * LA PETITE LIGNE LÉGALE, tout en bas du pied de page de chaque page publique,
+ * et nulle part ailleurs dans la navigation : ni dans le menu déplié, ni dans
+ * les groupes du pied de page (« je ne veux pas que ce soit trop voyant »). La
+ * loi la veut atteignable sur toutes les pages : elle l'est, en petit.
+ */
+export const LIENS_LEGAUX: readonly LienDeMenu[] = [LIEN_MENTIONS, LIEN_CGV, LIEN_CGU];
+
+/**
+ * LES GROUPES SONT LES PRODUITS DU SITE (décisions du propriétaire, novembre 2026).
  *
- * Un groupe pour les élèves, puis un par public (les enseignants du lycée, du
- * BTS et de l'université ; les établissements, écoles de commerce et
- * universités ; les entreprises et leurs managers), puis ce qui sert à tous :
- * l'aide et les offres. Chaque page n'a qu'une place et qu'un nom.
+ *   Cours      Diplômes · Notions · Référentiels
+ *   Arène      Solo · Métiers · Ateliers · Concours
+ *   Épisodes   Catalogue · Classe
+ *   Offres     Enseignants · Lycées · Écoles · Entreprises · Devis
+ *   Aide       Guides · Manuel · Règles · Reprendre · Profil · Contact
  *
- * LE MENU RANGÉ PAR PUBLIC (chantier délimité approuvé par le propriétaire,
- * novembre 2026). « Jouer » devient « Élèves », avec UNE SEULE PORTE pour tous
- * les codes (/join : services/rejoindre.service conduit un code de concours à
- * /compete, un code d'examen à /examen ; les deux pages restent, leurs entrées
- * séparées quittent le menu). « Écoles » devient « Établissements ». Le cours
- * ouvre le groupe des enseignants. « Les entreprises jouables » deviennent
- * « Les cas d'entreprise » : ce ne sont pas les entreprises clientes. Les
- * adresses ne changent pas (tests/architecture/menu-par-public.test.ts).
+ * Le menu déplié montre la pédagogie : sous le titre du cours, de l'arène et
+ * des épisodes, une phrase dit ce qu'on y fait (`phrase`). Chaque page n'a
+ * qu'une place et qu'un nom. Les deux portes, Rejoindre et Connexion, sont hors
+ * des groupes (`PORTES`) ; le légal tient sur sa petite ligne (`LIENS_LEGAUX`).
  *
- * Sur téléphone, le menu est la seule navigation : le groupe des élèves est
- * déplié à l'ouverture, celui qui vient avec un code n'a rien à chercher.
+ * SORTIS DU MENU, ET ATTEINTS AUTREMENT : l'examen individuel (/ecoles#evaluer,
+ * une section de la page des écoles), l'intégration (/integration, liée depuis
+ * les offres et les guides), l'aide au choix (/orientation, les boutons de la
+ * page des enseignants) et le profil décisionnel des épisodes
+ * (/entreprises/episode/profil, lié depuis le profil de l'arène et la fin de
+ * chaque épisode). tests/architecture/menu-par-produit.test.ts tient ces liens.
  */
 export const NAVIGATION: readonly GroupeDeMenu[] = [
   {
-    code: GROUPE_OUVERT,
-    titre: "Élèves",
-    liens: [
-      {
-        href: "/join",
-        libelle: "J'ai un code",
-        // Une seule porte (services/rejoindre.service) : un code de partie, de classe du cours,
-        // de cohorte, de concours ou d'examen tapé ici mène à sa page.
-        aide: "Votre enseignant vous a donné un code, quel qu'il soit (partie, classe, concours, examen) : c'est ici qu'il s'utilise.",
-        acces: "eleve",
-      },
-      {
-        href: "/jouer",
-        libelle: "Jouer en solo",
-        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
-      },
-      {
-        // L'essai par défaut du cours (config/cours/chapitres-libres.ts, `chapitreLibreParDefaut`) :
-        // chaque diplôme a son chapitre libre, et la garde du menu vérifie que l'adresse est celle de
-        // l'essai par défaut. Le plan ne lit pas le registre des chapitres, qui est lourd et que le
-        // menu, côté navigateur, n'a pas à charger.
-        href: "/cours/les-flux-de-l-entreprise",
-        libelle: "Essayer le cours",
-        aide: "Chaque diplôme a son chapitre libre, sans compte. Celui-ci ouvre le bac STMG : ce qui circule entre l'entreprise, ses clients, ses fournisseurs, sa banque et l'État.",
-      },
-      {
-        href: "/reprendre",
-        libelle: "Reprendre une partie",
-        aide: "Vous avez changé d'appareil, ou le navigateur a oublié qui vous étiez : votre code de reprise vous rend votre partie.",
-      },
-      {
-        href: "/profile",
-        libelle: "Mon profil",
-        aide: "Vos compétences, vos parties jouées et vos réussites, sur cet appareil ou sous votre code de reprise.",
-      },
-      {
-        // Les entreprises de l'arène, celles qu'on dirige en jouant : pas les entreprises
-        // clientes, qui ont leur groupe.
-        href: "/entreprises",
-        libelle: "Les cas d'entreprise",
-        aide: "Les fiches des entreprises que l'on dirige dans l'arène : leur marché, leurs contraintes, ce qu'on y apprend.",
-      },
-    ],
-  },
-  {
-    code: "enseignants",
-    titre: "Enseignants",
-    precision: "lycée, BTS, université",
-    entree: "/enseignants",
+    code: "cours",
+    titre: "Cours",
+    entree: "/cours",
+    phrase: "Chaque notion se pratique : vous passez l'écriture, et vous voyez ce qu'elle change dans les comptes.",
     liens: [
       {
         href: "/cours",
-        libelle: "Le cours",
+        libelle: "Diplômes",
         aide: "Votre diplôme d'abord : ses chapitres dans l'ordre d'apprentissage, bloc par bloc du référentiel, chacun sur une entreprise simulée, guidé puis en cas pratique.",
       },
       {
-        href: "/animations",
-        libelle: "Ateliers clés en main",
-        aide: "Des déroulés de séance prêts à animer, avec leurs livrables et leur grille d'évaluation.",
-      },
-      {
-        href: "/enseignants/episodes",
-        libelle: "Épisodes en classe",
-        aide: "Un coût marginal, une VAN ou un rachat joué comme une décision, en une séance de deux heures, avec la fiche de l'enseignant.",
+        href: "/notions",
+        libelle: "Notions",
+        aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
       },
       {
         href: "/parcours",
-        libelle: "Référentiels par diplôme",
+        libelle: "Référentiels",
         aide: "Votre référentiel bloc par bloc, pour chaque formation servie, du CAP au DSCG : où chacun se travaille, et ce qui n'est qu'effleuré.",
+      },
+    ],
+  },
+  {
+    // L'ARÈNE : le simulateur. Son mot ouvre sa présentation (/fonctionnalites), qui n'a plus
+    // d'entrée à elle ; ses entrées sont ce qu'on y fait.
+    code: "arene",
+    titre: "Arène",
+    entree: "/fonctionnalites",
+    aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos élèves et de vos étudiants.",
+    phrase: "Vous dirigez une entreprise en équipe, et le marché répond à vos choix.",
+    liens: [
+      {
+        href: "/jouer",
+        libelle: "Solo",
+        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
+      },
+      {
+        // Les entreprises de l'arène, celles qu'on dirige en jouant (« Choisissez votre métier ») :
+        // pas les entreprises clientes, qui ont leur entrée dans les offres.
+        href: "/entreprises",
+        libelle: "Métiers",
+        aide: "Les fiches des entreprises que l'on dirige dans l'arène : leur marché, leurs contraintes, ce qu'on y apprend.",
+      },
+      {
+        href: "/animations",
+        libelle: "Ateliers",
+        aide: "Des déroulés de séance prêts à animer, avec leurs livrables et leur grille d'évaluation.",
       },
       {
         href: "/guide#concours",
-        libelle: "Concours entre classes",
+        libelle: "Concours",
         aide: "Comment se déroule un concours entre classes, des inscriptions à la finale ; l'enseignant le crée depuis son espace.",
       },
-      {
-        href: "/teacher/login",
-        libelle: "Espace enseignant",
-        aide: "Créer une partie, suivre les équipes, clôturer les tours et relire le carnet d'usage.",
-        acces: "enseignant",
-      },
-      {
-        // La page que « Enseignants » ouvre depuis la barre : elle ferme le groupe, après ce
-        // qu'un enseignant vient chercher.
-        href: "/enseignants",
-        libelle: "Présentation",
-        aide: "Découvrir Business Arena : pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
-      },
     ],
   },
   {
-    code: "etablissements",
-    titre: "Établissements",
-    precision: "écoles, universités",
-    entree: "/ecoles",
+    code: "episodes",
+    titre: "Épisodes",
+    entree: "/entreprises/episode",
+    phrase: "Vous décidez en manager, puis vous voyez ce que la décision a coûté.",
     liens: [
-      {
-        href: "/ecoles",
-        libelle: "Présentation",
-        aide: `L'arène pour le bachelor, les épisodes manager pour le master et la formation continue, et ${COMPETENCES.length} compétences mesurées à montrer à un jury d'accréditation.`,
-      },
-      {
-        // La section « Évaluer et accréditer » de la page des établissements, qui présente
-        // l'examen individuel : son ancre est #evaluer, et c'est elle qu'on vise.
-        href: "/ecoles#evaluer",
-        libelle: "Examen individuel",
-        aide: "Chaque étudiant dirige seul son entreprise, sur le même scénario que sa promotion : une note qui juge les décisions, pas le hasard.",
-      },
-      {
-        href: "/integration",
-        libelle: "Moodle et RENATER",
-        aide: "Ajouter Business Arena à Moodle ou à Canvas par LTI 1.3, et laisser vos étudiants entrer avec le compte de leur établissement.",
-      },
-    ],
-  },
-  {
-    code: "entreprises",
-    titre: "Entreprises",
-    precision: "et managers",
-    entree: "/entreprises/offre",
-    liens: [
-      {
-        href: "/entreprises/offre",
-        libelle: "Pour les entreprises",
-        aide: "Pour une entreprise ou un organisme de formation : les formules, ce qui est inclus, ce qui se chiffre au devis.",
-      },
       {
         href: "/entreprises/episode",
-        libelle: "Épisodes manager",
+        libelle: "Catalogue",
         aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : ${DECISIONS_PAR_EPISODE} décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
       },
       {
-        href: "/entreprises/episode/profil",
-        libelle: "Mon profil décisionnel",
-        aide: `Ce que vos épisodes disent de votre façon de décider : ${COMPETENCES.length} compétences, leurs preuves, et les épisodes à jouer ensuite.`,
+        href: "/enseignants/episodes",
+        libelle: "Classe",
+        aide: "Un coût marginal, une VAN ou un rachat joué comme une décision, en une séance de deux heures, avec la fiche de l'enseignant.",
       },
     ],
   },
   {
+    // LES OFFRES : à qui elles s'adressent, et le devis où elles aboutissent (le site n'encaisse
+    // rien). Leur mot ouvre la page des offres, /tarifs : l'adresse reste, pour les liens partagés
+    // et le référencement.
+    code: "offres",
+    titre: "Offres",
+    entree: "/tarifs",
+    aide: "Gratuit pour découvrir en solo ; sur mesure et sur devis pour faire cours, et pour les épisodes manager.",
+    liens: [
+      {
+        href: "/enseignants",
+        libelle: "Enseignants",
+        aide: "Découvrir Business Arena : pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
+      },
+      // « LYCÉES » A SA PLACE ICI, juste après « Enseignants » : { href: "/lycees", libelle: "Lycées" }.
+      // La page /lycees vient avec un chantier suivant, qui pose l'entrée ; d'ici là, aucune
+      // entrée ne mène à une page absente (tests/architecture/menu-par-produit.test.ts).
+      {
+        href: "/ecoles",
+        libelle: "Écoles",
+        aide: `L'arène pour le bachelor, les épisodes manager pour le master et la formation continue, et ${COMPETENCES.length} compétences mesurées à montrer à un jury d'accréditation.`,
+      },
+      {
+        href: "/entreprises/offre",
+        libelle: "Entreprises",
+        aide: "Pour une entreprise ou un organisme de formation : les formules, ce qui est inclus, ce qui se chiffre au devis.",
+      },
+      {
+        href: "/devis",
+        libelle: "Devis",
+        aide: "Une demande écrite : l'offre, l'établissement ou l'entreprise, le niveau souhaité, le nombre d'enseignants ou de managers. La réponse vient par écrit.",
+      },
+    ],
+  },
+  {
+    // L'AIDE : les guides, le manuel, les règles du jeu, la reprise d'une partie, le profil de
+    // l'arène et le contact.
     code: "aide",
     titre: "Aide",
     entree: "/guides",
@@ -324,48 +284,60 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       LIEN_GUIDES,
       {
         href: "/manuel",
-        libelle: "Manuel de l'enseignant",
-        aide: "Comment l'application évalue : les situations, les grilles, l'indice et le mérite, dans un document qui s'imprime.",
+        libelle: "Manuel",
+        aide: "Le manuel de l'enseignant : comment l'application évalue, les situations, les grilles, l'indice et le mérite, dans un document qui s'imprime.",
       },
       LIEN_REGLES,
       {
-        href: "/notions",
-        libelle: "Fiches notions",
-        aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
+        href: "/reprendre",
+        libelle: "Reprendre",
+        aide: "Vous avez changé d'appareil, ou le navigateur a oublié qui vous étiez : votre code de reprise vous rend votre partie.",
       },
-    ],
-  },
-  {
-    // LES OFFRES, CE QU'ELLES CONTIENNENT ET CE QUE SIGNE L'ACHETEUR. Tout se vend sur devis
-    // (le site n'encaisse rien). Le contact et les mentions légales sont hors des groupes
-    // (LIENS_TRANSVERSES), au pied de page.
-    code: "offres",
-    titre: "Offres",
-    entree: "/tarifs",
-    liens: [
-      LIEN_TARIFS_DU_MENU,
       {
-        href: "/fonctionnalites",
-        libelle: "Fonctionnalités",
-        aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos élèves et de vos étudiants.",
+        // Le profil de l'arène. Celui des épisodes (/entreprises/episode/profil) s'ouvre depuis
+        // cette page et depuis la fin de chaque épisode.
+        href: "/profile",
+        libelle: "Profil",
+        aide: "Vos compétences, vos parties jouées et vos réussites, sur cet appareil ou sous votre code de reprise.",
       },
-      LIEN_CGV,
-      LIEN_CGU,
+      {
+        // Le rendez-vous téléphonique, le seul lien du plan qui mette une personne au bout du fil.
+        // Les pages l'appellent par son verbe (`LIEN_CONTACT`).
+        href: "/rendez-vous",
+        libelle: "Contact",
+        aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
+      },
     ],
   },
 ];
 
 /**
- * CE QUI SERT À TOUS, HORS DES GROUPES : choisir sa simulation (l'action principale),
- * prendre rendez-vous, et les mentions que la loi impose. Aucun public n'en est le
- * propriétaire. Le menu pose les deux premiers en tête du plan, les mentions à sa fin ; le
- * pied de page les déroule sur la ligne qui ferme le plan.
+ * LES DEUX PORTES, hors des groupes : en boutons à droite de la barre sur grand
+ * écran, et en tête du menu déplié, seules (aucune autre action n'y a sa
+ * place). Un mot chacune, et un nom plus long pour une synthèse vocale.
  */
-export const LIENS_TRANSVERSES: readonly LienDeMenu[] = [ACTION_PRINCIPALE, LIEN_CONTACT, LIEN_MENTIONS];
+export const PORTES: readonly LienDeMenu[] = [
+  {
+    href: "/join",
+    libelle: "Rejoindre",
+    nom: "Rejoindre avec un code",
+    // Une seule porte (services/rejoindre.service) : un code de partie, de classe du cours,
+    // de cohorte, de concours ou d'examen tapé ici mène à sa page.
+    aide: "Votre enseignant vous a donné un code, quel qu'il soit (partie, classe, concours, examen) : c'est ici qu'il s'utilise.",
+    acces: "eleve",
+  },
+  {
+    href: "/teacher/login",
+    libelle: "Connexion",
+    nom: "Connexion à l'espace enseignant",
+    aide: "L'espace enseignant : créer une partie, suivre les équipes, clôturer les tours et relire le carnet d'usage.",
+    acces: "enseignant",
+  },
+];
 
-/** Tous les liens du plan public, groupes confondus. */
+/** Tous les liens du plan public : les entrées des groupes, puis les deux portes. */
 export function tousLesLiens(): LienDeMenu[] {
-  return [...NAVIGATION.flatMap((g) => g.liens), ...LIENS_TRANSVERSES];
+  return [...NAVIGATION.flatMap((g) => g.liens), ...PORTES];
 }
 
 /**
@@ -380,23 +352,54 @@ export function lienDuPlan(href: string): LienDeMenu {
 }
 
 /**
- * Les liens à plat de la barre, sur grand écran : un par groupe qui a une
- * entrée, sous le TITRE du groupe. Peu nombreux par construction : une barre
+ * Les mots de la barre, sur grand écran : un par groupe, sous le TITRE du
+ * groupe, vers la page que ce titre ouvre. Cinq, par construction : une barre
  * qui affiche tout n'affiche plus rien, et c'est de là que venait
  * l'encombrement.
  */
 export function liensDeTete(): LienDeMenu[] {
-  return NAVIGATION.filter((g) => g.entree).map((g) => ({
-    href: g.entree!,
+  return NAVIGATION.map((g) => ({
+    href: g.entree,
     libelle: g.titre,
-    aide: lienDuPlan(g.entree!).aide,
+    aide: g.aide ?? lienDuPlan(g.entree).aide,
   }));
 }
 
-/** Les portes d'entrée par public, en boutons à droite de la barre. */
+/** Les portes d'entrée par public, en boutons à droite de la barre et en tête du menu déplié. */
 export function liensDAcces(): LienDeMenu[] {
-  return tousLesLiens().filter((l) => l.acces);
+  return [...PORTES];
 }
+
+/**
+ * LES APPELS DES PAGES, SOUS LEUR VERBE. Le menu nomme une page d'un mot ; un
+ * bouton dit ce qu'il fait. La barre d'action du téléphone et le corps des
+ * pages appellent donc « Jouer en solo » et « Prendre rendez-vous » : les
+ * adresses de « Solo » et « Contact », lues dans le plan, sous le verbe de
+ * l'action. Deux endroits qui écriraient ces adresses se désaccorderaient le
+ * jour où l'une change.
+ */
+const appel = (href: string, libelle: string): LienDeMenu => ({ ...lienDuPlan(href), libelle });
+
+/** Jouer tout de suite : l'appel des pages générales, dans la barre d'action du téléphone. */
+export const APPEL_JOUER: LienDeMenu = appel("/jouer", "Jouer en solo");
+
+/**
+ * Par où commencer, pour un enseignant : l'aide au choix (/orientation). C'est
+ * l'appel de la barre d'action du téléphone sur les pages enseignantes, et
+ * celui des boutons de la page des enseignants. La page n'est plus une entrée
+ * du menu (novembre 2026) : son adresse s'écrit donc ici.
+ */
+export const ACTION_PRINCIPALE: LienDeMenu = {
+  href: "/orientation",
+  libelle: "Choisir ma simulation",
+  aide: "Quatre questions, et le réglage qui convient à votre classe s'écrit à mesure, avec ses raisons.",
+};
+
+/**
+ * De quoi joindre quelqu'un. Des pages le citent depuis leur corps (les tarifs,
+ * le devis, les parcours), sous son verbe ; le menu le nomme « Contact ».
+ */
+export const LIEN_CONTACT: LienDeMenu = appel("/rendez-vous", "Prendre rendez-vous");
 
 /* -------------------------------------------------------------------------
  * LES ESPACES SOUS COMPTE : les mêmes pastilles, lues ici.
@@ -417,8 +420,11 @@ export interface Pastille {
 
 /**
  * L'ESPACE ENSEIGNANT, dans l'ordre d'usage : ce qu'on ouvre le plus souvent
- * d'abord. L'aide mène au guide de prise en main de l'enseignant ; le manuel
- * s'y lit, et depuis le groupe « Aide » du site.
+ * d'abord. Un mot par pastille, comme le menu du site (novembre 2026) : la
+ * page garde son titre (« Mes parties », « Mes classes du cours », « Carnet
+ * d'usage »), la pastille n'en dit que le mot. L'aide mène au guide de prise
+ * en main de l'enseignant ; le manuel s'y lit, et depuis le groupe « Aide » du
+ * site.
  */
 /*
  * UNE LIGNE PAR RUBRIQUE (audit UX du 29 octobre 2026, P2-11) : un nouvel enseignant ne voyait
@@ -429,39 +435,39 @@ export const NAVIGATION_ENSEIGNANT: readonly Pastille[] = [
   {
     code: "parties",
     href: "/teacher",
-    libelle: "Mes parties",
+    libelle: "Parties",
     aide: "Une partie : vos élèves dirigent en équipes une entreprise de l'arène, tour après tour, face à des concurrents. Les concours entre classes se créent ici aussi.",
   },
   {
     code: "examens",
     href: "/teacher/examens",
-    libelle: "Mes examens",
+    libelle: "Examens",
     aide: "Un examen : chaque candidat joue seul la même entreprise, dans un temps donné, et reçoit une note.",
   },
   {
     code: "cohortes",
     href: "/teacher/cohortes",
-    libelle: "Mes cohortes",
+    libelle: "Cohortes",
     aide: "Une cohorte : une classe qui joue des épisodes manager, de courtes situations de management, par un code.",
   },
   {
     code: "cours",
     href: "/teacher/cours",
-    libelle: "Mes classes du cours",
+    libelle: "Classes",
     aide: "Une classe du cours : vos élèves suivent les chapitres du cours par la simulation, et vous voyez où chacun en est.",
   },
   {
     code: "scenarios",
     href: "/teacher/scenarios",
-    libelle: "Mes scénarios",
+    libelle: "Scénarios",
     aide: "Vos propres entreprises, écrites par vous, à lancer en partie comme celles de l'arène.",
   },
-  { code: "usage", href: "/teacher/usage", libelle: "Carnet d'usage", aide: "Ce que vos classes ont fait sur la plateforme, partie après partie." },
+  { code: "usage", href: "/teacher/usage", libelle: "Usage", aide: "Ce que vos classes ont fait sur la plateforme, partie après partie." },
   { code: "aide", href: "/guides/enseignant", libelle: "Aide" },
 ];
 
 /** À droite des pastilles enseignantes : l'établissement, et l'administration pour le propriétaire. */
-export const LIEN_ETABLISSEMENT: Pastille = { code: "etablissement", href: "/org", libelle: "Mon établissement" };
+export const LIEN_ETABLISSEMENT: Pastille = { code: "etablissement", href: "/org", libelle: "Établissement" };
 export const LIEN_ADMINISTRATION: Pastille = { code: "administration", href: "/admin", libelle: "Administration" };
 export const LIEN_ESPACE_ENSEIGNANT: Pastille = { code: "parties", href: "/teacher", libelle: "Espace enseignant" };
 
@@ -485,8 +491,8 @@ export const NAVIGATION_ADMIN: readonly Pastille[] = [
 
 /**
  * L'ÉTUDIANT CONNECTÉ PAR SON ÉTABLISSEMENT (/etablissement/parties) : ses
- * parties, et les deux autres portes du groupe « Élèves » qui le concernent,
- * sous les mots du plan.
+ * parties, et les deux autres pages du plan qui le concernent (la porte du
+ * code, son profil), sous les mots du plan.
  */
 export const NAVIGATION_ETUDIANT: readonly Pastille[] = [
   { code: "parties", href: "/etablissement/parties", libelle: "Vos parties et cohortes" },
@@ -496,7 +502,7 @@ export const NAVIGATION_ETUDIANT: readonly Pastille[] = [
 
 /**
  * L'ARÈNE : le petit menu de l'élève, le même sur ordinateur et dans le menu
- * du téléphone. Les trois pages publiques sont citées sous leur nom du plan ;
+ * du téléphone. Les deux pages publiques sont citées sous leur nom du plan ;
  * « Quitter la partie » mène là d'où l'élève vient (components/menu-de-l-arene.tsx).
  */
 export const NAVIGATION_ARENE: readonly LienDeMenu[] = [

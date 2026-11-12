@@ -94,27 +94,29 @@ describe("le pied de page", () => {
     ).toEqual([]);
   });
 
-  it("déroule le plan du site en cinq colonnes et une ligne, sans recopier ses liens", () => {
+  it("déroule le plan du site, une colonne par produit, sans recopier ses liens", () => {
     // Le pied de l'accueil déroulait les quatorze liens du plan à la main, puis
     // n'en a plus proposé que quatre. Il lit maintenant le plan, groupe par
-    // groupe, sous les mêmes titres que la barre et le menu : cinq colonnes
-    // sur grand écran, puis les offres et le contact sur une ligne ; trois
-    // colonnes sur tablette, une pile sur téléphone. Il a été en quatre
-    // colonnes dont une empilait les trois publics : trente lignes à côté de
-    // trois fois cinq.
+    // groupe, sous les mêmes mots que la barre et le menu (novembre 2026 : un
+    // menu par produit, un mot par entrée) : cinq colonnes sur grand écran,
+    // trois sur tablette, deux sur téléphone. Il a été en cinq colonnes, une
+    // ligne pour les offres et une pour ce qui sert à tous ; les mentions
+    // légales sont maintenant une entrée de l'aide.
     const source = readFileSync(join(SRC, "components", "pied-de-page.tsx"), "utf8");
-    expect(source).toContain("NAVIGATION");
-    expect(source).toContain("ACTION_PRINCIPALE");
+    expect(source).toContain("NAVIGATION.map(");
+    expect(source, "le titre d'une colonne est le mot de la barre").toContain("liensDeTete()");
     expect(source).toContain('aria-label="Plan du site"');
-    expect(source).toMatch(/grid-cols-1 [^"]*sm:grid-cols-3 [^"]*lg:grid-cols-5/);
-    expect(source, "la ligne traverse les cinq colonnes").toMatch(/sm:col-span-3 lg:col-span-5/);
-    expect(source).toContain('const ligne = groupe("offres")');
-    for (const code of ["eleves", "enseignants", "etablissements", "entreprises", "aide", "offres"]) {
-      expect(source, `le groupe « ${code} » manque`).toContain(`groupe("${code}")`);
-    }
-    // Ce qui sert à tous (orientation, rendez-vous, mentions légales) ferme le plan, sur une ligne.
-    expect(source).toContain("LIENS_TRANSVERSES.map(");
-    expect(source).toMatch(/data-liens-transverses="" className="sm:col-span-3 lg:col-span-5"/);
+    expect(source).toMatch(/grid-cols-2 [^"]*sm:grid-cols-3 [^"]*lg:grid-cols-5/);
+    expect(source).toContain("data-groupe-du-pied={g.code}");
+    // Plus de ligne à part dans le plan : tout est dans les groupes.
+    expect(source).not.toContain("LIENS_TRANSVERSES");
+    expect(source).not.toMatch(/col-span/);
+    // Le légal, en petit, tout en bas (novembre 2026) : sa ligne, sous le filet, lue du plan.
+    expect(source).toContain("LIENS_LEGAUX.map(");
+    expect(source).toContain('data-ligne-legale=""');
+    expect(source.indexOf('data-ligne-legale=""'), "la ligne légale vient après le plan du site").toBeGreaterThan(
+      source.indexOf('aria-label="Plan du site"'),
+    );
     // L'adresse de contact reste en texte, et l'année se lit au rendu.
     expect(source).toContain("VENDEUR.contact");
     expect(source).toContain("new Date().getFullYear()");

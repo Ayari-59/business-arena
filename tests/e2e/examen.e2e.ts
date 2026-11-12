@@ -184,7 +184,9 @@ describe("un examen, de la création à la publication", () => {
     await enseignantSousLicence(ctxProf);
     prof = await ctxProf.newPage();
     await aller(prof, "/teacher/examens");
-    expect(await prof.getByRole("link", { name: "Mes examens" }).first().getAttribute("aria-current")).toBe("page");
+    expect(
+      await prof.getByRole("navigation", { name: "Espace enseignant" }).getByRole("link", { name: "Examens", exact: true }).getAttribute("aria-current"),
+    ).toBe("page");
     expect(await prof.locator("[data-examens-sans-module]").count()).toBe(0);
     expect(await pleinsVisibles(prof)).toEqual(["Créer l'examen"]);
     await prof.getByLabel("Nom de l'examen").fill("Gestion L2 · examen de fin de semestre");
