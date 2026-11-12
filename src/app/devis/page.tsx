@@ -8,6 +8,8 @@ import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES, libellesDuDevisDe, MENTION_TVA, NIVEAUX_DE_L_ARENE } from "@/config/tarifs";
 import { demandeLeParcoursAuDevis, offresDuDevis } from "@/config/catalogue";
 import { PARCOURS_DU_DEVIS, parcoursDuDevis } from "@/config/cours/devis-du-cours";
+import { CE_QU_EST_UN_PARCOURS } from "@/config/cours/parcours-a-choisir";
+import { insecables } from "@/lib/typographie";
 import { SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
 import { ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { lireLeCatalogue } from "@/services/catalogue.service";
@@ -81,6 +83,7 @@ async function DevisPage({
             niveauInitial={niveauInitial}
             parcours={PARCOURS_DU_DEVIS}
             parcoursInitial={parcoursInitial}
+            ceQuEstUnParcours={insecables(CE_QU_EST_UN_PARCOURS)}
             source={source === SOURCE_DU_COURS ? SOURCE_DU_COURS : null}
             ateliers={ateliersParCombinaison()}
           />

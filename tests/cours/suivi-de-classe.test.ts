@@ -77,3 +77,17 @@ describe("vueDeLaClasse, objectif par objectif", () => {
     for (const o of autres) expect([o.acquis, o.enCours, o.aRevoir]).toEqual([2, 0, 0]);
   });
 });
+
+describe("vueDeLaClasse, l'élève qui n'a pas ouvert le chapitre (audit UX du 11 novembre 2026, P2-9)", () => {
+  // Tom a rejoint la classe sans ouvrir ce chapitre : il n'est ni « à l'étape 1 », ni compté parmi
+  // ceux qui ont atteint la première étape.
+  const vue = vueDeLaClasse(chapitre, [p("Zoé", 1, { [intro!.id]: { essais: 0, reussi: true, aide: false } }), { ...p("Tom", 0, {}), commence: false }]);
+
+  it("il est « pas commencé » : aucune case en cours, aucune étape atteinte", () => {
+    const tom = vue.eleves.find((e) => e.eleve === "Tom")!;
+    expect(tom.commence).toBe(false);
+    expect(tom.cases.every((k) => k === "a-venir")).toBe(true);
+    expect(vue.eleves.find((e) => e.eleve === "Zoé")!.commence).toBe(true);
+    expect(vue.etapes[0]!.atteinte).toBe(1);
+  });
+});

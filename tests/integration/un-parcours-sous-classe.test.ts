@@ -9,6 +9,12 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
  * classe, ou celui que l'admin lui a attribué. Une seconde classe sur le même parcours se crée ;
  * sur un autre, non. Campus ne change pas. Rien de ce qui existe n'est fermé : une classe déjà
  * créée sur un autre parcours garde ses chapitres.
+ *
+ * LES CLASSES D'ESSAI NE COMPTENT PAS (décision du propriétaire, 11 novembre 2026 ; audit UX du même
+ * jour, P1-4) : une classe créée avant la licence Classe, pendant l'essai, ne fixe pas son parcours ;
+ * celui-ci se fixe au devis (l'attribution de l'admin) ou par la première classe créée sous la licence.
+ * La classe d'essai garde son parcours et ce qu'il ouvre, comme toute classe déjà créée ; une
+ * attribution la restreint comme les autres.
  */
 
 vi.mock("@/db", async () => {
@@ -17,9 +23,9 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { users, coursClasses } from "@/db/schema";
+import { users, coursClasses, organizationMembers, organizations } from "@/db/schema";
 import { CHAPITRES } from "@/config/cours/registre";
-import { placerSousLicence } from "./helpers/licence";
+import { placerSousLicence, poserUneLicence } from "./helpers/licence";
 import { attribuerALEnseignant } from "@/services/attributions.service";
 import { choisirLeParcours, coursOuvert, creerClasse, parcoursImposeALEnseignant, rejoindreClasse } from "@/services/cours.service";
 
@@ -122,5 +128,61 @@ describe("Campus et Programme ne sont pas limités", () => {
     await placerSousLicence(prof, { arene: "programme", entreprises: ["hotel"] });
     expect(await creerClasse({ enseignantId: prof, nom: "MCO", parcours: "mco" })).not.toBeNull();
     expect(await creerClasse({ enseignantId: prof, nom: "CG", parcours: "comptabilite-generale" })).not.toBeNull();
+  });
+});
+
+describe("les classes d'essai ne comptent pas", () => {
+  /** Un enseignant sans offre, rattaché à son établissement : il crée une classe d'essai, puis la licence Classe arrive. */
+  async function essaiPuisClasse(classeDEssai: string) {
+    const prof = await utilisateur();
+    const [org] = await db
+      .insert(organizations)
+      .values({ name: "Lycée à l'essai", slug: `essai-${randomUUID()}` })
+      .returning({ id: organizations.id });
+    await db.insert(organizationMembers).values({ userId: prof, organizationId: org!.id, role: "teacher" });
+    expect(await parcoursImposeALEnseignant(prof)).toBeNull();
+    const essai = (await creerClasse({ enseignantId: prof, nom: "Classe d'essai", parcours: classeDEssai }))!;
+    expect(essai).not.toBeNull();
+    // La licence est enregistrée après la classe d'essai (une milliseconde au moins).
+    await new Promise((r) => setTimeout(r, 5));
+    await poserUneLicence(org!.id, prof, { arene: "classe", entreprises: ["hotel"], niveaux: [2] });
+    return { prof, essai };
+  }
+
+  it("une classe d'essai ne fixe pas le parcours : la première classe créée sous la licence le choisit", async () => {
+    const { prof } = await essaiPuisClasse("comptabilite-generale");
+    expect(await parcoursImposeALEnseignant(prof)).toBeNull();
+    expect(await creerClasse({ enseignantId: prof, nom: "MCO 1", parcours: "mco" })).not.toBeNull();
+    expect(await parcoursImposeALEnseignant(prof)).toBe("mco");
+    // Les suivantes suivent la première classe de la licence, pas la classe d'essai.
+    expect(await creerClasse({ enseignantId: prof, nom: "CG 2", parcours: "comptabilite-generale" })).toBeNull();
+    expect(await creerClasse({ enseignantId: prof, nom: "MCO 2", parcours: "mco" })).not.toBeNull();
+  });
+
+  it("une classe d'essai dont le parcours diffère de celui de la licence garde son parcours et ce qu'il ouvre", async () => {
+    const { prof, essai } = await essaiPuisClasse("comptabilite-generale");
+    expect(await creerClasse({ enseignantId: prof, nom: "MCO 1", parcours: "mco" })).not.toBeNull();
+    const eleve = await utilisateur();
+    expect((await rejoindreClasse(eleve, essai.code, "Léa")).ok).toBe(true);
+    expect(await coursOuvert({ eleve }, deCompta)).toBe(true);
+    expect(await coursOuvert({ eleve }, deMco)).toBe(false);
+  });
+
+  it("le parcours attribué au devis la restreint comme les autres classes", async () => {
+    const { prof, essai } = await essaiPuisClasse("comptabilite-generale");
+    await attribuerALEnseignant(prof, ["mco"]);
+    expect(await parcoursImposeALEnseignant(prof)).toBe("mco");
+    const eleve = await utilisateur();
+    expect((await rejoindreClasse(eleve, essai.code, "Tom")).ok).toBe(true);
+    expect(await coursOuvert({ eleve }, deCompta)).toBe(false);
+  });
+
+  it("une licence posée aujourd'hui, datée d'avant la classe d'essai, ne la compte pas non plus", async () => {
+    // La licence de test commence dix jours avant d'être enregistrée : la classe d'essai, créée
+    // entre les deux, ne compte pas.
+    const { prof } = await essaiPuisClasse("ndrc");
+    expect(await parcoursImposeALEnseignant(prof)).toBeNull();
+    expect(await creerClasse({ enseignantId: prof, nom: "MCO", parcours: "mco" })).not.toBeNull();
+    expect(await parcoursImposeALEnseignant(prof)).toBe("mco");
   });
 });

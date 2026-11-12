@@ -12,6 +12,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { servirLeBureau } from "@/pedagogy/cours/bureau-servi";
 import { classeDeLEleve } from "@/services/cours.service";
+import { chapitreDuParcoursDeLaClasse } from "@/services/chapitres-de-la-classe";
 import { chapitreOuvert } from "../../acces";
 import { ENTREPRISES } from "../../entreprises";
 
@@ -41,7 +42,11 @@ async function BureauPage({ params }: { params: Promise<{ code: string }> }) {
   if (!(await chapitreOuvert(bureau))) {
     const userId = await getGuestUserId();
     const classe = userId ? await classeDeLEleve(userId) : null;
-    const eleve = classe && !(await getSession()) ? { classe: classe.classe } : null;
+    // Du parcours de sa classe (pas encore ouvert) ou hors de son programme (audit UX du 11 novembre 2026, P2-8).
+    const eleve =
+      classe && !(await getSession())
+        ? { classe: classe.classe, dansLeParcours: classe.parcours === null || chapitreDuParcoursDeLaClasse(classe.parcours, bureau) }
+        : null;
     return (
       <>
         <ChapitreReserve titre={bureau.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(bureau, { classe: classe?.parcours })} eleve={eleve} devis={lienDuDevisDuCours(parcoursDuContenu(bureau))} />

@@ -20,9 +20,10 @@ import { parametrageRequisAuDevis, parcoursRequisAuDevis } from "@/config/parame
  *
  * LE DIPLÔME OU LE PARCOURS (audit produit du 10 novembre 2026, P1-4) : une offre qui ouvre le cours
  * à une école (Classe, Programme, Campus) le demande, facultatif, dans la liste que l'enseignant voit
- * en créant sa classe ; la page serveur la lui passe (config/cours/devis-du-cours.ts), le composant
- * n'importe pas le registre. Une demande qui vient du cours (`source`) le trouve prérempli quand il
- * est connu, et n'exige ni l'entreprise ni le niveau.
+ * en créant sa classe, rangée par diplôme (décision du propriétaire, 11 novembre 2026) ; la page
+ * serveur la lui passe (config/cours/devis-du-cours.ts), avec la phrase qui dit ce qu'est un parcours,
+ * et le composant n'importe pas le registre. Une demande qui vient du cours (`source`) le trouve
+ * prérempli quand il est connu, et n'exige ni l'entreprise ni le niveau.
  *
  * La confirmation DIT LA VÉRITÉ : l'accusé de réception n'est annoncé que s'il est parti.
  *
@@ -48,6 +49,13 @@ export interface OffreDuFormulaire {
   parcours?: true;
 }
 
+/** Un diplôme de la liste des parcours, et ses entrées (config/cours/parcours-a-choisir.ts, `GroupeDeParcours`). */
+export interface GroupeDuFormulaire {
+  cle: string;
+  libelle: string;
+  parcours: readonly { code: string; libelle: string }[];
+}
+
 const ETAT_INITIAL: DevisFormState = { error: null, ok: null, values: null };
 
 export function DevisForm({
@@ -63,6 +71,7 @@ export function DevisForm({
   niveauInitial = "",
   parcours = [],
   parcoursInitial = "",
+  ceQuEstUnParcours = "",
   source = null,
   ateliers = {},
 }: {
@@ -80,10 +89,12 @@ export function DevisForm({
   /** Le réglage déjà choisi ailleurs (`?entreprise=…&niveau=…`, depuis l'orientation). */
   entrepriseInitiale?: string;
   niveauInitial?: string;
-  /** Les parcours qu'une classe peut choisir, dans leur ordre et sous leur nom (config/cours/devis-du-cours.ts). */
-  parcours?: readonly { code: string; titre: string }[];
+  /** Les parcours qu'une classe peut choisir, rangés par diplôme (config/cours/devis-du-cours.ts). */
+  parcours?: readonly GroupeDuFormulaire[];
   /** Le parcours déjà connu (`?parcours=` ou `?diplome=`, depuis le cours). */
   parcoursInitial?: string;
+  /** Ce qu'est un parcours, en une phrase sous la liste (config/cours/parcours-a-choisir.ts). */
+  ceQuEstUnParcours?: string;
   /** D'où vient la demande : « cours » depuis le cours (config/parametrage-du-devis.ts), null sinon. */
   source?: string | null;
   /**
@@ -268,16 +279,31 @@ export function DevisForm({
             className={`${champ} max-w-full truncate`}
             required={parcoursRequis}
             {...invalide("parcours")}
+            aria-describedby={
+              [champEnErreur === "parcours" ? "erreur-parcours" : null, ceQuEstUnParcours ? "ce-qu-est-un-parcours" : null]
+                .filter(Boolean)
+                .join(" ") || undefined
+            }
           >
             <option value="" disabled={parcoursRequis}>
               {parcoursRequis ? "Choisir le diplôme ou le parcours" : "À préciser plus tard"}
             </option>
-            {parcours.map((p) => (
-              <option key={p.code} value={p.code}>
-                {p.titre}
-              </option>
+            {/* RANGÉE PAR DIPLÔME, le cours du diplôme en premier (décision du propriétaire, 11 novembre 2026). */}
+            {parcours.map((g) => (
+              <optgroup key={g.cle} label={g.libelle} data-groupe-de-parcours={g.cle}>
+                {g.parcours.map((p) => (
+                  <option key={p.code} value={p.code}>
+                    {p.libelle}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
+          {ceQuEstUnParcours ? (
+            <span id="ce-qu-est-un-parcours" className="mt-1 block text-xs text-slate-400" data-ce-qu-est-un-parcours="">
+              {ceQuEstUnParcours}
+            </span>
+          ) : null}
           {parcoursRequis ? null : (
             <span className="mt-1 block text-xs text-slate-400" data-facultatif="parcours">
               Facultatif : il dit à l&apos;équipe pour quel diplôme préparer le cours.

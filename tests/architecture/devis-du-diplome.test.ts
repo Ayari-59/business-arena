@@ -11,7 +11,14 @@ import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import { demandeLeParcoursAuDevis } from "@/config/catalogue";
 import { PARCOURS_DU_DEVIS, parcoursDuDevis } from "@/config/cours/devis-du-cours";
 import { parcoursDuContenu } from "@/config/cours/devis-du-contenu";
-import { CHAPITRES_DES_PARCOURS_DE_FORMATION, PARCOURS_PROPOSES_A_CHOISIR } from "@/config/cours/parcours-de-formation";
+import {
+  CE_QU_EST_UN_PARCOURS,
+  CHAPITRES_DES_PARCOURS_DE_FORMATION,
+  PARCOURS_PROPOSES_A_CHOISIR,
+  codesDesGroupes,
+  parcoursDuDiplome,
+  parcoursRangesParDiplome,
+} from "@/config/cours/parcours-de-formation";
 import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
 import { vueDOrientation } from "@/config/orientation";
@@ -25,10 +32,13 @@ import { CATALOGUE_PAR_DEFAUT, ENTREPRISES, NIVEAUX_DE_L_ARENE } from "@/config/
  * niveau de l'arène à l'enseignant qui voulait le cours : « l'enseignant de STMG qui veut le cours doit
  * choisir “NOVA, niveau 3” sans savoir pourquoi, et le vendeur ne reçoit pas l'information dont il a
  * besoin pour attribuer les parcours ». Ce que cette garde tient, sans base :
- *  · la liste est celle que l'enseignant voit en créant sa classe, dans son ordre et sous ses noms ;
+ *  · la liste est celle que l'enseignant voit en créant sa classe, rangée par diplôme, le cours du
+ *    diplôme en premier, chaque entrée avec son nombre de chapitres et les diplômes qu'elle sert
+ *    (décision du propriétaire, 11 novembre 2026), et une phrase dit ce qu'est un parcours ;
  *  · elle paraît pour les offres qui ouvrent le cours à une école (Classe, Programme, Campus), facultative ;
- *  · une demande qui vient du cours la trouve préremplie quand le diplôme est connu, et n'exige ni
- *    entreprise ni niveau ; le chapitre réservé, l'aide au choix et la classe du cours sans offre y mènent.
+ *  · une demande qui vient du cours la trouve préremplie quand le diplôme est connu (le cours de ce
+ *    diplôme, depuis sa page), et n'exige ni entreprise ni niveau ; le chapitre réservé, l'aide au
+ *    choix et la classe du cours sans offre y mènent.
  * Le côté serveur (demande enregistrée, courriels) : tests/integration/devis-du-diplome.test.ts.
  */
 
@@ -54,16 +64,34 @@ const PROPS = {
   mentionTva: "TVA",
   contact: "c@x.test",
   parcours: PARCOURS_DU_DEVIS,
+  ceQuEstUnParcours: CE_QU_EST_UN_PARCOURS,
 };
 const rendu = (props: Partial<Parameters<typeof DevisForm>[0]> = {}) => renderToStaticMarkup(createElement(DevisForm, { ...PROPS, ...props }));
 const REQUIS = (nom: string) => new RegExp(`<select[^>]*required[^>]*name="${nom}"|<select[^>]*name="${nom}"[^>]*required`);
 
 describe("la liste : les parcours que l'enseignant voit en créant sa classe", () => {
-  it("dans leur ordre et sous leurs noms, sans rien d'autre", () => {
-    expect(PARCOURS_DU_DEVIS).toEqual(PARCOURS_PROPOSES_A_CHOISIR.map((p) => ({ code: p.code, titre: p.titre })));
-    expect(PARCOURS_DU_DEVIS.length).toBeGreaterThan(5);
-    // Les mêmes noms que la création de classe (/teacher/cours), qui lit la même liste.
-    expect(lire("app/teacher/cours/[id]/page.tsx")).toMatch(/PARCOURS_PROPOSES_A_CHOISIR\.filter[\s\S]{0,200}\{p\.titre\}/);
+  it("rangés par diplôme, le cours du diplôme en premier, chacun avec son nombre de chapitres et les diplômes qu'il sert", () => {
+    expect(PARCOURS_DU_DEVIS).toEqual(parcoursRangesParDiplome());
+    // Chaque parcours proposé, une fois.
+    const codes = codesDesGroupes(PARCOURS_DU_DEVIS);
+    expect([...codes].sort()).toEqual(PARCOURS_PROPOSES_A_CHOISIR.map((p) => p.code).sort());
+    expect(new Set(codes).size).toBe(codes.length);
+    // Un groupe par diplôme, le cours du diplôme en premier ; les matières à la fin.
+    expect(PARCOURS_DU_DEVIS.slice(0, 2).map((g) => g.libelle)).toEqual(["STMG", "BTS CG"]);
+    expect(PARCOURS_DU_DEVIS.at(-1)!.cle).toBe("matieres");
+    for (const g of PARCOURS_DU_DEVIS.slice(0, -1)) {
+      const leCours = parcoursDuDiplome(g.cle);
+      if (leCours) expect(g.parcours[0]!.code, g.cle).toBe(leCours);
+    }
+    expect(PARCOURS_DU_DEVIS[0]!.parcours.map((p) => p.code)).toEqual(["bac-stmg", "stmg", "stmg-gf", "stmg-rh", "stmg-sig", "stmg-management"]);
+    expect(PARCOURS_DU_DEVIS[1]!.parcours[0]!.libelle).toMatch(/^BTS CG · Le cours du diplôme · \d+ chapitres$/);
+    expect(PARCOURS_DU_DEVIS.at(-1)!.parcours.find((p) => p.code === "comptabilite-generale")!.libelle).toMatch(
+      /^Comptabilité générale · \d+ chapitres · BTS CG, DCG/,
+    );
+    for (const p of PARCOURS_DU_DEVIS.flatMap((g) => g.parcours)) expect(p.libelle, p.code).toMatch(/ · \d+ chapitres?( · |$)/);
+    // La même liste à la création d'une classe (/teacher/cours) et sur la page d'une classe héritée.
+    expect(lire("app/teacher/cours/page.tsx")).toMatch(/parcoursRangesParDiplome\(aChoisir\.map/);
+    expect(lire("app/teacher/cours/[id]/page.tsx")).toMatch(/parcoursRangesParDiplome\(\s*PARCOURS_PROPOSES_A_CHOISIR\.filter/);
   });
 
   it("le formulaire la reçoit du serveur et n'importe pas le registre du cours", () => {
@@ -89,12 +117,16 @@ describe("quelles offres le demandent", () => {
     expect(texte(classe)).toContain("Le diplôme ou le parcours");
     expect(classe).not.toMatch(REQUIS("parcours"));
     expect(texte(classe)).toContain("Facultatif : il dit à l'équipe pour quel diplôme préparer le cours.");
-    // Les options : « À préciser plus tard », puis la liste, dans l'ordre.
+    // Les options : « À préciser plus tard », puis la liste, dans l'ordre, un groupe par diplôme.
     const options = [...classe.matchAll(/<select[^>]*name="parcours"[\s\S]*?<\/select>/g)][0]![0];
     const valeurs = [...options.matchAll(/<option value="([^"]*)"/g)].map((m) => m[1]);
-    expect(valeurs).toEqual(["", ...PARCOURS_DU_DEVIS.map((p) => p.code)]);
+    expect(valeurs).toEqual(["", ...codesDesGroupes(PARCOURS_DU_DEVIS)]);
     expect(options).toContain(">À préciser plus tard<");
-    for (const p of PARCOURS_DU_DEVIS) expect(texte(options)).toContain(p.titre.replace(/'/g, "'"));
+    expect([...options.matchAll(/<optgroup label="([^"]*)"/g)].map((m) => m[1])).toEqual(PARCOURS_DU_DEVIS.map((g) => g.libelle));
+    for (const p of PARCOURS_DU_DEVIS.flatMap((g) => g.parcours)) expect(texte(options)).toContain(p.libelle);
+    // Et la phrase qui dit ce qu'est un parcours, liée au champ.
+    expect(texte(classe)).toContain(CE_QU_EST_UN_PARCOURS);
+    expect(classe).toMatch(/<select[^>]*aria-describedby="ce-qu-est-un-parcours"[^>]*name="parcours"|<select[^>]*name="parcours"[^>]*aria-describedby="ce-qu-est-un-parcours"/);
     expect(rendu({ offreInitiale: "programme" })).toContain('data-champ-devis="parcours"');
     expect(rendu({ offreInitiale: "episodes" })).not.toContain('name="parcours"');
   });
@@ -154,17 +186,19 @@ describe("une demande qui vient du cours", () => {
     expect(lienDuDevisDuCours("stmg-gf")).toBe("/devis?offre=classe&source=cours&parcours=stmg-gf");
   });
 
-  it("`?parcours=` tel quel ; `?diplome=` : le parcours d'un diplôme qui n'en a qu'un, sinon rien", () => {
+  it("`?parcours=` tel quel ; `?diplome=` : le cours du diplôme, sinon le parcours d'un diplôme qui n'en a qu'un, sinon rien", () => {
     expect(parcoursDuDevis("stmg-gf")).toBe("stmg-gf");
     expect(parcoursDuDevis("stmg")).toBe("stmg");
     expect(parcoursDuDevis("stmg-gf", "bts-mco")).toBe("stmg-gf");
     expect(parcoursDuDevis(null, "but-gea")).toBe("but-gea");
     expect(parcoursDuDevis(null, "bts-mco")).toBe("mco");
-    expect(parcoursDuDevis(undefined, "dscg")).toBe("dscg-finance");
-    // Le bac STMG a cinq parcours, le BTS CG aucun à son nom : rien n'est deviné. Le code du
-    // diplôme STMG est aussi celui du parcours de mercatique : comme diplôme, il ne choisit pas.
-    expect(parcoursDuDevis(null, "stmg")).toBeNull();
-    expect(parcoursDuDevis(null, "bts-cg")).toBeNull();
+    // Le cours du diplôme (décision du propriétaire, 11 novembre 2026) : le DSCG en entier, et non
+    // plus « DSCG · Finance » ; le bac STMG et le BTS CG ont le leur. Le code du diplôme STMG est aussi
+    // celui du parcours de mercatique : comme diplôme, il vaut le cours du bac STMG.
+    expect(parcoursDuDevis(undefined, "dscg")).toBe("dscg");
+    expect(parcoursDuDevis(null, "stmg")).toBe("bac-stmg");
+    expect(parcoursDuDevis(null, "bts-cg")).toBe("bts-cg");
+    expect(parcoursDuDevis(null, "bts-mhr-bc")).toBe("bts-mhr");
     // Un parcours passé comme diplôme vaut ce parcours.
     expect(parcoursDuDevis(null, "stmg-gf")).toBe("stmg-gf");
     // Inconnu, retiré, ou mal formé : ignoré.
@@ -180,7 +214,15 @@ describe("une demande qui vient du cours", () => {
   it("depuis un contenu réservé : le parcours du diplôme d'où l'on vient, sinon le sien", () => {
     const gf = CHAPITRES.find((c) => c.parcours === "stmg-gf")!;
     expect(parcoursDuContenu(gf)).toBe("stmg-gf");
-    expect(parcoursDuContenu(gf, "stmg")).toBe("stmg-gf");
+    // Depuis la page du bac STMG, le cours du bac STMG (décision du propriétaire, 11 novembre 2026).
+    expect(parcoursDuContenu(gf, "stmg")).toBe("bac-stmg");
+    // Depuis la page du BTS CG, deux chapitres de deux matières mènent au même parcours, celui du BTS CG.
+    const ecarts = CHAPITRES.find((c) => c.code === "analyse-des-ecarts")!;
+    const cloture = CHAPITRES.find((c) => c.parcours === "comptabilite-generale" && CHAPITRES_DES_PARCOURS_DE_FORMATION["bts-cg"]!.includes(c.code))!;
+    expect(parcoursDuContenu(ecarts, "bts-cg")).toBe("bts-cg");
+    expect(parcoursDuContenu(ecarts)).toBe("controle-de-gestion");
+    expect(parcoursDuContenu(cloture, "bts-cg")).toBe("bts-cg");
+    expect(parcoursDuContenu(cloture)).toBe("comptabilite-generale");
     // Un chapitre de comptabilité générale que le BUT GEA regroupe : depuis la page du BUT GEA, le BUT GEA.
     const gea = CHAPITRES.find((c) => c.parcours === "comptabilite-generale" && CHAPITRES_DES_PARCOURS_DE_FORMATION["but-gea"]!.includes(c.code))!;
     expect(parcoursDuContenu(gea)).toBe("comptabilite-generale");
@@ -188,7 +230,7 @@ describe("une demande qui vient du cours", () => {
     // Un diplôme qui ne l'ouvre pas ne change rien.
     expect(parcoursDuContenu(gea, "bts-mco")).toBe("comptabilite-generale");
     // Chaque chapitre et chaque cas proposé mène à un parcours de la liste, ou à aucun.
-    const codes = new Set(PARCOURS_DU_DEVIS.map((p) => p.code));
+    const codes = new Set(codesDesGroupes(PARCOURS_DU_DEVIS));
     for (const c of [...CHAPITRES, ...SITUATIONS]) {
       const p = parcoursDuContenu(c);
       if (p !== null) expect(codes.has(p), c.code).toBe(true);
@@ -227,7 +269,7 @@ describe("une demande qui vient du cours", () => {
 
   it("l'aide au choix connaît le parcours d'un diplôme quand il n'en a qu'un", () => {
     const vue = vueDOrientation();
-    const codes = new Set(PARCOURS_DU_DEVIS.map((p) => p.code));
+    const codes = new Set(codesDesGroupes(PARCOURS_DU_DEVIS));
     const valeurs = Object.entries(vue.parcoursDuCours);
     expect(valeurs.length).toBeGreaterThan(0);
     for (const [atelier, parcours] of valeurs) {

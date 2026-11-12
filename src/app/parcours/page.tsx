@@ -440,9 +440,10 @@ async function ParcoursPage() {
           ))}
         </div>
 
-        {/* LES PARCOURS DE FORMATION DU COURS (le BUT) : un chapitre n'a qu'un parcours, celui de sa
-            discipline ; une formation regroupe ceux qui citent ses compétences, sans les dupliquer,
-            et une classe peut la choisir pour parcours (config/cours/parcours-de-formation.ts). */}
+        {/* LE COURS D'UN DIPLÔME, UN PARCOURS (décision du propriétaire, 11 novembre 2026 ; le BUT
+            d'abord) : un chapitre n'a qu'un parcours, celui de sa discipline ; le cours d'un diplôme
+            regroupe ceux que sa page présente, sans les dupliquer, et une classe peut le choisir pour
+            parcours (config/cours/parcours-de-formation.ts). */}
         <section
           aria-labelledby="parcours-de-formation"
           className="mx-auto max-w-4xl space-y-4 px-6 pb-8"
@@ -452,13 +453,13 @@ async function ParcoursPage() {
             id="parcours-de-formation"
             className="text-2xl font-bold leading-tight text-slate-50"
           >
-            Les parcours de formation du cours
+            Le cours d&apos;un diplôme, en un parcours
           </h2>
           <p className="max-w-2xl text-base leading-relaxed text-slate-400">
-            Les chapitres du cours s&apos;écrivent par discipline. Pour le BUT,
-            un parcours de formation regroupe ceux qui travaillent ses
-            compétences, d&apos;où qu&apos;ils viennent : une classe qui le
-            choisit les ouvre tous, avec leurs cas pratiques.
+            Les chapitres du cours s&apos;écrivent par discipline. Le cours
+            d&apos;un diplôme les réunit tels que sa page les présente,
+            d&apos;où qu&apos;ils viennent : une classe qui le choisit les
+            ouvre tous, avec leurs cas pratiques.
           </p>
           <ul className="grid gap-2">
             {PARCOURS_DE_FORMATION.map((p) => (

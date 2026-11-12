@@ -7,19 +7,24 @@ import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { classesDeLEnseignant, NOM_DE_CLASSE_MAX, parcoursImposeALEnseignant } from "@/services/cours.service";
 import { compter, jourDeCreation } from "@/lib/format";
+import { insecables, typographier } from "@/lib/typographie";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
-import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES } from "@/app/cours/entreprises";
 import { parcoursAttribues } from "@/services/attributions.service";
 import { parcoursAttribue } from "@/services/chapitres-de-la-classe";
-import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
-import { classeSansOffre, offreDuCoursDeLEnseignant, unParcoursParLicenceClasse } from "@/services/chapitres-de-la-classe";
+import {
+  CE_QU_EST_UN_PARCOURS,
+  PARCOURS_PROPOSES_A_CHOISIR,
+  parcoursRangesParDiplome,
+  titreDuParcours,
+} from "@/config/cours/parcours-de-formation";
+import { classeSansOffre, offreDuCoursDeLEnseignant, parcoursDeLEssai, unParcoursParLicenceClasse } from "@/services/chapitres-de-la-classe";
 import { LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
-import { creerClasseAction } from "./actions";
+import { NouvelleClasseDuCours } from "@/components/nouvelle-classe-du-cours";
 
 export const metadata: Metadata = {
   title: "Mes classes du cours",
@@ -28,18 +33,18 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+/** Ce que dit la page quand un geste sur une classe a été refusé (`?refus=`, depuis la page d'une classe). */
 const REFUS: Record<string, string> = {
-  nom: "Donnez un nom à la classe, par exemple « BTS CG 1 · groupe A ».",
-  parcours: `Avec l'offre ${OFFRES.classe.nom}, une nouvelle classe suit le parcours de vos autres classes : choisissez-le dans la liste.`,
   introuvable: "Cette classe n'existe pas, ou elle n'est pas l'une des vôtres.",
 };
 
 /**
  * MES CLASSES DU COURS PAR LA SIMULATION.
  *
- * L'enseignant crée une classe (un nom, et s'il le veut une entreprise pour tous) ; elle
- * reçoit un code. Ses élèves la rejoignent sur /cours/rejoindre, sous un prénom ou un
- * pseudonyme, et leur progression remonte ici, chapitre par chapitre.
+ * L'enseignant crée une classe (un nom, son parcours, et s'il le veut une entreprise pour tous) ; elle
+ * reçoit un code. Ses élèves la rejoignent sur /cours/rejoindre, sous un prénom ou un pseudonyme, et
+ * leur progression remonte ici, chapitre par chapitre. Le formulaire est un composant client, pour que
+ * ses erreurs se lisent sous leurs champs, la saisie gardée (components/nouvelle-classe-du-cours.tsx).
  */
 async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{ refus?: string }> }) {
   const { refus } = await searchParams;
@@ -54,7 +59,16 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
   ]);
   // Les parcours que l'admin a attribués (migration 0056) : sans liste, tous ceux qu'on propose.
   // Sous l'offre Classe, le seul parcours de la licence quand il est fixé (décision du 10 novembre 2026).
+  // Rangés par diplôme, le cours du diplôme en premier (décision du 11 novembre 2026).
   const aChoisir = PARCOURS_PROPOSES_A_CHOISIR.filter((p) => (impose ? p.code === impose : parcoursAttribue(attribues, p.code)));
+  const groupes = parcoursRangesParDiplome(aChoisir.map((p) => p.code));
+  const offres = { classe: OFFRES.classe.nom, programme: OFFRES.programme.nom, campus: OFFRES.campus.nom };
+  const aide =
+    offre === "classe"
+      ? unParcoursParLicenceClasse(offres, impose ? (titreDuParcours(impose) ?? impose) : null)
+      : offre
+        ? `Avec l'offre ${offres.classe} ou ${offres.programme}, la classe ouvre les chapitres de ce parcours ; avec l'offre ${offres.campus}, tous les chapitres.`
+        : parcoursDeLEssai(offres);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const raison = refus && Object.hasOwn(REFUS, refus) ? REFUS[refus] : null;
   return (
@@ -77,7 +91,7 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
           </p>
         ) : null}
         <Rubrique note={classes.length > 0 ? compter(classes.length, "classe") : undefined}>Mes classes</Rubrique>
-        <details id="nouvelle-classe" className="group scroll-mt-24" open={classes.length === 0 || !!raison || undefined}>
+        <details id="nouvelle-classe" className="group scroll-mt-24" open={classes.length === 0 || undefined}>
           <summary className="inline-flex cursor-pointer list-none rounded-lg [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">
               <span className={bouton({ taille: "l" })}>
@@ -103,90 +117,16 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
                 </Link>
               </p>
             ) : null}
-            <form action={creerClasseAction} className="mt-4 grid gap-5">
-              <label className="grid gap-1">
-                <span className="text-sm font-semibold text-slate-200">Nom de la classe</span>
-                <input
-                  name="nom"
-                  required
-                  maxLength={NOM_DE_CLASSE_MAX}
-                  placeholder="BTS CG 1 · groupe A"
-                  className="champ w-full px-3 py-2 text-base"
-                />
-              </label>
-              {/* LE PARCOURS DE LA CLASSE (décision du propriétaire, octobre 2026) : sous l'offre
-                  Classe ou Programme, il ouvre les chapitres de ce parcours ; Campus ouvre tout
-                  (services/cours.service.ts, coursOuvert). */}
-              <label className="grid gap-1">
-                <span className="text-sm font-semibold text-slate-200">Parcours du cours</span>
-                <select
-                  name="parcours"
-                  required
-                  defaultValue={impose ?? ""}
-                  className="champ w-full px-3 py-2 text-base"
-                  data-parcours-de-la-classe=""
-                  aria-describedby="parcours-de-la-classe-aide"
-                >
-                  <option value="" disabled>
-                    Choisir un parcours
-                  </option>
-                  {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
-                      des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
-                  {aChoisir.map((p) => (
-                    <option key={p.code} value={p.code}>
-                      {p.titre}
-                    </option>
-                  ))}
-                </select>
-                <span id="parcours-de-la-classe-aide" className="text-sm text-slate-400">
-                  {offre === "classe" ? (
-                    <span data-un-parcours-par-licence="">
-                      {unParcoursParLicenceClasse(
-                        { classe: OFFRES.classe.nom, programme: OFFRES.programme.nom, campus: OFFRES.campus.nom },
-                        impose ? (titreDuParcours(impose) ?? impose) : null,
-                      )}
-                    </span>
-                  ) : (
-                    <>
-                      Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, la classe ouvre les chapitres de ce parcours ; avec
-                      l&apos;offre {OFFRES.campus.nom}, tous les chapitres.
-                    </>
-                  )}
-                </span>
-              </label>
-              <label className="grid gap-1">
-                <span className="text-sm font-semibold text-slate-200">Entreprise du cas</span>
-                <select name="entreprise" defaultValue="" className="champ w-full px-3 py-2 text-base">
-                  <option value="">Au choix de chaque élève</option>
-                  {ENTREPRISES.map((e) => (
-                    <option key={e.code} value={e.code}>
-                      {e.nom} · {e.tagline}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-sm text-slate-400">
-                  La même pour toute la classe, pour corriger ensemble ; ou au choix, pour comparer les métiers.
-                </span>
-              </label>
-              {/* LA LIBÉRATION DES CHAPITRES (décision du propriétaire, novembre 2026 ; migration 0056). */}
-              <fieldset className="grid gap-2" data-liberation-a-la-creation="">
-                <legend className="text-sm font-semibold text-slate-200">Chapitres ouverts aux élèves</legend>
-                <label className="flex items-start gap-2 text-sm text-slate-200">
-                  <input type="radio" name="liberation" value="tout" defaultChecked className="mt-1" />
-                  <span>Tout ouvrir : les élèves voient tous les chapitres que votre offre permet.</span>
-                </label>
-                <label className="flex items-start gap-2 text-sm text-slate-200">
-                  <input type="radio" name="liberation" value="chapitre" className="mt-1" />
-                  <span>Libérer chapitre par chapitre : vous ouvrez chaque chapitre quand la classe y arrive.</span>
-                </label>
-                <span className="text-sm text-slate-400">Les chapitres libres restent toujours ouverts. Vous pourrez changer d&apos;avis sur la page de la classe.</span>
-              </fieldset>
-              <div>
-                <SubmitButton pendingLabel="Création de la classe…" className={bouton()}>
-                  Créer la classe
-                </SubmitButton>
-              </div>
-            </form>
+            {/* Un composant client n'est, vu d'ici, qu'une référence : ses textes lui arrivent avec
+                leurs insécables (lib/typographie.ts). */}
+            <NouvelleClasseDuCours
+              groupes={typographier(groupes.map((g) => ({ cle: g.cle, libelle: g.libelle, parcours: g.parcours.map((p) => ({ code: p.code, libelle: p.libelle })) })))}
+              impose={impose}
+              aide={insecables(aide)}
+              ceQuEstUnParcours={insecables(CE_QU_EST_UN_PARCOURS)}
+              entreprises={typographier(ENTREPRISES.map((e) => ({ code: e.code, nom: e.nom, tagline: e.tagline })))}
+              nomMax={NOM_DE_CLASSE_MAX}
+            />
           </section>
         </details>
         {classes.length === 0 ? (

@@ -5,9 +5,13 @@ import {
   type BrowserContext,
   type Page,
 } from "playwright-core";
-import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { aller, BASE, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { COULEUR_DU_PAPIER } from "../../src/config/themes";
+import { chapitresDuParcoursDansLOrdre } from "../../src/config/cours/par-diplome";
+import { espacesOrdinaires } from "../../src/lib/typographie";
 
 /**
  * L'APPLICATION, À LA MAIN D'UN TÉLÉPHONE.
@@ -1271,3 +1275,116 @@ describe("un niveau complet (NOVA niveau 6), sur téléphone", () => {
   }, 180_000);
 });
 
+/**
+ * LA CLASSE DU COURS, SUR TÉLÉPHONE (audit UX du 11 novembre 2026, P1-1 à P1-3, P2-6 et P2-9) : le
+ * formulaire de classe et ses erreurs, la page de la classe (la classe élève par élève, le code à
+ * projeter, la liste de libération, le tableau du chapitre suivi) et « Ma classe » tiennent dans
+ * 390 px. Le tableau du chapitre dit qu'il défile, et sa zone s'atteint et défile au clavier ; les
+ * cases de libération font 44 px. Avec E2E_CAPTURES, chaque écran est photographié.
+ */
+describe("la classe du cours, sur téléphone", () => {
+  const TELEPHONE = { ...devices["iPhone 13"], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: "fr-FR" };
+  const debordement = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const capturer = async (p: Page, nom: string, cible?: ReturnType<Page["locator"]>) => {
+    if (!process.env.E2E_CAPTURES) return;
+    mkdirSync(process.env.E2E_CAPTURES, { recursive: true });
+    const chemin = join(process.env.E2E_CAPTURES, `${nom}-390.png`);
+    if (cible) await cible.screenshot({ path: chemin });
+    else await p.screenshot({ path: chemin, fullPage: true });
+  };
+  const aLiberer = chapitresDuParcoursDansLOrdre("bts-cg").find((c) => !c.libre)!;
+
+  it("le formulaire, la page de la classe, la liste de libération et « Ma classe » tiennent dans 390 px", async () => {
+    const ctxProf = await navigateur.newContext(TELEPHONE);
+    await enseignantSousLicence(ctxProf, { arene: "classe" });
+    const prof = await ctxProf.newPage();
+    const ctxEleve = await navigateur.newContext(TELEPHONE);
+    const eleve = await ctxEleve.newPage();
+    try {
+      // Le formulaire de classe, et ses erreurs sous les champs.
+      await aller(prof, "/teacher/cours");
+      expect(await debordement(prof), "/teacher/cours déborde").toBeLessThanOrEqual(0);
+      const liste = prof.locator("[data-nouvelle-classe] select[name='parcours']");
+      await liste.evaluate((s) => ((s as HTMLSelectElement).size = 18));
+      await capturer(prof, "liste-des-parcours-de-la-classe", liste);
+      await liste.evaluate((s) => ((s as HTMLSelectElement).size = 0));
+      await prof.getByRole("button", { name: "Créer la classe" }).click();
+      await prof.locator('[data-erreur-du-champ="parcours"]').waitFor({ state: "visible", timeout: 30_000 });
+      expect(await debordement(prof), "le formulaire refusé déborde").toBeLessThanOrEqual(0);
+      await capturer(prof, "formulaire-de-classe-refuse", prof.locator("[data-nouvelle-classe]"));
+
+      await prof.getByLabel("Nom de la classe").fill("BTS CG 1 · groupe B");
+      await prof.getByLabel("Parcours du cours").selectOption("bts-cg");
+      await prof.getByLabel(/Libérer chapitre par chapitre/).check();
+      await prof.getByRole("button", { name: "Créer la classe" }).click();
+      await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}\?creee=1$/, { timeout: 60_000 });
+      const pageDeLaClasse = new URL(prof.url()).pathname;
+      const code = (await prof.locator("[data-code-de-classe]").innerText()).trim();
+
+      // La liste de libération : chaque case fait 44 px, et se coche du doigt.
+      const cases = await prof.locator("[data-case-de-liberation]").evaluateAll((xs) =>
+        xs.map((x) => {
+          const r = x.getBoundingClientRect();
+          return { l: Math.round(r.width), h: Math.round(r.height) };
+        }),
+      );
+      expect(cases.length).toBeGreaterThan(0);
+      expect(cases.filter((c) => c.l < 44 || c.h < 44)).toEqual([]);
+      const caseDuChapitre = prof.locator(`[data-liberer-le-chapitre="${aLiberer.code}"] [data-case-de-liberation]`);
+      await caseDuChapitre.tap();
+      await expect.poll(() => caseDuChapitre.getAttribute("aria-checked"), { timeout: 30_000 }).toBe("true");
+
+      // L'élève rejoint, et commence le chapitre libéré depuis « Ma classe ».
+      await aller(eleve, `/cours/rejoindre?code=${code}`);
+      await eleve.getByLabel("Prénom ou pseudonyme").fill("Tom");
+      await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();
+      await eleve.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });
+      await eleve.waitForLoadState("networkidle");
+      expect(await debordement(eleve), "« Ma classe » déborde").toBeLessThanOrEqual(0);
+      const titre = (await eleve.locator("#ma-classe").boundingBox())!;
+      expect(titre.y + titre.height, "« Ma classe » hors du premier écran").toBeLessThanOrEqual(844);
+      const commencer = eleve.locator("[data-commencer-en-classe]");
+      expect(await commencer.getAttribute("data-commencer-en-classe")).toBe(aLiberer.code);
+      await capturer(eleve, "ma-classe", eleve.locator("[data-classe-du-cours]"));
+      await commencer.tap();
+      await eleve.waitForURL(new RegExp(`/cours/${aLiberer.code}\\?`), { timeout: 60_000 });
+      await eleve.getByRole("button", { name: "Étape suivante" }).tap();
+
+      // La page de la classe : la classe élève par élève, le code, la liste et le tableau du chapitre.
+      await aller(prof, pageDeLaClasse);
+      const ligne = prof.locator('[data-resume-eleve="Tom"]');
+      await expect
+        .poll(
+          async () => {
+            await prof.reload();
+            return (await ligne.count()) === 1 ? espacesOrdinaires(await ligne.innerText()) : "";
+          },
+          { timeout: 30_000 },
+        )
+        .toContain(espacesOrdinaires(aLiberer.titre));
+      expect(await debordement(prof), "la page de la classe déborde").toBeLessThanOrEqual(0);
+      expect(await prof.locator("[data-projeter-le-code]").isVisible()).toBe(true);
+      await capturer(prof, "suivi-de-la-classe");
+      await capturer(prof, "liste-de-liberation", prof.locator("#liberation"));
+      await capturer(prof, "classe-eleve-par-eleve", prof.locator("[data-eleves-de-la-classe]"));
+      // Le tableau du chapitre suivi dit qu'il défile ; sa zone s'atteint au clavier, et y défile.
+      expect(await prof.locator("[data-tableau-glisser]").isVisible()).toBe(true);
+      const zone = prof.locator("[data-tableau-qui-defile]");
+      expect(await zone.getAttribute("tabindex")).toBe("0");
+      expect(await zone.evaluate((z) => z.scrollWidth > z.clientWidth), "le tableau ne défile pas : l'indice ment").toBe(true);
+      await capturer(prof, "tableau-du-chapitre", prof.locator("[data-tableau-glisser]").locator(".."));
+      await zone.focus();
+      await prof.keyboard.press("ArrowRight");
+      await expect.poll(() => zone.evaluate((z) => z.scrollLeft), { timeout: 5_000 }).toBeGreaterThan(0);
+
+      // Le code à projeter.
+      await prof.locator("[data-projeter-le-code]").tap();
+      await prof.waitForURL(/\/code$/, { timeout: 60_000 });
+      expect(await debordement(prof), "le code projeté déborde").toBeLessThanOrEqual(0);
+      await capturer(prof, "code-de-la-classe");
+    } finally {
+      await ctxProf.close();
+      await ctxEleve.close();
+    }
+  }, 240_000);
+});

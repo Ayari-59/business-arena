@@ -1,20 +1,21 @@
 import { randomInt } from "node:crypto";
-import { and, asc, count, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNull, ne, or } from "drizzle-orm";
 import { db } from "@/db";
-import { coursClasses, coursEleves, coursProgressions, organizationMembers, type SuiviDEtapeEnregistre } from "@/db/schema";
+import { coursClasses, coursEleves, coursProgressions, organizationMembers, orgLicences, type SuiviDEtapeEnregistre } from "@/db/schema";
 import { ALPHABET_REPRISE } from "@/config/reprise";
 import { chapitreParCode } from "@/config/cours/registre";
 import { parcoursProposeAChoisir, parcoursQuiOuvrent, type OuvrablePar } from "@/config/cours/parcours-de-formation";
 import type { Chapitre } from "@/config/cours/types";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
+import { distinguerLesHomonymes } from "@/lib/format";
 import type { ProgressionLue } from "@/pedagogy/cours/suivi";
 import { offreDuCoursDe, plafondDElevesDesComptes, unCompteSousLicence } from "@/services/acces.service";
 import { getTeacherOrgId } from "@/services/auth.service";
-import { chapitresLiberes, parcoursAttribues } from "@/services/attributions.service";
+import { chapitresLiberesDuPlusRecent, parcoursAttribues } from "@/services/attributions.service";
+import { getLicenceStatus } from "@/services/licence.service";
 import {
   dansLesAttributions,
   libereALaClasse,
-  offreDuCoursDeLEnseignant,
   parcoursAttribue,
   parcoursDeLaLicenceClasse,
   type ModeDeLiberation,
@@ -60,24 +61,46 @@ export const normaliserCodeDeClasse = (saisi: string) =>
 
 const entrepriseValide = (e: string | null | undefined) => (e && ENTREPRISES_DU_COURS.includes(e) ? e : null);
 /**
- * Un parcours du registre, ou un parcours de formation (le BUT : config/cours/parcours-de-formation.ts),
+ * Un parcours du registre, ou un parcours de formation (le cours d'un diplôme : config/cours/parcours-de-formation.ts),
  * qu'une classe peut choisir aujourd'hui : pas celui d'une formation retirée (config/formations-proposees.ts).
  */
 const parcoursValide = (p: string | null | undefined) => (parcoursProposeAChoisir(p) ? p : null);
 
 /**
+ * LA LICENCE CLASSE EN COURS DE L'ÉTABLISSEMENT DE CET ENSEIGNANT, et le moment depuis lequel une
+ * classe compte pour elle : son début, ou son enregistrement s'il est plus tard (une licence posée
+ * aujourd'hui, datée du 1er septembre, ne compte pas les classes d'essai de septembre). Null hors de
+ * l'offre Classe.
+ */
+async function licenceClasseEnCours(enseignantId: string): Promise<{ depuis: Date } | null> {
+  const org = await getTeacherOrgId(enseignantId);
+  if (!org) return null;
+  const statut = await getLicenceStatus(org, new Date(), "arene");
+  if ((statut.state !== "active" && statut.state !== "bientot_expiree") || statut.licence?.arene !== "classe") return null;
+  const [ligne] = await db
+    .select({ debut: orgLicences.startsAt, enregistree: orgLicences.createdAt })
+    .from(orgLicences)
+    .where(eq(orgLicences.id, statut.licence.id));
+  const debut = ligne ? Math.max(ligne.debut.getTime(), ligne.enregistree.getTime()) : statut.licence.startsAt.getTime();
+  return { depuis: new Date(debut) };
+}
+
+/**
  * LE SEUL PARCOURS QU'UNE NOUVELLE CLASSE DE CET ENSEIGNANT PEUT PRENDRE, sous l'offre Classe
  * (services/chapitres-de-la-classe.ts, `parcoursDeLaLicenceClasse`) ; null quand le choix est libre
- * (Programme, Campus, sans offre, ou pas encore de parcours fixé sous Classe).
+ * (Programme, Campus, sans offre, ou pas encore de parcours fixé sous Classe). LES CLASSES D'ESSAI NE
+ * COMPTENT PAS (décision du propriétaire, 11 novembre 2026) : seules les classes créées sous la
+ * licence en cours le fixent.
  */
 export async function parcoursImposeALEnseignant(enseignantId: string): Promise<string | null> {
-  if ((await offreDuCoursDeLEnseignant(enseignantId)) !== "classe") return null;
+  const licence = await licenceClasseEnCours(enseignantId);
+  if (!licence) return null;
   const [attribues, classes] = await Promise.all([
     parcoursAttribues(enseignantId),
     db
       .select({ parcours: coursClasses.parcours })
       .from(coursClasses)
-      .where(eq(coursClasses.creePar, enseignantId))
+      .where(and(eq(coursClasses.creePar, enseignantId), gte(coursClasses.createdAt, licence.depuis)))
       .orderBy(asc(coursClasses.createdAt), asc(coursClasses.id)),
   ]);
   return parcoursDeLaLicenceClasse(attribues, classes.map((c) => c.parcours));
@@ -131,6 +154,30 @@ export async function classesDeLEnseignant(enseignantId: string) {
     .orderBy(desc(coursClasses.createdAt));
 }
 
+/**
+ * LES ÉLÈVES D'UNE CLASSE, CHACUN SOUS UN NOM QUI LE DISTINGUE (audit UX du 11 novembre 2026, P1-5) :
+ * deux « Léa » deviennent « Léa n°1 » et « Léa n°2 », dans l'ordre où elles ont rejoint
+ * (lib/format.ts, `distinguerLesHomonymes`, la règle des équipes de l'arène). Rangés par nom.
+ */
+async function elevesDeLaClasse(classeId: string): Promise<{ userId: string; nom: string }[]> {
+  const eleves = await db
+    .select({ userId: coursEleves.userId, nom: coursEleves.nom })
+    .from(coursEleves)
+    .where(eq(coursEleves.classeId, classeId))
+    .orderBy(asc(coursEleves.depuis), asc(coursEleves.userId));
+  const noms = distinguerLesHomonymes(eleves.map((e) => e.nom));
+  return eleves.map((e, i) => ({ userId: e.userId, nom: noms[i]! })).sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+}
+
+/** Une classe de cet enseignant, sans ses élèves ; null : pas la sienne. */
+export async function laClasseDeLEnseignant(enseignantId: string, classeId: string) {
+  const [classe] = await db
+    .select()
+    .from(coursClasses)
+    .where(and(eq(coursClasses.id, classeId), eq(coursClasses.creePar, enseignantId)));
+  return classe ?? null;
+}
+
 /** Une classe de cet enseignant, et la progression de ses élèves dans un chapitre. Null : pas la sienne. */
 export async function classeDeLEnseignant(enseignantId: string, classeId: string, chapitre: string) {
   const [classe] = await db
@@ -138,17 +185,14 @@ export async function classeDeLEnseignant(enseignantId: string, classeId: string
     .from(coursClasses)
     .where(and(eq(coursClasses.id, classeId), eq(coursClasses.creePar, enseignantId)));
   if (!classe) return null;
-  const eleves = await db
-    .select({ userId: coursEleves.userId, nom: coursEleves.nom })
-    .from(coursEleves)
-    .where(eq(coursEleves.classeId, classeId))
-    .orderBy(asc(coursEleves.nom));
+  const eleves = await elevesDeLaClasse(classeId);
   const lignes = await db
     .select()
     .from(coursProgressions)
     .where(and(eq(coursProgressions.classeId, classeId), eq(coursProgressions.chapitre, chapitre)));
   const parEleve = new Map(lignes.map((l) => [l.userId, l]));
-  // Un élève qui a rejoint sans avoir encore ouvert le chapitre compte : il est à l'étape 0.
+  // Un élève qui a rejoint sans avoir encore ouvert le chapitre compte, « pas commencé » (audit UX
+  // du 11 novembre 2026, P2-9 : il se lisait « 1 sur 7 »).
   const progressions: ProgressionLue[] = eleves.map((e) => {
     const l = parEleve.get(e.userId);
     return {
@@ -158,9 +202,47 @@ export async function classeDeLEnseignant(enseignantId: string, classeId: string
       etapes: l?.etapes ?? {},
       erreurs: l?.erreurs ?? {},
       majLe: l?.majLe ?? classe.createdAt,
+      commence: Boolean(l),
     };
   });
   return { classe, progressions };
+}
+
+/** La ligne d'un élève en tête du suivi : le chapitre où il a travaillé en dernier, son étape, et quand. */
+export interface ResumeDEleve {
+  eleve: string;
+  /** Le code du chapitre ; null : aucun chapitre ouvert encore. */
+  chapitre: string | null;
+  /** L'étape la plus avancée atteinte dans ce chapitre. */
+  etape: number;
+  majLe: Date | null;
+}
+
+/**
+ * LA CLASSE, ÉLÈVE PAR ÉLÈVE (audit UX du 11 novembre 2026, P1-2 : le suivi ne valait que pour le
+ * chapitre choisi, et rien ne disait quel chapitre chaque élève avait ouvert). Pour chacun, le
+ * chapitre de sa dernière activité. Null : pas une classe de cet enseignant.
+ */
+export async function resumeDeLaClasse(enseignantId: string, classeId: string): Promise<ResumeDEleve[] | null> {
+  const [classe] = await db
+    .select({ id: coursClasses.id })
+    .from(coursClasses)
+    .where(and(eq(coursClasses.id, classeId), eq(coursClasses.creePar, enseignantId)));
+  if (!classe) return null;
+  const [eleves, lignes] = await Promise.all([
+    elevesDeLaClasse(classeId),
+    db
+      .select({ userId: coursProgressions.userId, chapitre: coursProgressions.chapitre, etape: coursProgressions.etape, majLe: coursProgressions.majLe })
+      .from(coursProgressions)
+      .where(eq(coursProgressions.classeId, classeId))
+      .orderBy(desc(coursProgressions.majLe)),
+  ]);
+  const derniere = new Map<string, (typeof lignes)[number]>();
+  for (const l of lignes) if (!derniere.has(l.userId)) derniere.set(l.userId, l);
+  return eleves.map((e) => {
+    const l = derniere.get(e.userId);
+    return { eleve: e.nom, chapitre: l?.chapitre ?? null, etape: l?.etape ?? 0, majLe: l?.majLe ?? null };
+  });
 }
 
 export async function cloreClasse(args: { enseignantId: string; classeId: string; close: boolean }): Promise<boolean> {
@@ -268,6 +350,7 @@ export async function classeDeLEleve(userId: string) {
       parcours: coursClasses.parcours,
       closeLe: coursClasses.closeLe,
       sansCalculatrice: coursClasses.sansCalculatrice,
+      liberation: coursClasses.liberation,
     })
     .from(coursEleves)
     .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
@@ -355,10 +438,13 @@ export async function classeSousLicence(userId: string): Promise<boolean> {
  *    tous ses groupes, pas tout le catalogue : c'est l'offre Campus qui ouvre tout) ;
  *  · une classe héritée (d'avant la migration 0052) sans parcours : sous Classe ou Programme,
  *    l'accès d'avant (tout le cours), jusqu'à ce que son enseignant choisisse son parcours ;
- *  · LE PARCOURS D'UNE FORMATION (le BUT GEA, TC ou GACO) : il regroupe des chapitres d'autres
+ *  · LE PARCOURS D'UNE FORMATION (le cours d'un diplôme : le bac STMG, un BTS, un BUT, le DCG…) : il regroupe des chapitres d'autres
  *    parcours sans les dupliquer ; un chapitre s'ouvre à la classe dont le parcours est le sien ou
  *    un parcours de formation qui le regroupe, un cas dédié avec le chapitre qu'il reprend
  *    (`parcoursQuiOuvrent`, config/cours/parcours-de-formation.ts) ;
+ *  · LES PRÉREQUIS ANNONCÉS (décision du propriétaire, 11 novembre 2026) : un chapitre s'ouvre aussi
+ *    avec le chapitre qui l'annonce en prérequis, de proche en proche, et une classe qui libère un
+ *    chapitre libère ses prérequis (même fonction ; services/chapitres-de-la-classe.ts) ;
  *  · sans licence de l'arène en cours : aucun.
  * L'offre est celle de l'établissement de l'enseignant (celui de la classe, pour l'élève).
  */
@@ -374,15 +460,21 @@ export async function coursOuvert(
   return false;
 }
 
-/** La libération de la classe d'un élève : son mode et ses chapitres libérés ; null sans classe. */
-export async function liberationDeLEleve(eleve: string): Promise<{ mode: ModeDeLiberation; liberes: Set<string> } | null> {
+/**
+ * La libération de la classe d'un élève : son mode, ses chapitres libérés, et ceux-ci du plus
+ * récemment libéré au plus ancien (« Ma classe » vise le dernier) ; null sans classe.
+ */
+export async function liberationDeLEleve(
+  eleve: string,
+): Promise<{ mode: ModeDeLiberation; liberes: Set<string>; duPlusRecent: string[] } | null> {
   const [m] = await db
     .select({ classeId: coursClasses.id, liberation: coursClasses.liberation })
     .from(coursEleves)
     .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
     .where(eq(coursEleves.userId, eleve));
   if (!m) return null;
-  return { mode: m.liberation, liberes: m.liberation === "chapitre" ? await chapitresLiberes(m.classeId) : new Set() };
+  const duPlusRecent = m.liberation === "chapitre" ? await chapitresLiberesDuPlusRecent(m.classeId) : [];
+  return { mode: m.liberation, liberes: new Set(duPlusRecent), duPlusRecent };
 }
 
 // L'ADMIN RESTREINT, L'ENSEIGNANT LIBÈRE (migration 0056 ; règles pures :
@@ -427,5 +519,6 @@ async function ouvertALEleve(eleve: string, chapitre: OuvrablePar, sansLiberatio
   const parSonOffre = offre === "campus" || (m.parcours !== null && parcours.includes(m.parcours)) || (m.heritee && m.parcours === null);
   if (!parSonOffre) return false;
   if (sansLiberation || m.liberation === "tout") return true;
-  return libereALaClasse(m.liberation, await chapitresLiberes(m.classeId), { libre: false, code: chapitre.code ?? "", reprend: chapitre.reprend });
+  const liberes = new Set(await chapitresLiberesDuPlusRecent(m.classeId));
+  return libereALaClasse(m.liberation, liberes, { libre: false, code: chapitre.code ?? "", reprend: chapitre.reprend });
 }

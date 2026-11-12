@@ -8,14 +8,20 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { OuvreLeTiroirVise } from "@/components/ouvre-le-tiroir-vise";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
-import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME } from "@/config/cours/registre";
+import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME, chapitreParCode } from "@/config/cours/registre";
 import {
   PARCOURS_DE_FORMATION,
   chapitresDuParcoursDeFormation,
   parcoursQuiOuvrent,
 } from "@/config/cours/parcours-de-formation";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
-import { coursDuDiplome, couvertureDuCoursEnClair, rechercherChapitres, type ChapitreDuDiplome } from "@/config/cours/par-diplome";
+import {
+  chapitresDuParcoursDansLOrdre,
+  coursDuDiplome,
+  couvertureDuCoursEnClair,
+  rechercherChapitres,
+  type ChapitreDuDiplome,
+} from "@/config/cours/par-diplome";
 import { LIBELLE_POUR_ALLER_PLUS_LOIN } from "@/config/cours/pour-aller-plus-loin";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { CHAPITRES_PROPOSES, PARCOURS_PROPOSES, chapitrePropose } from "@/config/formations-proposees";
@@ -34,7 +40,7 @@ import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { classeDeLEleve, coursOuvert, liberationDeLEleve } from "@/services/cours.service";
-import { libereALaClasse } from "@/services/chapitres-de-la-classe";
+import { chapitreDuParcoursDeLaClasse, libereALaClasse } from "@/services/chapitres-de-la-classe";
 import { ENTREPRISES } from "./entreprises";
 import { quitterClasseAction } from "./actions";
 
@@ -96,7 +102,11 @@ async function CoursPage({
   const essaiDeLaClasse = essaiDuDiplome(formationDuParcours(classe?.parcours));
   const essai = essaiDuProgramme ?? essaiDeLaClasse;
   const pilote = essai?.chapitre ?? chapitreLibreParDefaut();
-  const aCommencer = essaiDeLaClasse?.chapitre ?? pilote;
+  // « MA CLASSE » (audit UX du 11 novembre 2026, P1-1) : les chapitres ouverts à la classe, et celui à
+  // commencer, lus par la règle de l'élève (services/cours.service.ts, `coursOuvert`).
+  const maClasse = classe && userId ? await chapitresDeMaClasse(userId, classe.parcours) : null;
+  const aCommencer = maClasse?.aCommencer ?? essaiDeLaClasse?.chapitre ?? pilote;
+  const diplomeDeLaClasse = formationDuParcours(classe?.parcours) ?? undefined;
   // Les entreprises où l'essai se joue (un chapitre peut n'en garder que certaines).
   const entreprisesDuPilote = ENTREPRISES.filter((e) => !pilote.entreprises || pilote.entreprises.codes.includes(e.code));
   const premiere = entreprisesDuPilote[0]!;
@@ -107,39 +117,38 @@ async function CoursPage({
     { enseignant: session?.userId ?? null, eleve: classe ? userId : null },
     [...lignesDuParcours.map((l) => l.chapitre), ...trouves],
   );
+  // L'élève d'une classe lit, devant un chapitre fermé, « pas encore ouvert » ou « hors programme »,
+  // jamais « réservé », le mot de la vente (audit UX du 11 novembre 2026, P2-8). Un enseignant connecté
+  // garde la page commerciale.
+  const eleveDeLaClasse = classe && !session ? { parcours: classe.parcours } : undefined;
   const vueParDefaut = !programme && !motCle;
   // Le diplôme de l'essai, que les liens du chapitre libre portent aussi (config/cours/competences-affichees.ts).
   const duDiplome = essai ? `&diplome=${essai.diplome.code}` : programme ? `&diplome=${programme.formation.code}` : "";
+  const chapeauDeLaVitrine = (
+    <>
+      Un cas d&apos;entreprise simulé, guidé étape par étape. L&apos;élève passe lui-même les écritures, répond aux questions, et voit à
+      chaque fois ce que l&apos;opération change dans les comptes. Choisissez votre formation : ses chapitres viennent dans l&apos;ordre où
+      ils s&apos;apprennent, bloc par bloc.
+    </>
+  );
   return (
     <>
       <main id="main">
-        <EnTeteDePage
-          surtitre="Le cours par la simulation"
-          titre="Comptabilité, gestion et commerce, sur un cas qui vit"
-          chapeau={
-            <>
-              Un cas d&apos;entreprise simulé, guidé étape par étape. L&apos;élève passe lui-même les écritures,
-              répond aux questions, et voit à chaque fois ce que l&apos;opération change dans les comptes. Choisissez
-              votre formation : ses chapitres viennent dans l&apos;ordre où ils s&apos;apprennent, bloc par bloc.
-            </>
-          }
-        />
-        <div className={`${COLONNE_DE_PAGE} grid gap-12 pb-16 pt-2`}>
-          {/* L'ÉLÈVE D'UNE CLASSE le lit d'abord : sa classe, son nom, et l'entreprise que
-              l'enseignant a choisie pour tous, s'il en a choisi une. */}
-          {classe ? (
-            // « MA CLASSE », EN TÊTE ET AVEC SON BOUTON (audit UX du 29 octobre 2026, P1-2) :
-            // l'inscription se noyait dans la vitrine du cours ; l'élève lit sa classe et le
-            // chapitre à commencer, avant tout ce qui s'adresse aux enseignants.
-            <section className="carte grid gap-3 p-5 sm:p-6" data-classe-du-cours="" aria-labelledby="ma-classe">
+        {classe ? (
+          // « MA CLASSE » PASSE AVANT LE TITRE DE LA VITRINE (audit UX du 11 novembre 2026, P1-1 ; après
+          // celui du 29 octobre, P1-2) : c'est le titre de la page de l'élève d'une classe, avec le chapitre
+          // à commencer et ceux que sa classe lui ouvre ; la vitrine vient dessous.
+          <div className={`${COLONNE_DE_PAGE} pt-10 sm:pt-14`}>
+            <section className="carte grid gap-4 p-5 sm:p-6" data-classe-du-cours="" aria-labelledby="ma-classe">
+              <p className="surtitre">Le cours par la simulation</p>
               {annonce === "rejointe" ? (
                 <p role="status" className="text-sm font-semibold text-emerald-300">
                   Inscription enregistrée.
                 </p>
               ) : null}
-              <h2 id="ma-classe" className="text-2xl font-bold text-slate-50">
+              <h1 id="ma-classe" className="text-[clamp(1.75rem,6vw,2.5rem)] font-bold leading-[1.1] text-slate-50">
                 Ma classe : « {classe.classe} »
-              </h2>
+              </h1>
               <p className="text-sm text-slate-300">
                 Vous suivez le cours sous le nom <strong className="font-semibold">{classe.eleve}</strong> : votre
                 enseignant voit où vous en êtes.
@@ -147,20 +156,45 @@ async function CoursPage({
               </p>
               <p>
                 <Link
-                  href={lienDuChapitre(aCommencer, imposee?.code, essaiDeLaClasse?.diplome.code)}
+                  href={lienDuChapitre(aCommencer, imposee?.code, diplomeDeLaClasse)}
                   className={bouton({ taille: "l" })}
-                  data-commencer-en-classe=""
+                  data-commencer-en-classe={aCommencer.code}
                 >
                   Commencer : {aCommencer.titre}
                 </Link>
               </p>
+              {maClasse && maClasse.ouverts.length > 0 ? (
+                <ChapitresDeMaClasse
+                  lignes={maClasse.ouverts}
+                  aCommencer={aCommencer.code}
+                  lien={(c) => lienDuChapitre(c, imposee?.code, diplomeDeLaClasse)}
+                />
+              ) : null}
               <form action={quitterClasseAction}>
                 <SubmitButton pendingLabel="Départ…" className={bouton({ variante: "lien", taille: "s" })}>
                   Quitter la classe
                 </SubmitButton>
               </form>
             </section>
-          ) : (
+          </div>
+        ) : null}
+        {classe ? (
+          <header className={`${COLONNE_DE_PAGE} pb-2 pt-10`} data-vitrine-du-cours="">
+            <p className="surtitre">Le cours par la simulation</p>
+            <h2 className="mt-3 text-[clamp(1.75rem,5vw,2.25rem)] font-bold leading-[1.1] text-slate-50">
+              Comptabilité, gestion et commerce, sur un cas qui vit
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300">{chapeauDeLaVitrine}</p>
+          </header>
+        ) : (
+          <EnTeteDePage
+            surtitre="Le cours par la simulation"
+            titre="Comptabilité, gestion et commerce, sur un cas qui vit"
+            chapeau={chapeauDeLaVitrine}
+          />
+        )}
+        <div className={`${COLONNE_DE_PAGE} grid gap-12 pb-16 pt-2`}>
+          {classe ? null : (
             <p className="text-sm text-slate-400">
               {annonce === "quittee" ? "Vous avez quitté votre classe. " : ""}Votre enseignant vous a donné un code
               de classe ?{" "}
@@ -251,7 +285,7 @@ async function CoursPage({
                 {programme ? ` dans le ${programme.formation.sigle}` : ""}
               </h2>
               {trouves.length > 0 ? (
-                <ListeDeChapitres chapitres={trouves} imposee={imposee?.code} ouverts={ouverts} diplome={programme?.formation.code} />
+                <ListeDeChapitres chapitres={trouves} imposee={imposee?.code} ouverts={ouverts} diplome={programme?.formation.code} eleve={eleveDeLaClasse} />
               ) : (
                 <p className="text-sm text-slate-400">
                   Essayez un autre mot, ou{" "}
@@ -302,13 +336,14 @@ async function CoursPage({
                 </p>
               </div>
 
-              {/* LE PARCOURS DE FORMATION (le BUT) : il regroupe des chapitres d'autres parcours, sans
-                  les dupliquer ; une classe qui le choisit les ouvre tous (config/cours/parcours-de-formation.ts). */}
+              {/* LE COURS DU DIPLÔME, UN PARCOURS (décision du propriétaire, 11 novembre 2026) : il réunit les
+                  chapitres de cette page, sans les dupliquer ; une classe qui le choisit les ouvre tous
+                  (config/cours/parcours-de-formation.ts). */}
               {parcoursDeFormation ? (
                 <p className="text-sm text-slate-300" data-parcours-de-formation={parcoursDeFormation.code}>
-                  Pour une classe : le parcours « {parcoursDeFormation.titre} » regroupe{" "}
-                  {chapitresDuParcoursDeFormation(parcoursDeFormation.code).length} chapitres écrits pour d&apos;autres parcours.
-                  Choisi pour la classe, il les ouvre tous, avec leurs cas pratiques.
+                  Pour une classe : le parcours « {parcoursDeFormation.titre} » réunit les{" "}
+                  {chapitresDuParcoursDeFormation(parcoursDeFormation.code).length} chapitres de cette page. Choisi pour la classe, il les
+                  ouvre tous, avec leurs cas pratiques et les prérequis qu&apos;ils annoncent.
                 </p>
               ) : null}
 
@@ -349,7 +384,7 @@ async function CoursPage({
                           ) : null}
                           <ol className="grid gap-3">
                             {b.chapitres.map((l) => (
-                              <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} diplome={programme.formation.code} />
+                              <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} diplome={programme.formation.code} eleve={eleveDeLaClasse} />
                             ))}
                           </ol>
                         </>
@@ -558,6 +593,74 @@ async function CoursPage({
   );
 }
 
+/** Une ligne de « Ma classe » : un chapitre ouvert à la classe, et pourquoi. */
+interface LigneDeMaClasse {
+  chapitre: Chapitre;
+  /** Libéré par l'enseignant, libre pour tous, ou ouvert par l'offre (la classe ouvre tout). */
+  etat: "libere" | "libre" | "ouvert";
+}
+
+/**
+ * LES CHAPITRES QUE LA CLASSE OUVRE À L'ÉLÈVE, POUR « MA CLASSE » (audit UX du 11 novembre 2026, P1-1 :
+ * le chapitre libéré n'y était cité nulle part, et « Commencer » visait le chapitre libre d'un autre
+ * diplôme dans 11 parcours sur 18). Une classe qui libère chapitre par chapitre : ses chapitres libérés,
+ * dans l'ordre du parcours, puis les chapitres libres de son parcours. Une classe qui ouvre tout : les
+ * chapitres ouverts de son parcours, dans l'ordre d'apprentissage. Et le chapitre à commencer : le
+ * dernier libéré, à défaut le premier ouvert du parcours. La règle d'accès est celle de l'élève
+ * (`chapitresOuverts`, plus bas).
+ */
+async function chapitresDeMaClasse(eleve: string, parcours: string | null): Promise<{ ouverts: LigneDeMaClasse[]; aCommencer: Chapitre | null }> {
+  const duParcours = chapitresDuParcoursDansLOrdre(parcours);
+  const liberation = await liberationDeLEleve(eleve);
+  const parLiberation = (liberation?.duPlusRecent ?? []).map((c) => chapitreParCode(c)).filter((c): c is Chapitre => Boolean(c));
+  const candidats = [...new Map([...duParcours, ...parLiberation].map((c) => [c.code, c])).values()];
+  const ouverts = await chapitresOuverts({ enseignant: null, eleve }, candidats);
+  const parChapitre = liberation?.mode === "chapitre";
+  const libres: LigneDeMaClasse[] = duParcours.filter((c) => c.libre).map((chapitre) => ({ chapitre, etat: "libre" }));
+  const lignes: LigneDeMaClasse[] = parChapitre
+    ? [
+        // Les libérés, dans l'ordre du parcours ; ceux d'ailleurs (un prérequis libéré) ensuite.
+        ...[...duParcours.filter((c) => !c.libre && liberation!.liberes.has(c.code)), ...parLiberation.filter((c) => !duParcours.includes(c))]
+          .filter((c) => ouverts.has(c.code))
+          .map((chapitre): LigneDeMaClasse => ({ chapitre, etat: "libere" })),
+        ...libres,
+      ]
+    : duParcours.filter((c) => ouverts.has(c.code)).map((chapitre): LigneDeMaClasse => ({ chapitre, etat: chapitre.libre ? "libre" : "ouvert" }));
+  const aCommencer = (parChapitre ? parLiberation.find((c) => ouverts.has(c.code)) : undefined) ?? duParcours.find((c) => ouverts.has(c.code)) ?? null;
+  return { ouverts: lignes, aCommencer };
+}
+
+/** Les chapitres ouverts à la classe, sous « Ma classe » : les premiers en clair, la suite repliée. */
+function ChapitresDeMaClasse({ lignes, aCommencer, lien }: { lignes: readonly LigneDeMaClasse[]; aCommencer: string; lien: (c: Chapitre) => string }) {
+  const EN_CLAIR = 6;
+  const mot = (l: LigneDeMaClasse) =>
+    l.etat === "libere" ? (l.chapitre.code === aCommencer ? "libéré en dernier" : "libéré") : l.etat === "libre" ? "libre" : "ouvert";
+  const ligne = (l: LigneDeMaClasse) => (
+    <li key={l.chapitre.code} data-chapitre-de-ma-classe={l.chapitre.code} data-etat={l.etat} className="flex flex-wrap items-baseline gap-x-2">
+      <Link href={lien(l.chapitre)} className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline">
+        {l.chapitre.titre}
+      </Link>
+      <span className="text-xs text-slate-400">{mot(l)}</span>
+    </li>
+  );
+  return (
+    <div className="grid gap-2" data-chapitres-de-ma-classe="">
+      <h2 className="text-base font-semibold text-slate-100">
+        Les chapitres ouverts à votre classe <span className="font-normal text-slate-400">({lignes.length})</span>
+      </h2>
+      <ol className="grid gap-1.5 text-sm">{lignes.slice(0, EN_CLAIR).map(ligne)}</ol>
+      {lignes.length > EN_CLAIR ? (
+        <details className="group text-sm">
+          <summary className="cursor-pointer text-slate-300 underline-offset-4 hover:underline">
+            Voir les {lignes.length - EN_CLAIR} autres
+          </summary>
+          <ol className="mt-1.5 grid gap-1.5">{lignes.slice(EN_CLAIR).map(ligne)}</ol>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * CE QUI EST OUVERT À CE VISITEUR, parmi les chapitres montrés : la règle d'accès du cours
  * (services/cours.service.ts, `coursOuvert`), lue une fois par ensemble de parcours qui
@@ -593,13 +696,31 @@ async function chapitresOuverts(
   return ouverts;
 }
 
-/** Le cadenas d'un chapitre réservé à ce visiteur, ou la mention d'un chapitre libre. */
-function Acces({ chapitre, ouvert }: { chapitre: Chapitre; ouvert?: boolean }) {
+/** L'élève d'une classe du cours qui regarde la page : le parcours de sa classe. */
+type EleveDeLaClasse = { parcours: string | null };
+
+/**
+ * Le cadenas d'un chapitre réservé à ce visiteur, ou la mention d'un chapitre libre. L'ÉLÈVE D'UNE
+ * CLASSE ne lit pas « réservé », le mot de la vente (audit UX du 11 novembre 2026, P2-8) : un chapitre
+ * de son parcours est « pas encore ouvert » pour sa classe, un autre « hors programme ».
+ */
+function Acces({ chapitre, ouvert, eleve }: { chapitre: Chapitre; ouvert?: boolean; eleve?: EleveDeLaClasse }) {
   if (chapitre.libre) return <span className="font-semibold text-amber-300">libre</span>;
   if (ouvert === undefined) return <>licence</>;
-  return ouvert ? (
-    <span data-ouvert="">ouvert</span>
-  ) : (
+  if (ouvert) return <span data-ouvert="">ouvert</span>;
+  if (eleve) {
+    const duParcours = eleve.parcours === null || chapitreDuParcoursDeLaClasse(eleve.parcours, chapitre);
+    return duParcours ? (
+      <span data-cadenas="pas-encore-ouvert" title="Pas encore ouvert pour votre classe : votre enseignant l'ouvrira">
+        <Icone nom="verrou" /> pas encore ouvert
+      </span>
+    ) : (
+      <span data-cadenas="hors-programme" title="Hors du programme de votre classe">
+        <Icone nom="verrou" /> hors programme
+      </span>
+    );
+  }
+  return (
     <span data-cadenas="" title="Réservé aux établissements sous licence">
       <Icone nom="verrou" /> réservé
     </span>
@@ -611,7 +732,19 @@ function Acces({ chapitre, ouvert }: { chapitre: Chapitre; ouvert?: boolean }) {
  * son palier et son public, sa durée et son accès ; ses prérequis en une ligne, et ses
  * objectifs repliés.
  */
-function ChapitreDuParcours({ ligne, imposee, ouvert, diplome }: { ligne: ChapitreDuDiplome; imposee?: string; ouvert: boolean; diplome?: string }) {
+function ChapitreDuParcours({
+  ligne,
+  imposee,
+  ouvert,
+  diplome,
+  eleve,
+}: {
+  ligne: ChapitreDuDiplome;
+  imposee?: string;
+  ouvert: boolean;
+  diplome?: string;
+  eleve?: EleveDeLaClasse;
+}) {
   const c = ligne.chapitre;
   return (
     <li data-chapitre={c.code} data-rang={ligne.rang} data-approfondissement={ligne.approfondissement ? "" : undefined} className="grid gap-x-3 gap-y-1 sm:grid-cols-[2rem_1fr_auto] sm:items-baseline">
@@ -658,7 +791,7 @@ function ChapitreDuParcours({ ligne, imposee, ouvert, diplome }: { ligne: Chapit
       <span className="whitespace-nowrap text-xs tabular-nums text-slate-400">
         {dureeEnClair(ligne.duree)}
         {" · "}
-        <Acces chapitre={c} ouvert={ouvert} />
+        <Acces chapitre={c} ouvert={ouvert} eleve={eleve} />
       </span>
     </li>
   );
@@ -691,6 +824,7 @@ function ListeDeChapitres({
   imposee,
   ouverts,
   diplome,
+  eleve,
 }: {
   chapitres: readonly Chapitre[];
   imposee?: string;
@@ -698,6 +832,8 @@ function ListeDeChapitres({
   ouverts?: ReadonlySet<string>;
   /** Le diplôme choisi, que les liens portent. */
   diplome?: string;
+  /** L'élève d'une classe : un chapitre fermé ne se dit pas « réservé ». */
+  eleve?: EleveDeLaClasse;
 }) {
   return (
     <ol className="grid gap-2.5">
@@ -717,7 +853,7 @@ function ListeDeChapitres({
           <span className="whitespace-nowrap text-xs tabular-nums text-slate-400">
             {dureeEnClair(dureeDuChapitre(c))}
             {" · "}
-            <Acces chapitre={c} ouvert={ouverts ? ouverts.has(c.code) : undefined} />
+            <Acces chapitre={c} ouvert={ouverts ? ouverts.has(c.code) : undefined} eleve={eleve} />
           </span>
         </li>
       ))}
