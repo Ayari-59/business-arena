@@ -8,7 +8,7 @@ import { parcoursProposeAChoisir, parcoursQuiOuvrent, type OuvrablePar } from "@
 import type { Chapitre } from "@/config/cours/types";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import { distinguerLesHomonymes } from "@/lib/format";
-import type { ProgressionLue } from "@/pedagogy/cours/suivi";
+import { progressionLaPlusAvancee, type ProgressionLue } from "@/pedagogy/cours/suivi";
 import { offreDuCoursDe, plafondDElevesDesComptes, unCompteSousLicence } from "@/services/acces.service";
 import { getTeacherOrgId } from "@/services/auth.service";
 import { chapitresLiberesDuPlusRecent, parcoursAttribues } from "@/services/attributions.service";
@@ -368,8 +368,29 @@ export interface ProgressionEnvoyee {
 }
 
 /**
+ * LA PROGRESSION D'UN ÉLÈVE DE CLASSE DANS UN CHAPITRE, RELUE AU SERVEUR (décision du propriétaire du
+ * 11 novembre 2026 ; audit UX du même jour, P1-5). La page d'un chapitre la donne au guide, qui la
+ * reprend quand l'appareil n'en a pas : stockage vidé, poste de salle, autre appareil retrouvé par le
+ * code de reprise. Celle de sa classe d'aujourd'hui ; null : pas de classe, ou rien d'enregistré.
+ */
+export async function progressionDeLEleve(
+  userId: string,
+  chapitre: string,
+): Promise<{ entreprise: string; etape: number; etapes: Record<string, SuiviDEtapeEnregistre> } | null> {
+  const [ligne] = await db
+    .select({ entreprise: coursProgressions.entreprise, etape: coursProgressions.etape, etapes: coursProgressions.etapes })
+    .from(coursProgressions)
+    .innerJoin(coursEleves, and(eq(coursEleves.userId, coursProgressions.userId), eq(coursEleves.classeId, coursProgressions.classeId)))
+    .where(and(eq(coursProgressions.userId, userId), eq(coursProgressions.chapitre, chapitre)));
+  return ligne ?? null;
+}
+
+/**
  * Enregistrer la progression d'un élève dans le chapitre qu'il suit, pour sa classe.
  * Sans classe, rien ne s'écrit : le cours seul reste sur l'appareil.
+ *
+ * ELLE NE RECULE JAMAIS (pedagogy/cours/suivi.ts, `progressionLaPlusAvancee`) : l'envoi se fond dans ce
+ * qui est déjà enregistré, l'étape la plus loin et, pour chaque étape, la plus avancée.
  */
 export async function enregistrerProgression(userId: string, envoi: ProgressionEnvoyee): Promise<boolean> {
   const classe = await classeDeLEleve(userId);
@@ -387,7 +408,7 @@ export async function enregistrerProgression(userId: string, envoi: ProgressionE
   const etape = entier(envoi.etape, chapitre.etapes.length);
 
   const [deja] = await db
-    .select({ erreurs: coursProgressions.erreurs })
+    .select({ etape: coursProgressions.etape, etapes: coursProgressions.etapes, erreurs: coursProgressions.erreurs })
     .from(coursProgressions)
     .where(
       and(
@@ -403,12 +424,14 @@ export async function enregistrerProgression(userId: string, envoi: ProgressionE
       .map((r) => r.trim().slice(0, REMARQUE_MAX));
     erreurs[envoi.erreur.etape] = [...(erreurs[envoi.erreur.etape] ?? []), ...nouvelles].slice(-REMARQUES_GARDEES_PAR_ETAPE);
   }
+  // Jamais en recul : l'envoi se fond dans ce qui est déjà enregistré.
+  const fondue = progressionLaPlusAvancee(deja ? { etape: deja.etape, etapes: deja.etapes } : null, { etape, etapes });
   await db
     .insert(coursProgressions)
-    .values({ userId, classeId: classe.classeId, chapitre: chapitre.code, entreprise, etape, etapes, erreurs })
+    .values({ userId, classeId: classe.classeId, chapitre: chapitre.code, entreprise, etape: fondue.etape, etapes: fondue.etapes, erreurs })
     .onConflictDoUpdate({
       target: [coursProgressions.userId, coursProgressions.classeId, coursProgressions.chapitre],
-      set: { entreprise, etape, etapes, erreurs, majLe: new Date() },
+      set: { entreprise, etape: fondue.etape, etapes: fondue.etapes, erreurs, majLe: new Date() },
     });
   return true;
 }

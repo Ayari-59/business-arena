@@ -352,6 +352,8 @@ export function QuickConfigFields({
         value={level}
         onChange={(e) => setLevel(Math.min(Number(e.target.value), niveauMax))}
         aria-label="Niveau de difficulté"
+        // Le niveau se dit avec son nom, pas seulement son numéro (audit UX du 11 novembre 2026, P2-11).
+        aria-valuetext={cur ? `Niveau ${level} · ${cur.name}` : `Niveau ${level}`}
         className="curseur mt-2 accent-amber-500"
       />
       <div className="flex justify-between">

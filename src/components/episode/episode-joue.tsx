@@ -2,7 +2,7 @@
 
 import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import type { CodeNiveau, TempsDeDecision } from "@/config/episodes/niveaux";
 import type { Message, PartieJouee } from "@/config/episodes/types";
 import type {
@@ -24,6 +24,7 @@ import { VerdictDuMarche } from "@/components/verdict-du-marche";
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
 import type { CoursDeLEpisode } from "@/pedagogy/cours/suites";
 import { CourbeDesSemaines } from "./courbe-des-semaines";
+import { cleDeLaPartie, gesteDeReprise, lireLesFaits, type FaitsDeLaPartie } from "./faits-de-la-partie";
 
 /**
  * UN ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT.
@@ -46,6 +47,11 @@ import { CourbeDesSemaines } from "./courbe-des-semaines";
  * jouent le même trimestre peuvent comparer leurs décisions, et les tests
  * jouent un trimestre connu. Le niveau aussi (`?niveau=expert`) : il change ce
  * que le manager sait et voit, jamais le trimestre ni le jugement du bilan.
+ *
+ * LA PARTIE REPREND AU MÊME ÉCRAN APRÈS UN RECHARGEMENT (audit UX du 11 novembre 2026, P1-6) : ses
+ * faits se gardent dans le stockage de session de l'onglet (./faits-de-la-partie.ts), et le serveur la
+ * rejoue à partir d'eux. PENDANT L'ATTENTE (P2-3), la scène garde sa hauteur sous la phrase qui dit
+ * qu'on attend, et l'en-tête n'avance qu'avec la réponse.
  */
 
 type Ecran = "intro" | "jeu" | "bilan";
@@ -151,6 +157,13 @@ const previsionValide = (p: NonNullable<EtapeServie["prevision"]>, v: string) =>
   const n = Number(v.replace(",", "."));
   return v.trim() !== "" && Number.isFinite(n) && n >= p.min && n <= p.max;
 };
+
+/** Un nombre de la plage, à la française, le signe moins typographique : « 1 000 », « −500 ». */
+const nombreDeLaPlage = (x: number) => (x < 0 ? `−${(-x).toLocaleString("fr-FR")}` : x.toLocaleString("fr-FR"));
+
+/** La plage d'une prévision, dite sous le champ quand la valeur en sort : « Entre 0 et 100 % ». */
+export const plageDeLaPrevision = (p: Pick<NonNullable<EtapeServie["prevision"]>, "min" | "max" | "unite">) =>
+  `Entre ${nombreDeLaPlage(p.min)} et ${nombreDeLaPlage(p.max)}${p.unite.trim() ? ` ${p.unite.trim()}` : ""}`;
 
 /** Le niveau d'un code, Standard s'il est inconnu, comme au serveur. */
 const niveauDe = (reglages: ReglagesDesNiveaux, code: string | null | undefined): NiveauAffiche =>
@@ -329,9 +342,12 @@ function Suite({
 }
 
 /** La réponse du serveur est en route : l'écran a changé, son contenu arrive. */
-function Attente({ texte }: { texte: string }) {
+function Attente({ texte, enTete = false }: { texte: string; enTete?: boolean }) {
+  // EN TÊTE DE LA SCÈNE (le trimestre ou le bilan qui se prépare), la phrase descend sous la ligne du tableau
+  // de bord, collée en haut de l'écran du téléphone : la scène remonte à son haut au geste, et la phrase
+  // passait dessous (audit UX du 11 novembre 2026, P2-3).
   return (
-    <p role="status" className="text-base text-slate-400">
+    <p role="status" className={`text-base text-slate-400 ${enTete ? "max-lg:pt-8" : ""}`}>
       {texte}
     </p>
   );
@@ -433,6 +449,10 @@ function partieJoueeDe(s: EtatDeLEpisode, choisi: CodeNiveau): PartieJouee | nul
   };
 }
 
+/** Ce que le bilan suivant lit de la partie terminée : ses seuls faits, gardés aussi dans l'onglet. */
+const faitsDeLaPrecedente = (p: PartieJouee | null): FaitsDeLaPartie["precedente"] =>
+  p ? { graine: p.graine, chemin: [...p.chemin], jours: p.jours, ...(p.niveau ? { niveau: p.niveau } : {}) } : null;
+
 const ERREUR_RESEAU =
   "La partie n'a pas pu continuer : la connexion au serveur a échoué. Vos choix sont gardés sur cette page.";
 const ERREUR_ACCES =
@@ -453,12 +473,17 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
     () => null,
   );
   const choisi = niveauChoisi(s, demande, niveaux);
-  // La partie terminée juste avant : le bilan suivant la met en regard.
-  const [precedente, setPrecedente] = useState<PartieJouee | null>(null);
+  // La partie terminée juste avant : le bilan suivant la met en regard. Ses seuls faits.
+  const [precedente, setPrecedente] = useState<FaitsDeLaPartie["precedente"]>(null);
   const scene = useRef<HTMLDivElement>(null);
   const maj = (f: (e: EtatDeLEpisode) => Partial<EtatDeLEpisode>) => setS((e) => ({ ...e, ...f(e) }));
   // Le numéro du dernier geste envoyé : une réponse plus ancienne arrive trop tard, on l'ignore.
   const dernier = useRef(0);
+  // LA HAUTEUR DE LA SCÈNE AU MOMENT DU GESTE (audit UX du 11 novembre 2026, P2-3) : pendant l'attente,
+  // la scène la garde sous la phrase qui dit qu'on attend, et le pied de page ne remonte plus au milieu
+  // de l'écran du téléphone.
+  const [hauteurReservee, setHauteurReservee] = useState<number | null>(null);
+  const reserverLaHauteur = () => setHauteurReservee(scene.current?.offsetHeight ?? null);
 
   // Chaque nouvel écran se lit depuis son haut : sur téléphone, le bouton
   // qu'on vient de toucher est en bas de l'écran précédent. Le seuil est la
@@ -496,7 +521,7 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
    * envoyé est gardé : « Réessayer » le renvoie tel quel.
    */
   const aRefaire = useRef<{ demande: DemandeDePartie; apres: Apres } | null>(null);
-  const envoyer = (demandeDePartie: DemandeDePartie, apres: Apres) => {
+  const envoyer = (demandeDePartie: DemandeDePartie, apres: Apres, { reprise = false }: { reprise?: boolean } = {}) => {
     const numero = ++dernier.current;
     aRefaire.current = { demande: demandeDePartie, apres };
     maj(() => ({ attente: demandeDePartie.geste, erreur: null }));
@@ -507,6 +532,13 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
     })
       .then(async (r) => {
         if (numero !== dernier.current) return;
+        // Une partie gardée que le serveur ne rejoue plus (un niveau que l'accès n'ouvre plus, une
+        // partie qui ne tient plus dans l'épisode) repart de l'introduction, sans rien en dire.
+        if (reprise && (r.status === 400 || r.status === 403)) {
+          setS((e) => nouvelEtat(n, null, e.niveau));
+          setPrecedente(null);
+          return;
+        }
         if (!r.ok) {
           maj(() => ({ attente: null, erreur: r.status === 403 ? ERREUR_ACCES : ERREUR_RESEAU }));
           return;
@@ -526,6 +558,7 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
     e: EtatDeLEpisode,
     geste: Geste,
     faits: Partial<Pick<DemandeDePartie, "decisions" | "consultes">> = {},
+    avant: FaitsDeLaPartie["precedente"] = precedente,
   ): DemandeDePartie => {
     const decisions = faits.decisions ?? e.decisions;
     const fin =
@@ -546,16 +579,86 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
       consultes: faits.consultes ?? e.consultes,
       fin,
       precedente:
-        fin && precedente
+        fin && avant
           ? {
-              graine: precedente.graine,
-              chemin: [...precedente.chemin],
-              jours: precedente.jours,
-              ...(precedente.niveau ? { niveau: precedente.niveau } : {}),
+              graine: avant.graine,
+              chemin: [...avant.chemin],
+              jours: avant.jours,
+              ...(avant.niveau ? { niveau: avant.niveau } : {}),
             }
           : null,
     };
   };
+
+  /**
+   * LA PARTIE GARDÉE DANS L'ONGLET, REPRISE AU RECHARGEMENT (audit UX du 11 novembre 2026, P1-6). Avant
+   * que la page se peigne : la scène prend l'état gardé, garde la hauteur de l'introduction, et le
+   * serveur rejoue la partie pour rendre l'écran où l'on était. Puis chaque geste garde les faits.
+   */
+  const cleDeSession = cleDeLaPartie(intro.code);
+  const repriseLue = useRef(false);
+  useLayoutEffect(() => {
+    if (repriseLue.current) return;
+    repriseLue.current = true;
+    let faits: FaitsDeLaPartie | null = null;
+    try {
+      const brut = window.sessionStorage.getItem(cleDeSession);
+      faits = brut ? lireLesFaits(JSON.parse(brut), intro.code, n, niveaux) : null;
+    } catch {
+      faits = null;
+    }
+    if (!faits) return;
+    const reprise: EtatDeLEpisode = {
+      ...nouvelEtat(n, faits.graine, faits.niveau, faits.cle),
+      ecran: faits.ecran,
+      etape: faits.etape,
+      phase: faits.phase,
+      decisions: faits.decisions,
+      consultes: faits.consultes,
+      jours: faits.jours,
+      diagnostic: faits.diagnostic,
+      reevaluation: faits.reevaluation,
+      prevision: faits.prevision,
+      choix: faits.choix,
+    };
+    reserverLaHauteur();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setS(reprise);
+    setPrecedente(faits.precedente);
+    envoyer(demandeDe(reprise, gesteDeReprise(faits), {}, faits.precedente), () => ({}), { reprise: true });
+    // Une fois, au montage : la reprise lit l'onglet tel que la page l'a trouvé.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!repriseLue.current) return;
+    try {
+      if (s.ecran === "intro" || s.graine === null || s.niveau === null) {
+        window.sessionStorage.removeItem(cleDeSession);
+        return;
+      }
+      const faits: FaitsDeLaPartie = {
+        v: 1,
+        code: intro.code,
+        graine: s.graine,
+        cle: s.cle,
+        niveau: s.niveau,
+        ecran: s.ecran,
+        etape: s.etape,
+        phase: s.phase,
+        decisions: s.decisions,
+        consultes: s.consultes,
+        jours: s.jours,
+        diagnostic: s.diagnostic,
+        reevaluation: s.reevaluation,
+        prevision: s.prevision,
+        choix: s.choix,
+        precedente,
+      };
+      window.sessionStorage.setItem(cleDeSession, JSON.stringify(faits));
+    } catch {
+      // Stockage refusé (navigation privée stricte) : la partie vit le temps de la page, comme avant.
+    }
+  }, [s, precedente, cleDeSession, intro.code]);
 
   const commencer = (g: number | null) => {
     const graine = g ?? tirerUnHasard();
@@ -571,6 +674,7 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
       precedente: null,
     };
     // L'écran passe au jeu tout de suite, comme avant ; la première étape arrive avec la réponse.
+    reserverLaHauteur();
     setS(() => ({ ...nouvelEtat(n, graine, choisi, cle), ecran: "jeu" }));
     envoyer(d, () => ({}));
   };
@@ -606,6 +710,7 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
       if (e.choix == null || e.attente === "valider") return;
       const decisions = [...e.decisions.slice(0, e.etape), e.choix];
       // La décision est prise tout de suite, comme avant ; sa conséquence arrive avec la réponse.
+      reserverLaHauteur();
       maj(() => ({ decisions, phase: "consequence" }));
       envoyer(demandeDe(e, "valider", { decisions }), (vue) => ({ decisions: [...vue.decisions] }));
     },
@@ -620,11 +725,11 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
       if (r) envoyer(r.demande, r.apres);
     },
     autreHasard: () => {
-      setPrecedente(partieJoueeDe(s, choisi));
+      setPrecedente(faitsDeLaPrecedente(partieJoueeDe(s, choisi)));
       commencer(1 + Math.floor(Math.random() * 9000));
     },
     memeHasard: () => {
-      setPrecedente(partieJoueeDe(s, choisi));
+      setPrecedente(faitsDeLaPrecedente(partieJoueeDe(s, choisi)));
       commencer(s.graine ?? 1);
     },
   };
@@ -636,6 +741,7 @@ function EpisodeJoueBrut(props: ProprietesDeLEpisode) {
       choisi={choisi}
       haut={haut}
       scene={scene}
+      hauteurReservee={s.attente !== null ? hauteurReservee : null}
       gestes={gestes}
     />
   );
@@ -656,12 +762,15 @@ function EcranDeLEpisodeBrut({
   choisi,
   haut = 0,
   scene,
+  hauteurReservee = null,
   gestes,
 }: ProprietesDeLEpisode & {
   s: EtatDeLEpisode;
   choisi: CodeNiveau;
   haut?: number;
   scene?: RefObject<HTMLDivElement | null>;
+  /** Pendant l'attente d'une réponse, la hauteur que la scène garde (audit UX du 11 novembre 2026, P2-3). */
+  hauteurReservee?: number | null;
   gestes: Gestes;
 }) {
   const niveau = niveauDe(reglages, choisi);
@@ -677,17 +786,24 @@ function EcranDeLEpisodeBrut({
   const enConsequence = s.ecran === "jeu" && s.phase === "consequence";
   const consequence = enConsequence && vue?.consequence?.indice === s.etape ? vue.consequence : null;
   const affichee = consequence ?? etape;
+  // L'EN-TÊTE N'AVANCE QU'AVEC LA RÉPONSE (audit UX du 11 novembre 2026, P2-3). Il disait « Fin de
+  // semaine 4 » pendant que le tableau de bord montrait encore les chiffres d'avant : en attendant la
+  // conséquence, il reste à la décision (son moment, son étape au fil, la décision pas encore comptée),
+  // et avant la première étape, à « Avant de commencer ».
+  const consequenceAttendue = enConsequence && !consequence;
+  const avantLaPartie = s.ecran === "intro" || (s.ecran === "jeu" && !affichee && s.decisions.length === 0);
+  const prises = consequenceAttendue ? s.decisions.length - 1 : s.decisions.length;
+  const phaseAffichee: Phase = consequenceAttendue ? "decision" : s.phase;
   // L'EN-TÊTE SUIT L'ÉTAPE AFFICHÉE. À la conséquence, le tableau de bord dit
   // « fin de semaine 2 » : l'en-tête disait encore « Semaine 1 · lundi », le
   // moment de la décision qu'on vient de prendre.
-  const moment =
-    s.ecran === "intro"
-      ? "Avant de commencer"
-      : s.ecran === "bilan"
-        ? "Fin du trimestre"
-        : enConsequence && affichee
-          ? `Fin de semaine ${affichee.jusqua}`
-          : (affichee?.moment ?? "");
+  const moment = avantLaPartie
+    ? "Avant de commencer"
+    : s.ecran === "bilan"
+      ? "Fin du trimestre"
+      : consequence
+        ? `Fin de semaine ${consequence.jusqua}`
+        : (affichee?.moment ?? "");
   const titre = affichee?.titre ?? "";
 
   return (
@@ -699,8 +815,10 @@ function EcranDeLEpisodeBrut({
           </Link>{" "}
           / {intro.numero}
         </p>
-        <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400">
-          Démonstration · données fictives
+        {/* « DÉMONSTRATION » SEULEMENT POUR UNE DÉMONSTRATION (audit UX du 11 novembre 2026, P2-4) : une
+            partie sous licence, celle d'une cohorte qui compte au profil, ne l'est pas. */}
+        <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400" data-badge-de-l-episode="">
+          {licence ? "Données fictives" : "Démonstration · données fictives"}
         </span>
         {s.ecran !== "intro" && (
           <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs font-semibold text-slate-300">
@@ -708,11 +826,13 @@ function EcranDeLEpisodeBrut({
           </span>
         )}
         <div className="ml-auto flex items-center gap-4">
-          <span className="text-sm tabular-nums text-slate-400">{moment}</span>
-          <ol className="flex gap-1.5" aria-label={`Avancement : ${n} décisions`}>
+          <span className="text-sm tabular-nums text-slate-400" data-moment-de-l-episode="">
+            {moment}
+          </span>
+          <ol className="flex gap-1.5" aria-label={`Avancement : ${n} décisions`} data-avancement="">
             {Array.from({ length: n }, (_, i) => {
-              const fait = i < s.decisions.length;
-              const enCours = !fait && i === s.etape && s.ecran === "jeu";
+              const fait = i < prises;
+              const enCours = !fait && i === s.etape && s.ecran === "jeu" && !avantLaPartie;
               return (
                 <li
                   key={i}
@@ -751,9 +871,12 @@ function EcranDeLEpisodeBrut({
 
         <div
           ref={scene}
-          className="grid min-w-0 scroll-mt-24 gap-5"
+          className="grid min-w-0 scroll-mt-24 content-start gap-5"
           aria-live="polite"
           aria-busy={s.attente !== null || undefined}
+          // Pendant l'attente, la scène garde la hauteur qu'elle avait au geste : la page ne se vide pas.
+          style={hauteurReservee ? { minHeight: hauteurReservee } : undefined}
+          data-scene-de-l-episode=""
         >
           {s.ecran === "intro" && (
             <Intro
@@ -768,7 +891,7 @@ function EcranDeLEpisodeBrut({
             />
           )}
 
-          {s.ecran === "jeu" && !affichee && !s.erreur && <Attente texte="Le trimestre se prépare…" />}
+          {s.ecran === "jeu" && !affichee && !s.erreur && <Attente texte="Le trimestre se prépare…" enTete />}
 
           {s.ecran === "jeu" && affichee && (
             <>
@@ -779,7 +902,7 @@ function EcranDeLEpisodeBrut({
                 <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
                   {titre}
                 </h1>
-                <Fil etape={s.etape} phase={s.phase} />
+                <Fil etape={s.etape} phase={phaseAffichee} />
               </header>
               {consequence ? (
                 <Consequence reglages={reglages} s={s} consequence={consequence} gestes={gestes} />
@@ -792,6 +915,9 @@ function EcranDeLEpisodeBrut({
           )}
 
           {s.erreur && <Erreur texte={s.erreur} onReessayer={gestes.reessayer} />}
+
+          {/* Un bilan repris après un rechargement se redemande au serveur. */}
+          {s.ecran === "bilan" && !vue?.bilan && !s.erreur && <Attente texte="Le bilan se prépare…" enTete />}
 
           {s.ecran === "bilan" && partieJouee && vue?.bilan && (
             <BilanDeLEpisode
@@ -983,6 +1109,7 @@ function Scene({
   etape: EtapeServie;
   gestes: Gestes;
 }) {
+  const idDeLaPlage = useId();
   const i = s.etape;
   const niveau = niveauDe(reglages, s.niveau);
   const sources = etape.sources;
@@ -1173,6 +1300,7 @@ function Scene({
   const avecSources = i >= 2 && sources.length > 0;
   const prevision = etape.prevision;
   const previsionOk = !prevision || previsionValide(prevision, s.prevision.valeur);
+  const horsPlage = Boolean(prevision) && s.prevision.valeur.trim() !== "" && !previsionOk;
   return (
     <>
       {repere("decision")}
@@ -1231,29 +1359,40 @@ function Scene({
       </label>
       {prevision && (
         <div className="carte grid gap-4 p-4 sm:grid-cols-2 sm:items-end">
-          <label className="grid gap-1.5">
-            <span className="font-semibold text-slate-50">
-              Votre prévision : {prevision.libelle}
-            </span>
-            <span className="flex max-w-40 items-center gap-2">
-              <input
-                type="number"
-                onWheel={sansMolette}
-                inputMode="decimal"
-                min={prevision.min}
-                max={prevision.max}
-                step={prevision.step}
-                value={s.prevision.valeur}
-                placeholder={prevision.placeholder}
-                onChange={(ev) => {
-                  const v = ev.target.value;
-                  maj((e) => ({ prevision: { ...e.prevision, valeur: v } }));
-                }}
-                className="champ w-full px-3 py-2 text-base tabular-nums text-slate-100"
-              />
-              <span className="text-slate-300">{prevision.unite}</span>
-            </span>
-          </label>
+          <div className="grid gap-1.5">
+            <label className="grid gap-1.5">
+              <span className="font-semibold text-slate-50">
+                Votre prévision : {prevision.libelle}
+              </span>
+              <span className="flex max-w-40 items-center gap-2">
+                <input
+                  type="number"
+                  onWheel={sansMolette}
+                  inputMode="decimal"
+                  min={prevision.min}
+                  max={prevision.max}
+                  step={prevision.step}
+                  value={s.prevision.valeur}
+                  placeholder={prevision.placeholder}
+                  aria-invalid={horsPlage || undefined}
+                  aria-describedby={horsPlage ? idDeLaPlage : undefined}
+                  onChange={(ev) => {
+                    const v = ev.target.value;
+                    maj((e) => ({ prevision: { ...e.prevision, valeur: v } }));
+                  }}
+                  className="champ w-full px-3 py-2 text-base tabular-nums text-slate-100"
+                />
+                <span className="text-slate-300">{prevision.unite}</span>
+              </span>
+            </label>
+            {/* Une prévision hors de sa plage grisait « Valider la décision » sans rien dire (audit UX du
+                11 novembre 2026, P2-5) : la plage se dit sous le champ. */}
+            {horsPlage && (
+              <span id={idDeLaPlage} role="alert" className="text-sm text-red-300" data-prevision-hors-plage="">
+                {plageDeLaPrevision(prevision)}
+              </span>
+            )}
+          </div>
           <label className="grid gap-1.5">
             <span className="font-semibold text-slate-50">
               Votre confiance :{" "}
@@ -1266,6 +1405,7 @@ function Scene({
               max={100}
               step={10}
               value={s.prevision.confiance}
+              aria-valuetext={`${s.prevision.confiance} %`}
               onChange={(ev) => {
                 const v = Number(ev.target.value);
                 maj((e) => ({ prevision: { ...e.prevision, confiance: v } }));

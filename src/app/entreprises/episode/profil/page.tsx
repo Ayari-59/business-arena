@@ -5,6 +5,7 @@ import Link from "next/link";
 import { GuardedForm } from "@/components/guarded-action";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { Repliable } from "@/components/repliable";
+import { ZoneQuiDefile } from "@/components/zone-qui-defile";
 import { PiedDePage } from "@/components/pied-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { niveauParCode } from "@/config/episodes/niveaux";
@@ -434,7 +435,9 @@ async function ProfilPage({
                 </p>
               ))}
             {profil.progression.points.length > 0 && (
-              <div className="overflow-x-auto">
+              // Sur téléphone, le tableau défile de côté : sa zone est nommée et s'atteint au clavier
+              // (audit UX du 11 novembre 2026, P2-11).
+              <ZoneQuiDefile nom="Vos épisodes, dans l'ordre où vous les avez joués : tableau qui défile de côté">
                 <table className="w-full min-w-[520px] text-left text-sm">
                   <caption className="sr-only">
                     Vos épisodes, dans l&apos;ordre où vous les avez joués
@@ -466,7 +469,7 @@ async function ProfilPage({
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ZoneQuiDefile>
             )}
           </section>
 

@@ -12,10 +12,11 @@ import { chapitrePropose } from "@/config/formations-proposees";
 import { motsDuContenu } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
 import { getGuestUserId } from "@/lib/guest";
-import { classeDeLEleve } from "@/services/cours.service";
+import { classeDeLEleve, progressionDeLEleve } from "@/services/cours.service";
 import { chapitreDuParcoursDeLaClasse } from "@/services/chapitres-de-la-classe";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 import { competencesAffichees, diplomeDeLAdresse } from "@/config/cours/competences-affichees";
+import { enTeteDuChapitre } from "@/config/cours/en-tete-du-chapitre";
 import { chapitreOuvert, diaporamaPermis } from "../acces";
 import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
@@ -111,6 +112,10 @@ async function ChapitrePage({
   const demande = diplomeDeLAdresse(diplome);
   const competences = competencesAffichees(chapitre, { classe: classeDeLEleveLue?.parcours, demande });
   const diaporama = aSonDiaporama(chapitre.code) && (await diaporamaPermis(chapitre));
+  // LA PROGRESSION DE L'ÉLÈVE DE CLASSE, RELUE AU SERVEUR (audit UX du 11 novembre 2026, P1-5) : le guide
+  // la reprend quand l'appareil n'en a pas. Celle d'une autre entreprise ne vaut pas pour celle-ci.
+  const enregistree = classeDeLEleveLue && userId ? await progressionDeLEleve(userId, chapitre.code) : null;
+  const repriseDuServeur = enregistree && enregistree.entreprise === choisie.code ? { index: enregistree.etape, etapes: enregistree.etapes } : null;
   return (
     <>
       <main id="main" data-metier={choisie.teinte} className="relative overflow-x-clip">
@@ -120,7 +125,8 @@ async function ChapitrePage({
           </p>
         )}
         <ChapitreGuide
-          chapitre={servirLeChapitre(chapitre, cas, competences)}
+          // L'en-tête nomme le diplôme d'où l'on vient (config/cours/en-tete-du-chapitre.ts ; audit UX du 11 novembre 2026, P2-12).
+          chapitre={{ ...servirLeChapitre(chapitre, cas, competences), parcours: enTeteDuChapitre(chapitre, demande) }}
           cas={cas}
           entreprises={possibles.map(({ code: c, nom }) => ({ code: c, nom }))}
           classe={classe !== undefined}
@@ -128,6 +134,7 @@ async function ChapitrePage({
           suites={suitesDuChapitre(chapitre.code)}
           calculatrice={classeDeLEleveLue?.calculatrice ?? true}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
+          repriseDuServeur={repriseDuServeur}
           diplome={demande}
         />
         {diaporama && <Diaporama chapitre={chapitre.code} entreprise={choisie.code} diplome={demande} />}

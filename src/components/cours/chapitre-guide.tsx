@@ -3,13 +3,19 @@
 import {
   bilanDesObjectifs,
   etapesARevoir,
+  explicationDeLaSolutionMontree,
   grandPasDuCurseur,
   LIBELLE_DE_L_ETAT,
+  manqueDeDecimales,
   montantInsecable,
   phraseDeReprise,
   REGLE_D_ACQUISITION,
+  remarqueDuChampRefuse,
+  verdictDuRetour,
+  type ChampRefuse,
   type EtatDeLObjectif,
 } from "@/pedagogy/cours/aides-du-guide";
+import { natureDuChamp } from "@/pedagogy/cours/deux-decimales";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { bouton } from "@/components/bouton";
@@ -58,7 +64,10 @@ import { enregistrerProgressionAction } from "@/app/cours/actions";
  * (`?classe`), l'enseignant qui projette peut montrer la correction à tout moment.
  *
  * La progression se garde sur l'appareil, par chapitre et par entreprise : on
- * reprend où on s'était arrêté. Rien ne part au serveur.
+ * reprend où on s'était arrêté. Hors classe, rien ne part au serveur. EN CLASSE, chaque
+ * geste la remonte à l'enseignant, et le serveur la rend quand l'appareil n'en a pas
+ * (stockage vidé, poste de salle, autre appareil retrouvé par le code de reprise) ; elle n'y
+ * recule jamais (audit UX du 11 novembre 2026, P1-5 ; pedagogy/cours/suivi.ts).
  *
  * LE GUIDE NE PORTE AUCUN CHAPITRE (audit, P0). Il reçoit de la page le seul chapitre
  * ouvert, réduit à ses données après le contrôle de la licence
@@ -125,21 +134,42 @@ interface Suivi {
 const NEUF: Suivi = { index: 0, etapes: {} };
 const ESSAIS_AVANT_LA_CORRECTION = 2;
 
-function useSuivi(cle: string): [Suivi, (f: (s: Suivi) => Suivi) => void, boolean] {
+/** Une progression lue (de l'appareil ou du serveur) qui a la forme d'une progression. */
+const suiviValide = (s: unknown): s is Suivi =>
+  !!s && typeof s === "object" && typeof (s as Suivi).index === "number" && !!(s as Suivi).etapes && typeof (s as Suivi).etapes === "object";
+
+/**
+ * LA PROGRESSION DE L'APPAREIL, SINON CELLE DU SERVEUR (audit UX du 11 novembre 2026, P1-5). Un élève de
+ * classe dont l'appareil n'a rien gardé (stockage vidé, autre poste) reprend celle que le serveur a
+ * enregistrée (`reprise`) ; l'appareil la garde ensuite. Une progression déjà sur l'appareil l'emporte :
+ * « Recommencer » le chapitre reste un choix de l'élève.
+ */
+function useSuivi(cle: string, reprise: Suivi | null): [Suivi, (f: (s: Suivi) => Suivi) => void, boolean] {
   const [suivi, setSuivi] = useState<Suivi>(NEUF);
   const [lu, setLu] = useState(false);
+  // Écrite, la reprise du serveur se compare d'un rendu à l'autre : elle ne relance la lecture qu'en changeant.
+  const repriseEcrite = reprise ? JSON.stringify(reprise) : null;
   useEffect(() => {
     // La progression ne se lit qu'au navigateur : le rendu serveur part d'un chapitre neuf.
+    const lue: unknown = repriseEcrite ? JSON.parse(repriseEcrite) : null;
+    const duServeur = suiviValide(lue) ? lue : null;
     try {
       const brut = window.localStorage.getItem(cle);
-      const s = brut ? (JSON.parse(brut) as Suivi) : null;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSuivi(s && typeof s.index === "number" && s.etapes ? s : NEUF);
+      const s: unknown = brut ? JSON.parse(brut) : null;
+      if (suiviValide(s)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSuivi(s);
+      } else if (duServeur) {
+        setSuivi(duServeur);
+        window.localStorage.setItem(cle, JSON.stringify(duServeur));
+      } else {
+        setSuivi(NEUF);
+      }
     } catch {
-      setSuivi(NEUF);
+      setSuivi(duServeur ?? NEUF);
     }
     setLu(true);
-  }, [cle]);
+  }, [cle, repriseEcrite]);
   const changer = (f: (s: Suivi) => Suivi) =>
     setSuivi((s) => {
       const n = f(s);
@@ -159,6 +189,12 @@ const montantAffiche = (x: number) => montantInsecable(montantEcrit(x));
 /** Une ligne du laboratoire : en euros, ou dans son unité quand elle en a une (kilos, heures). */
 const valeurDeLigne = (x: number, unite?: string) =>
   unite ? montantInsecable(`${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ${unite}`) : montantAffiche(x);
+
+/**
+ * La valeur d'un curseur dite avec son unité (`aria-valuetext`) : un lecteur d'écran annonçait « 1990 »
+ * sans « € » (audit UX du 11 novembre 2026, P2-11).
+ */
+const valeurAvecUnite = (x: number, unite?: string) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}${unite ? ` ${unite}` : ""}`;
 
 /** « 0 écriture », « 1 écriture », « 2 écritures » : zéro s'accorde au singulier. */
 const ecritures = (n: number) => `${n} écriture${n > 1 ? "s" : ""}`;
@@ -402,6 +438,8 @@ function Options({
     <div className="grid max-w-2xl gap-2" role="radiogroup">
       {options.map((o, i) => {
         const montree = choisie === i || (fait && o.juste);
+        // Un seul « Non » : celui du texte, quand il le dit déjà (audit UX du 11 novembre 2026, P2-5).
+        const { verdict, suite } = verdictDuRetour(o.juste, o.retour);
         return (
           <div key={o.texte} className="grid gap-1">
             <button
@@ -417,9 +455,9 @@ function Options({
               {o.texte}
             </button>
             {montree && (
-              <p className={`${o.juste ? "encadre-gain" : "encadre-perte"} rounded-lg px-4 py-2 text-sm`}>
-                <strong className="font-semibold">{o.juste ? "Juste · " : "Non · "}</strong>
-                {o.retour}
+              <p className={`${o.juste ? "encadre-gain" : "encadre-perte"} rounded-lg px-4 py-2 text-sm`} data-retour-de-l-option="">
+                <strong className="font-semibold">{verdict}</strong>
+                {suite}
               </p>
             )}
           </div>
@@ -475,6 +513,7 @@ function EtapeDeMontants({ etape, chapitre, index, suivi, classe, noter, suite }
   const champs = etape.champs;
   const [valeurs, setValeurs] = useState<string[]>(() => champs.map(() => ""));
   const [verifie, setVerifie] = useState<boolean[] | null>(null);
+  const [refuses, setRefuses] = useState<ChampRefuse[]>([]);
   const racine = useId();
   const fait = suivi?.reussi ?? false;
   const essais = suivi?.essais ?? 0;
@@ -488,13 +527,14 @@ function EtapeDeMontants({ etape, chapitre, index, suivi, classe, noter, suite }
         onSubmit={(ev) => {
           ev.preventDefault();
           const v = champs.map((c, i) => champJuste(valeurs[i] ?? "", c));
+          // Ce qui est refusé, dit juste : un taux n'est pas un montant, et un calcul arrêté trop tôt
+          // n'est pas un calcul faux (audit UX du 11 novembre 2026, P2-5).
+          const r = champs.flatMap((c, i): ChampRefuse[] =>
+            v[i] ? [] : [{ libelle: c.libelle, nature: natureDuChamp(c), imprecis: manqueDeDecimales(valeurs[i] ?? "", c) }],
+          );
           setVerifie(v);
-          noter({
-            essai: true,
-            ...(v.every(Boolean)
-              ? { reussi: true }
-              : { remarques: champs.filter((_, i) => !v[i]).map((c) => `${c.libelle} : montant faux`) }),
-          });
+          setRefuses(r);
+          noter({ essai: true, ...(v.every(Boolean) ? { reussi: true } : { remarques: r.map(remarqueDuChampRefuse) }) });
         }}
       >
         {champs.map((c, i) => (
@@ -544,8 +584,8 @@ function EtapeDeMontants({ etape, chapitre, index, suivi, classe, noter, suite }
         )}
       </form>
       {verifie && !fait && (
-        <p className="encadre-perte max-w-2xl rounded-lg px-4 py-2.5 text-sm" role="alert">
-          {phraseDeReprise(verifie.filter((v) => !v).length, etape.vue)}
+        <p className="encadre-perte max-w-2xl rounded-lg px-4 py-2.5 text-sm" role="alert" data-reprise-des-montants="">
+          {phraseDeReprise(refuses, etape.vue)}
         </p>
       )}
       {fait && (
@@ -817,6 +857,8 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
             value={position}
             disabled={fait}
             aria-label={grandeur.libelle}
+            // L'unité se dit avec la valeur : « 1 990 € », pas « 1990 » (audit UX du 11 novembre 2026, P2-11).
+            aria-valuetext={valeurAvecUnite(position, grandeur.unite)}
             aria-describedby={grandPas > 1 ? aideClavier : undefined}
             onKeyDown={(e) => {
               if (grandPas <= 1) return;
@@ -1189,6 +1231,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
                   value={affichee[l.code]}
                   disabled={fait}
                   aria-label={l.libelle}
+                  aria-valuetext={valeurAvecUnite(affichee[l.code]!, l.unite)}
                   onChange={(e) => placer(l.code, Number(e.target.value))}
                   className="w-full accent-amber-400"
                 />
@@ -1336,9 +1379,10 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
       )}
       {fait && (
         <>
-          {/* Le résultat du laboratoire, seul à parler : la région vivante est ici, pas sur l'étape. */}
-          <div role="status" data-resultat-du-laboratoire="">
-            <Paragraphes textes={lecture.explication ?? []} />
+          {/* Le résultat du laboratoire, seul à parler : la région vivante est ici, pas sur l'étape. La
+              solution montrée ne se dit pas « Défi relevé » (audit UX du 11 novembre 2026, P2-5). */}
+          <div role="status" data-resultat-du-laboratoire="" data-solution-montree={suivi?.aide ? "" : undefined}>
+            <Paragraphes textes={suivi?.aide ? explicationDeLaSolutionMontree(lecture.explication ?? []) : (lecture.explication ?? [])} />
           </div>
           <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
@@ -1785,6 +1829,7 @@ export function ChapitreGuide({
   suites = null,
   calculatrice = true,
   diplome = null,
+  repriseDuServeur = null,
 }: {
   /** Le chapitre ouvert, réduit à ses données pour cette entreprise, après le contrôle de la licence. */
   chapitre: ChapitreServi;
@@ -1795,6 +1840,11 @@ export function ChapitreGuide({
   mission?: MissionAffichee | null;
   /** La classe de l'élève, s'il en suit une : sa progression remonte à l'enseignant. */
   enClasse?: { classe: string; eleve: string } | null;
+  /**
+   * La progression de l'élève de classe dans ce chapitre et cette entreprise, enregistrée au serveur :
+   * reprise quand l'appareil n'en a pas (audit UX du 11 novembre 2026, P1-5). Null : rien à reprendre.
+   */
+  repriseDuServeur?: Suivi | null;
   /** Ce qui vient après : les cas pratiques, les chapitres repris, les épisodes du thème. */
   suites?: SuitesDuChapitre | null;
   /** La calculatrice, permise sauf si l'enseignant l'a retirée à la classe de l'élève. */
@@ -1809,7 +1859,7 @@ export function ChapitreGuide({
   // Le chapitre est servi dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
   const { code } = chapitre;
   const garde = diplome ? `&diplome=${encodeURIComponent(diplome)}` : "";
-  const [suivi, changer, lu] = useSuivi(`cours:${code}:${cas.code}`);
+  const [suivi, changer, lu] = useSuivi(`cours:${code}:${cas.code}`, repriseDuServeur);
   const [vue, setVue] = useState<number | null>(null);
   const n = chapitre.etapes.length;
   const fini = suivi.index >= n;

@@ -33,6 +33,36 @@ export interface ProgressionLue {
 /** Combien de remarques fréquentes l'enseignant voit par étape. */
 export const REMARQUES_PAR_ETAPE = 3;
 
+/** La progression d'un élève dans un chapitre : l'étape la plus avancée atteinte, et chaque étape tentée. */
+export interface ProgressionDuChapitre {
+  etape: number;
+  etapes: Record<string, SuiviDEtape>;
+}
+
+/**
+ * Deux suivis d'une même étape : une étape réussie le reste, avec ses essais et son aide d'alors
+ * (« du premier coup » se juge au premier passage) ; sinon, celui qui a le plus d'essais.
+ */
+const etapeLaPlusAvancee = (a: SuiviDEtape, b: SuiviDEtape): SuiviDEtape => (a.reussi ? a : b.reussi ? b : b.essais >= a.essais ? b : a);
+
+/**
+ * LA PROGRESSION NE RECULE JAMAIS (décision du propriétaire du 11 novembre 2026 ; audit UX du même jour,
+ * P1-5). Chaque geste d'un élève de classe envoie sa progression entière, et le serveur la remplaçait :
+ * un appareil qui avait oublié la sienne (stockage vidé, autre poste) repartait de l'étape 1, et
+ * l'enseignant voyait « 2 sur 7 » là où l'élève avait fini. Désormais, une progression moins avancée
+ * ne remplace pas une plus avancée : l'étape la plus loin des deux, et pour chaque étape, la plus
+ * avancée (`etapeLaPlusAvancee`). Ce qui n'était que d'un côté reste.
+ */
+export function progressionLaPlusAvancee(avant: ProgressionDuChapitre | null, envoyee: ProgressionDuChapitre): ProgressionDuChapitre {
+  if (!avant) return { etape: envoyee.etape, etapes: { ...envoyee.etapes } };
+  const etapes: Record<string, SuiviDEtape> = { ...avant.etapes };
+  for (const [id, s] of Object.entries(envoyee.etapes)) {
+    const a = etapes[id];
+    etapes[id] = a ? etapeLaPlusAvancee(a, s) : s;
+  }
+  return { etape: Math.max(avant.etape, envoyee.etape), etapes };
+}
+
 export const duPremierCoup = (s: SuiviDEtape | undefined) => !!s && s.reussi && s.essais === 1 && !s.aide;
 
 export interface LigneDEleve {

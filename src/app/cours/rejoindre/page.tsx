@@ -117,6 +117,14 @@ async function RejoindreUneClassePage({
           </p>
             </form>
           )}
+          {/* DÉJÀ DANS LA CLASSE, SUR UN AUTRE APPAREIL (audit UX du 11 novembre 2026, P1-5) : rejoindre de
+              nouveau ferait un second élève à son nom ; son code de reprise lui rend sa place. */}
+          <p className="text-sm text-slate-300" data-lien-reprendre-sa-place="">
+            Vous avez déjà rejoint cette classe sur un autre appareil ?{" "}
+            <Link href="/cours/reprendre" className="text-amber-300 underline underline-offset-4">
+              Reprendre ma place avec mon code de reprise
+            </Link>
+          </p>
         </div>
       </main>
       <PiedDePage />
