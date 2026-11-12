@@ -88,7 +88,7 @@ describe("suivre ses ventes : l'objectif, le réalisé, l'écart", () => {
     expect(attendus(SUIVRE_SES_VENTES, "l-ecart")).toEqual([-100, Math.round((-100 / 12_600) * 10_000) / 100]);
     expect(attendus(SUIVRE_SES_VENTES, "le-taux-de-realisation")).toEqual([Math.round((12_500 / 12_600) * 10_000) / 100]);
     expect(attendus(SUIVRE_SES_VENTES, "les-clients")).toEqual([14_440 - 12_500, 14_440 - 12_600]);
-    expect(juste(SUIVRE_SES_VENTES, "pourquoi")).toEqual(["Assez de clients sont venus, mais tous n'ont pas été servis"]);
+    expect(juste(SUIVRE_SES_VENTES, "pourquoi")).toEqual(["Assez de clients sont venus, pas tous servis"]);
     expect(juste(SUIVRE_SES_VENTES, "et-ensuite")).toEqual(["Servir tous les clients qui viennent"]);
     // Les prix n'expliquent jamais l'écart : les étiquettes n'ont pas changé.
     expect(optionsDuPourquoi(suiviDesVentes(BOUTIQUE)).find((o) => /prix/.test(o.texte))!.juste).toBe(false);

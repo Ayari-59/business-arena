@@ -497,7 +497,7 @@ export const LE_COUT_MATIERE: Chapitre = {
             juste: false,
             retour: `Pari à vérifier. ${voir}`,
           },
-          { texte: `De moins de ${pct(sous)} : les couverts jetés prennent leur part`, juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `De moins de ${pct(sous)} : les couverts jetés pèsent`, juste: true, retour: `Bon pari. ${voir}` },
         ];
       },
     },

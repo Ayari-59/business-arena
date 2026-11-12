@@ -175,7 +175,7 @@ export function decision(c: Pick<Cas, "code">) {
 
 export type Decision = ReturnType<typeof decision>;
 
-const LIBELLES = (e: number) => [`Prix −${pct(e)}`, "Prix du trimestre", `Prix +${pct(e)}`] as const;
+const LIBELLES = (e: number) => [`Prix −${pct(e)}`, "Prix inchangé", `Prix +${pct(e)}`] as const;
 
 /** Le trimestre aux trois prix, au plan de production du trimestre : le document des étapes de choix. */
 export function tableauDesTroisPrix(c: Pick<Cas, "code">): TableauDeDonnees {
@@ -646,7 +646,7 @@ export const DECIDER: Chapitre = {
       options: () => {
         const voir = "Faites varier son prix à l'étape suivante : le curseur montre où elle commence à rapporter.";
         return [
-          { texte: "Peut rapporter : seul compte ce qu'elle rapporte face à ce qu'elle coûte en plus", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Peut rapporter : seul compte ce qu'elle ajoute", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Fait perdre : son prix ne couvre pas le coût complet", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Fait perdre : son prix est sous celui du trimestre", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];

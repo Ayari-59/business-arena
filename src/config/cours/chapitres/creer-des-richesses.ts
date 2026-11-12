@@ -312,7 +312,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
         return [
           tous
             ? { texte: "Chaque enseigne crée de la richesse, et toutes finissent en bénéfice", juste: true, retour: `Oui : ${faits}` }
-            : { texte: "Une enseigne peut finir en perte et créer pourtant de la richesse", juste: true, retour: `Oui : ${faits}` },
+            : { texte: "Une enseigne en perte peut créer de la richesse", juste: true, retour: `Oui : ${faits}` },
           { texte: "Une enseigne en perte ne crée aucune richesse", juste: false, retour: `Non : une perte ne dit pas qu'aucune richesse n'est créée. ${tous ? `Ici, ${faits}` : faits}` },
           { texte: "La valeur ajoutée d'une enseigne est son bénéfice", juste: false, retour: `Non : la valeur ajoutée paie d'abord les salaires et l'impôt. Le bénéfice est ce qui reste, une fois l'usure de l'équipement mise de côté : ${faits}` },
         ];

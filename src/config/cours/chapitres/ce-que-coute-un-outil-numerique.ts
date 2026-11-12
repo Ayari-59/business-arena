@@ -220,7 +220,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
       options: (c) => {
         const o = outilNumerique(c);
         return [
-          { texte: "L'outil se rembourse dans la première année", juste: o.verdict === "rembourse-dans-l-annee", retour: o.verdict === "rembourse-dans-l-annee" ? `Oui : à ${A} % d'adoption, le gain net se monte à ${eur(o.gainNetAdopte)} par an, et les dépenses de départ sont remboursées en ${mois(o.delaiAdopte!)}.` : `Non : la première année, le gain (${eur(o.gainAdopte)}) reste sous son coût (${eur(o.coutPremiereAnnee)}).` },
+          { texte: "Il se rembourse en moins d'un an", juste: o.verdict === "rembourse-dans-l-annee", retour: o.verdict === "rembourse-dans-l-annee" ? `Oui : à ${A} % d'adoption, le gain net se monte à ${eur(o.gainNetAdopte)} par an, et les dépenses de départ sont remboursées en ${mois(o.delaiAdopte!)}.` : `Non : la première année, le gain (${eur(o.gainAdopte)}) reste sous son coût (${eur(o.coutPremiereAnnee)}).` },
           { texte: "Il se rembourse, mais en plus d'un an", juste: o.verdict === "rembourse-en-plus-d-un-an", retour: o.verdict === "rembourse-en-plus-d-un-an" ? `Oui : à ${A} % d'adoption, il faut ${mois(o.delaiAdopte!)} pour rembourser les ${eur(o.depart)} de départ.` : `Non : le gain de la première année (${eur(o.gainAdopte)}) couvre déjà son coût (${eur(o.coutPremiereAnnee)}).` },
           { texte: "Il ne couvre même pas son abonnement", juste: o.verdict === "ne-couvre-pas-l-abonnement", retour: o.verdict === "ne-couvre-pas-l-abonnement" ? `Oui : à ${A} %, le gain reste sous l'abonnement.` : `Non : à ${A} % d'adoption, le gain (${eur(o.gainAdopte)}) dépasse l'abonnement (${eur(o.abonnement)}).` },
         ];

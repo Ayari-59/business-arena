@@ -424,7 +424,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       options: (c) => {
         const { f, s, seuilSurLePrix } = seuilDuMois(c);
         return [
-          { texte: "Sous les ventes de janvier : la marge du mois couvre déjà les charges fixes", juste: s.resultat >= 0, retour: `Bon pari. ${voirLeCurseur}` },
+          { texte: "Sous les ventes de janvier : la marge du mois couvre les charges fixes", juste: s.resultat >= 0, retour: `Bon pari. ${voirLeCurseur}` },
           { texte: "Au-dessus des ventes de janvier : la marge de chaque vente est trop mince", juste: s.resultat < 0, retour: `Pari à vérifier. ${voirLeCurseur}` },
           {
             texte: `Vers ${qte(seuilSurLePrix)} ${f.unites} : les charges fixes divisées par le prix`,
@@ -751,13 +751,13 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
       notions: ["breakeven", "operating_leverage"],
       question: (c) => `Que peut faire ${ficheDe(c).entreprise} pour abaisser son seuil de rentabilité ?`,
       options: () => [
-        { texte: "Vendre davantage.", juste: false, retour: "Vendre plus éloigne du seuil (la marge de sécurité grandit), mais ne déplace pas le seuil lui-même : le laboratoire l'a montré." },
+        { texte: "Vendre davantage, pour couvrir plus vite les charges fixes.", juste: false, retour: "Vendre plus éloigne du seuil (la marge de sécurité grandit), mais ne déplace pas le seuil lui-même : le laboratoire l'a montré." },
         {
           texte: "Gagner plus sur chaque vente, ou réduire ses charges fixes.",
           juste: true,
           retour: "Le seuil est le rapport des charges fixes à la marge unitaire : on l'abaisse en réduisant le numérateur ou en augmentant le dénominateur.",
         },
-        { texte: "Baisser son prix pour vendre plus.", juste: false, retour: "Baisser le prix réduit la marge par vente : le seuil monte, comme vous l'avez calculé." },
+        { texte: "Baisser son prix pour vendre plus, et atteindre le seuil plus tôt.", juste: false, retour: "Baisser le prix réduit la marge par vente : le seuil monte, comme vous l'avez calculé." },
       ],
     },
     {
@@ -808,7 +808,7 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         const { s, variationDuResultat } = seuilDuMois(c);
         return [
           {
-            texte: "C'est un signe de fragilité : l'entreprise travaille près de son seuil",
+            texte: "C'est un signe de fragilité : l'entreprise est près de son seuil",
             juste: true,
             retour: `Oui. Un levier élevé veut dire que le résultat est petit devant la marge (${eur(s.resultat)} pour ${eur(s.marge)}) : ${pct(BAISSE_DES_VENTES_DU_LEVIER)} de ventes en moins effacent ${pct(-variationDuResultat)} du résultat. À la hausse, il joue dans l'autre sens ; c'est un risque, pas une rentabilité.`,
           },
@@ -950,9 +950,9 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
         const mieux = palier.resultatALaDemande > palier.resultatALaLimite;
         return [
           {
-            texte: `Pas pour ${qte(DEMANDE_AU_DELA_DU_PALIER)} : il faut plus de ${qte(palier.pourFaireMieux - 1)} ${f.unites} pour gagner plus qu'à ${qte(palier.limite)}`,
+            texte: `Pas pour ${qte(DEMANDE_AU_DELA_DU_PALIER)} : il faut plus de ${qte(palier.pourFaireMieux - 1)} ${f.unites}`,
             juste: !mieux,
-            retour: `Oui. À ${qte(DEMANDE_AU_DELA_DU_PALIER)} ${f.unites}, le résultat serait de ${eur(palier.resultatALaDemande)}, contre ${eur(palier.resultatALaLimite)} en restant à ${qte(palier.limite)}. Pour repayer les ${eur(SUPPLEMENT_DU_PALIER)} du palier, il faut ${qte(palier.pourFaireMieux - palier.limite)} ${f.unites} de plus que l'activité normale, soit ${qte(palier.pourFaireMieux)} au moins.`,
+            retour: `Oui : il faut plus de ${qte(palier.pourFaireMieux - 1)} ${f.unites} pour gagner plus qu'à ${qte(palier.limite)}. À ${qte(DEMANDE_AU_DELA_DU_PALIER)} ${f.unites}, le résultat serait de ${eur(palier.resultatALaDemande)}, contre ${eur(palier.resultatALaLimite)} en restant à ${qte(palier.limite)}. Pour repayer les ${eur(SUPPLEMENT_DU_PALIER)} du palier, il faut ${qte(palier.pourFaireMieux - palier.limite)} ${f.unites} de plus que l'activité normale, soit ${qte(palier.pourFaireMieux)} au moins.`,
           },
           {
             texte: `Oui : ${qte(DEMANDE_AU_DELA_DU_PALIER)} ${f.unites} dépassent le second seuil, ${qte(palier.secondSeuil)}`,

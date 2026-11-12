@@ -328,7 +328,7 @@ describe("les écarts sur charges indirectes : le centre de montage", () => {
 
   it("les verdicts : la bonne référence, le boni n'est pas une économie, qui doit agir", () => {
     expect(juste(ch, "la-bonne-reference")).toBe(`Au coût préétabli de la production réelle, 202 000 €`);
-    expect(juste(ch, "le-boni-de-suractivite")).toBe("Ce n'est pas une économie : le centre a payé toutes ses charges fixes, réparties sur plus d'heures");
+    expect(juste(ch, "le-boni-de-suractivite")).toBe("Pas une économie : toutes les charges fixes ont été payées");
     const tri = ch.etapes.find((e) => e.id === "qui-doit-agir") as EtapeTri;
     expect(Object.fromEntries(tri.elements(cas).map((x) => [x.libelle, [x.montant, x.categorie]]))).toEqual({
       "Écart sur budget": [budget, "centre"],
@@ -527,9 +527,9 @@ describe("les écarts sur chiffre d'affaires et sur marge", () => {
   });
 
   it("les verdicts : un chiffre presque tenu, le volume à la marge, le mix qui masque, qui doit agir", () => {
-    expect(juste(ch, "le-chiffre-presque-tenu")).toBe("Rien encore : deux gros écarts de sens contraire se compensent, et la marge reste à voir");
-    expect(juste(ch, "le-volume-au-prix")).toBe("Une enceinte de plus ou de moins change le résultat de sa marge, et la baisse de prix porte sur ce qui a été vendu");
-    expect(juste(ch, "le-mix-qui-masque")).toBe("Le volume total a baissé : 400 enceintes de moins coûtent 12 500 €, que le mix compense sans les effacer");
+    expect(juste(ch, "le-chiffre-presque-tenu")).toBe("Rien encore : deux gros écarts se compensent");
+    expect(juste(ch, "le-volume-au-prix")).toBe("Une enceinte de plus ou de moins change le résultat de sa marge");
+    expect(juste(ch, "le-mix-qui-masque")).toBe("Le volume total a baissé : le mix compense sans effacer");
     const tri = ch.etapes.find((e) => e.id === "qui-doit-agir") as EtapeTri;
     expect(Object.fromEntries(tri.elements(cas).map((x) => [x.libelle, [x.montant, x.categorie]]))).toEqual({
       "Écart sur prix de la Nomade": [prixN, "commercial"],

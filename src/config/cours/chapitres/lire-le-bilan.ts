@@ -202,14 +202,14 @@ export const LIRE_LE_BILAN: Chapitre = {
         const tendue = b.decouvert > b.disponible;
         return [
           {
-            texte: "Elle a plus d'argent disponible que de découvert : sa trésorerie est positive",
+            texte: "Sa trésorerie est positive : plus d'argent que de découvert",
             juste: !tendue,
             retour: !tendue
               ? `Oui : ${eur(b.disponible)} disponibles${b.decouvert > 0 ? ` pour ${eur(b.decouvert)} de découvert` : ", sans découvert"}. ${b.disponible >= b.aCourtTerme ? `Avec cet argent, elle pourrait régler toutes ses dettes de l'année (${eur(b.aCourtTerme)} : fournisseurs, État et personnel, intérêts courus, ventes payées d'avance) sans attendre ses clients.` : `Ses dettes de l'année (${eur(b.aCourtTerme)}) dépassent pourtant cet argent : pour les régler, elle compte sur ce que ses clients lui doivent.`}`
               : `Non : son découvert (${eur(b.decouvert)}) dépasse ce qu'elle a de disponible (${eur(b.disponible)}).`,
           },
           {
-            texte: "Son découvert dépasse son argent disponible : sa trésorerie est négative",
+            texte: "Sa trésorerie est négative : plus de découvert que d'argent",
             juste: tendue,
             retour: tendue
               ? `Oui : ${eur(b.decouvert)} de découvert pour ${eur(b.disponible)} disponibles. La banque finance son quotidien : c'est cher, et cela ne peut pas durer.`

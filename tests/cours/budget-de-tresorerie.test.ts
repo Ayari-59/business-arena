@@ -340,7 +340,7 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
       "Trésorerie de fin de mars": mars.fin,
     });
     expect([mars.enc, mars.fournisseur, mars.tvaPayee, mars.echeance, mars.fin]).toEqual([100_394.4, 38_280, 6_090, 5_000, 19_302.8]);
-    expect(juste(ch, "le-point-bas")).toBe("CampusTech n'a encore rien payé, et l'échéance de l'emprunt tombe");
+    expect(juste(ch, "le-point-bas")).toBe("Aucun paiement de CampusTech, et l'échéance de l'emprunt");
     // Février vend moins que mars : le point bas ne vient pas des ventes du mois.
     expect(base.mois[1]!.quantite).toBeLessThan(base.mois[2]!.quantite);
   });
@@ -482,7 +482,7 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
 
   it("les verdicts : la TVA due à la livraison, le dirigeant qui négocie avant, la synthèse", () => {
     expect(juste(ch, "la-tva-de-campustech")).toBe("En février, avant d'être payée");
-    expect(juste(ch, "que-faire-du-decouvert")).toBe("Il négocie dès janvier ce qui manquera : un découvert autorisé, un délai, ou il décale l'achat");
+    expect(juste(ch, "que-faire-du-decouvert")).toBe("Il négocie dès janvier ce qui manquera");
     const synthese = ch.etapes.find((e) => e.id === "synthese")!;
     if (synthese.type !== "lecture") throw new Error("lecture attendue");
     expect(synthese.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");

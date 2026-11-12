@@ -362,7 +362,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const jamais = k.nova.indiceQualite <= 100;
         return [
           { texte: `Oui, dès que son indice de prix dépasse ${100 + k.ecart}`, juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: "Non : son indice de qualité resterait sous 100", juste: jamais, retour: `${jamais ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          { texte: "Non : son indice de qualité reste sous 100", juste: jamais, retour: `${jamais ? "Bon pari." : "Pari à vérifier."} ${voir}` },
           { texte: `Oui, si elle vend plus cher ${quE(k.auris.nom)}`, juste: !jamais, retour: `${!jamais ? "Bon pari." : "Pari à vérifier."} ${voir}` },
         ];
       },
@@ -587,7 +587,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const partFaitLeResultat = [...k.enseignes].sort((x, y) => y.part - x.part)[0]!.code === b.code;
         return [
           {
-            texte: "La part de marché ne fait pas le résultat : la marge et les charges le font",
+            texte: "La part de marché ne fait pas le résultat",
             juste: !partFaitLeResultat,
             retour: !partFaitLeResultat
               ? `Oui : ${b.nom} a le meilleur résultat (${eur(b.resultat)}) avec la plus petite part du marché. Lire un concurrent, c'est lire sa marge par enceinte et ses charges, pas seulement ses ventes.`

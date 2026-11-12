@@ -52,7 +52,7 @@ describe("facturer et se faire payer, à la boutique du monde du cours", () => {
       "Coût du découvert à 45 jours": decouvert(ttc, 45),
     });
     expect(decouvert(ttc, 45)).toBe(27.25);
-    expect(juste(ch, "les-mentions")).toBe("Le taux des pénalités de retard et l'indemnité de 40 €");
+    expect(juste(ch, "les-mentions")).toBe("Les pénalités de retard et l'indemnité de 40 €");
   });
 
   it("l'échéance et le plafond légal, les pénalités d'un retard de 30 jours", () => {
@@ -97,7 +97,7 @@ describe("facturer et se faire payer, à la boutique du monde du cours", () => {
     });
     expect([lcr, factor]).toEqual([29.8, 48.69]);
     expect(juste(ch, "le-mode-de-reglement")).toMatch(/^Une LCR/);
-    expect(juste(ch, "decider")).toBe("Garder les 45 jours et financer au découvert : 27,25 € contre 48,45 €");
+    expect(juste(ch, "decider")).toBe("Garder les 45 jours et financer au découvert");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

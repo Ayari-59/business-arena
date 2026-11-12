@@ -790,7 +790,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
         const d = k.decembre;
         return [
           {
-            texte: `Cet argent part au trimestre suivant : ${eur(d.detteEtat)} à l'État, la TVA du négoce avec ses factures`,
+            texte: "Cet argent part au trimestre suivant",
             juste: true,
             retour: `Oui : ${eur(d.detteEtat)} de TVA à payer du ${nomDuTrimestre(4)}, versés au premier trimestre de N + 1, et ${eur(d.tvaDesDettes)} de TVA due au négoce. La TVA se renouvelle tant que les chantiers tournent, mais elle varie : ${eur(k.juin.effet)} seulement au ${juinDit}. S'en servir pour investir, ce serait la retirer au pire moment.`,
           },

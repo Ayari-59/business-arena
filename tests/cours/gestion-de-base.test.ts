@@ -89,7 +89,7 @@ describe("les flux de l'entreprise", () => {
     const t = premierTrimestreALaBanque();
     expect([t.debut, t.fin]).toEqual([25_000, c(25_000 - 5_697.2)]);
     expect(t.duParCampusTech).toBe(3 * 320 * 59 * 1.2);
-    expect(juste(LES_FLUX, "deux-sens")).toEqual(["Un flux réel vers le client, les enceintes, et un flux financier en sens inverse, le paiement, 80 jours plus tard."]);
+    expect(juste(LES_FLUX, "deux-sens")).toEqual(["Deux flux en sens inverse, à des dates différentes."]);
   });
 
   it("le curseur : 111 enceintes de plus en mars, chacune 70,80 € entrés et 19,20 € sortis avant avril", () => {

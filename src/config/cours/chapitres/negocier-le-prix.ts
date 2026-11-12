@@ -382,7 +382,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
         const n = negociationDuCabinet(c);
         return [
           {
-            texte: "Oui : le prix remisé reste au-dessus du coût complet",
+            texte: "Oui : il reste au-dessus du coût complet",
             juste: n.tient,
             retour: n.tient
               ? `Oui : à ${eur(n.prixRemise)}, la journée couvre le coût complet de ${eur(n.coutComplet)}, à ${eur(n.ecartAuCoutComplet)} près. La remise de ${pct(n.remiseDemandee)} reste sous la remise maximale de ${pct(n.remiseMaximale)} ; elle coûte pourtant ${eur(n.coutDeLaRemiseParJournee)} par journée, ${eur(n.coutDeLaRemise)} sur l'affaire, qui sortent du bénéfice.`

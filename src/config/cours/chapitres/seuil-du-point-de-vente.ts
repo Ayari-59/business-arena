@@ -336,7 +336,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       options: () => {
         const voir = "Faites défiler le mois à l'étape suivante : le curseur montre le jour où le chiffre d'affaires cumulé rattrape le seuil.";
         return [
-          { texte: "Vers le 21 : quand les ventes cumulées atteignent le seuil", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Vers le 21 : quand le cumul atteint le seuil", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Le 30 : le résultat ne se constate qu'en fin de mois", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Vers le 9 : passé l'indice de sécurité", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -608,9 +608,9 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
         const x = seuilDeLaBoutique(c);
         return [
           {
-            texte: "Il ne vaut que si le panier baisse sans toucher au taux de marge : par la remise, le plancher monte",
+            texte: "Il ne vaut que si le taux de marge ne bouge pas",
             juste: true,
-            retour: `Oui. ${eur(x.panierPlancher)} suppose les mêmes articles dans les mêmes proportions, aux mêmes prix. Un panier plus petit par la remise garde ses coûts : son plancher est de ${eur(x.plancherEnPromotion)}. Et une composition différente change aussi le taux : il faut refaire le calcul, pas lire le plancher.`,
+            retour: `Oui : il ne vaut que si le panier baisse sans toucher au taux de marge ; par la remise, le plancher monte. ${eur(x.panierPlancher)} suppose les mêmes articles dans les mêmes proportions, aux mêmes prix. Un panier plus petit par la remise garde ses coûts : son plancher est de ${eur(x.plancherEnPromotion)}. Et une composition différente change aussi le taux : il faut refaire le calcul, pas lire le plancher.`,
           },
           {
             texte: "Il vaut pour toute baisse du panier : le seuil ne dépend que des charges fixes",

@@ -635,7 +635,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
             retour: `Non : ${dernierA.nom}, dernier compte A par le chiffre d'affaires, laisse ${eur(dernierA.marge)} et reste en A par la marge. Le compte qui sort est le ${sort.nom}, ${qte(sort.rang)}e par le chiffre d'affaires.`,
           },
           {
-            texte: "Aucun : les mêmes comptes, dans un autre ordre",
+            texte: "Aucun : la classe A garde ses comptes, seul leur ordre change avec la marge",
             juste: false,
             retour: `Non : l'ordre change, et la classe aussi. Le ${sort.nom}, ${eur(sort.marge)} de marge, tombe au ${qte(p.rangDuCompteQuiSortParMarge)}e rang.`,
           },
@@ -741,9 +741,9 @@ export const PORTEFEUILLE_ABC: Chapitre = {
         const neuf = v("helianthe");
         return [
           {
-            texte: "La durée du compte : un petit compte fidèle peut valoir bien plus qu'un gros",
+            texte: "La durée du compte, que l'année ne montre pas",
             juste: true,
-            retour: `Oui : le classement d'une année ne voit pas combien de temps le compte restera. La ${entre.nom} vaut ${eur(entre.valeurVie)} sur sa vie, plus de ${qte(Math.floor(entre.valeurVie / sort.valeurVie))} fois le ${sort.nom} (${eur(sort.valeurVie)}), qui fait pourtant ${qte(Math.round((p.sort.chiffreDAffaires / p.entre.chiffreDAffaires) * 10) / 10)} fois ses ventes. Un portefeuille se pilote aussi à la fidélité.`,
+            retour: `Oui : un petit compte fidèle peut valoir bien plus qu'un gros, et le classement d'une année ne voit pas combien de temps le compte restera. La ${entre.nom} vaut ${eur(entre.valeurVie)} sur sa vie, plus de ${qte(Math.floor(entre.valeurVie / sort.valeurVie))} fois le ${sort.nom} (${eur(sort.valeurVie)}), qui fait pourtant ${qte(Math.round((p.sort.chiffreDAffaires / p.entre.chiffreDAffaires) * 10) / 10)} fois ses ventes. Un portefeuille se pilote aussi à la fidélité.`,
           },
           {
             texte: "Rien de plus : la marge de l'année résume la valeur du compte",
@@ -782,7 +782,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
             retour: `Oui : un compte A justifie des visites et un interlocuteur attitré ; les B, dont les ${qte(p.conquete.length)} comptes neufs de la conquête, sont ceux qui peuvent grandir ; un compte C ne justifie pas ce temps, mais il rapporte : on le sert à distance, avec une offre standard, et on repère ceux qui pourraient monter.`,
           },
           {
-            texte: "Elle abandonne les C, pour se concentrer sur les comptes A",
+            texte: "Elle abandonne les C, pour se concentrer sur les comptes A qui rapportent",
             juste: false,
             retour: `Non : les comptes C laissent ${eur(p.margeDesCParCa)} de marge, et certains seront les B de demain. Les abandonner, c'est renoncer à cette marge pour un temps qu'on peut gagner autrement, en les servant à distance.`,
           },

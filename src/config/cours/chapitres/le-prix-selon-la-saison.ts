@@ -507,7 +507,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
           "C'est l'idée du yield management : faire varier le prix selon ce qui reste à vendre, le monter quand les clients se pressent, le baisser quand des chambres restent vides. Reste à savoir ce que chaque prix rapporte : la simulation va rejouer l'année.";
         return [
           {
-            texte: "Trop bas quand des clients repartaient, trop haut quand des chambres restaient vides",
+            texte: "Tantôt trop bas, tantôt trop haut, selon la saison",
             juste: lesDeux,
             retour: lesDeux ? `Oui. ${yield_}` : `Non : ${p.refus.length === 0 ? "aucun client n'est reparti" : "aucune chambre n'est restée vide"}.`,
           },
@@ -635,7 +635,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         return [
           { texte: `Oui : la baisse remplira les ${qte(b.vides)} chambres vides`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: `Oui, si la demande monte d'au moins ${EN_POURCENT(BAISSE_EN_BASSE_SAISON)}`, juste: !impossible, retour: `${impossible ? "Pari à vérifier" : "Bon pari"}. ${voir}` },
-          { texte: "Non : il faudrait plus de nuitées que l'hôtel n'en offre", juste: impossible, retour: `${impossible ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
+          { texte: "Non : l'hôtel n'a pas assez de nuitées", juste: impossible, retour: `${impossible ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
         ];
       },
     },
@@ -739,7 +739,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const voir = "Faites vendre l'hôtel au prix relevé, au curseur de l'étape suivante.";
         return [
           { texte: "Aucune : il doit rester plein", juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: `Exactement les ${qte(h.refusees)} qu'il refusait`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `Exactement les ${qte(h.refusees)} qu'il refusait, pas une de plus`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: `Plus de ${qte(seuil)} : chaque nuitée gardée rapporte plus`, juste: true, retour: `Bon pari. ${voir}` },
         ];
       },
@@ -893,7 +893,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const resultats = `Résultat de l'année : ${eur(p.unique.resultat)} au prix unique, ${eur(p.saison.resultat)} au prix de la saison, ${eur(p.remplissage.resultat)} au prix du remplissage.`;
         return [
           {
-            texte: "Regarder s'il reste des chambres à vendre ou des clients refusés, pas seulement le calendrier",
+            texte: "Regarder les chambres vides et les clients refusés",
             juste: p.meilleur === "remplissage",
             retour:
               p.meilleur === "remplissage"

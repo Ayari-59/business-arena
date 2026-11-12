@@ -357,10 +357,10 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
       question: () => "Pourquoi la remise ne s'enregistre-t-elle pas, alors que l'escompte s'enregistre ?",
       options: () => [
         {
-          texte: "La remise baisse le prix de vente ; l'escompte est le coût d'un service financier, payer plus tôt.",
+          texte: "La remise change le prix, pas l'escompte.",
           juste: true,
           retour:
-            "C'est cela. Le chiffre d'affaires est le prix réellement consenti : la remise en fait partie. L'escompte rémunère l'argent reçu plus tôt : il se lit avec les charges financières, à côté des intérêts.",
+            "C'est cela. La remise baisse le prix de vente ; l'escompte est le coût d'un service financier, payer plus tôt. Le chiffre d'affaires est le prix réellement consenti : la remise en fait partie. L'escompte rémunère l'argent reçu plus tôt : il se lit avec les charges financières, à côté des intérêts.",
         },
         { texte: "La remise est trop petite pour être enregistrée.", juste: false, retour: "La taille n'y fait rien : une remise, même grosse, réduit le prix et ne s'écrit pas à part." },
         {
@@ -415,7 +415,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         const voir = "Faites varier les jours d'avance à l'étape suivante : le curseur montre jusqu'où l'escompte paie l'argent avancé.";
         return [
           { texte: `Bien plus que les ${pct(c.pret.tauxAnnuel)} de l'emprunt`, juste: a.vautLaPeine, retour: `Bon pari. ${voir}` },
-          { texte: `${pct(TAUX_D_ESCOMPTE)}, le taux affiché sur la facture`, juste: false, retour: `Pari à vérifier : ${pct(TAUX_D_ESCOMPTE)} paie ${qte(a.joursGagnes)} jours, pas une année. ${voir}` },
+          { texte: `${pct(TAUX_D_ESCOMPTE)}, le taux affiché sur la facture d'achat`, juste: false, retour: `Pari à vérifier : ${pct(TAUX_D_ESCOMPTE)} paie ${qte(a.joursGagnes)} jours, pas une année. ${voir}` },
           { texte: `Moins que les ${pct(c.pret.tauxAnnuel)} de l'emprunt`, juste: !a.vautLaPeine, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -508,7 +508,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         const f = factureDAchat(c);
         return [
           {
-            texte: `Payer sous ${qte(JOURS_D_ESCOMPTE)} jours et prendre l'escompte, si la trésorerie le permet.`,
+            texte: `Payer sous ${qte(JOURS_D_ESCOMPTE)} jours pour l'escompte, si la trésorerie le permet.`,
             juste: f.vautLaPeine,
             retour: f.vautLaPeine
               ? `Oui : l'escompte rapporte bien plus que ce que coûte l'argent à l'entreprise. Même en finançant l'avance par un découvert, elle y gagne, tant que le découvert coûte moins de ${pct(f.tauxAnnuel)} par an.`
@@ -522,7 +522,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
               : `Garder sa trésorerie a un prix : ici, renoncer à ${pct(f.tauxAnnuel)} par an, quand l'argent ne coûte que ${pct(c.pret.tauxAnnuel)}.`,
           },
           {
-            texte: `Peu importe : ${pct(TAUX_D_ESCOMPTE)}, c'est négligeable.`,
+            texte: `Peu importe : ${pct(TAUX_D_ESCOMPTE)}, c'est négligeable sur une facture de ce montant.`,
             juste: false,
             retour: `${pct(TAUX_D_ESCOMPTE)} pour ${qte(f.joursGagnes)} jours, c'est ${pct(f.tauxAnnuel)} par an : c'est tout sauf négligeable.`,
           },
@@ -606,7 +606,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         return [
           { texte: `Moins que les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours`, juste: t < TAUX_D_ESCOMPTE, retour: `${t < TAUX_D_ESCOMPTE ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
           { texte: `Plus que les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours`, juste: t > TAUX_D_ESCOMPTE, retour: `${t > TAUX_D_ESCOMPTE ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
-          { texte: `${pct(TAUX_DU_DECOUVERT)}, le taux du découvert lui-même`, juste: false, retour: `Non : ${pct(TAUX_DU_DECOUVERT)} est un taux pour une année, l'escompte un taux pour ${qte(factureDeVente(c).joursAvances)} jours. ${voir}` },
+          { texte: `${pct(TAUX_DU_DECOUVERT)}, le taux du découvert qu'il économise`, juste: false, retour: `Non : ${pct(TAUX_DU_DECOUVERT)} est un taux pour une année, l'escompte un taux pour ${qte(factureDeVente(c).joursAvances)} jours. ${voir}` },
         ];
       },
     },
@@ -792,9 +792,9 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         const v = factureDeVente(c);
         return [
           {
-            texte: `Pas la même chose : l'escompte achète ${qte(v.joursAvances)} jours de trésorerie, la remise n'achète rien`,
+            texte: "Pas la même chose : la remise n'achète rien",
             juste: true,
-            retour: `Oui. L'escompte n'est payé qu'au client qui règle vite, et il rapporte ${qte(v.joursAvances)} jours d'argent en banque ; la remise est donnée à tous, qu'ils paient tôt ou tard. Et elle baisse le chiffre d'affaires, quand l'escompte est une charge financière, qui se compare au coût du découvert.`,
+            retour: `Oui. L'escompte achète ${qte(v.joursAvances)} jours de trésorerie, la remise n'achète rien. L'escompte n'est payé qu'au client qui règle vite, et il rapporte ${qte(v.joursAvances)} jours d'argent en banque ; la remise est donnée à tous, qu'ils paient tôt ou tard. Et elle baisse le chiffre d'affaires, quand l'escompte est une charge financière, qui se compare au coût du découvert.`,
           },
           {
             texte: "C'est la même chose : les deux baissent la TVA du même montant",

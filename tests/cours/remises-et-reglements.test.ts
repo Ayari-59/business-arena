@@ -213,7 +213,7 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
     });
     // L'escompte du fournisseur vaut toujours plus que l'emprunt : prendre l'escompte est la bonne décision.
     expect(a.taux).toBeGreaterThan(cas.pret.tauxAnnuel);
-    expect(juste(ch, cas, "decision")).toBe("Payer sous 10 jours et prendre l'escompte, si la trésorerie le permet.");
+    expect(juste(ch, cas, "decision")).toBe("Payer sous 10 jours pour l'escompte, si la trésorerie le permet.");
     expect(juste(ch, cas, "predire-l-escompte")).toMatch(/^Bien plus que les /);
   });
 
@@ -361,7 +361,7 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
     const w = factureALaMain(cas, cas.venteCredit.quantite, 0.02, [0.05, 0.03]);
     expect(attendus(ch, cas, "en-cascade")).toEqual({ "Net commercial": w.nc, Escompte: w.esc, "Net financier": w.nf, TVA: w.tva, "Net à payer": w.ttc });
     expect(w.nc).not.toBe(centime(v.brut * 0.92));
-    expect(juste(ch, cas, "critique")).toBe(`Pas la même chose : l'escompte achète ${j} jours de trésorerie, la remise n'achète rien`);
+    expect(juste(ch, cas, "critique")).toBe("Pas la même chose : la remise n'achète rien");
   });
 
   it("chez NOVA, les chiffres épinglés, et le délai de CampusTech dit comme le propriétaire l'a décidé", () => {

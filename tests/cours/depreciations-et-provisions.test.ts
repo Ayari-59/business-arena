@@ -334,8 +334,8 @@ describe("dépréciations et provisions : les étapes", () => {
     expect([PRIX_DU_JEU_APRES_NOEL, PART_DE_REVENTE_DE_LA_LIGNE]).toEqual([21.5, 0.4]);
     const vnc = c(60_000 - (60_000 / 6) * (355 / 360));
     expect([vnc, c(vnc * 0.4), c(vnc - c(vnc * 0.4))]).toEqual([50_138.89, 20_055.56, 30_083.33]);
-    expect(juste(ch, "le-stock-de-composants")).toBe("Non : ces jeux entreront dans des enceintes vendues au-dessus de leur coût");
-    expect(juste(ch, "equipement")).toBe("Non : l'entreprise s'en sert, et ce qu'elle lui rapporte en servant dépasse sa valeur au bilan");
+    expect(juste(ch, "le-stock-de-composants")).toBe("Non : ce sont des composants, pas des marchandises");
+    expect(juste(ch, "equipement")).toBe("Non : sa valeur d'usage dépasse sa valeur au bilan");
     // La dépréciation que l'erreur proposerait : 600 jeux × (22,50 € − 21,50 €).
     const options = (ch.etapes.find((x) => x.id === "le-stock-de-composants") as EtapeChoix).options(cas, etatVide);
     expect(options.find((o) => o.texte.startsWith("Oui"))!.texte).toContain(`${600 * (22.5 - 21.5)} €`);
@@ -458,8 +458,8 @@ describe("dépréciations et provisions : les étapes", () => {
     expect([r.perteHt, r.depreciation, chargeNetteARebours]).toEqual([19_617.5, 18_216.25, 1_401.25]);
     expect(attendus(LE_DENOUEMENT_DES_RISQUES, "a-rebours")).toEqual({ "Perte hors taxes": r.perteHt, "Dépréciation constatée en N": c(r.perteHt - chargeNetteARebours), "Perte estimée en N, en %": c((c(r.perteHt - chargeNetteARebours) / ht) * 100) });
     expect((LE_DENOUEMENT_DES_RISQUES.etapes.find((e) => e.id === "a-rebours") as EtapeMontants).question(cas, etatVide)).toContain("1\u202f401,25 €");
-    expect(juste(LE_DENOUEMENT_DES_RISQUES, "corriger-n")).toBe("Non : l'estimation était la meilleure au 31 décembre, et l'écart va dans N+1");
-    expect(juste(ch, "client-douteux")).toBe("Il passe la créance en clients douteux, et la déprécie de la perte probable, calculée sur son montant hors taxes");
+    expect(juste(LE_DENOUEMENT_DES_RISQUES, "corriger-n")).toBe("Non : l'estimation était la meilleure au 31 décembre");
+    expect(juste(ch, "client-douteux")).toBe("Il la passe en clients douteux, et la déprécie de la perte probable");
     expect(juste(ch, "litige")).toBe("Une provision pour litige de 5\u202f000 € : le montant probable");
   });
 

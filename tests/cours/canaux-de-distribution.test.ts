@@ -32,7 +32,7 @@ describe("les canaux de distribution", () => {
     expect(attendus(CANAUX_DE_DISTRIBUTION, "part")).toEqual([Math.round((960 / 4_778) * 10_000) / 100, DU]);
     expect(attendus(CANAUX_DE_DISTRIBUTION, "cout")).toEqual([attente(DU, 60), c(attente(DU, 60) / 960)]);
     expect(attente(DU, 60)).toBe(566.4);
-    expect(juste(CANAUX_DE_DISTRIBUTION, "avantage")).toEqual(["Il lui apporte des clients qu'elle n'atteindrait pas seule"]);
+    expect(juste(CANAUX_DE_DISTRIBUTION, "avantage")).toEqual(["Il lui apporte des clients nouveaux"]);
   });
 
   it("le curseur : à 60 jours, l'attente coûte 1 % du chiffre d'affaires du canal ; à 61, plus", () => {

@@ -187,7 +187,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
         const d = demandeEtPrix(c);
         return [
           {
-            texte: "Seulement si l'entreprise peut servir les clients en plus, et que chaque vente reste rentable",
+            texte: "Seulement si les ventes en plus sont servies et rentables",
             juste: true,
             retour: `Oui : ${pct(d.gagneDemandeEnBaissant)} de demande en plus ne rapporte que si l'entreprise peut produire ces enceintes, et si le prix baissé couvre encore ses coûts. Sinon, elle vend la même chose moins cher.`,
           },

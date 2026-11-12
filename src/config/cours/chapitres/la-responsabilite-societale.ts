@@ -462,7 +462,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const plusTard = !jamais && !cetteAnnee;
         const dit = (juste: boolean) => `${juste ? "Bon pari" : "Pari à vérifier"}. ${voir}`;
         return [
-          { texte: "Jamais, à ce budget : le capital plafonne sous le seuil", juste: jamais, retour: dit(jamais) },
+          { texte: "Jamais, à ce budget : le capital plafonne", juste: jamais, retour: dit(jamais) },
           { texte: "Plus tard : il suffit de tenir quelques années", juste: plusTard, retour: dit(plusTard) },
           { texte: "Dès cette année, au trimestre 4", juste: cetteAnnee, retour: dit(cetteAnnee) },
         ];
@@ -593,7 +593,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const egal = !monte && !descend;
         const dit = (juste: boolean) => `${juste ? "Bon pari" : "Pari à vérifier"}. ${voir}`;
         return [
-          { texte: "Le plan qui monte : la plus grosse dépense est la plus récente", juste: monte, retour: dit(monte) },
+          { texte: "Le plan qui monte : la plus grosse dépense est la dernière", juste: monte, retour: dit(monte) },
           { texte: "Le plan qui descend : le capital commence à se bâtir plus tôt", juste: descend, retour: dit(descend) },
           { texte: "Les deux ou aucun : seul le total compte", juste: egal, retour: dit(egal) },
         ];
@@ -812,7 +812,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const x = responsabilite(c);
         return [
           {
-            texte: "Chaque euro de plus dans un même trimestre y rapporte moins que le précédent",
+            texte: "Chaque euro de plus dans un trimestre rapporte moins",
             juste: true,
             retour: `Oui. L'effort est le logarithme du budget : le dernier euro d'un trimestre déjà chargé rapporte peu de capital. Le plan le moins cher égalise ce que rapporte le dernier euro de chaque trimestre, pondéré par son poids : c'est pourquoi chaque budget, échelle comprise, y est proportionnel au poids de son trimestre. Tout au trimestre ${x.n}, il faudrait ${eur(x.budgetToutAuT3)}.`,
           },
@@ -854,7 +854,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const t4 = !moins && !moyenne;
         const dit = (juste: boolean) => `${juste ? "Bon pari" : "Pari à vérifier"}. ${voir}`;
         return [
-          { texte: `De moins de ${part(SEUIL_DU_PARI_DES_VENTES)} : une part monte moins vite que l'attractivité`, juste: moins, retour: dit(moins) },
+          { texte: `De moins de ${part(SEUIL_DU_PARI_DES_VENTES)} : la part monte moins vite`, juste: moins, retour: dit(moins) },
           { texte: `D'environ ${qte(Math.round(x.hausseMoyenne))} %, la hausse moyenne de l'attractivité`, juste: moyenne, retour: dit(moyenne) },
           { texte: `D'environ ${qte(Math.round(x.haussesDAttractivite[3]!))} %, la hausse du trimestre 4`, juste: t4, retour: dit(t4) },
         ];
@@ -1002,7 +1002,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
                 : `Non : le résultat ${x.annee.ecart < 0 ? `baisse de ${eur(-x.annee.ecart)}` : "ne monte pas"}.`,
           },
           {
-            texte: "Pas encore : la demande gagnée se vend, mais pas assez pour payer l'année",
+            texte: "Pas encore : la demande gagnée ne paie pas l'année",
             juste: v === "pas-encore",
             retour:
               v === "pas-encore"
@@ -1143,7 +1143,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const tot = x.ecartT3AuCours > 0 && x.ecartMonteAT4Egal < 0;
         return [
           {
-            texte: "Plus il vient tôt, plus il rapporte : au trimestre 3, il paie son budget",
+            texte: "Plus il vient tôt, plus il rapporte",
             juste: tot,
             retour: tot
               ? `Oui : au trimestre ${TRIMESTRE_DU_LABEL_VISE}, il ne joue qu'un trimestre, et l'année finit ${sensDuResultat(x.ecartMonteAT4Egal)} qu'au budget du cours ; dès le trimestre 3, il en joue ${qte(x.trimestresDeLabelT3)}, et l'année finit ${sensDuResultat(x.ecartT3AuCours)}, à budget du trimestre ${TRIMESTRE_DU_LABEL_VISE} égal. Aucun plan ne bat pour autant l'année sans engagement.`
@@ -1178,7 +1178,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
             retour: `Non : rien n'oblige ${x.f.entreprise} à s'engager, et rien ne la punit si elle ne le fait pas ; SoundBox n'engage rien. Et l'engagement rapporte : ${qte(x.annee.ventesGagnees)} ${x.f.unites} vendues de plus dès la première année. Hors de la simulation, des obligations existent (les grandes entreprises publient des informations de durabilité) ; la simulation du cours n'en retient aucune.`,
           },
           {
-            texte: "Un investissement : un capital payé maintenant, qui rapporte ensuite",
+            texte: "Un investissement, qui rapporte ensuite",
             juste: true,
             retour: `Oui : la dépense est une charge du trimestre, et elle bâtit un capital qui relève l'attractivité les trimestres suivants. Le capital garde ${part(x.k)} de lui-même chaque trimestre : il s'use lentement si l'on arrête. Devenu assez fort pour le label, il distingue l'offre : une stratégie de différenciation, qui se juge sur plusieurs années, et qui demande un budget assez fort et bien placé.`,
           },

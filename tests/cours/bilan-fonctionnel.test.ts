@@ -300,7 +300,7 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
       "Produit constaté d'avance": [pca, "exploitation"],
       "Compte à terme et ses intérêts courus": [placement, "tresorerie"],
     });
-    expect(juste(ch, "les-interets-courus")).toBe("Ceux du placement suivent le placement en trésorerie ; ceux de l'emprunt, dus le 3 janvier, vont hors exploitation");
+    expect(juste(ch, "les-interets-courus")).toBe("Ceux du placement en trésorerie, ceux de l'emprunt hors exploitation");
     expect(attendus(ch, "frng")).toEqual({ "Ressources stables": ressourcesStables, "Fonds de roulement net global": frng });
     expect(attendus(ch, "bfr-d-exploitation")).toEqual({
       "Actif d'exploitation": actifDExploitation,
@@ -360,7 +360,7 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
     expect(tn - 69 * unJour).toBeLessThan(0);
     // Le compte courant, lui, tient 31 jours : le compte à terme est bloqué jusqu'au 6 janvier.
     expect(Math.floor(banque / unJour)).toBe(31);
-    expect(juste(ch, "predire-la-place-de-marche")).toBe("Le fonds de roulement ne bouge pas ; le besoin grossit, et la trésorerie baisse d'autant");
+    expect(juste(ch, "predire-la-place-de-marche")).toBe("Le fonds de roulement tient, le besoin grossit, la trésorerie baisse");
   });
 
   it("le BFR normatif, en jours de chiffre d'affaires", () => {
@@ -451,7 +451,7 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
       "Durée de rotation du stock": centime((stock * 360) / consommation),
     });
     expect([centime((clientsBruts * 360) / (caHt * (1 + TVA))), centime((fournisseurs * 360) / achatsTtc), centime((stock * 360) / consommation)]).toEqual([24.98, 45.5, 9.34]);
-    expect(juste(ch, "le-ratio-et-le-contrat")).toBe("De décembre : le dépannage de Composants Express s'ajoute à la facture du mois, et le bilan est une photo de ce jour");
+    expect(juste(ch, "le-ratio-et-le-contrat")).toBe("De décembre : le dépannage s'ajoute à la facture du mois");
   });
 
   it("les étapes d'expert : la croissance à structure constante", () => {
@@ -476,7 +476,7 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
     expect([interets, place, centime(interets - place), net]).toEqual([3_681.11, 2_366.67, 1_314.44, 985.83]);
     // Le bénéfice dépasse le plafond du taux réduit : le taux marginal est le taux normal.
     expect(rai).toBeGreaterThan(42_500);
-    expect(juste(ch, "emprunter-pour-garder")).toBe("Garder se défend : la réserve a coûté 985,83 € après impôt, et finance la seconde ligne sans nouveau prêt");
+    expect(juste(ch, "emprunter-pour-garder")).toBe("Garder se défend : la réserve a coûté 985,83 € après impôt");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

@@ -368,15 +368,15 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect(Math.floor((13_337 + cf2) / mu)).toBe(2_834);
     expect(2_835 * mu - cf2).toBeGreaterThan(13_337);
     expect(2_834 * mu - cf2).toBeLessThanOrEqual(13_337);
-    expect(juste(LES_LEVIERS_DU_SEUIL, "franchir-le-palier")).toBe(`Pas pour ${n(2_400)} : il faut plus de ${n(2_834)} enceintes pour gagner plus qu'à ${n(2_120)}`);
+    expect(juste(LES_LEVIERS_DU_SEUIL, "franchir-le-palier")).toBe(`Pas pour ${n(2_400)} : il faut plus de ${n(2_834)} enceintes`);
   });
 
   it("les verdicts des paris et des choix", () => {
     expect(juste(ch, "une-de-plus")).toBe("De 21 € : la marge sur coût variable unitaire.");
-    expect(juste(ch, "predire-le-seuil")).toBe("Sous les ventes de janvier : la marge du mois couvre déjà les charges fixes");
+    expect(juste(ch, "predire-le-seuil")).toBe("Sous les ventes de janvier : la marge du mois couvre les charges fixes");
     expect(juste(ch, "predire-les-fixes")).toBe(`De ${n(2_207)} €, le résultat de janvier`);
     expect(juste(LES_LEVIERS_DU_SEUIL, "leviers")).toBe("Gagner plus sur chaque vente, ou réduire ses charges fixes.");
-    expect(juste(LES_LEVIERS_DU_SEUIL, "lire-le-levier")).toBe("C'est un signe de fragilité : l'entreprise travaille près de son seuil");
+    expect(juste(LES_LEVIERS_DU_SEUIL, "lire-le-levier")).toBe("C'est un signe de fragilité : l'entreprise est près de son seuil");
   });
 
   it("les curseurs, refaits à la main : le seuil sur les ventes, les charges fixes tenables", () => {

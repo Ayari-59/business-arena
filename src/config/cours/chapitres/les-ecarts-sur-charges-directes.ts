@@ -248,7 +248,7 @@ const PREDIRE_LA_MAIN_D_OEUVRE: EtapeChoix = {
     const d = ecartsDirects(c);
     const g = d.e.mainDOeuvre.global;
     return [
-      pari("Non : la hausse du taux l'emporte sur les heures gagnées", g > 0),
+      pari("Non : la hausse du taux l'emporte", g > 0),
       pari("Oui : les heures gagnées paient la hausse du taux", g < 0),
       pari("Tout juste : l'un efface exactement l'autre", g === 0),
     ];

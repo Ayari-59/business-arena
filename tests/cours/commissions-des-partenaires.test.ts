@@ -240,7 +240,7 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
   });
 
   it("le pari et le curseur du plafond : 12 %, et le piège de la première année à 34 %", () => {
-    expect(juste(ch, "predire-le-plafond")).toBe("Sous 20 % : la commission revient chaque année sur les comptes restés chez elle");
+    expect(juste(ch, "predire-le-plafond")).toBe("Sous 20 % : la commission revient chaque année");
     // La valeur vie nette à la commission t : 84 000 − 43 200 × t × 2,8 ; elle vaut la conquête tant qu'elle reste à 69 000 €.
     const net = (t: number) => vv - ((ca * t) / 100) * facteur;
     const plafond = Math.floor((cac / (ca * facteur)) * 100);
@@ -272,7 +272,7 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
   });
 
   it("les retours en direct : le pari, le curseur à 76 %, puis 75,5 % et 8,7 % sans retour", () => {
-    expect(juste(ch, "predire-les-retours")).toBe("Plus de la moitié : chaque compte resté chez elle repaie sa commission");
+    expect(juste(ch, "predire-les-retours")).toBe("Plus de la moitié : chaque compte resté repaie sa commission");
     // Les commissions sur la vie à une part d de retours : 8 640 + 8 640 × (1 − d) × 3, face aux 15 000 € de la conquête.
     const vieA = (d: number) => premiere + premiere * (1 - d / 100) * suivantes;
     expect(vieA(76)).toBeLessThanOrEqual(cac);
@@ -296,11 +296,11 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
       "Commission plafond sans aucun retour en direct (%)": centime((cac / (ca * (1 + suivantes))) * 100),
     });
     expect([payable, centime((1 - payable / premiere) * 100), centime((cac / (ca * (1 + suivantes))) * 100)]).toEqual([2_120, 75.46, 8.68]);
-    expect(juste(ch, "le-client")).toBe("Le compte de la plateforme repaie sa commission, s'il n'est pas revenu en direct");
+    expect(juste(ch, "le-client")).toBe("Le compte de la plateforme repaie sa commission");
   });
 
   it("le laboratoire : à la valeur vie actualisée, le plafond monte à 16 %", () => {
-    expect(juste(ch, "predire-l-actualisation")).toBe("Monte : les commissions se paient plus tard, la conquête aujourd'hui");
+    expect(juste(ch, "predire-l-actualisation")).toBe("Monte : les commissions se paient plus tard");
     const l = laboratoire(ch, "le-laboratoire-des-partenaires");
     expect(l.depart).toEqual({ commission: 20, part: 40, horizon: 1, methode: 0 });
     expect(l.solution).toEqual({ commission: 16, part: 40, horizon: 12, methode: 10 });
@@ -377,7 +377,7 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
       "Commission plafond de l'apporteur (%)": centime((cac / ca) * 100),
     });
     expect([commission, vv - commission, vv - commission - enPropre]).toEqual([4_320, 79_680, 10_680]);
-    expect(juste(ch, "tout-par-l-apporteur")).toBe("Non : il n'a présenté que 4 entreprises dans l'année ; il complète la conquête");
+    expect(juste(ch, "tout-par-l-apporteur")).toBe("Non : il n'a présenté que 4 entreprises dans l'année");
   });
 
   it("la synthèse finit sur l'arène", () => {

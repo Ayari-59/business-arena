@@ -317,7 +317,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
         const pari = (juste: boolean) => (juste ? `Bon pari. ${voir}` : `Pari à vérifier. ${voir}`);
         return [
           { texte: `Au-delà de ${pct(actuel)} : la première commission coûte bien moins que la conquête`, juste: x.plafond > actuel, retour: pari(x.plafond > actuel) },
-          { texte: `Sous ${pct(actuel)} : la commission revient chaque année sur les comptes restés chez elle`, juste: x.plafond < actuel, retour: pari(x.plafond < actuel) },
+          { texte: `Sous ${pct(actuel)} : la commission revient chaque année`, juste: x.plafond < actuel, retour: pari(x.plafond < actuel) },
           { texte: `À ${pct(actuel)} pile : c'est le taux que le marché a fixé`, juste: x.plafond === actuel, retour: pari(x.plafond === actuel) },
         ];
       },
@@ -462,7 +462,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
         const plus = x.retours !== null && x.retours >= 50;
         return [
           { texte: `Moins de la moitié : la première année n'a coûté que ${eur(x.v.commissionPremiereAnnee)}`, juste: moitie, retour: pari(moitie) },
-          { texte: "Plus de la moitié : chaque compte resté chez elle repaie sa commission", juste: plus, retour: pari(plus) },
+          { texte: "Plus de la moitié : chaque compte resté repaie sa commission", juste: plus, retour: pari(plus) },
           { texte: "Aucune part ne suffit : même seule, la première commission coûte plus", juste: x.retours === null, retour: pari(x.retours === null) },
         ];
       },
@@ -565,9 +565,9 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
         const restent = pct((1 - x.plateforme.partQuiRevientEnDirect) * 100);
         return [
           {
-            texte: "Le compte de la plateforme repaie sa commission, s'il n'est pas revenu en direct",
+            texte: "Le compte de la plateforme repaie sa commission",
             juste: true,
-            retour: `Oui : ${restent} des comptes de la plateforme restent chez elle, et chacun repaie ${eur(x.v.commissionPremiereAnnee)} par an, ${eur(x.v.commissionDesAnneesSuivantes)} en moyenne sur les comptes. Le compte gagné en propre laisse sa marge entière, ${eur(x.m.marge)} : sa conquête ne se paie qu'une fois.`,
+            retour: `Oui, s'il n'est pas revenu en direct : ${restent} des comptes de la plateforme restent chez elle, et chacun repaie ${eur(x.v.commissionPremiereAnnee)} par an, ${eur(x.v.commissionDesAnneesSuivantes)} en moyenne sur les comptes. Le compte gagné en propre laisse sa marge entière, ${eur(x.m.marge)} : sa conquête ne se paie qu'une fois.`,
           },
           {
             texte: "Rien : une fois gagné, un compte vaut la même chose quel que soit le canal",
@@ -599,7 +599,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
         const monte = x.plafondActualise > x.plafond;
         const baisse = x.plafondActualise < x.plafond;
         return [
-          { texte: "Monte : les commissions se paient plus tard, la conquête aujourd'hui", juste: monte, retour: pari(monte) },
+          { texte: "Monte : les commissions se paient plus tard", juste: monte, retour: pari(monte) },
           { texte: `Baisse : la valeur vie du compte fond, de ${eur(x.v.valeurVie)} à ${eur(x.va.valeurVie)}`, juste: baisse, retour: pari(baisse) },
           { texte: "Ne bouge pas : on actualise les deux côtés de la même façon", juste: !monte && !baisse, retour: pari(!monte && !baisse) },
         ];
@@ -783,7 +783,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
         const cacApporteur = auCentime(k.cout / k.contrats);
         return [
           {
-            texte: `Non : il n'a présenté que ${qte(k.contacts)} entreprises dans l'année ; il complète la conquête`,
+            texte: `Non : il n'a présenté que ${qte(k.contacts)} entreprises dans l'année`,
             juste: true,
             retour: `Oui : l'apporteur coûte ${eur(cacApporteur)} par compte gagné, mais il n'a fait que ${qte(k.contacts)} présentations et ${qte(k.contrats)} compte dans l'année, sur les ${qte(x.acq.comptes)} que le cabinet a gagnés. Couper la prospection, c'est perdre ses comptes sans que l'apporteur en amène plus : un canal se juge sur ce qu'il coûte et sur ce qu'il peut amener.`,
           },

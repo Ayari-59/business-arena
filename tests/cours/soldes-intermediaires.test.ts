@@ -322,7 +322,7 @@ describe("les soldes intermédiaires de gestion, à l'exercice de NOVA du monde 
       },
     });
     expect([c2(EBE - loyer), c2(RN + DOTATIONS - DOTATION)]).toEqual([114_597.89, 95_435.96]);
-    expect(juste(ch, "predire-la-location")).toBe("Plus bas : le loyer est une consommation, la dotation ne l'était pas");
+    expect(juste(ch, "predire-la-location")).toBe("Plus bas : le loyer est une consommation");
   });
 
   it("le laboratoire de l'EBE : moins de résultat courant, le même EBE, plus de CAF", () => {
@@ -389,7 +389,7 @@ describe("les soldes intermédiaires de gestion, à l'exercice de NOVA du monde 
       "Charges financières retraitées": c2(CHARGES_FINANCIERES + REDEVANCES_DE_CREDIT_BAIL - DOTATION),
     });
     expect([vaBrute, ebeBrut, c2(CHARGES_FINANCIERES + REDEVANCES_DE_CREDIT_BAIL - DOTATION)]).toEqual([209_084, 113_234, 7_268.4]);
-    expect(juste(ch, "pourquoi-retraiter")).toBe("Pour que la façon de tenir l'équipement et d'employer le personnel ne change ni la valeur ajoutée ni l'EBE");
+    expect(juste(ch, "pourquoi-retraiter")).toBe("Pour que la forme juridique ne change ni la valeur ajoutée ni l'EBE");
   });
 
   it("l'étape d'expert : emprunter à 5 % pour placer à 3 %, et le jugement", () => {
@@ -402,18 +402,18 @@ describe("les soldes intermédiaires de gestion, à l'exercice de NOVA du monde 
       "Coût net après impôt": c2(net * 0.75),
     });
     expect([INTERETS, produit, net, c2(net * 0.75)]).toEqual([3_681.11, 2_366.67, 1_314.44, 985.83]);
-    expect(juste(ch, "garder-l-emprunt")).toBe("Sur le rendement, oui ; il ne se justifie que par la réserve qu'il garde pour la gamme à venir");
+    expect(juste(ch, "garder-l-emprunt")).toBe("Sur le rendement, oui ; seule la réserve le justifie");
   });
 
   it("les verdicts : ce que mesure l'EBE, la CAF face à la trésorerie", () => {
-    expect(juste(ch, "ce-que-mesure-l-ebe")).toMatch(/^Parce qu'il ne dépend ni de la façon dont l'entreprise est financée/);
+    expect(juste(ch, "ce-que-mesure-l-ebe")).toBe("Parce qu'il mesure l'activité seule");
     // Du 6 janvier, la ligne payée, au 31 décembre : le compte courant et le compte à terme.
     const debut = 150_000 + 80_000 - 72_000;
     const fin = 115_734.87 + 133_000;
     const e = ch.etapes.find((x) => x.id === "caf-et-tresorerie") as EtapeChoix;
     expect(e.question(cas, etatVide)).toContain(`${(158_000).toLocaleString("fr-FR")} €`);
     expect(e.question(cas, etatVide)).toContain(`${c2(fin - debut).toLocaleString("fr-FR")} €`);
-    expect(juste(ch, "caf-et-tresorerie")).toBe("Parce que la CAF compte l'encaissable, pas l'encaissé, et ignore les 12 000 € d'emprunt remboursés et les écarts de délais");
+    expect(juste(ch, "caf-et-tresorerie")).toBe("Parce que la CAF compte l'encaissable, pas l'encaissé");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

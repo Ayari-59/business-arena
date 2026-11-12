@@ -216,10 +216,10 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
       question: (c) => `Le compte de résultat du trimestre porte ${eur(resultat().dotation)} de dotation aux amortissements. Quand ${c.entreprise} paie-t-elle cette somme ?`,
       options: () => [
         {
-          texte: "Jamais au cours du trimestre : l'équipement a été payé le jour de son achat, la dotation mesure seulement son usure.",
+          texte: "Jamais au cours du trimestre.",
           juste: true,
           retour:
-            "C'est cela. L'équipement est payé une fois, à l'achat : un décaissement sans charge. Puis, chaque trimestre, son usure devient une charge, sans décaissement. Au bout de sa durée de vie, les deux se rejoignent.",
+            "C'est cela : l'équipement a été payé le jour de son achat, la dotation mesure seulement son usure. L'équipement est payé une fois, à l'achat : un décaissement sans charge. Puis, chaque trimestre, son usure devient une charge, sans décaissement. Au bout de sa durée de vie, les deux se rejoignent.",
         },
         { texte: "À la fin du trimestre, à la banque.", juste: false, retour: "Aucune banque ne reçoit la dotation : c'est une charge calculée, l'usure de l'équipement, qui ne fait sortir aucun argent." },
         { texte: "Au fournisseur de l'équipement, en plusieurs fois.", juste: false, retour: "Le fournisseur a été payé à l'achat. La dotation ne paie personne : elle répartit le coût de l'équipement sur les années où il sert." },

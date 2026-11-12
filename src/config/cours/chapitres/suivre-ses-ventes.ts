@@ -132,7 +132,7 @@ export function optionsDuPourquoi(k: Suivi) {
       retour: k.verdict === "clients" ? `Oui : ${faits}. Même en servant tous les clients venus, l'objectif n'était pas à portée.` : `Non : ${faits}. Les clients venus suffisaient pour l'objectif.`,
     },
     {
-      texte: "Assez de clients sont venus, mais tous n'ont pas été servis",
+      texte: "Assez de clients sont venus, pas tous servis",
       juste: k.verdict === "service",
       retour:
         k.verdict === "service"

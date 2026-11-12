@@ -386,10 +386,10 @@ export const TABLEAU_DE_BORD: Chapitre = {
       },
       options: () => [
         {
-          texte: "La position face aux concurrents : on peut gagner de l'argent sur un marché qui grandit tout en y perdant du terrain.",
+          texte: "La position face aux concurrents.",
           juste: true,
           retour:
-            "C'est cela. Le résultat dit si l'entreprise gagne de l'argent ; la part de marché dit si elle tient sa place. La seconde annonce souvent le premier, quelques mois plus tôt : un marché qui grandit sans vous finit par se passer de vous.",
+            "C'est cela : on peut gagner de l'argent sur un marché qui grandit tout en y perdant du terrain. Le résultat dit si l'entreprise gagne de l'argent ; la part de marché dit si elle tient sa place. La seconde annonce souvent le premier, quelques mois plus tôt : un marché qui grandit sans vous finit par se passer de vous.",
         },
         {
           texte: "Rien de plus : la part de marché suit toujours le chiffre d'affaires.",
@@ -417,7 +417,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
         const x = tableauDuChapitre(c);
         const voir = "Faites varier les ventes du mois à l'étape suivante : le curseur montre où le voyant de l'indice s'allume.";
         return [
-          { texte: "Avant celui du résultat, quand NOVA gagne encore de l'argent", juste: x.ventesDAlerte > x.seuilEnQuantite, retour: `Bon pari. ${voir}` },
+          { texte: "Avant : NOVA gagne encore de l'argent à ce niveau", juste: x.ventesDAlerte > x.seuilEnQuantite, retour: `Bon pari. ${voir}` },
           { texte: "En même temps : sous ce seuil, NOVA perd déjà de l'argent", juste: x.ventesDAlerte === x.seuilEnQuantite, retour: `Pari à vérifier. ${voir}` },
           { texte: "Après : il faut perdre de l'argent pour descendre si bas", juste: x.ventesDAlerte < x.seuilEnQuantite, retour: `Pari à vérifier. ${voir}` },
         ].map((o) => ({ ...o, texte: o.texte.replace("NOVA", x.f.entreprise) }));
@@ -671,10 +671,10 @@ export const TABLEAU_DE_BORD: Chapitre = {
       },
       options: () => [
         {
-          texte: "Le résultat compte les ventes et les charges quand elles naissent, la trésorerie quand elles se paient : délais, TVA et emprunt les séparent.",
+          texte: "Délais, TVA et emprunt séparent le résultat de la trésorerie.",
           juste: true,
           retour:
-            "C'est cela. C'est pourquoi un tableau de bord suit les deux : un mois bénéficiaire peut vider la banque (un client qui paie tard, une échéance d'emprunt), un mois de perte peut la remplir (des créances anciennes qui rentrent).",
+            "C'est cela. Le résultat compte les ventes et les charges quand elles naissent, la trésorerie quand elles se paient. C'est pourquoi un tableau de bord suit les deux : un mois bénéficiaire peut vider la banque (un client qui paie tard, une échéance d'emprunt), un mois de perte peut la remplir (des créances anciennes qui rentrent).",
         },
         {
           texte: "C'est impossible : le tableau de bord contient une erreur.",
@@ -735,13 +735,13 @@ export const TABLEAU_DE_BORD: Chapitre = {
       question: () => "Le dirigeant veut ajouter un indicateur de plus. Lequel n'a pas sa place dans son tableau de bord ?",
       options: () => [
         {
-          texte: "Le nombre d'écritures passées dans le journal ce mois-ci.",
+          texte: "Le nombre d'écritures du journal ce mois-ci.",
           juste: true,
           retour:
             "C'est cela : il ne dit rien de la santé de l'entreprise et n'appelle aucune décision. Un indicateur a sa place s'il alerte et s'il fait agir quelqu'un.",
         },
         {
-          texte: "Le délai moyen de paiement des clients.",
+          texte: "Le délai moyen de paiement des clients, en jours.",
           juste: false,
           retour: "Il a sa place : il annonce la trésorerie des mois suivants, et le commercial peut agir dessus. Le laboratoire l'a montré avec CampusTech.",
         },
@@ -767,7 +767,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
         const n = x.nom(x.inv.mois);
         return [
           {
-            texte: `Ses voyants constatent le mois écoulé : le budget voyait le découvert ${dE(n)} dès janvier`,
+            texte: "Ses voyants constatent le mois écoulé, ils ne prévoient pas",
             juste: true,
             retour: `Oui. Un tableau de bord constate vite, il ne prévoit pas : le voyant de trésorerie s'allumerait fin ${dE(n)}, quand le budget de trésorerie annonçait le découvert dès janvier. Et un indicateur seul se manipule : payé sur le chiffre d'affaires, un commercial laisserait CampusTech payer ${DELAI_DU_PARI} jours après sa facture, sans la relancer, sans qu'aucun voyant du résultat ne bouge. On le lit avec les budgets, et plusieurs faces à la fois.`,
           },

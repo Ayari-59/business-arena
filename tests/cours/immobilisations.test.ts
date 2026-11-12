@@ -311,7 +311,7 @@ describe("immobilisations : le chapitre, au monde du cours", () => {
     expect([m.cumul, m.vnc, m.prix, centime(m.prix - m.vnc)]).toEqual([24_861.11, 35_138.89, 24_000, -11_138.89]);
     expect([m.mD, m.mL]).toEqual([33, 44]);
     expect([m.dotRebours, centime(m.B - m.dotRebours)]).toEqual([2_777.78, 57_222.22]);
-    expect(juste(IMMOBILISATIONS, "le-degressif-et-l-impot", cas)).toBe("L'impôt est décalé, pas économisé : les dernières années porteront moins de dotations, 60\u202f000 € au total dans les deux plans");
+    expect(juste(IMMOBILISATIONS, "le-degressif-et-l-impot", cas)).toBe("L'impôt est décalé, pas économisé");
     expect(etapeDe<EtapeChoix>(IMMOBILISATIONS, "le-degressif-et-l-impot").question(cas, etatVide)).toContain("7\u202f638,89 € de charges en plus cette année, c'est 1\u202f909,72 € d'impôt en moins");
   });
 
@@ -508,7 +508,7 @@ describe.each(ENTREPRISES_DU_COURS)("immobilisations chez %s, refaites à la mai
   });
 
   it("les verdicts : la valeur nette fait la frontière, le dégressif baisse la valeur nette, l'impôt est décalé", () => {
-    expect(juste(ch, "predire-la-revente", cas)).toBe("La valeur nette comptable de l'équipement ce jour-là");
+    expect(juste(ch, "predire-la-revente", cas)).toBe("La valeur nette comptable ce jour-là");
     expect(juste(ch, "predire-le-degressif", cas)).toBe("Plus basse : les premières années portent plus de charges");
     expect(juste(ch, "tresorerie", cas)).toBe("Non : l'argent est sorti à l'achat. La dotation répartit ce coût sur les années, sans nouveau paiement.");
     expect(juste(ch, "le-degressif-et-l-impot", cas)).toMatch(/^L'impôt est décalé, pas économisé/);
