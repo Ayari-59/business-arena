@@ -3,14 +3,12 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-// Cadence de base et plafond du backoff. Un onglet d'arène laissé ouvert en
-// classe interrogeait le serveur toutes les 30 s en continu — autant
-// d'invocations de fonction facturées pour, la plupart du temps, « rien de
-// neuf ». On part à 60 s et on RALENTIT progressivement (×1,5 jusqu'à 3 min)
-// tant que rien ne change ; on revient à la cadence rapide dès qu'un changement
-// survient ou que l'utilisateur revient sur l'onglet.
-const BASE_MS = 60_000;
-const MAX_MS = 180_000;
+import { prochainDelai, CADENCE_DE_SEANCE_MS } from "@/lib/cadence-du-sondage";
+
+// LA CADENCE vit dans `lib/cadence-du-sondage.ts` : 12 s en séance, sans recul,
+// tant qu'une page attend une validation, une clôture ou une révélation ; le
+// recul de 60 s à 3 min ne revient que pour un onglet oublié ouvert, quand plus
+// rien n'a bougé depuis une demi-heure. Un onglet caché ne sonde pas.
 
 interface Props {
   gameId: string;
@@ -26,6 +24,12 @@ interface Props {
    * classement est tombé. Elle continue donc à sonder, en ralentissant.
    */
   insistant?: boolean;
+  /**
+   * Le dernier tour dont le classement est révélé, quand la page le connaît.
+   * Sans lui, le premier sondage sert de point de départ : une révélation qui
+   * tombe ensuite recharge la page de l'élève, qui voit alors son rang.
+   */
+  dernierTourRevele?: number | null;
 }
 
 export function RoundStatusPoller({
@@ -35,30 +39,39 @@ export function RoundStatusPoller({
   endpoint,
   submittedCount,
   insistant = false,
+  dernierTourRevele,
 }: Props) {
   const router = useRouter();
-  const stateRef = useRef({ currentRound, roundStatus, submittedCount });
+  const stateRef = useRef({ currentRound, roundStatus, submittedCount, dernierTourRevele });
 
   useEffect(() => {
-    stateRef.current = { currentRound, roundStatus, submittedCount };
-  }, [currentRound, roundStatus, submittedCount]);
+    stateRef.current = { currentRound, roundStatus, submittedCount, dernierTourRevele };
+  }, [currentRound, roundStatus, submittedCount, dernierTourRevele]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let fetching = false;
-    let delay = BASE_MS;
+    let delay = CADENCE_DE_SEANCE_MS;
     let stopped = false;
+    // Le dernier mouvement : l'ouverture de la page, un changement, un retour
+    // sur l'onglet. Une demi-heure sans rien, et la séance est finie.
+    let dernierMouvement = Date.now();
+    // Le dernier tour révélé vu au sondage précédent, quand la page ne l'a pas dit.
+    let reveleVu: number | null | undefined = stateRef.current.dernierTourRevele;
 
     const planifier = () => {
       if (stopped) return;
+      if (timer) clearTimeout(timer);
       timer = setTimeout(poll, delay);
     };
 
     async function poll() {
+      timer = null;
       if (stopped) return;
-      // Onglet en arrière-plan : on ne sonde pas (et on ne gaspille pas), on
-      // reprogramme simplement — le retour au premier plan relancera vite.
-      if (document.hidden || fetching) {
+      // Onglet en arrière-plan : on ne sonde pas, et on ne reprogramme rien.
+      // C'est le retour sur l'onglet qui relance le sondage.
+      if (document.hidden) return;
+      if (fetching) {
         planifier();
         return;
       }
@@ -81,6 +94,12 @@ export function RoundStatusPoller({
             data.submittedCount !== prev.submittedCount
           ) {
             changed = true;
+          }
+          // La révélation du classement ne change ni le tour ni son statut :
+          // l'élève qui attend son rang doit la voir arriver aussi.
+          if (data.dernierTourRevele !== undefined) {
+            if (reveleVu !== undefined && data.dernierTourRevele !== reveleVu) changed = true;
+            reveleVu = data.dernierTourRevele;
           }
 
           if (changed) router.refresh();
@@ -105,16 +124,27 @@ export function RoundStatusPoller({
       } finally {
         fetching = false;
       }
-      // Backoff : on repart vif quand ça bouge, on ralentit sinon.
-      delay = changed ? BASE_MS : Math.min(MAX_MS, Math.round(delay * 1.5));
+      if (changed) dernierMouvement = Date.now();
+      delay = prochainDelai({
+        delai: delay,
+        change: changed,
+        depuisLeDernierMouvementMs: Date.now() - dernierMouvement,
+      });
       planifier();
     }
 
     function onVisibilityChange() {
-      if (document.hidden) return;
-      // Retour sur l'onglet : cadence rapide et sondage immédiat.
-      delay = BASE_MS;
+      if (document.hidden) {
+        // Onglet caché : on coupe le minuteur, rien ne part.
+        if (timer) clearTimeout(timer);
+        timer = null;
+        return;
+      }
+      // Retour sur l'onglet : la séance reprend, sondage immédiat.
+      dernierMouvement = Date.now();
+      delay = CADENCE_DE_SEANCE_MS;
       if (timer) clearTimeout(timer);
+      timer = null;
       poll();
     }
 

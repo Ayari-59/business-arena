@@ -1,4 +1,14 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  BASE_MS,
+  CADENCE_DE_SEANCE_MS,
+  DUREE_DE_SEANCE_MS,
+  MAX_MS,
+  prochainDelai,
+  requetesParMinute,
+} from "@/lib/cadence-du-sondage";
 
 /**
  * Tests for the RoundStatusPoller polling logic.
@@ -208,5 +218,69 @@ describe("RoundStatusPoller logic", () => {
     await p2;
 
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+});
+
+/**
+ * LA CADENCE EN SÉANCE (séance d'essai, P1-2). Le mur disait « 2 / 4 » quand
+ * le pilotage comptait 3 sur 4, et l'élève voyait ses résultats 42 s à 3 min
+ * après la clôture : le sondeur partait à 60 s et reculait jusqu'à 180 s.
+ */
+
+describe("la cadence du sondeur", () => {
+  it("sonde toutes les 10 à 15 s pendant une séance", () => {
+    expect(CADENCE_DE_SEANCE_MS).toBeGreaterThanOrEqual(10_000);
+    expect(CADENCE_DE_SEANCE_MS).toBeLessThanOrEqual(15_000);
+  });
+
+  it("ne recule pas pendant une séance, même quand rien ne bouge", () => {
+    let delai = CADENCE_DE_SEANCE_MS;
+    let ecoule = 0;
+    // 20 minutes d'attente sans rien de neuf : un tour entier.
+    while (ecoule < 20 * 60_000) {
+      delai = prochainDelai({ delai, change: false, depuisLeDernierMouvementMs: ecoule });
+      expect(delai).toBe(CADENCE_DE_SEANCE_MS);
+      ecoule += delai;
+    }
+  });
+
+  it("ralentit jusqu'à 3 min pour un onglet oublié, une fois la séance finie", () => {
+    let delai = CADENCE_DE_SEANCE_MS;
+    const vus: number[] = [];
+    for (let i = 0; i < 8; i++) {
+      delai = prochainDelai({ delai, change: false, depuisLeDernierMouvementMs: DUREE_DE_SEANCE_MS + i });
+      vus.push(delai);
+    }
+    expect(vus[0]).toBe(BASE_MS);
+    expect(Math.max(...vus)).toBe(MAX_MS);
+  });
+
+  it("repart à la cadence de séance dès que quelque chose bouge", () => {
+    expect(prochainDelai({ delai: MAX_MS, change: true, depuisLeDernierMouvementMs: 0 })).toBe(CADENCE_DE_SEANCE_MS);
+  });
+
+  it("garde une charge raisonnable pour une classe de 35", () => {
+    // 35 téléphones, le pilotage et le mur, tous visibles : 37 pages.
+    const parMinute = requetesParMinute(37);
+    expect(parMinute).toBe(185);
+    // Soit environ 3 requêtes par seconde, et rien pour un onglet caché.
+    expect(parMinute / 60).toBeLessThan(3.5);
+  });
+
+  const source = readFileSync(join(process.cwd(), "src/components/round-status-poller.tsx"), "utf8");
+
+  it("le sondeur suit cette cadence, et ne sonde pas un onglet caché", () => {
+    expect(source).toContain("prochainDelai({");
+    expect(source).toContain("let delay = CADENCE_DE_SEANCE_MS;");
+    expect(source).toMatch(/if \(document\.hidden\) return;/);
+    expect(source).not.toMatch(/delay \* 1\.5/);
+  });
+
+  it("une révélation recharge la page qui l'attend", () => {
+    expect(source).toContain("data.dernierTourRevele");
+    for (const route of ["round-status", "submissions"]) {
+      const r = readFileSync(join(process.cwd(), `src/app/api/games/[gameId]/${route}/route.ts`), "utf8");
+      expect(r, route).toContain("dernierTourRevele,");
+    }
   });
 });
