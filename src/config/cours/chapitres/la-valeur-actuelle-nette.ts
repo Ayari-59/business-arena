@@ -440,7 +440,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
         const surLEbe = auCentime(a.excedentBrut * x.k.impot);
         return [
           {
-            texte: `${eur(a.impot)} : une économie d'impôt sur le bénéfice du reste de ${x.entreprise}`,
+            texte: `${eur(a.impot)} : une économie d'impôt`,
             juste: true,
             retour: `Oui : sans le projet, ${x.entreprise} paierait ${eur(-a.impot)} d'impôt de plus. La perte du projet s'impute sur son bénéfice, au taux marginal de ${pct(x.impotPct)}. Le flux de N+1 vaut ${eur(a.excedentBrut)} − ${entre(a.impot)} = ${eur(a.fluxDExploitation)}.`,
           },
@@ -510,7 +510,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
         const x = gammeDuChapitre(c);
         const voir = "Le laboratoire de l'étape suivante compte le BFR ou l'oublie, d'un geste : regardez la VAN.";
         return [
-          { texte: "Il la fait baisser : l'argent avancé revient, mais tard, et il a perdu de sa valeur", juste: x.vanSansLeBfr > x.van, retour: `Bon pari. ${voir}` },
+          { texte: "Il la fait baisser : l'argent avancé revient tard", juste: x.vanSansLeBfr > x.van, retour: `Bon pari. ${voir}` },
           { texte: "Il ne la change pas : tout ce qui est avancé est récupéré à la fin", juste: x.vanSansLeBfr === x.van, retour: `Pari à vérifier. ${voir}` },
           { texte: "Il la fait monter : la récupération de la fin s'ajoute aux flux", juste: x.vanSansLeBfr < x.van, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -778,7 +778,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
         const x = gammeDuChapitre(c);
         return [
           {
-            texte: "Lancer : la VAN est positive, la gamme rend plus que le coût du capital",
+            texte: "Lancer : la VAN est positive",
             juste: x.verdict === "investir",
             retour:
               x.verdict === "investir"

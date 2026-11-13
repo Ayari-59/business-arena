@@ -399,9 +399,9 @@ export const L_EMPRUNT: Chapitre = {
         return [
           { texte: "La banque a baissé son taux.", juste: false, retour: "Le taux est fixé par le contrat : il n'a pas changé." },
           {
-            texte: `Ils se calculent sur le capital qui reste dû, plus petit de ${eur(x.capital)} à chaque échéance.`,
+            texte: "Ils portent sur un capital dû plus petit.",
             juste: true,
-            retour: `C'est cela : chaque échéance rembourse une part de la dette, et les intérêts suivants portent sur moins. Ils baissent de ${eur(auCentime(x.capital * x.i))} à chaque trimestre : le capital remboursé × le taux du trimestre.`,
+            retour: `C'est cela : chaque échéance rembourse une part de la dette, et les intérêts suivants portent sur moins. Ils se calculent sur le capital qui reste dû, plus petit de ${eur(x.capital)} à chaque échéance. Ils baissent de ${eur(auCentime(x.capital * x.i))} à chaque trimestre : le capital remboursé × le taux du trimestre.`,
           },
           {
             texte: "La deuxième échéance rembourse moins de capital.",
@@ -519,7 +519,7 @@ export const L_EMPRUNT: Chapitre = {
         const voir = "Déplacez le curseur à l'étape suivante : il compare, échéance par échéance, les deux façons de rembourser.";
         return [
           { texte: "Plus légère que les premières, plus lourde que les dernières", juste: x.a < x.e(1).echeance && x.a > x.e(x.n).echeance, retour: `Bon pari. ${voir}` },
-          { texte: "Plus légère que toutes : elle étale mieux le remboursement", juste: x.a < x.e(x.n).echeance, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Plus légère que toutes : elle étale mieux le remboursement sur la durée", juste: x.a < x.e(x.n).echeance, retour: `Pari à vérifier. ${voir}` },
           { texte: "Plus lourde que toutes : elle paie plus d'intérêts", juste: x.a > x.e(1).echeance, retour: `Pari à vérifier. ${voir}` },
         ];
       },

@@ -294,7 +294,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
         const p = prixDEquilibre(c);
         const raison = `à ${eur(p.bas.prix)}, ${constat(p.bas, c)} ; à ${eur(p.haut.prix)}, ${constat(p.haut, c)}`;
         return [
-          { texte: `Entre ${eur(p.bas.prix)} et ${eur(p.haut.prix)}`, juste: true, retour: `Oui : ${raison}. Le prix où la demande et l'offre se valent est entre les deux.` },
+          { texte: `De ${eur(p.bas.prix)} à ${eur(p.haut.prix)}`, juste: true, retour: `Oui : ${raison}. Le prix où la demande et l'offre se valent est entre les deux.` },
           { texte: `En dessous de ${eur(p.bas.prix)}`, juste: false, retour: `Non : ${raison}. En dessous de ${eur(p.bas.prix)}, la demande dépasserait l'offre plus encore.` },
           { texte: `Au-dessus de ${eur(p.haut.prix)}`, juste: false, retour: `Non : ${raison}. Au-dessus de ${eur(p.haut.prix)}, l'offre dépasserait la demande plus encore.` },
         ];

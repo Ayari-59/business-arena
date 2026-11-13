@@ -292,7 +292,7 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
       "Budget flexible moins coût préétabli de l'activité réelle": flexible - 40 * 5_200,
     });
     expect([flexible, 40 * 5_200, flexible - 40 * 5_200]).toEqual([203_200, 208_000, -4_800]);
-    expect(juste(LE_BUDGET_FLEXIBLE, "flexible-ou-preetabli")).toBe("Les fixes ne bougent pas au budget flexible, mais le coût préétabli en impute à chaque heure");
+    expect(juste(LE_BUDGET_FLEXIBLE, "flexible-ou-preetabli")).toBe("Le coût préétabli impute les fixes à l'heure, pas le budget flexible");
   });
 
   it("variante : un centre à 4 600 heures-machine, sous son activité normale", () => {
@@ -326,7 +326,7 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
     expect([centieme((14_900 / 270_000) * 100), centieme((3_800 / 225_000) * 100), centieme((11_000 / 202_000) * 100)]).toEqual([5.52, 1.69, 5.45]);
     // L'écart sur taux dépasse à lui seul le seuil que le global ne passe pas.
     expect(8_800).toBeGreaterThan(0.03 * 225_000);
-    expect(juste(LE_BUDGET_FLEXIBLE, "gestion-par-exception")).toBe("Pas sur son seul écart global : deux écarts de sens contraire peuvent s'y compenser");
+    expect(juste(LE_BUDGET_FLEXIBLE, "gestion-par-exception")).toBe("Pas sur son seul écart global : deux écarts peuvent s'y compenser");
   });
 
   it("les expériences : la production qui rejoint le budget, le centre qui croise son budget flexible", () => {
@@ -583,7 +583,7 @@ describe("les écarts sur charges directes", () => {
     });
     expect(rang(ch, "predire-la-main-d-oeuvre")).toBe(iMod - 1);
     expect(iMod).toBeLessThan(rang(ch, "ecart-mod"));
-    expect(juste(ch, "predire-la-main-d-oeuvre")).toBe("Non : la hausse du taux l'emporte sur les heures gagnées");
+    expect(juste(ch, "predire-la-main-d-oeuvre")).toBe("Non : la hausse du taux l'emporte");
   });
 
   it("le laboratoire : un écart global nul avec un kilo plus cher que le standard", () => {

@@ -405,7 +405,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const croise = x.fisher > x.t && x.fisher * 100 <= TAUX_DU_LABORATOIRE.max;
         const pari = (texte: string, juste: boolean) => ({ texte, juste, retour: `${juste ? "Bon pari" : "Pari à vérifier"}. ${voir}` });
         return [
-          pari("Fond, puis s'inverse : B attend plus longtemps le retour d'une mise plus lourde", croise),
+          pari("Fond, puis s'inverse : la mise de B revient plus tard", croise),
           pari("Grandit : B a les plus gros flux, et ils pèsent plus quand le taux monte", false),
           pari("Ne bouge pas : les deux lignes vendent la même gamme", !croise),
         ];
@@ -779,7 +779,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
           retour: m.nom === nom ? `Oui : ${eur(m.van)} de VAN pour ${eur(m.mise)} engagés, le programme qui crée le plus de valeur parmi ceux qui tiennent dans le budget.` : retourFaux,
         });
         return [
-          opt("BC", "La ligne semi-automatique et le banc : la plus forte VAN qui tient dans le budget", `Non : ${nomDuProgramme("BC")} engagent ${eur(x.programmes.find((p) => p.nom === "BC")!.mise)}, et créent ${eur(x.programmes.find((p) => p.nom === "BC")!.van)}.`),
+          opt("BC", "La ligne semi-automatique et le banc, dans le budget", `Non : ${nomDuProgramme("BC")} engagent ${eur(x.programmes.find((p) => p.nom === "BC")!.mise)}, et créent ${eur(x.programmes.find((p) => p.nom === "BC")!.van)}.`),
           opt(
             pi.nom,
             `${nomDuProgramme(pi.nom).charAt(0).toUpperCase()}${nomDuProgramme(pi.nom).slice(1)} : les meilleurs indices de profitabilité`,

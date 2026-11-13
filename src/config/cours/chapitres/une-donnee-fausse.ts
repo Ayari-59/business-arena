@@ -271,7 +271,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
         const r = donneeFausse(c);
         const coute = r.verdict === "l-erreur-coute";
         return [
-          { texte: "L'erreur a coûté : la prévision trop basse a fait manquer des ventes", juste: coute, retour: coute ? `Oui : ${qte(r.ventesPerdues)} ${c.unites} ${accordPluriel(c, "vendu")} en moins, et ${eur(r.coutDeLErreur)} de résultat en moins sur le seul trimestre ${D}. La décision était fausse parce que la donnée l'était.` : `Non : le résultat ne baisse pas.` },
+          { texte: "L'erreur a coûté des ventes manquées", juste: coute, retour: coute ? `Oui : ${qte(r.ventesPerdues)} ${c.unites} ${accordPluriel(c, "vendu")} en moins, et ${eur(r.coutDeLErreur)} de résultat en moins sur le seul trimestre ${D}. La décision était fausse parce que la donnée l'était.` : `Non : le résultat ne baisse pas.` },
           { texte: "L'erreur n'a rien coûté : la demande restait sous les deux plans", juste: !coute, retour: !coute ? "Oui : les ventes sont les mêmes avec les deux plans." : `Non : la demande dépassait le plan faux. La demande non servie monte à ${qte(r.faux.manquees)} ${c.unites}, contre ${qte(r.juste.manquees)} avec le plan juste.` },
           { texte: "L'erreur a rapporté : le plan plus bas a évité des invendus", juste: false, retour: `Non : ${c.entreprise} ne fabrique que son plan, et la demande dépassait les deux plans : il n'y avait aucun invendu à éviter. Le plan plus bas a fait perdre ${eur(r.margePerdue)} de marge.` },
         ];
@@ -335,7 +335,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
         return [
           { texte: "Rendre obligatoire la case des ventes", juste: false, retour: "Non : ce contrôle protège la complétude, et la case était remplie. Il arrête une case vide, pas une valeur fausse." },
           { texte: "N'accepter qu'un nombre dans la case des ventes", juste: false, retour: `Non : ${qte(f.saisie)} est bien un nombre. Un contrôle de format arrête une lettre ou un symbole, pas une virgule mal placée.` },
-          { texte: "Comparer ventes × prix au chiffre d'affaires saisi", juste: true, retour: `Oui : c'est le contrôle de cohérence fait plus haut, confié au tableur au moment de la saisie. ${qte(f.saisie)} × ${eur(f.prix)} = ${eur(f.recalcule)}, loin des ${eur(f.chiffreDAffaires)} des factures : la saisie aurait été refusée sur-le-champ.` },
+          { texte: "Comparer ventes × prix au montant saisi", juste: true, retour: `Oui : c'est le contrôle de cohérence fait plus haut, confié au tableur au moment de la saisie. ${qte(f.saisie)} × ${eur(f.prix)} = ${eur(f.recalcule)}, loin des ${eur(f.chiffreDAffaires)} des factures : la saisie aurait été refusée sur-le-champ.` },
         ];
       },
     },

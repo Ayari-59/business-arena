@@ -312,7 +312,7 @@ describe("le capital-image et son plafond, refaits à la main", () => {
 
   it("le pari : le label ne vient jamais au budget du cours", () => {
     expect(LN2).toBeLessThan(SEUIL);
-    expect(juste(ch, "predire-le-label")).toBe("Jamais, à ce budget : le capital plafonne sous le seuil");
+    expect(juste(ch, "predire-le-label")).toBe("Jamais, à ce budget : le capital plafonne");
   });
 
   it("le curseur de l'effort : 97 centièmes, le capital du trimestre 3 = (1 − 0,65³) × effort face au seuil de 70", () => {
@@ -365,7 +365,7 @@ describe("l'inertie : dépenser tard compte plus, refait à la main", () => {
     expect(PLAN_QUI_MONTE).toEqual([4_000, 16_000, 36_000]);
     expect(MONTE.label).toEqual([false, false, false, true]);
     expect(annee([36_000, 16_000, 4_000, 0]).label).toEqual([false, false, false, false]);
-    expect(juste(ch, "predire-l-ordre")).toBe("Le plan qui monte : la plus grosse dépense est la plus récente");
+    expect(juste(ch, "predire-l-ordre")).toBe("Le plan qui monte : la plus grosse dépense est la dernière");
   });
 
   it("les poids des trimestres : 0,15, 0,23, 0,35", () => {
@@ -406,7 +406,7 @@ describe("l'inertie : dépenser tard compte plus, refait à la main", () => {
   });
 
   it("la critique du plan le moins cher : le logarithme, pas le poids seul", () => {
-    expect(juste(ch, "le-plan-le-moins-cher")).toBe("Chaque euro de plus dans un même trimestre y rapporte moins que le précédent");
+    expect(juste(ch, "le-plan-le-moins-cher")).toBe("Chaque euro de plus dans un trimestre rapporte moins");
     // Le plan le moins cher, refait : E + budget du trimestre proportionnel à son poids.
     const w = [(1 - K) * K * K, (1 - K) * K, 1 - K];
     const lnLambda = (SEUIL - somme(w.map((x) => x * Math.log(x / E)))) / somme(w);
@@ -504,7 +504,7 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
     const hausses = COURS.ouv.map((c) => Math.round(S * c * 1000) / 10);
     expect(hausses).toEqual([0, 5.3, 8.8, 11.1]);
     expect((COURS.total - SANS.total) / SANS.total).toBeLessThan(0.05);
-    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "predire-les-ventes")).toBe("De moins de 5 % : une part monte moins vite que l'attractivité");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "predire-les-ventes")).toBe("De moins de 5 % : la part monte moins vite");
   });
 
   it("le curseur des ventes : 2 286 enceintes en plus paieraient les 48 000 €", () => {
@@ -543,7 +543,7 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
   });
 
   it("le verdict de l'année : pas encore", () => {
-    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "verdict")).toBe("Pas encore : la demande gagnée se vend, mais pas assez pour payer l'année");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "verdict")).toBe("Pas encore : la demande gagnée ne paie pas l'année");
   });
 
   it("à budget du trimestre 4 égal : le plan qui monte paraît gagner 2 815 €, il perd 9 185 €", () => {
@@ -580,8 +580,8 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
   });
 
   it("les verdicts du label et de fond : plus il vient tôt, plus il rapporte ; un investissement", () => {
-    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "ce-que-paie-le-label")).toBe("Plus il vient tôt, plus il rapporte : au trimestre 3, il paie son budget");
-    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "de-fond")).toBe("Un investissement : un capital payé maintenant, qui rapporte ensuite");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "ce-que-paie-le-label")).toBe("Plus il vient tôt, plus il rapporte");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "de-fond")).toBe("Un investissement, qui rapporte ensuite");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

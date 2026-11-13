@@ -278,7 +278,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
         const x = acquisitionDuCabinet(c);
         return [
           {
-            texte: "L'apporteur, mais il ne présente que quelques entreprises par an",
+            texte: "L'apporteur, mais il présente peu d'entreprises",
             juste: true,
             retour: `Oui : ${eur(x.apporteurs.cac)} par compte, car il ne présente que des entreprises déjà intéressées, et ${pct(x.apporteurs.tauxDeTransformationDesDevis)} de ses devis sont signés. Mais il n'a fait que ${qte(x.apporteurs.contacts)} présentations en N : on ne peut pas y mettre plus de budget, il ne rapporte pas plus de contacts.`,
           },

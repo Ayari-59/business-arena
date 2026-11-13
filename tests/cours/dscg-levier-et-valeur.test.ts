@@ -352,10 +352,10 @@ describe("l'effet de levier chez L'ESCALE, refait à la main", () => {
 
   it("les verdicts : la dette joue pour les associés, l'apport, la limite de la relation", () => {
     expect(levierDeLEscale(cas).verdict).toBe("levier");
-    expect(juste(ch, "predire-le-levier")).toBe("Plus haute que 12,07 % : la dette rapporte à l'outil plus qu'elle ne coûte");
-    expect(juste(ch, "predire-le-taux")).toBe("Un peu au-delà de 12,07 % : les intérêts se déduisent de l'impôt");
-    expect(juste(ch, "moins-de-dette")).toBe("Elle baisse : moins de dette, c'est moins de levier sur une rentabilité qui dépasse son coût");
-    expect(juste(ch, "la-limite-de-la-relation")).toBe("La Rcp monte avec le levier, mais son risque aussi, et une dette plus chère rapproche le seuil de massue");
+    expect(juste(ch, "predire-le-levier")).toBe("Plus haute que 12,07 % : la dette rapporte plus");
+    expect(juste(ch, "predire-le-taux")).toBe("Un peu au-delà de 12,07 % : les intérêts se déduisent");
+    expect(juste(ch, "moins-de-dette")).toBe("Elle baisse : moins de dette, c'est moins de levier");
+    expect(juste(ch, "la-limite-de-la-relation")).toBe("La Rcp monte avec le levier, mais son risque aussi");
   });
 
   it("les curseurs, refaits à la main : le seuil de massue, le taux limite", () => {
@@ -503,7 +503,7 @@ describe("la création de valeur chez L'ESCALE, refaite à la main", () => {
     expect(champ.tolerance ?? 0.01).toBe(0.01);
     // La salle rapporte 11 250 € après impôt sur 216 000 € : 5,21 %, sous le CMPC.
     expect([(39_000 - dotation) * (1 - t), 240_000 - dotation, pc(((39_000 - dotation) * (1 - t)) / (240_000 - dotation))]).toEqual([11_250, 216_000, 5.21]);
-    expect(juste(ch, "la-salle-cree-t-elle")).toBe("Non : elle rapporte moins que ne coûte le capital qu'elle mobilise, même si le résultat net monte");
+    expect(juste(ch, "la-salle-cree-t-elle")).toBe("Non : elle rapporte moins que le coût du capital mobilisé");
   });
 
   it("Hamada : le bêta du comparable désendetté redonne celui de la fiche, réendetté au levier de 2", () => {
@@ -517,11 +517,11 @@ describe("la création de valeur chez L'ESCALE, refaite à la main", () => {
 
   it("les verdicts : la valeur créée, l'exigence couverte, le U, Modigliani et Miller", () => {
     expect(valeurDeLEscale(cas).verdict).toBe("cree");
-    expect(juste(ch, "predire-la-valeur")).toBe("Moins que son résultat net : il faut d'abord payer ce qu'exigent les associés");
+    expect(juste(ch, "predire-la-valeur")).toBe("Moins que son résultat net : les associés exigent leur part");
     expect(juste(ch, "verdict")).toBe("Elle crée de la valeur : son outil rapporte plus que ne coûte le capital");
     expect(juste(ch, "predire-l-exigence")).toBe("Jusqu'à 20,43 %, la rentabilité des capitaux propres");
     expect(juste(ch, "predire-la-structure")).toBe("Baisse, puis remonte : la dette finit par coûter plus cher");
-    expect(juste(ch, "modigliani-miller")).toBe("Au-delà d'un certain levier, la dette coûte plus cher et le risque de défaillance a un coût");
+    expect(juste(ch, "modigliani-miller")).toBe("Au-delà d'un certain levier, la dette et le risque coûtent");
   });
 
   it("les curseurs, refaits à la main : le résultat qui couvre le capital, l'exigence limite", () => {

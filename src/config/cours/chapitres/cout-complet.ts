@@ -499,7 +499,7 @@ export const COUT_COMPLET: Chapitre = {
         const { r, perduEnCascade } = coutCompletDeJanvier(c);
         return [
           {
-            texte: `Son tableau perd ${eur(perduEnCascade)} : les centres principaux ne retrouvent plus toutes les charges`,
+            texte: `Son tableau perd ${eur(perduEnCascade)} de charges`,
             juste: true,
             retour: `Oui. Ses centres principaux ne totalisent que ${eur(arrondi2(r.total - perduEnCascade))}, pour ${eur(r.total)} de charges. Quand deux centres se rendent service, aucun ordre ne marche : il faut résoudre le système, ou l'on perd ce que chacun doit à l'autre.`,
           },
@@ -579,10 +579,10 @@ export const COUT_COMPLET: Chapitre = {
       },
       options: () => [
         {
-          texte: "Parce que les deux méthodes rangent les mêmes charges autrement : le total ne change pas.",
+          texte: "Ce sont les mêmes charges, rangées autrement.",
           juste: true,
           retour:
-            "C'est cela. Variables et fixes, ou directes et indirectes : ce sont deux lectures des mêmes charges. Le résultat est le même ; ce qui change, c'est ce que chaque méthode permet de voir : le seuil d'un côté, le coût de chaque étage de l'autre.",
+            "C'est cela : les deux méthodes rangent les mêmes charges autrement, et le total ne change pas. Variables et fixes, ou directes et indirectes : ce sont deux lectures des mêmes charges. Le résultat est le même ; ce qui change, c'est ce que chaque méthode permet de voir : le seuil d'un côté, le coût de chaque étage de l'autre.",
         },
         { texte: "C'est une coïncidence de ce mois-ci.", juste: false, retour: "Ce n'est pas un hasard : quand toutes les charges sont incorporées, les deux méthodes retrouvent le même résultat, tous les mois." },
         { texte: "Parce que les clés de répartition ont été choisies pour.", juste: false, retour: "Changez les clés : les coûts de chaque centre bougent, le résultat non. Les clés déplacent les charges entre les centres, elles ne les font pas disparaître." },
@@ -601,9 +601,9 @@ export const COUT_COMPLET: Chapitre = {
       options: () => {
         const voir = "Faites varier le volume à l'étape suivante : le curseur montre ce que vaut un coût complet figé.";
         return [
-          { texte: "Plus bas : les charges fixes se partageraient sur plus d'unités", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Plus bas : les charges fixes se partagent sur plus d'unités", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Le même : c'est le coût du produit, pas celui du mois", juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: "Plus haut : plus de ventes, c'est plus de charges", juste: false, retour: `Pari à vérifier : seules les charges variables suivent les ventes. ${voir}` },
+          { texte: "Plus haut : plus de ventes, c'est plus de charges à couvrir", juste: false, retour: `Pari à vérifier : seules les charges variables suivent les ventes. ${voir}` },
         ];
       },
     },
@@ -869,9 +869,9 @@ export const COUT_COMPLET: Chapitre = {
             retour: `C'est le piège du coût complet. Le coût de revient unitaire contient une part de charges fixes, que l'entreprise paie de toute façon. La commande ne coûte que ses charges variables : elle rapporte ${eur(gainDeLaCommande)}.`,
           },
           {
-            texte: `Oui : chaque unité rapporte sa marge sur coût variable, ${eur(marge)}, et les charges fixes ne bougent pas.`,
+            texte: "Oui : chaque unité rapporte sa marge sur coût variable.",
             juste: true,
-            retour: `Oui : ${qte(commande)} × ${eur(marge)} = ${eur(gainDeLaCommande)} de résultat en plus. À une condition : que ce prix ne devienne pas celui de tous les clients, sans quoi les charges fixes ne seraient plus couvertes.`,
+            retour: `Oui : chaque unité rapporte ${eur(marge)}, et les charges fixes ne bougent pas. ${qte(commande)} × ${eur(marge)} = ${eur(gainDeLaCommande)} de résultat en plus. À une condition : que ce prix ne devienne pas celui de tous les clients, sans quoi les charges fixes ne seraient plus couvertes.`,
           },
           { texte: "Seulement si le client paie comptant.", juste: false, retour: "Le délai de paiement compte pour la trésorerie, pas pour le résultat de la commande : c'est la marge sur coût variable qui décide." },
         ];

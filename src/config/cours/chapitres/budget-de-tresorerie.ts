@@ -539,12 +539,12 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const m = x.base.mois[i]!;
         return [
           {
-            texte: "CampusTech n'a encore rien payé, et l'échéance de l'emprunt tombe",
+            texte: "Aucun paiement de CampusTech, et l'échéance de l'emprunt",
             juste: true,
             retour: `Oui. En ${bas.nom}, les ventes à CampusTech de janvier à ${bas.nom} attendent leur paiement (aucune n'est encore encaissée), et l'emprunt prend ${eur(m.decaissements.emprunt)}. Dès ${x.nom(i + 1)}, la première facture de CampusTech rentre, ${eur(x.factureCampusTech)}, et la trésorerie remonte.`,
           },
           {
-            texte: `Les ventes de ${bas.nom}, les plus faibles du semestre`,
+            texte: `Les ventes de ${bas.nom}, les plus faibles du semestre : moins d'argent qui rentre`,
             juste: false,
             retour: `Non : ${x.nom(i - 1)} vend moins (${qte(x.base.mois[i - 1]!.quantite)} enceintes) que ${bas.nom} (${qte(m.quantite)}). Le point bas ne vient pas des ventes du mois, mais de ce qui se paie et de ce qui ne rentre pas encore.`,
           },
@@ -954,10 +954,10 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         return [
           {
-            texte: "Il négocie dès janvier ce qui manquera : un découvert autorisé, un délai, ou il décale l'achat",
+            texte: "Il négocie dès janvier ce qui manquera",
             juste: true,
             retour:
-              "C'est cela. Un besoin de trésorerie annoncé des mois à l'avance se négocie ; découvert le jour même, il se subit, au taux le plus cher, quand la banque accepte. Le budget ne sert pas à constater, mais à décider à temps.",
+              "C'est cela : un découvert autorisé, un délai, ou il décale l'achat. Un besoin de trésorerie annoncé des mois à l'avance se négocie ; découvert le jour même, il se subit, au taux le plus cher, quand la banque accepte. Le budget ne sert pas à constater, mais à décider à temps.",
           },
           {
             texte: `Rien : fin de ${x.nom(x.k + 1)}, la trésorerie redevient positive`,

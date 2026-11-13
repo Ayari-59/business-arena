@@ -240,17 +240,17 @@ export const LE_PRIX_AFFICHE: Chapitre = {
         const p = promo(c);
         return [
           {
-            texte: "L'ancien prix barré, la remise et le nouveau prix",
+            texte: "Ancien prix barré, remise, nouveau prix",
             juste: true,
             retour: `Oui : ${eur(p.article.affiche)} barré, ${pct(p.remise)} et ${eur(p.nouveauPrix)}. Le client voit ce qu'il gagne. La loi demande que le prix barré soit le prix de référence : le plus bas pratiqué dans les 30 jours d'avant la promotion.`,
           },
           {
-            texte: "Le nouveau prix, seul",
+            texte: "Le nouveau prix, seul, pour ne pas embrouiller",
             juste: false,
             retour: `Non : sans l'ancien prix, le client ne voit pas la promotion. Il faut ${eur(p.article.affiche)} barré à côté de ${eur(p.nouveauPrix)}.`,
           },
           {
-            texte: "Le nouveau prix hors taxes",
+            texte: "Le nouveau prix hors taxes, comme sur la facture",
             juste: false,
             retour: `Non : le client paie toutes taxes. L'étiquette affiche ${eur(p.nouveauPrix)}, pas ${eur(p.prixHtPromo)}.`,
           },

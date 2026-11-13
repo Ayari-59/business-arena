@@ -627,8 +627,8 @@ describe("le prix selon la saison, à l'hôtel du monde du cours", () => {
     expect(r.resultat).toBeGreaterThan(s.resultat);
     expect(p.meilleur).toBe("remplissage");
     expect(juste(LE_PRIX_SELON_LA_SAISON, "verdict-de-la-saison", cas)).toBe("Oui : le résultat de l'année monte");
-    expect(juste(LE_PRIX_SELON_LA_SAISON, "la-regle", cas)).toBe("Regarder s'il reste des chambres à vendre ou des clients refusés, pas seulement le calendrier");
-    expect(juste(LE_PRIX_SELON_LA_SAISON, "lire-l-annee", cas)).toBe("Trop bas quand des clients repartaient, trop haut quand des chambres restaient vides");
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "la-regle", cas)).toBe("Regarder les chambres vides et les clients refusés");
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "lire-l-annee", cas)).toBe("Tantôt trop bas, tantôt trop haut, selon la saison");
     // Au 2e trimestre, haute saison sans clients refusés : la hausse fait perdre des ventes et du résultat.
     expect(p.hausseMalPlacee).toEqual([2]);
     expect(p.baisseMalPlacee).toEqual([]);
@@ -685,7 +685,7 @@ describe("le prix selon la saison, à l'hôtel du monde du cours", () => {
   });
 
   it("les deux cycles, refaits à la main : ce qu'une baisse de 15 % doit vendre au 2e trimestre, ce qu'une hausse de 15 % peut perdre au 3e", () => {
-    expect(juste(LE_PRIX_SELON_LA_SAISON, "predire-la-baisse", cas)).toBe("Non : il faudrait plus de nuitées que l'hôtel n'en offre");
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "predire-la-baisse", cas)).toBe("Non : l'hôtel n'a pas assez de nuitées");
     // Au 2e trimestre : (88 − 21) × 5 000 de marge à garder, 74,80 − 21 par nuitée vendue en baisse.
     const margeT2 = (88 - 21) * 5000;
     const baisse = Math.ceil(margeT2 / centime(74.8 - 21));

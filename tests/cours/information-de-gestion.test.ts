@@ -136,7 +136,7 @@ describe("une donnée fausse, une décision fausse", () => {
     expect(attendus(UNE_DONNEE_FAUSSE, "coherence")).toEqual([4_778 * 59, 6_081 * 59, 581 * 59]);
     expect(attendus(UNE_DONNEE_FAUSSE, "prevision")).toEqual([(5_810 * 59) / 59, Math.round((4_778 + 6_081 + 581) / 3), Math.round((4_778 + 6_081 + 5_810) / 3)]);
     expect(attendus(UNE_DONNEE_FAUSSE, "le-trimestre-rejoue")).toEqual([5_556 - 3_813, (5_556 - 3_813) * 21]);
-    expect(juste(UNE_DONNEE_FAUSSE, "controle")).toEqual(["Comparer ventes × prix au chiffre d'affaires saisi"]);
+    expect(juste(UNE_DONNEE_FAUSSE, "controle")).toEqual(["Comparer ventes × prix au montant saisi"]);
   });
 
   it("le curseur : 5 810, la seule saisie dont le produit par 59 € retombe sur les 342 790 € des factures", () => {
@@ -208,7 +208,7 @@ describe("ce que coûte et rapporte un outil numérique", () => {
     // À deux décimales : 3 700 × 12 ÷ 11 709 = 3,7919… mois ; 1 920 ÷ 13 629 = 14,0876… %.
     expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "delai")).toEqual([13_629 - 1_920, 3.79]);
     expect(attendus(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "adoption")).toEqual([14.09, c(13_629 * 0.6), c(13_629 * 0.6 - 1_920)]);
-    expect(juste(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "verdict")).toEqual(["L'outil se rembourse dans la première année"]);
+    expect(juste(CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, "verdict")).toEqual(["Il se rembourse en moins d'un an"]);
   });
 
   it("le curseur : 15 % d'adoption paient les 1 920 € d'abonnement ; le laboratoire : 50 % remboursent les 5 620 € dans l'année", () => {

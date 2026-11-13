@@ -317,7 +317,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       question: (c) => `Au mois suivant, la rotation du stock de ${stockDeLaBoutique(c).f.entreprise} passe au-dessus de ${deux(stockDeLaBoutique(c).rotation)}. Qu'est-ce que cela veut dire ?`,
       options: () => [
         {
-          texte: "Le stock tourne plus vite : moins d'argent dort en réserve pour les mêmes ventes.",
+          texte: "Le stock tourne plus vite.",
           juste: true,
           retour: "Oui. Une rotation plus forte, c'est une durée de stockage plus courte : la boutique vend la même chose avec moins de stock, donc moins d'argent avancé au fournisseur.",
         },
@@ -371,7 +371,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         const voir = "Déplacez le curseur à l'étape suivante : il montre ce qui reste en réserve quand la livraison arrive.";
         return [
           { texte: "Juste les ventes du délai de livraison", juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: "Les ventes du délai, plus une réserve pour le retard", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Les ventes du délai, plus une réserve", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Rien : on commande quand le rayon est vide", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -718,7 +718,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         const pulls = x.col.pointDeCommande - x.pointDeCommandeAtelier;
         return [
           {
-            texte: "Le délai baisse le point de commande, pas le stock moyen : c'est la taille de la commande qui l'allège",
+            texte: "Le délai baisse le point de commande, pas le stock moyen",
             juste: true,
             retour: `Oui. Le stock moyen d'un cycle reste ${qte(x.stockMoyenDUnCycle)} pulls. Ce que le délai court permet, c'est de commander plus petit et plus souvent sans risquer la rupture (l'atelier accepte ${qte(x.atelier.minimumDeCommande)} pulls) : c'est là que le stock baisserait, et il faudrait le payer ${eur(auCentime(x.prixAtelier - x.refCol.coutDAchat))} de plus par pull.`,
           },

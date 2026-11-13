@@ -250,7 +250,7 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
       "Chiffre d'affaires manqué": 24 * 75,
     });
     expect(juste(ch, "deux-taux")).toBe("98,46 % est le taux de service ; la transformation vaut 24,43 %");
-    expect(juste(ch, "pourquoi-manquees")).toBe("Commander plus de cardigans : le rayon en a eu moins que la demande");
+    expect(juste(ch, "pourquoi-manquees")).toBe("Commander plus de cardigans");
   });
 
   it("le premier cycle : les passages pariés, cherchés au curseur, puis les deux leviers formalisés", () => {

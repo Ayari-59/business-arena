@@ -407,7 +407,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
         const m = margesDuRayon(c);
         return [
           {
-            texte: "Les deux : l'une parle du taux de marque, l'autre du taux de marge.",
+            texte: "Les deux : ce sont deux taux différents.",
             juste: true,
             retour: `Exactement. ${pct(m.tMarque)} se rapporte au prix de vente, ${pct(m.tMarge)} au prix d'achat. Dans un magasin, dites toujours de quel taux vous parlez : la distribution raisonne en taux de marque.`,
           },
@@ -1031,9 +1031,9 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
         const m = margesDuRayon(c);
         return [
           {
-            texte: `Le taux est gardé, pas la marge : ${eur(m.auPrixQuiGarde.margeDuMois)} au lieu de ${eur(m.meilleurAtelier.marge)} vers ${eur(m.meilleurAtelier.prix)}`,
+            texte: "Le taux est gardé, pas la marge du mois",
             juste: true,
-            retour: `Oui. À ${eur(m.prixAtelier)}, la demande tombe à ${qte(m.auPrixQuiGarde.demande)} pulls : chaque pull marque ${pct(m.tMarque)}, mais le mois rapporte moins qu'à un prix plus bas. Quand les clients répondent au prix, on cherche le prix qui donne la plus forte marge du mois ; le taux de marque n'en est qu'une conséquence.`,
+            retour: `Oui : ${eur(m.auPrixQuiGarde.margeDuMois)} de marge au lieu de ${eur(m.meilleurAtelier.marge)} vers ${eur(m.meilleurAtelier.prix)}. À ${eur(m.prixAtelier)}, la demande tombe à ${qte(m.auPrixQuiGarde.demande)} pulls : chaque pull marque ${pct(m.tMarque)}, mais le mois rapporte moins qu'à un prix plus bas. Quand les clients répondent au prix, on cherche le prix qui donne la plus forte marge du mois ; le taux de marque n'en est qu'une conséquence.`,
           },
           {
             texte: "Elle a raison : garder le taux de marque garde la marge du mois",

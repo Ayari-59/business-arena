@@ -252,7 +252,7 @@ describe("la valeur d'un client, chez ATLAS CONSEIL", () => {
   });
 
   it("le premier cycle : le pari, le portefeuille au rythme de N − 2 au curseur, puis l'équilibre", () => {
-    expect(juste(ch, "predire-l-equilibre")).toBe("Grossi de moins en moins vite, jusqu'à un plafond");
+    expect(juste(ch, "predire-l-equilibre")).toBe("Grossi de moins en moins vite");
     // Au rythme de N − 2 : les recrues apportent 8 × 21 000 € ; les départs emportent 5 ÷ 28 × 21 000 € par compte.
     const departsParCompte = (n2!.perdus * marge) / n2!.auPremierJanvier;
     expect(departsParCompte).toBe(3_750);
@@ -309,7 +309,7 @@ describe("la valeur d'un client, chez ATLAS CONSEIL", () => {
   });
 
   it("le troisième cycle : le pari sur l'actualisation, puis le laboratoire de la valeur", () => {
-    expect(juste(ch, "predire-l-actualisation")).toBe("Elle monterait, mais bien moins que du double");
+    expect(juste(ch, "predire-l-actualisation")).toBe("Elle monterait, bien moins que du double");
     expect([marge / (a / 2), marge / (a / 2 + taux)].map(centime)).toEqual([168_000, 93_333.33]);
     const l = laboratoire(ch, "le-laboratoire-de-la-valeur");
     expect(l.depart).toEqual({ recrues: 8, attrition: 25, methode: 0 });

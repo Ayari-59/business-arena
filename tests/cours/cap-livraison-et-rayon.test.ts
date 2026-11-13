@@ -87,7 +87,7 @@ describe("remplir le rayon", () => {
     expect(attendus(REMPLIR_LE_RAYON, "reassort")).toEqual([21 - 9, 12 - 1 - 9]);
     expect(attendus(REMPLIR_LE_RAYON, "ce-que-coute")).toEqual([384 - 360, 24 * 75]);
     expect(juste(REMPLIR_LE_RAYON, "lire-la-rupture")).toEqual(["La plupart des articles demandés ont été vendus"]);
-    expect(juste(REMPLIR_LE_RAYON, "le-geste")).toEqual(["Prévenir votre responsable aujourd'hui, avec vos chiffres"]);
+    expect(juste(REMPLIR_LE_RAYON, "le-geste")).toEqual(["Prévenir votre responsable aujourd'hui"]);
   });
 
   it("le curseur : 273 cardigans le jour de la commande (13 × 21)", () => {

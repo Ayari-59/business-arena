@@ -377,9 +377,9 @@ const LA_DECLARATION_DE_TVA_ENTIERE: Chapitre = {
         const f = declarationDeTva(c).f;
         return [
           {
-            texte: `À l'encaissement du prix : ${f.entreprise} fait des travaux, sans option pour les débits`,
+            texte: "À l'encaissement du prix",
             juste: true,
-            retour: `Oui : des travaux sont des prestations de services, dont la TVA est exigible à l'encaissement. Celle du cabinet est due dès la réception ; celle de l'entreprise, quand elle paiera. Elle se déclare au trimestre de l'encaissement, et se verse au trimestre suivant.`,
+            retour: `Oui : ${f.entreprise} fait des travaux, sans option pour les débits. Des travaux sont des prestations de services, dont la TVA est exigible à l'encaissement. Celle du cabinet est due dès la réception ; celle de l'entreprise, quand elle paiera. Elle se déclare au trimestre de l'encaissement, et se verse au trimestre suivant.`,
           },
           {
             texte: "À la facture, que le client ait payé ou non",
@@ -729,7 +729,7 @@ const LA_DECLARATION_DE_TVA_ENTIERE: Chapitre = {
         const x = declarationDeTva(c);
         const voir = "Faites varier le délai des entreprises à l'étape suivante : le curseur montre la TVA collectée qui suit.";
         return [
-          { texte: "Fondrait, jusqu'à disparaître : la TVA collectée suit l'argent reçu", juste: x.delaiSansCredit < x.delaiDesEntreprises, retour: `Bon pari. ${voir}` },
+          { texte: "Fondrait : la TVA collectée suit l'argent reçu", juste: x.delaiSansCredit < x.delaiDesEntreprises, retour: `Bon pari. ${voir}` },
           { texte: "Ne bougerait pas : la TVA se collecte sur les factures", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Grandirait : des clients plus rapides font plus de TVA à déduire", juste: x.delaiSansCredit >= x.delaiDesEntreprises, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -1048,7 +1048,7 @@ const LA_DECLARATION_DE_TVA_ENTIERE: Chapitre = {
         const x = declarationDeTva(c);
         return [
           {
-            texte: "L'option fait verser plus tôt la TVA des factures pas encore payées : de la trésorerie en moins, pas d'impôt en plus",
+            texte: "L'option avance le versement de la TVA, sans impôt en plus",
             juste: true,
             retour: `Oui. En N, l'option aurait fait déclarer ${eur(-x.ecartDeLAnnee)} de plus, la TVA de créances qui ont grossi, et la TVA due au 31 décembre serait de ${eur(x.deb.dueAuBilan)} au lieu de ${eur(x.enc.dueAuBilan)}. Ce n'est pas un impôt de plus : c'est la même TVA, versée avant d'être reçue. La simplicité se paie en trésorerie.`,
           },

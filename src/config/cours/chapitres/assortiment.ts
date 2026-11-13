@@ -453,9 +453,9 @@ export const ASSORTIMENT: Chapitre = {
         const v = x.deVolume;
         return [
           {
-            texte: "La moyenne simple compte chaque référence pour une, quelles que soient ses ventes : elle mesure les étiquettes, pas ce que rapporte un article vendu",
+            texte: "La moyenne simple mesure les étiquettes, pas les ventes",
             juste: true,
-            retour: `Oui. Elle donne au ${m.nomCourt}, ${qte(m.ventes)} articles, le même poids qu'au ${v.nomCourt}, ${qte(v.ventes)} : sa forte marge la tire vers le haut. Ici, les deux moyennes classent la gamme pareil ; mais un cardigan à ${eur(x.margeHypothetique)} par article passerait au-dessus de la moyenne pondérée (${eur(x.moyennePondereeHypothetique)}) et sous la moyenne simple (${eur(x.moyenneSimpleHypothetique)}) : locomotive pour l'une, produit de volume pour l'autre.`,
+            retour: `Oui : elle compte chaque référence pour une, quelles que soient ses ventes, et ne dit pas ce que rapporte un article vendu. Elle donne au ${m.nomCourt}, ${qte(m.ventes)} articles, le même poids qu'au ${v.nomCourt}, ${qte(v.ventes)} : sa forte marge la tire vers le haut. Ici, les deux moyennes classent la gamme pareil ; mais un cardigan à ${eur(x.margeHypothetique)} par article passerait au-dessus de la moyenne pondérée (${eur(x.moyennePondereeHypothetique)}) et sous la moyenne simple (${eur(x.moyenneSimpleHypothetique)}) : locomotive pour l'une, produit de volume pour l'autre.`,
           },
           {
             texte: "La moyenne simple est plus exigeante : elle a raison de classer plus haut la barre de la marge",
@@ -737,9 +737,9 @@ export const ASSORTIMENT: Chapitre = {
         const r = x.leRetrait;
         return [
           {
-            texte: `Pas pour la marge : retiré, il coûterait ${eur(-r.effetNet)} par mois, et il faudrait ${pct(x.partEntiereQuiCompense)} de report`,
+            texte: `Pas pour la marge : retiré, il coûterait ${eur(-r.effetNet)} par mois`,
             juste: true,
-            retour: `Oui. Le ${r.nom} laisse ${eur(r.visee.marge)} par mois après ses coûts variables ; le report n'en rattrape que ${eur(r.margeRecuperee)}. Le chiffre ne dit pas tout : la place libérée en rayon, le stock immobilisé et les clients que le ${r.nom} fait entrer se pèsent aussi, avant de décider.`,
+            retour: `Oui, et il faudrait ${pct(x.partEntiereQuiCompense)} de report pour le compenser. Le ${r.nom} laisse ${eur(r.visee.marge)} par mois après ses coûts variables ; le report n'en rattrape que ${eur(r.margeRecuperee)}. Le chiffre ne dit pas tout : la place libérée en rayon, le stock immobilisé et les clients que le ${r.nom} fait entrer se pèsent aussi, avant de décider.`,
           },
           {
             texte: "Oui : une référence à revoir coûte forcément de l'argent",

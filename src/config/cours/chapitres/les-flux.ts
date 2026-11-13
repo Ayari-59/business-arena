@@ -137,10 +137,10 @@ export const LES_FLUX: Chapitre = {
       question: (c) => `${c.entreprise} vend ${qte(c.venteCredit.quantite)} ${c.unites} à ${c.venteCredit.client}, qui paie ${aSonDelai(c)}. Quels flux cette vente crée-t-elle ?`,
       options: (c) => [
         {
-          texte: `Un flux réel vers le client, les ${c.unites}, et un flux financier en sens inverse, le paiement, ${qte(c.venteCredit.delai)} jours plus tard.`,
+          texte: "Deux flux en sens inverse, à des dates différentes.",
           juste: true,
           retour:
-            "C'est cela. Toute opération avec un partenaire a ses deux sens : ce qui part, ce qui revient. Ici, les deux ne tombent pas le même jour : entre la livraison et le paiement, le client doit de l'argent à l'entreprise.",
+            `C'est cela : un flux réel vers le client, les ${c.unites}, et un flux financier en sens inverse, le paiement, ${qte(c.venteCredit.delai)} jours plus tard. Toute opération avec un partenaire a ses deux sens : ce qui part, ce qui revient. Ici, les deux ne tombent pas le même jour : entre la livraison et le paiement, le client doit de l'argent à l'entreprise.`,
         },
         {
           texte: "Un seul flux, financier : l'argent que le client paie.",
@@ -148,7 +148,7 @@ export const LES_FLUX: Chapitre = {
           retour: `L'argent ne vient pas de nulle part : il paie les ${c.unites} ${accordPluriel(c, "livré")}. Le flux réel part le premier, le flux financier suit.`,
         },
         {
-          texte: "Deux flux le même jour, puisque la vente est faite.",
+          texte: "Deux flux le même jour, puisque la vente est faite et facturée.",
           juste: false,
           retour: `Le client paie ${aSonDelai(c)} : le flux financier arrive après. C'est ce décalage qui fait naître une créance.`,
         },
@@ -163,9 +163,9 @@ export const LES_FLUX: Chapitre = {
       question: (c) => `La banque prête ${eur(c.emprunt)} à ${c.entreprise}. Quel flux réel y a-t-il en face ?`,
       options: () => [
         {
-          texte: "Aucun : un emprunt est un flux financier dans les deux sens, l'argent prêté puis l'argent remboursé, avec les intérêts.",
+          texte: "Aucun : il n'y a que des flux financiers.",
           juste: true,
-          retour: "C'est cela. La banque ne livre ni bien ni service : elle prête de l'argent, et en reçoit plus tard, un peu plus. Les flux financiers ne paient pas toujours un flux réel.",
+          retour: "C'est cela. Un emprunt est un flux financier dans les deux sens, l'argent prêté puis l'argent remboursé, avec les intérêts. La banque ne livre ni bien ni service : elle prête de l'argent, et en reçoit plus tard, un peu plus. Les flux financiers ne paient pas toujours un flux réel.",
         },
         { texte: "Le service de la banque, que l'entreprise paie avec l'emprunt.", juste: false, retour: "Le service de la banque se paie par les intérêts, pas par l'emprunt. L'emprunt lui-même est de l'argent qui se rendra." },
         { texte: "L'équipement acheté avec l'argent prêté.", juste: false, retour: "L'équipement vient du fournisseur, dans une autre opération. L'emprunt, lui, ne concerne que la banque." },
@@ -212,12 +212,12 @@ export const LES_FLUX: Chapitre = {
         const t = trimestre();
         return [
           {
-            texte: `Parce que ${c.venteCredit.client} paie ${aSonDelai(c)} : aucune de ses factures du trimestre n'est payée fin mars.`,
+            texte: `Parce que ${c.venteCredit.client} n'a payé aucune facture du trimestre.`,
             juste: true,
-            retour: `C'est cela. Les particuliers paient à la commande ; ${c.venteCredit.client} doit encore ${eur(t.duParCampusTech)} au 31 mars. Vendre, c'est livrer ; encaisser, c'est recevoir l'argent. Le chapitre suivant les sépare : charges et produits d'un côté, encaissements et décaissements de l'autre.`,
+            retour: `C'est cela : ${c.venteCredit.client} paie ${aSonDelai(c)}, et aucune de ses factures du trimestre n'est payée fin mars. Les particuliers paient à la commande ; ${c.venteCredit.client} doit encore ${eur(t.duParCampusTech)} au 31 mars. Vendre, c'est livrer ; encaisser, c'est recevoir l'argent. Le chapitre suivant les sépare : charges et produits d'un côté, encaissements et décaissements de l'autre.`,
           },
-          { texte: "Parce que la TVA ne s'encaisse pas.", juste: false, retour: "Si : le client paie la TVA avec le prix, et l'entreprise la reverse ensuite à l'État. L'écart vient d'un client qui n'a pas encore payé." },
-          { texte: "Parce que l'emprunt a été remboursé.", juste: false, retour: "L'échéance de l'emprunt est une sortie, pas une vente qui manque. L'écart vient d'un client qui paie après le trimestre." },
+          { texte: "Parce que la TVA ne s'encaisse pas : l'entreprise la reverse à l'État.", juste: false, retour: "Si : le client paie la TVA avec le prix, et l'entreprise la reverse ensuite à l'État. L'écart vient d'un client qui n'a pas encore payé." },
+          { texte: "Parce que l'emprunt a été remboursé avec l'argent des clients.", juste: false, retour: "L'échéance de l'emprunt est une sortie, pas une vente qui manque. L'écart vient d'un client qui paie après le trimestre." },
         ];
       },
     },

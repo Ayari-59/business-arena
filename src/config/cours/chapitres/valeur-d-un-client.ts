@@ -453,7 +453,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
         const x = valeurDesComptes(c);
         const voir = "Faites vivre le portefeuille à l'étape suivante : le curseur montre jusqu'où il grossit, et pourquoi.";
         return [
-          { texte: "Grossi de moins en moins vite, jusqu'à un plafond", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Grossi de moins en moins vite", juste: true, retour: `Bon pari. ${voir}` },
           { texte: `Grossi de ${qte(x.n.nouveaux - x.n2.perdus)} comptes par an, sans fin`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Cessé de grossir tout de suite", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -669,7 +669,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       options: () => {
         const voir = "Le laboratoire suivant trace les deux valeurs selon l'attrition : regardez-les s'écarter.";
         return [
-          { texte: "Elle monterait, mais bien moins que du double", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Elle monterait, bien moins que du double", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Elle doublerait aussi, comme la durée de vie", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Elle ne bougerait presque pas", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];

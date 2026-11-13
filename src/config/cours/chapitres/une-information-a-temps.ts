@@ -247,9 +247,9 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
         const k = informationATemps();
         const faits = `${eur(k.coutDuRetardLong)} avec ${R2}, contre ${eur(k.coutDuRetard)} avec ${R1}.`;
         return [
-          { texte: "Au moins le double", juste: k.verdict === "au-moins-le-double", retour: k.verdict === "au-moins-le-double" ? `Oui : ${faits}` : `Non : ${faits}` },
+          { texte: "Au moins le double du premier", juste: k.verdict === "au-moins-le-double", retour: k.verdict === "au-moins-le-double" ? `Oui : ${faits}` : `Non : ${faits}` },
           { texte: "Plus, mais moins du double", juste: k.verdict === "plus-mais-moins-du-double", retour: k.verdict === "plus-mais-moins-du-double" ? `Oui : ${faits} Le trimestre 2 est raté dans les deux cas ; le retard plus long rate aussi le trimestre 3.` : `Non : ${faits}` },
-          { texte: "Moins", juste: k.verdict === "moins", retour: k.verdict === "moins" ? `Oui : ${faits}` : `Non : ${faits}` },
+          { texte: "Moins que le premier", juste: k.verdict === "moins", retour: k.verdict === "moins" ? `Oui : ${faits}` : `Non : ${faits}` },
         ];
       },
     },

@@ -418,7 +418,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         return [
           { texte: "Jamais : le taux des pénalités est sous celui du découvert", juste: jamais, retour: `Pari à vérifier. ${voir}` },
           { texte: "Toujours : l'indemnité s'ajoute aux pénalités", juste: toujours, retour: `Pari à vérifier. ${voir}` },
-          { texte: "Jusqu'à un certain retard : l'indemnité comble l'écart des taux, puis s'épuise", juste: !toujours && !jamais, retour: `Bon pari. ${voir}` },
+          { texte: "Jusqu'à un certain retard, puis l'indemnité s'épuise", juste: !toujours && !jamais, retour: `Bon pari. ${voir}` },
         ];
       },
     },
@@ -524,7 +524,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const r = k.r;
         return [
           {
-            texte: "Lui rappeler les pénalités et l'indemnité dues, pour obtenir le paiement à l'échéance",
+            texte: "Lui rappeler les pénalités et l'indemnité dues",
             juste: r.enRetard,
             retour: `Oui : la loi les lui donne de plein droit, ${eur(r.reclamableParAn)} par an, quand le retard lui coûte ${eur(r.coutDuRetardParAn)}. Les réclamer ou s'en servir pour négocier le paiement à l'échéance est une décision commerciale ; ne rien dire, c'est financer le client.`,
           },
@@ -588,9 +588,9 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const k = clientQuiPaieTard(c);
         return [
           {
-            texte: `La moyenne cache le retard : les particuliers paient comptant, ${k.ct.nom} paie en retard`,
+            texte: "La moyenne cache le retard d'un seul client",
             juste: true,
-            retour: `Oui : ${k.ct.nom} ne pèse que ${qte(k.partDeCampusTech)} % des ventes, mais paie à ${jours(k.ct.delaiReel)}. À l'échéance, le délai moyen serait de ${jours(k.delaiMoyenALEcheance)} : un délai moyen se lit client par client, et un retard se mesure à l'échéance convenue.`,
+            retour: `Oui : les particuliers paient comptant, ${k.ct.nom} paie en retard. ${k.ct.nom} ne pèse que ${qte(k.partDeCampusTech)} % des ventes, mais paie à ${jours(k.ct.delaiReel)}. À l'échéance, le délai moyen serait de ${jours(k.delaiMoyenALEcheance)} : un délai moyen se lit client par client, et un retard se mesure à l'échéance convenue.`,
           },
           {
             texte: `Il a raison : ${jours(k.delaiMoyen)}, c'est bien sous les ${jours(DELAI_MAXIMAL_CONVENU.joursDeLaFacture)} de la loi`,
@@ -621,7 +621,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const toujours = k.joursQuiValentLEscompte <= DECOUVERT_DU_CURSEUR.min;
         return [
           { texte: "Oui : son taux est plus bas", juste: toujours, retour: `Pari à vérifier. ${voir}` },
-          { texte: "Non : il se paie sur tous ses jours, le découvert seulement les jours où le compte est débiteur", juste: !toujours, retour: `Bon pari. ${voir}` },
+          { texte: "Non : il se paie sur tous ses jours", juste: !toujours, retour: `Bon pari. ${voir}` },
           { texte: "Non : la banque ajoute une commission à l'escompte", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },

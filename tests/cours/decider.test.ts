@@ -320,7 +320,7 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     });
     expect(Object.values(attendus(ch, "les-trois-prix"))).toEqual([5_975, -21_401.2, 3_580, 2_753]);
     expect(juste(ch, "ce-qui-borne")).toBe("Le plan de production : le marché demandait plus que ce qui était fabriqué");
-    expect(juste(ch, "meilleur-prix")).toBe("Prix du trimestre (59 €)");
+    expect(juste(ch, "meilleur-prix")).toBe("Prix inchangé (59 €)");
     const borne = ch.etapes.find((e) => e.id === "ce-qui-borne") as EtapeChoix;
     expect(borne.question(cas, etatVide)).toBe("À −10 %, la demande monte à 5 975 enceintes, mais les ventes restent à 4 778. Qu'est-ce qui les borne ?");
   });
@@ -357,7 +357,7 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
       lecture: { "Chiffre d'affaires de la commande": 76_000, "Ce qu'elle coûte en plus (fabriqué et sous-traité)": cout, "Marge de la commande": 0 },
     });
     expect(2_000 * 37).toBeLessThan(cout);
-    expect(juste(ch, "predire-la-commande")).toBe("Peut rapporter : seul compte ce qu'elle rapporte face à ce qu'elle coûte en plus");
+    expect(juste(ch, "predire-la-commande")).toBe("Peut rapporter : seul compte ce qu'elle ajoute");
   });
 
   it("l'expert : sans sous-traitant, la commande ne chasse aucune vente : la capacité n'est plus le facteur rare", () => {

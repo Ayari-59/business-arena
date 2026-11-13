@@ -191,7 +191,7 @@ export const COMMUNICATION: Chapitre = {
       options: (c) => {
         const k = communication(c);
         return k.budgets.map((b) => ({
-          texte: b.budget === 0 ? "Aucune campagne" : eur(b.budget),
+          texte: b.budget === 0 ? "Aucune campagne" : `${eur(b.budget)} de campagne`,
           juste: b.facteur === k.meilleur.facteur,
           retour:
             b.facteur === k.meilleur.facteur
@@ -222,7 +222,7 @@ export const COMMUNICATION: Chapitre = {
               ? "Oui : la première publicité touche les clients prêts à acheter ; chaque euro de plus va chercher des clients plus difficiles, et en convainc moins. C'est ce qu'on appelle des rendements décroissants."
               : "Pas seulement : ici, l'entreprise ne peut plus servir davantage de clients.",
           },
-          { texte: "La publicité finit par faire fuir les clients", juste: false, retour: "Non : les ventes ne baissent jamais quand le budget monte ; elles montent de moins en moins." },
+          { texte: "La publicité, trop répétée, finit par faire fuir les clients", juste: false, retour: "Non : les ventes ne baissent jamais quand le budget monte ; elles montent de moins en moins." },
         ];
       },
     },

@@ -502,8 +502,8 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
         const ebe = x.louee.sig.excedentBrutDExploitation;
         const voir = "Louez la ligne à l'étape suivante : le curseur montre ce que le loyer fait à l'EBE et au résultat.";
         return [
-          { texte: "Plus bas : le loyer est une consommation, la dotation ne l'était pas", juste: ebe < x.sig.excedentBrutDExploitation, retour: `Bon pari. ${voir}` },
-          { texte: "Le même : le résultat ne change pas", juste: ebe === x.sig.excedentBrutDExploitation, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Plus bas : le loyer est une consommation", juste: ebe < x.sig.excedentBrutDExploitation, retour: `Bon pari. ${voir}` },
+          { texte: "Le même : le résultat ne change pas, l'EBE non plus", juste: ebe === x.sig.excedentBrutDExploitation, retour: `Pari à vérifier. ${voir}` },
           { texte: "Plus haut : la dotation disparaît", juste: ebe > x.sig.excedentBrutDExploitation, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -566,10 +566,10 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
       question: () => "Pourquoi l'analyste regarde-t-il l'excédent brut d'exploitation avant le résultat, pour juger l'activité d'une entreprise ?",
       options: () => [
         {
-          texte: "Parce qu'il ne dépend ni de la façon dont l'entreprise est financée, ni de sa politique d'amortissement : il mesure l'activité seule",
+          texte: "Parce qu'il mesure l'activité seule",
           juste: true,
           retour:
-            "C'est cela. Les intérêts dépendent de la dette choisie, les dotations du plan d'amortissement. L'EBE se calcule avant les deux : deux entreprises au même métier se comparent par leur EBE, quelle que soit leur dette. Le curseur a montré sa limite : louer ou acheter le même équipement le fait bouger. C'est ce que les retraitements corrigent.",
+            "C'est cela : il ne dépend ni de la façon dont l'entreprise est financée, ni de sa politique d'amortissement. Les intérêts dépendent de la dette choisie, les dotations du plan d'amortissement. L'EBE se calcule avant les deux : deux entreprises au même métier se comparent par leur EBE, quelle que soit leur dette. Le curseur a montré sa limite : louer ou acheter le même équipement le fait bouger. C'est ce que les retraitements corrigent.",
         },
         {
           texte: "Parce qu'il est toujours plus élevé que le résultat, et présente mieux",
@@ -779,7 +779,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
         const x = soldesDeNova(c);
         return [
           {
-            texte: `Parce que la CAF compte l'encaissable, pas l'encaissé, et ignore les ${eur(x.capitalRembourse)} d'emprunt remboursés et les écarts de délais`,
+            texte: "Parce que la CAF compte l'encaissable, pas l'encaissé",
             juste: true,
             retour: `C'est cela. La CAF est une capacité : ce que l'activité permet de financer. La trésorerie, ce qui reste une fois payés les écarts de délais (clients, fournisseurs, stock, TVA, impôt dû), les ${eur(x.capitalRembourse)} de capital remboursé et les intérêts du placement encore à recevoir. Le bilan fonctionnel, au chapitre suivant, met ces flux en face.`,
           },
@@ -874,10 +874,10 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
       question: () => "Pourquoi la Banque de France et les analystes retraitent-ils le crédit-bail et le personnel extérieur avant de comparer deux entreprises ?",
       options: () => [
         {
-          texte: "Pour que la façon de tenir l'équipement et d'employer le personnel ne change ni la valeur ajoutée ni l'EBE",
+          texte: "Pour que la forme juridique ne change ni la valeur ajoutée ni l'EBE",
           juste: true,
           retour:
-            "C'est cela : la réalité économique avant la forme juridique. Une ligne en crédit-bail sert l'atelier comme une ligne achetée à crédit ; un intérimaire travaille comme un salarié. Retraitées, deux entreprises au même métier se comparent sur leur activité.",
+            "C'est cela : la façon de tenir l'équipement et d'employer le personnel ne doit changer aucun des deux soldes. La réalité économique avant la forme juridique. Une ligne en crédit-bail sert l'atelier comme une ligne achetée à crédit ; un intérimaire travaille comme un salarié. Retraitées, deux entreprises au même métier se comparent sur leur activité.",
         },
         {
           texte: "Parce que le crédit-bail est juridiquement un emprunt",
@@ -988,7 +988,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
         const x = soldesDeNova(c);
         return [
           {
-            texte: "Sur le rendement, oui ; il ne se justifie que par la réserve qu'il garde pour la gamme à venir",
+            texte: "Sur le rendement, oui ; seule la réserve le justifie",
             juste: true,
             retour: `Oui. Placer à ${pct(x.f.placement.tauxAnnuel * 100)} ce qu'on emprunte à ${pct(x.f.pret.tauxAnnuel * 100)} ne rapporte jamais : chaque euro gardé coûte l'écart des taux. Ce coût, ${eur(x.coutNetApresImpot)} cette année, est le prix d'une réserve ; il se justifie si la seconde ligne et le lancement de la gamme en ont besoin, et si la banque risque de prêter moins facilement plus tard.`,
           },

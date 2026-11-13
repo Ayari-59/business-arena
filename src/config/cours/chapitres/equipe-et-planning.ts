@@ -733,10 +733,10 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
         const suffit = p.heuresEnTrop >= p.heuresManquantes;
         return [
           {
-            texte: `Pas d'embauche : déplacer ${h(p.heuresManquantes)} du début de semaine couvre chaque créneau`,
+            texte: `Pas d'embauche : déplacer ${h(p.heuresManquantes)} suffit`,
             juste: suffit,
             retour: suffit
-              ? `Oui. Les contrats donnent ${h(p.heuresDuPlanning)} pour ${h(x.besoin.parSemaine)} de besoin ; les ${h(p.heuresEnTrop)} en trop du lundi au jeudi couvrent les ${h(p.heuresManquantes)} en manque. Une embauche coûterait ${eur(x.coutMoyen)} par mois et devrait faire vendre ${eur(x.caPourUneEmbauche)} de plus.`
+              ? `Oui : déplacer ${h(p.heuresManquantes)} du début de semaine couvre chaque créneau. Les contrats donnent ${h(p.heuresDuPlanning)} pour ${h(x.besoin.parSemaine)} de besoin ; les ${h(p.heuresEnTrop)} en trop du lundi au jeudi couvrent les ${h(p.heuresManquantes)} en manque. Une embauche coûterait ${eur(x.coutMoyen)} par mois et devrait faire vendre ${eur(x.caPourUneEmbauche)} de plus.`
               : "Non : les heures en trop ne suffisent pas à couvrir celles qui manquent.",
           },
           {

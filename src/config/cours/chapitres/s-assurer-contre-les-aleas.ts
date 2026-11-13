@@ -397,7 +397,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         const voir = "Faites varier la probabilité à l'étape suivante : le curseur montre où ce que la formule rembourse rattrape sa prime.";
         return [
           { texte: "Sous 2 % par an", juste: p < 20, retour: `${p < 20 ? "Bon pari." : "Pari à vérifier."} ${voir}` },
-          { texte: "Entre 2 % et 4 % par an", juste: p >= 20 && p <= 40, retour: `${p >= 20 && p <= 40 ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          { texte: "De 2 % à 4 % par an", juste: p >= 20 && p <= 40, retour: `${p >= 20 && p <= 40 ? "Bon pari." : "Pari à vérifier."} ${voir}` },
           { texte: "Au-delà de 4 % par an", juste: p > 40, retour: `${p > 40 ? "Bon pari." : "Pari à vérifier."} ${voir}` },
         ];
       },
@@ -540,7 +540,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         return [
           { texte: "Oui : ses capitaux propres dépassent le coût du sinistre", juste: seul, retour: dit(seul) },
           { texte: "Oui, en puisant dans la réserve placée", juste: parLaReserve, retour: dit(parLaReserve) },
-          { texte: "Non : ni sa trésorerie ni ses capitaux propres ne l'encaissent", juste: aucun, retour: dit(aucun) },
+          { texte: "Non, ni par sa trésorerie ni par ses capitaux propres", juste: aucun, retour: dit(aucun) },
         ];
       },
     },
@@ -724,7 +724,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         const touteSousLePire = a.options.filter((o) => o.choix !== "sans-assurance").every((o) => o.prime < a.sans.pireResteACharge);
         return [
           {
-            texte: `La ${r.nom} : la moins chère en moyenne des options dont le pire s'encaisse`,
+            texte: `La ${r.nom} : la moins chère des options dont le pire s'encaisse`,
             juste: true,
             retour: `Oui. ${ecartees.map((o) => `${o.choix === "sans-assurance" ? "Garder tous les risques" : `La ${o.nom}`} laisse au pire ${eur(o.pireResteACharge)}`).join(" ; ")}, plus que les ${eur(a.absorption.capacite)} que ${a.f.entreprise} peut encaisser : écarté. Parmi les options qui restent, la ${r.nom} coûte le moins en moyenne, ${eur(r.coutMoyen)}. Son pire, ${eur(r.pireResteACharge)}, passe, avec ${eur(arrondi2(a.absorption.capacite - r.pireResteACharge))} de marge : c'est juste, et un dirigeant prudent peut préférer l'${a.etendue.nom}, pour ${eur(arrondi2(a.etendue.coutMoyen - r.coutMoyen))} de plus par an.`,
           },
@@ -761,7 +761,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         const b = a.basique;
         return [
           {
-            texte: `Elle a coûté sa prime, ${eur(b.prime)}, et a protégé d'un incendie qui ne s'encaissait pas`,
+            texte: `Elle a coûté sa prime, ${eur(b.prime)}, et protégé d'un incendie`,
             juste: true,
             retour: `Oui. Une année sans sinistre coûte la prime, ${eur(b.prime)}, rien de plus. Ce que la ${b.nom} a acheté, c'est la certitude qu'un incendie, ${eur(a.incendie.cout)}, ne mettrait pas ${a.f.entreprise} en danger. Une année ne dit ni la moyenne ni le pire.`,
           },

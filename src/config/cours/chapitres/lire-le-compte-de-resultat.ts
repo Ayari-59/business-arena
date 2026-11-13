@@ -229,7 +229,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
         const activiteRentable = k.resultatDActivite > 0;
         return [
           {
-            texte: "L'activité est rentable : ce sont le financement et l'impôt qui réduisent le résultat",
+            texte: "L'activité est rentable : le financement et l'impôt réduisent le résultat",
             juste: activiteRentable,
             retour: activiteRentable
               ? `Oui : l'activité dégage ${eur(k.resultatDActivite)}. Le financement (${eur(k.financement)} de charges, en partie couvertes par les ${eur(k.produitsFinanciers)} du compte à terme) et l'impôt (${eur(k.impot)}) en prennent une part, et il reste ${eur(k.resultatNet)}.`

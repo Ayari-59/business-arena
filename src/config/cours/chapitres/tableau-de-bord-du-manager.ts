@@ -366,7 +366,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
         return [
           { texte: `Moins d'entrées qu'en janvier N − 1 (${qte(x.n1.trafic)})`, juste: x.entreesDuVoyant < x.n1.trafic, retour: `Bon pari. ${voir}` },
           { texte: `Plus d'entrées qu'en janvier N − 1 (${qte(x.n1.trafic)})`, juste: x.entreesDuVoyant > x.n1.trafic, retour: `Pari à vérifier. ${voir}` },
-          { texte: `Exactement les entrées de janvier N − 1`, juste: x.entreesDuVoyant === x.n1.trafic, retour: `Pari à vérifier. ${voir}` },
+          { texte: `Exactement les entrées de janvier N − 1 (${qte(x.n1.trafic)})`, juste: x.entreesDuVoyant === x.n1.trafic, retour: `Pari à vérifier. ${voir}` },
         ];
       },
     },
@@ -489,8 +489,8 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
         const voir = "Le laboratoire de l'étape suivante fait jouer le trafic, la transformation et le panier ensemble : vérifiez-le.";
         const besoin = Math.round(x.hausseNecessaire);
         return [
-          { texte: `D'environ ${qte(besoin)} %, ce qui manque au chiffre d'affaires`, juste: true, retour: `Bon pari. ${voir}` },
-          { texte: `De ${pct(-x.evolutionDuTrafic)}, ce que le trafic a perdu`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `D'environ ${qte(besoin)} %, ce qui manque aux ventes`, juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `De ${pct(-x.evolutionDuTrafic)}, ce que le trafic a perdu sur un an`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: `De ${pct(auCentime(100 - x.realisation))}, ce qui manque à l'objectif`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -674,9 +674,9 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
         const x = tableauDeBordDuMois(c);
         return [
           {
-            texte: "Il dit vrai sur l'écart, mais un tiers par mois suppose trois mois égaux : l'objectif se répartit selon la saison",
+            texte: "Il dit vrai, mais l'objectif se répartit selon la saison",
             juste: true,
-            retour: `Oui. Le budget du trimestre est juste ; le découper en trois parts égales ignore que janvier, février et mars ne vendent pas autant. L'écart de ${eur(x.ecartALObjectif)} mêle ce que la boutique a mal fait et ce que le découpage lui a demandé de trop. Un objectif mensuel se cale sur le poids de chaque mois dans les années passées.`,
+            retour: `Oui. Il dit vrai sur l'écart, mais un tiers par mois suppose trois mois égaux. Le budget du trimestre est juste ; le découper en trois parts égales ignore que janvier, février et mars ne vendent pas autant. L'écart de ${eur(x.ecartALObjectif)} mêle ce que la boutique a mal fait et ce que le découpage lui a demandé de trop. Un objectif mensuel se cale sur le poids de chaque mois dans les années passées.`,
           },
           {
             texte: "Il ne dit rien : seul janvier N − 1 compte",
@@ -715,9 +715,9 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
         const x = tableauDeBordDuMois(c);
         return [
           {
-            texte: "Une note d'une page sur l'outil partagé : les deux voyants, leur cause, l'action proposée ; puis on en décide en réunion",
+            texte: "Une note d'une page : voyants, cause, action ; puis la réunion décide",
             juste: true,
-            retour: `Oui. Le reporting sert une décision : il va à l'essentiel (deux voyants sur dix), dit la cause (le trafic, pas la transformation ni le panier), propose une action, et laisse une trace écrite que la direction lit avant d'en débattre. L'outil partagé garde les chiffres à jour ; la réunion tranche.`,
+            retour: `Oui : une note d'une page sur l'outil partagé, avec les deux voyants, leur cause et l'action proposée. Le reporting sert une décision : il va à l'essentiel (deux voyants sur dix), dit la cause (le trafic, pas la transformation ni le panier), propose une action, et laisse une trace écrite que la direction lit avant d'en débattre. L'outil partagé garde les chiffres à jour ; la réunion tranche.`,
           },
           { texte: "Les dix indicateurs du tableau de bord, envoyés tels quels par courriel", juste: false, retour: "Les chiffres sont justes, mais rien n'est dit : la direction doit trouver seule les deux voyants qui comptent et leur cause. Un reporting choisit et explique." },
           { texte: `Un message instantané au directeur : « chiffre d'affaires de ${eur(x.ca)}, objectif manqué »`, juste: false, retour: "Le canal convient à une alerte urgente, pas à une décision : sans la cause ni l'action proposée, le message inquiète sans permettre d'agir." },

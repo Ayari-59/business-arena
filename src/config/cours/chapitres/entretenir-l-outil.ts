@@ -235,8 +235,8 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         const x = entretienDeLOutil(c);
         const voir = "Faites varier le budget à l'étape suivante : le curseur montre où l'entretien cesse de suivre l'usure.";
         return [
-          { texte: `Dès qu'on descend sous la référence, ${eur(x.reference)}`, juste: x.seuil === x.reference, retour: `Pari à vérifier. ${voir}` },
-          { texte: "Sous un seuil plus bas : la référence répare plus que l'usure", juste: x.seuil < x.reference, retour: `Bon pari. ${voir}` },
+          { texte: `Dès qu'on descend sous la référence, ${eur(x.reference)}, même d'un euro`, juste: x.seuil === x.reference, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Plus bas : la référence répare plus que l'usure", juste: x.seuil < x.reference, retour: `Bon pari. ${voir}` },
           { texte: "Seulement sans aucun entretien", juste: x.seuil === 0, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -763,7 +763,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         const refusees = x.plan.refusees;
         return [
           {
-            texte: "C'est un maximum : aux trimestres 2 et 4, une demande refusée peut remplacer une vente perdue",
+            texte: "C'est un maximum : une demande refusée peut remplacer une vente perdue",
             juste: true,
             retour: `Oui : la ligne refuse déjà ${qte(refusees)} ${x.f.unites} demandées aux trimestres 2 et 4. Là, un client qui ne rachète pas peut laisser sa place à un client refusé, et la vente ne se perd pas vraiment. La simulation ne le fait pas : le chiffre est un plafond, honnête si la perte tombe aux trimestres où la ligne a du jeu.`,
           },

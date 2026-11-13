@@ -429,7 +429,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
         const x = promotionDuPointDeVente(c);
         const voir = "Lancez la promotion dans le laboratoire, à l'étape suivante : il suit la demande, les ventes et la marge en direct.";
         return [
-          { texte: "Coûtera de la marge : le rayon ne sert pas le volume nécessaire", juste: x.issue === "offre-bloque", retour: `Bon pari. ${voir}` },
+          { texte: "Coûtera de la marge : le rayon est trop petit", juste: x.issue === "offre-bloque", retour: `Bon pari. ${voir}` },
           { texte: "Paiera : la demande dépasse le volume nécessaire", juste: x.issue === "paie", retour: `Pari à vérifier. ${voir}` },
           { texte: "Coûtera de la marge : la demande reste trop faible", juste: x.issue === "demande-insuffisante", retour: `Pari à vérifier. ${voir}` },
         ];
@@ -668,10 +668,10 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
       },
       options: () => [
         {
-          texte: "Les achats avancés : des clientes qui auraient payé le pull au prix plein en mars l'achètent remisé en février",
+          texte: "Les achats avancés, de mars à février",
           juste: true,
           retour:
-            "Oui. Le calcul compte comme vente en plus tout ce que la remise fait demander. Si une part n'est qu'un achat avancé, elle se retire des ventes de mars au prix plein : le gain de février se paie le mois suivant. Les clientes fidèles, qui connaissent le calendrier des promotions, sont les premières à attendre.",
+            "Oui : des clientes qui auraient payé le pull au prix plein en mars l'achètent remisé en février. Le calcul compte comme vente en plus tout ce que la remise fait demander. Si une part n'est qu'un achat avancé, elle se retire des ventes de mars au prix plein : le gain de février se paie le mois suivant. Les clientes fidèles, qui connaissent le calendrier des promotions, sont les premières à attendre.",
         },
         {
           texte: "Le loyer et l'équipe de février, qu'il faudrait retrancher du gain de la promotion",
@@ -700,9 +700,9 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
       question: () => "Quelle vérification le manager doit-il faire avant de lancer une promotion ?",
       options: () => [
         {
-          texte: "S'assurer que le rayon et la réserve pourront servir le volume nécessaire, et commander en conséquence",
+          texte: "S'assurer de pouvoir servir le volume nécessaire",
           juste: true,
-          retour: "Oui. Une promotion ne paie que si elle vend le volume nécessaire, et ce volume, il faut pouvoir le servir. Sinon la remise ne fait que baisser la marge des ventes qui auraient eu lieu.",
+          retour: "Oui : le rayon et la réserve doivent pouvoir le servir, et l'on commande en conséquence. Une promotion ne paie que si elle vend le volume nécessaire, et ce volume, il faut pouvoir le servir. Sinon la remise ne fait que baisser la marge des ventes qui auraient eu lieu.",
         },
         {
           texte: "Choisir la remise la plus forte possible, pour attirer le plus de monde",

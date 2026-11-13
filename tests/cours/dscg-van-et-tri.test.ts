@@ -334,7 +334,7 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
     // N+1 : l'EBE est négatif, la perte fait économiser 25 % d'impôt sur le reste de NOVA.
     const ebe1 = 1_500 * 15 + 1_000 * 59 - 300 * 21 - (27_000 + 2 * 31_950 + 4_000);
     expect(ebe1).toBe(-19_700);
-    expect(juste(ch, "l-annee-de-lancement")).toBe(`${"−9 425 €"} : une économie d'impôt sur le bénéfice du reste de NOVA`);
+    expect(juste(ch, "l-annee-de-lancement")).toBe(`${"−9 425 €"} : une économie d'impôt`);
     expect(0.25 * (ebe1 - 18_000)).toBe(-9_425);
     expect(attendus(ch, "le-taux-et-le-temps")).toEqual({
       "Taux d'actualisation (%)": 3 + 1 * 6,
@@ -361,7 +361,7 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
       "Valeur résiduelle nette d'impôt du projet": 0.6 * vnc + 0.25 * (vnc - 0.6 * vnc),
     });
     expect(0.6 * vnc + 0.25 * 0.4 * vnc).toBe(7_000);
-    expect(juste(ch, "decision")).toBe("Lancer : la VAN est positive, la gamme rend plus que le coût du capital");
+    expect(juste(ch, "decision")).toBe("Lancer : la VAN est positive");
     expect(x.verdict).toBe("investir");
   });
 
@@ -403,7 +403,7 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
   });
 
   it("les deux paris épinglés", () => {
-    expect(juste(ch, "predire-le-bfr")).toBe("Il la fait baisser : l'argent avancé revient, mais tard, et il a perdu de sa valeur");
+    expect(juste(ch, "predire-le-bfr")).toBe("Il la fait baisser : l'argent avancé revient tard");
     expect(juste(ch, "predire-les-ventes")).toBe("De 10 % à 25 % : la VAN tient, sans plus");
   });
 
@@ -582,7 +582,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
     expect(k.parIndice).toEqual(["A", "C", "B"]);
     expect(k.programmeParIndice.nom).toBe("AC");
     expect(k.laisseParIndice).toBe(240_000 - 146_230);
-    expect(juste(ch, "le-programme")).toBe("La ligne semi-automatique et le banc : la plus forte VAN qui tient dans le budget");
+    expect(juste(ch, "le-programme")).toBe("La ligne semi-automatique et le banc, dans le budget");
     // Le TRI global : les flux positifs replacés à 9 % jusqu'à la date 5, un flux négatif ajouté à la mise.
     const global = (f: readonly number[]) => {
       let mise = -f[0]!;
@@ -604,7 +604,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
   });
 
   it("les deux paris épinglés", () => {
-    expect(juste(ch, "predire-le-croisement")).toBe("Fond, puis s'inverse : B attend plus longtemps le retour d'une mise plus lourde");
+    expect(juste(ch, "predire-le-croisement")).toBe("Fond, puis s'inverse : la mise de B revient plus tard");
     expect(juste(ch, "predire-l-entretien")).toBe("Jusqu'à 13 000 € ou 14 000 €");
   });
 

@@ -312,11 +312,11 @@ describe("le budget du point de vente, à la boutique du monde du cours", () => 
   });
 
   it("les verdicts sont épinglés", () => {
-    expect(juste(ch, "la-marge-du-vendeur")).toBe("Elle est trop basse de 1 320 € : la réserve perd des articles, mais gagne en valeur");
+    expect(juste(ch, "la-marge-du-vendeur")).toBe("Elle est trop basse de 1 320 € : la réserve gagne en valeur");
     expect(juste(ch, "predire-le-delai")).toBe("Non : il en sortirait encore plus");
-    expect(juste(ch, "predire-l-objectif")).toBe("Plus que l'objectif du mois : il faut rattraper janvier");
-    expect(juste(ch, "la-caisse-ou-la-rupture")).toBe("Non : la caisse tient, mais avril commence en rupture, sans réassort possible");
-    expect(juste(ch, "si-on-se-trompe")).toBe("Le stock final est plus gros que voulu, et l'argent des achats dort en réserve");
+    expect(juste(ch, "predire-l-objectif")).toBe("Plus que l'objectif : il faut rattraper janvier");
+    expect(juste(ch, "la-caisse-ou-la-rupture")).toBe("Non : avril commence en rupture");
+    expect(juste(ch, "si-on-se-trompe")).toBe("Le stock final est plus gros que voulu");
     // Le pari : à 30 jours, les fins de série feraient encore sortir plus que le façonnier.
     expect(centime(fins.achatsTtc * (1 - 30 / 90))).toBe(84_191.04);
   });

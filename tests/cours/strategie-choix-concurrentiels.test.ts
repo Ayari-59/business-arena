@@ -398,7 +398,7 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
     expect(juste(ch, "milieu")).toBe("Dernier des trois");
     expect(juste(ch, "predire-le-rattrapage")).toBe("Moins de 2 000 ventes de plus");
     expect(juste(ch, "predire-auris")).toBe("La gamme soignée à 65 €, sans budget en plus");
-    expect(juste(ch, "les-limites")).toBe("Le classement dépend des clients : moins sensibles à la qualité, ils le renverseraient");
+    expect(juste(ch, "les-limites")).toBe("Le classement dépend de la sensibilité des clients à la qualité");
     const k = coutsOuDifferenciation(cas);
     expect(k.rangDuMilieu).toBe("dernier");
     expect(k.coince).toBe(true);
@@ -729,9 +729,9 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
   });
 
   it("les verdicts : la carte, l'espace libre, la réussite, les paris", () => {
-    expect(juste(ch, "predire-le-prix-seul")).toBe("Non : son indice de qualité resterait sous 100");
+    expect(juste(ch, "predire-le-prix-seul")).toBe("Non : son indice de qualité reste sous 100");
     expect(juste(ch, "predire-la-reussite")).toBe("Auris, la différenciation");
-    expect(juste(ch, "reussite")).toBe("La part de marché ne fait pas le résultat : la marge et les charges le font");
+    expect(juste(ch, "reussite")).toBe("La part de marché ne fait pas le résultat");
     expect(juste(ch, "espace")).toBe("Entre NOVA et Auris");
     expect(juste(ch, "predire-l-offre")).toBe("Monter sa gamme, et son prix avec elle");
     const options = (ch.etapes.find((e) => e.id === "espace") as EtapeChoix).options(cas, etatVide).map((o) => o.texte);

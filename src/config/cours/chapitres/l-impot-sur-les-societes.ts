@@ -486,7 +486,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
         const k = CONDITIONS_DU_TAUX_REDUIT;
         return [
           {
-            texte: `Non : son capital n'est pas détenu à ${pct(k.partMinimaleDesPersonnesPhysiques * 100)} par des personnes physiques`,
+            texte: "Non : la condition de détention du capital manque",
             juste: !eligibleAuTauxReduit(PIXEL_ET_LE_TAUX_REDUIT),
             retour: `Oui. Les conditions vont ensemble : un chiffre d'affaires sous ${eur(k.chiffreDAffairesMaximal)}, un capital entièrement libéré, et détenu pour ${pct(k.partMinimaleDesPersonnesPhysiques * 100)} au moins par des personnes physiques (ou par une société qui remplit elle-même ces conditions, ce que n'est pas un groupe de cette taille). PIXEL & CO paie ${pct(TAUX_NORMAL * 100)} sur tout son bénéfice.`,
           },

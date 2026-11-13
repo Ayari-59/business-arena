@@ -315,9 +315,9 @@ describe("le seuil du point de vente : le chapitre", () => {
   });
 
   it("les verdicts : les paris, le plancher en question", () => {
-    expect(juste(ch, "predire-le-point-mort")).toBe("Vers le 21 : quand les ventes cumulées atteignent le seuil");
+    expect(juste(ch, "predire-le-point-mort")).toBe("Vers le 21 : quand le cumul atteint le seuil");
     expect(juste(ch, "predire-la-fermeture")).toBe("Autant de jours que l'indice de sécurité en laisse");
-    expect(juste(ch, "le-plancher-en-question")).toBe("Il ne vaut que si le panier baisse sans toucher au taux de marge : par la remise, le plancher monte");
+    expect(juste(ch, "le-plancher-en-question")).toBe("Il ne vaut que si le taux de marge ne bouge pas");
   });
 
   it("les curseurs, refaits à la main : le point mort, la fermeture, le panier plancher", () => {

@@ -531,7 +531,7 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
   });
 
   it("le curseur du retard : au plancher légal, l'indemnité couvre l'écart des taux jusqu'à 16 jours", () => {
-    expect(juste(ch, "predire-le-retard")).toBe("Jusqu'à un certain retard : l'indemnité comble l'écart des taux, puis s'épuise");
+    expect(juste(ch, "predire-le-retard")).toBe("Jusqu'à un certain retard, puis l'indemnité s'épuise");
     const parJourPlancher = (TTC * plancher) / 365;
     const attendu = Math.floor(40 / (parJour - parJourPlancher));
     expect(attendu).toBe(16);
@@ -561,12 +561,12 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
       "Réclamable sur l'année": centime(12 * (penalites + 40)),
     });
     expect([centime(parJour * 20), penalites, centime(12 * 151.04), centime(12 * (penalites + 40))]).toEqual([151.04, 150.83, 1_812.48, 2_289.96]);
-    expect(juste(ch, "que-faire-du-retard")).toBe("Lui rappeler les pénalités et l'indemnité dues, pour obtenir le paiement à l'échéance");
-    expect(juste(ch, "ce-que-cache-le-delai-moyen")).toBe("La moyenne cache le retard : les particuliers paient comptant, CampusTech paie en retard");
+    expect(juste(ch, "que-faire-du-retard")).toBe("Lui rappeler les pénalités et l'indemnité dues");
+    expect(juste(ch, "ce-que-cache-le-delai-moyen")).toBe("La moyenne cache le retard d'un seul client");
   });
 
   it("le curseur de l'escompte : un escompte de 60 jours coûte autant que 30 jours de découvert", () => {
-    expect(juste(ch, "predire-l-escompte")).toBe("Non : il se paie sur tous ses jours, le découvert seulement les jours où le compte est débiteur");
+    expect(juste(ch, "predire-l-escompte")).toBe("Non : il se paie sur tous ses jours");
     const escompte = centime((TTC * 0.06 * 60) / 360);
     expect(escompte).toBe(226.56);
     expect((60 * 0.06) / 0.12).toBeCloseTo(30, 12);

@@ -941,7 +941,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const h = x.hausseNulle;
         return [
           {
-            texte: `Pas sur la demande prévue : avec son opérateur, il lui faut ${h === null ? "plus de demande qu'il n'y en aura" : `${pct(h)} de demande en plus`}, chaque année`,
+            texte: `Pas sur la demande prévue : il lui faut ${h === null ? "plus de demande qu'il n'y en aura" : `${pct(h)} de demande en plus`}`,
             juste: x.verdict === "attendre-la-demande",
             retour:
               x.verdict === "attendre-la-demande"

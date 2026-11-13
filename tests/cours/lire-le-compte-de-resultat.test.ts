@@ -44,7 +44,7 @@ describe("le compte de résultat de NOVA", () => {
 
   it("l'activité est rentable : la bonne réponse le dit", () => {
     const juste = etape(ch, "activite-ou-financement", "choix").options(NOVA, VIDE).filter((o) => o.juste);
-    expect(juste.map((o) => o.texte)).toEqual(["L'activité est rentable : ce sont le financement et l'impôt qui réduisent le résultat"]);
+    expect(juste.map((o) => o.texte)).toEqual(["L'activité est rentable : le financement et l'impôt réduisent le résultat"]);
   });
 
   it("le curseur : 18 840 enceintes, la plus petite quantité où l'activité ne perd pas d'argent", () => {

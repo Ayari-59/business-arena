@@ -198,7 +198,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
             retour: `Oui : chaque euro encaissé plus tôt sort des créances et entre en banque. Le besoin en fonds de roulement baisse d'autant, et la trésorerie monte, sans que le fonds de roulement ait bougé. Ici, les créances pèsent ${eur(k.poste("clients"))} sur les ${eur(k.besoinsDuCycle)} que le cycle immobilise : le laboratoire va le mesurer.`,
           },
           {
-            texte: "Elle ne bougerait pas : le résultat ne change pas",
+            texte: "Elle ne bougerait pas : le résultat ne change pas, ni les ventes",
             juste: false,
             retour: "Non : le résultat ne change pas, c'est vrai, mais l'argent arrive plus tôt. La trésorerie ne dépend pas que du résultat : elle dépend aussi du moment où l'on encaisse et où l'on paie.",
           },

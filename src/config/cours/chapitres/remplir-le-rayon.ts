@@ -174,9 +174,9 @@ export const REMPLIR_LE_RAYON: Chapitre = {
         const r = rayon(c);
         return [
           {
-            texte: "Prévenir votre responsable aujourd'hui, avec vos chiffres",
+            texte: "Prévenir votre responsable aujourd'hui",
             juste: true,
-            retour: `Oui. C'est l'équipier qui voit le rayon : il prévient, le responsable commande. Même en retard, chaque jour compte : prévenu aujourd'hui, le responsable vérifie la livraison attendue et commande la suite.`,
+            retour: `Oui, avec vos chiffres. C'est l'équipier qui voit le rayon : il prévient, le responsable commande. Même en retard, chaque jour compte : prévenu aujourd'hui, le responsable vérifie la livraison attendue et commande la suite.`,
           },
           { texte: "Attendre que le rayon soit vide pour le signaler", juste: false, retour: `Non. Le rayon vide, il faut encore ${qte(r.delai)} jours pour être livré : ${qte(r.delai)} jours de clients qui repartent sans rien.` },
           { texte: "Mettre moins d'articles en rayon pour qu'ils durent", juste: false, retour: "Non. Un rayon à moitié vide vend moins, et les articles restent en réserve. Le stock ne dure pas plus : les clients achètent ailleurs." },

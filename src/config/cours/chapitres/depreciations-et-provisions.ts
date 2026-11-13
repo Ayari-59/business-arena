@@ -302,10 +302,10 @@ const DEPRECIATIONS_ET_PROVISIONS_ENTIER: Chapitre = {
       },
       options: () => [
         {
-          texte: "Il passe la créance en clients douteux, et la déprécie de la perte probable, calculée sur son montant hors taxes",
+          texte: "Il la passe en clients douteux, et la déprécie de la perte probable",
           juste: true,
           retour:
-            "C'est cela. La créance change de compte pour qu'on la suive à part, et la dépréciation constate dès cet exercice la perte probable. Hors taxes : si la perte se confirme, l'État rendra la TVA de la part perdue ; elle n'est pas une perte pour l'entreprise.",
+            "C'est cela. La créance change de compte pour qu'on la suive à part, et la dépréciation constate dès cet exercice la perte probable. Elle se calcule sur son montant hors taxes : si la perte se confirme, l'État rendra la TVA de la part perdue ; elle n'est pas une perte pour l'entreprise.",
         },
         {
           texte: "Rien pour l'instant : la perte n'est pas sûre, on la passera quand le tribunal aura statué",
@@ -475,9 +475,9 @@ const DEPRECIATIONS_ET_PROVISIONS_ENTIER: Chapitre = {
         const y = prudenceDeNova(c);
         return [
           {
-            texte: "Non : ces jeux entreront dans des enceintes vendues au-dessus de leur coût",
+            texte: "Non : ce sont des composants, pas des marchandises",
             juste: true,
-            retour: `C'est cela. Une matière première vaut ce qu'elle rapportera une fois fabriquée : tant que les produits où elle entre se vendent au moins à leur coût, elle ne se déprécie pas, même si son prix d'achat a baissé. Une marchandise revendue telle quelle, elle, se déprécierait dès que ce qu'on en tirera tombe sous son coût.`,
+            retour: `C'est cela : ces jeux entreront dans des enceintes vendues au-dessus de leur coût. Une matière première vaut ce qu'elle rapportera une fois fabriquée : tant que les produits où elle entre se vendent au moins à leur coût, elle ne se déprécie pas, même si son prix d'achat a baissé. Une marchandise revendue telle quelle, elle, se déprécierait dès que ce qu'on en tirera tombe sous son coût.`,
           },
           {
             texte: `Oui, de ${eur(auCentime(y.stock.valeur - y.stock.auPrixDuGrossiste))} : les jeux valent ${eur(PRIX_DU_JEU_APRES_NOEL)} chez le grossiste`,
@@ -506,10 +506,10 @@ const DEPRECIATIONS_ET_PROVISIONS_ENTIER: Chapitre = {
         const y = prudenceDeNova(c);
         return [
           {
-            texte: "Non : l'entreprise s'en sert, et ce qu'elle lui rapporte en servant dépasse sa valeur au bilan",
+            texte: "Non : sa valeur d'usage dépasse sa valeur au bilan",
             juste: true,
             retour:
-              "C'est cela. La valeur actuelle d'une immobilisation est la plus grande de deux : sa valeur de revente, et sa valeur d'usage, ce qu'elle rapportera à l'entreprise qui la garde. On ne déprécie que si cette valeur actuelle tombe sous la valeur nette comptable. Une ligne qui fait tourner toute l'activité vaut plus que son prix d'occasion.",
+              "C'est cela : l'entreprise s'en sert, et ce qu'elle lui rapporte en servant dépasse sa valeur au bilan. La valeur actuelle d'une immobilisation est la plus grande de deux : sa valeur de revente, et sa valeur d'usage, ce qu'elle rapportera à l'entreprise qui la garde. On ne déprécie que si cette valeur actuelle tombe sous la valeur nette comptable. Une ligne qui fait tourner toute l'activité vaut plus que son prix d'occasion.",
           },
           {
             texte: `Oui, de ${eur(auCentime(y.vnc - y.revente))} : la différence entre sa valeur au bilan et son prix de revente`,
@@ -1012,7 +1012,7 @@ const DEPRECIATIONS_ET_PROVISIONS_ENTIER: Chapitre = {
         const y = prudenceDeNova(c);
         return [
           {
-            texte: "Non : l'estimation était la meilleure au 31 décembre, et l'écart va dans N+1",
+            texte: "Non : l'estimation était la meilleure au 31 décembre",
             juste: true,
             retour: `C'est cela. Une estimation faite de bonne foi, avec ce qu'on savait à la clôture, ne devient pas fausse parce que la réalité diffère : c'est un changement d'estimation, qui passe dans l'exercice où l'on apprend le nouveau chiffre, ici les ${eur(y.p.chargeNette)} de N+1. Seule une erreur, un chiffre faux au regard de ce qu'on savait alors, appellerait une correction.`,
           },

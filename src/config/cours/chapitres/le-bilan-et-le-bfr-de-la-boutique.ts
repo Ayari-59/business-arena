@@ -477,7 +477,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
         const x = bilanDuChapitre(c);
         return [
           {
-            texte: `Le fonds de roulement et le BFR baissent du même montant : la trésorerie ne change pas`,
+            texte: "Le fonds de roulement et le BFR baissent ensemble",
             juste: true,
             retour: `Oui. Une provision justifiée, liée à l'exploitation et proche de son dénouement, peut se ranger avec les dettes d'exploitation : le fonds de roulement passe à ${eur(x.frngSansLaProvision)}, le BFR à ${eur(x.bfrAvecLaProvision)}. La trésorerie, elle, est la même : ce qui est en banque ne dépend pas du rangement.`,
           },
@@ -500,7 +500,7 @@ export const LE_BILAN_ET_LE_BFR_DE_LA_BOUTIQUE: Chapitre = {
         const x = bilanDuChapitre(c);
         return [
           {
-            texte: "Qu'un découvert finance un creux passager, pas un BFR qui dure toute l'année",
+            texte: "Qu'un découvert finance un creux passager, pas un BFR durable",
             juste: true,
             retour: `Oui. Le BFR de ${eur(x.comptant.bfr)} reviendrait à chaque réassort : c'est un besoin permanent, que le fonds de roulement doit couvrir. Le banquier accorde un découvert pour une pointe de saison, et le paie cher (${pct(BANQUE_DE_LA_BOUTIQUE.decouvert.taux * 100)} l'an) ; pour un besoin durable, il demande des ressources stables : moins de dividende, ou un emprunt.`,
           },
