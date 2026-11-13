@@ -362,12 +362,33 @@ export interface PedagogyInputsV2 {
 }
 
 /**
+ * LE RÉSULTAT HORS SUBVENTION (décision du propriétaire, séance d'essai du
+ * 13 novembre 2026). La subvention exceptionnelle que l'enseignant accorde à
+ * une entreprise en difficulté (`rescueSubsidy`) est un vrai produit au compte
+ * de résultat, et les comptes de l'équipe la gardent. Mais une aide de
+ * l'enseignant ne doit pas faire monter au classement : au tour 4 de l'essai,
+ * les deux équipes sauvées affichaient les deux meilleurs résultats de la
+ * classe. L'IPG, le résultat du tour projeté au mur et le résultat cumulé du
+ * classement se lisent donc sans elle, et la subvention se montre à part.
+ *
+ * On retire la subvention entière du résultat net : une entreprise qu'on
+ * sauve est en perte, son report déficitaire absorbe la subvention et l'impôt
+ * n'en prend rien. C'est la lecture simple, et celle que le mur écrit
+ * (« dont subvention 270 800 € »).
+ */
+export function resultatHorsSubvention(is: { netIncome: number; rescueSubsidy?: number }): number {
+  return is.netIncome - (is.rescueSubsidy ?? 0);
+}
+
+/**
  * Performance financière v2 : sur la variation du résultat net, normalisée par
  * le chiffre d'affaires. Un résultat négatif est plafonné à 20 (une perte ne
  * peut pas être une bonne note, quelle que soit la trésorerie de départ).
  */
 export function financialV2Score(result: CompanyRoundResult, previousNetIncome: number): number {
-  const netIncome = result.incomeStatement.netIncome;
+  // Hors subvention de l'enseignant : une aide ne fait pas monter au classement.
+  // `previousNetIncome` est lu de même par l'appelant (`resultatHorsSubvention`).
+  const netIncome = resultatHorsSubvention(result.incomeStatement);
   if (netIncome < 0) return 20;
   const ca = result.incomeStatement.revenue;
   const variation = netIncome - previousNetIncome;

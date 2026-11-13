@@ -78,6 +78,22 @@ export interface LigneDeRevelation {
   decouvert: boolean;
   ipg: number | null;
   defaillant: boolean;
+  /**
+   * Le résultat cumulé de la partie, hors subvention, déjà formaté : la classe
+   * le lit à côté du résultat du tour, parce que le rang se fait sur la partie.
+   */
+  cumul?: string | null;
+  /**
+   * La subvention de l'enseignant, montrée à part : le résultat affiché et
+   * l'IPG ne la comptent pas (décision du propriétaire). « hors subvention de
+   * 270 800 € » ; null sans aide.
+   */
+  subvention?: string | null;
+  /**
+   * Pourquoi ce rang, en mots simples (`scoring/pourquoi-ce-rang`) : écrit
+   * sous le nom, il arrive en fin de révélation, avec le podium.
+   */
+  explication?: string | null;
 }
 
 const TEINTE = { gain: "text-emerald-300", perte: "text-red-300" } as const;
@@ -165,8 +181,18 @@ export function RevelationDuMarche({
               {/* Le nom à gauche, contre sa médaille : la vue de projection
                   centre tout son message, et un classement ne se lit pas
                   centré. */}
-              <span className="min-w-0 flex-1 truncate text-left font-semibold text-slate-100">
-                {l.nom}
+              <span className="flex min-w-0 flex-1 flex-col text-left">
+                <span className="truncate font-semibold text-slate-100">{l.nom}</span>
+                {/* POURQUOI CE RANG : les deux composantes de l'IPG qui ont le
+                    plus pesé, en mots simples. Elle arrive avec le podium. */}
+                {l.explication ? (
+                  <span
+                    data-revelation-explication=""
+                    className="truncate text-[clamp(1.125rem,min(1.3vw,2vh),1.5rem)] leading-snug text-slate-300"
+                  >
+                    {l.explication}
+                  </span>
+                ) : null}
               </span>
               {l.defaillant ? (
                 <span
@@ -184,12 +210,29 @@ export function RevelationDuMarche({
                 <>
                   {/* LE RÉSULTAT DU TOUR, SIGNÉ, VERT OU ROUGE FRANCS : c'est
                       un résultat, et c'est le chiffre que la classe cherche. */}
-                  <span
-                    className={`w-[clamp(6rem,14vw,13rem)] shrink-0 text-right font-display text-[clamp(1.1rem,min(2.8vw,3.9vh),2.4rem)] font-bold tabular-nums ${
-                      l.sens ? TEINTE[l.sens] : "text-slate-200"
-                    }`}
-                  >
-                    {l.resultat ?? "—"}
+                  <span className="flex w-[clamp(6rem,14vw,13rem)] shrink-0 flex-col items-end text-right">
+                    <span
+                      className={`font-display text-[clamp(1.1rem,min(2.8vw,3.9vh),2.4rem)] font-bold leading-tight tabular-nums ${
+                        l.sens ? TEINTE[l.sens] : "text-slate-200"
+                      }`}
+                    >
+                      {l.resultat ?? "—"}
+                    </span>
+                    {/* À CÔTÉ DU TOUR, LA PARTIE : le cumul hors subvention, et
+                        la subvention de l'enseignant à part, jamais comptée. */}
+                    {l.cumul ? (
+                      <span className="whitespace-nowrap text-[clamp(1.125rem,min(1.3vw,2vh),1.5rem)] leading-snug tabular-nums text-slate-300">
+                        cumul {l.cumul}
+                      </span>
+                    ) : null}
+                    {l.subvention ? (
+                      <span
+                        data-revelation-subvention=""
+                        className="text-[clamp(1.125rem,min(1.3vw,2vh),1.5rem)] leading-snug tabular-nums text-amber-200"
+                      >
+                        {l.subvention}
+                      </span>
+                    ) : null}
                   </span>
                   {/* La trésorerie est un NIVEAU : à l'encre claire, et au
                       rouge seulement en découvert. */}
