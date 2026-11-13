@@ -301,7 +301,7 @@ async function TeacherGamePage({
         {aReveler ? (
           <div data-podium-a-reveler="" className="mt-4 space-y-3">
             <p className="max-w-2xl text-sm text-slate-300">
-              Le {periodLabel(view.roundDays, aReveler.index)} est clos. Les élèves ne voient pas
+              Le {periodLabel(view.roundDays, aReveler.index).toLowerCase()} est clos. Les élèves ne voient pas
               encore le classement : révélez-le, et la projection joue le podium devant la classe.
             </p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
