@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 /**
@@ -99,9 +100,18 @@ const BPI_FIELDS: { name: string; label: string; hint: string }[] = [
 export function EconomicParams({
   scenarios,
   defaultCode,
+  principal = null,
+  avance = null,
 }: {
   scenarios: ScenarioOption[];
   defaultCode: string;
+  /** Les réglages à la vue, sous l'entreprise : équipes, durée, niveau. */
+  principal?: ReactNode;
+  /**
+   * Les réglages repliés sous « Plus de réglages » (séance d'essai, P2-7),
+   * avant les paramètres économiques et les pondérations de l'IPG.
+   */
+  avance?: ReactNode;
 }) {
   const [code, setCode] = useState(defaultCode);
   const selected = scenarios.find((s) => s.code === code) ?? scenarios[0]!;
@@ -131,6 +141,20 @@ export function EconomicParams({
           matières en restauration, le poste clients dans les services.
         </span>
       </label>
+
+      {principal}
+
+      {/* PLUS DE RÉGLAGES : replié, il garde les valeurs proposées. Ouvert, il
+          montre ce qui se règle rarement. */}
+      <details data-plus-de-reglages="" className="group/reglages rounded-lg border border-white/10 p-3 sm:p-4 sm:col-span-3">
+        <summary className="cursor-pointer text-sm font-semibold text-slate-200">
+          Plus de réglages
+          <span className="ml-2 font-normal text-slate-400">
+            monde variable, courriers, questions, paramètres économiques, poids de l&apos;IPG
+          </span>
+        </summary>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      {avance}
 
       <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -211,6 +235,8 @@ export function EconomicParams({
               <span className="mt-1 block text-sm text-slate-400">{field.hint}</span>
             </label>
           ))}
+        </div>
+      </details>
         </div>
       </details>
     </>

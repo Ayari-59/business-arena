@@ -23,7 +23,8 @@ export function BandeauDesDefaillantes({
 }) {
   if (noms.length === 0) return null;
   return (
-    <section className="rounded-xl encadre-perte p-3 sm:p-5">
+    // L'ancre du rappel du bandeau « Ce tour » (« 2 équipes à l'arrêt »).
+    <section id="equipes-a-l-arret" className="scroll-mt-4 rounded-xl encadre-perte p-3 sm:p-5">
       <h2 className="text-sm font-semibold text-red-300">
         <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
         {noms.length === 1 ? "Une entreprise défaillante" : `${noms.length} entreprises défaillantes`}

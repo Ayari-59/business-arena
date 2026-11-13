@@ -71,6 +71,8 @@ import { Icone } from "@/components/icone";
 import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
 import { MOIS_MAX, MOIS_PAR_DEFAUT, NOMS_DES_MOIS } from "@/config/scenarios/calendrier-mensuel";
 import { ChampNombre } from "@/components/examen/champ-nombre";
+import { DureeDeLaPartie } from "@/components/duree-de-la-partie";
+import { estimationDuScenario, type EstimationDuScenario } from "@/config/estimation-de-la-partie";
 import { CHOIX_D_EQUIPES } from "@/config/equipes";
 
 export const dynamic = "force-dynamic";
@@ -155,6 +157,17 @@ async function TeacherDashboard({
         };
       }),
   );
+
+  // LA DURÉE DE LA PARTIE, PAR ENTREPRISE ET PAR NIVEAU : le formulaire en tire
+  // le nombre de séances à chaque réglage (`config/estimation-de-la-partie.ts`).
+  const estimationsDesEntreprises: Record<string, EstimationDuScenario> = Object.fromEntries([
+    ...SCENARIO_CHOICES.map((d) => [d.code, estimationDuScenario(d)] as const),
+    ...(await Promise.all(
+      mesScenarios
+        .filter((s) => s.status === "published")
+        .map(async (s) => [s.code, estimationDuScenario(await resolveScenarioDefinition(s.code))] as const),
+    )),
+  ]);
 
   return (
     <main id="main" className="pb-16">
@@ -382,298 +395,314 @@ async function TeacherDashboard({
               ...scenariosPublies,
             ]}
             defaultCode={entrepriseParDefaut}
-          />
-
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Équipes (élèves)
-            </span>
-            <select
-              name="humanTeamsCount"
-              defaultValue={4}
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              {CHOIX_D_EQUIPES.map((n) => (
-                <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Concurrents bots
-            </span>
-            <select
-              name="botCount"
-              defaultValue={1}
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              {[0, 1, 2, 3, 4].map((n) => (
-                <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Périodicité
-            </span>
-            <select
-              name="periodicity"
-              defaultValue="quarter"
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              <option value="month">Un mois par tour</option>
-              <option value="quarter">Un trimestre par tour</option>
-              <option value="year">Une année par tour</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Tours joués
-            </span>
-            {/* LIBRE (décision du propriétaire) : vide, la partie écrite du secteur (au mois,
-                une année) ; au trimestre, jusqu'à douze tours, au mois dix-huit. Au-delà, le
-                service refuse avec la raison (`services/game-creation.service.ts`). */}
-            <ChampNombre
-              name="roundsCount"
-              min={1}
-              max={Math.max(TOURS_MAX_AU_TRIMESTRE, MOIS_MAX)}
-              step={1}
-              inputMode="numeric"
-              placeholder="Toute la partie"
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            />
-            <span className="mt-1 block text-sm text-slate-400">
-              Laissez vide pour jouer toute la partie écrite du secteur. Une partie se raccourcit
-              pour tenir dans vos séances ; au trimestre, elle s&apos;allonge jusqu&apos;à{" "}
-              {TOURS_MAX_AU_TRIMESTRE} tours. Après la partie écrite, les équipes gèrent leur
-              entreprise sur l&apos;année du métier qui se répète : plus de nouvelle situation à
-              analyser, mais les événements, les courriers et les situations nées de leurs
-              résultats continuent. Au mois, la partie suit le calendrier : {MOIS_PAR_DEFAUT} mois
-              sans autre choix, {MOIS_MAX} au plus, et chaque situation arrive au premier mois de
-              son trimestre. À l&apos;année, une partie ne s&apos;allonge pas.
-            </span>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Mois de départ (partie au mois)
-            </span>
-            {/* LE CALENDRIER DES PARTIES AU MOIS (config/scenarios/calendrier-mensuel.ts) :
-                ignoré au trimestre et à l'année. */}
-            <select name="moisDeDepart" defaultValue="1" className="mt-1 w-full champ px-3 py-2 text-sm">
-              {NOMS_DES_MOIS.map((m, i) => (
-                <option key={m} value={i + 1}>
-                  {m.charAt(0).toUpperCase() + m.slice(1)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {/* LE TOUR D'ESSAI (config/tour-d-essai.ts) : un ou deux tours pour de faux
-              avant la vraie partie. Aucun reste le défaut : une partie se crée comme
-              avant tant que l'enseignant ne le demande pas. */}
-          <fieldset
-            data-tour-d-essai-choix=""
-            className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3"
-          >
-            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-              <Icone nom="recommencer" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
-              Tour d&apos;essai
-            </legend>
-            <p className="mt-1 text-sm text-slate-400">{EXPLICATION_DU_TOUR_D_ESSAI}</p>
-            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
-              <label className="flex items-center gap-2 text-sm text-slate-200">
-                <input
-                  type="radio"
-                  name="toursDEssai"
-                  value=""
-                  defaultChecked
-                  className="h-4 w-4 accent-amber-400"
-                />
-                Aucun
-              </label>
-              {TOURS_D_ESSAI.map((n) => (
-                <label key={n} className="flex items-center gap-2 text-sm text-slate-200">
-                  <input
-                    type="radio"
-                    name="toursDEssai"
-                    value={n}
-                    className="h-4 w-4 accent-amber-400"
-                  />
-                  {compter(n, "tour")}
-                </label>
-              ))}
-            </div>
-            <label className="mt-3 flex items-start gap-3 border-t border-white/5 pt-3">
-              <input
-                type="checkbox"
-                name="enchainementDeLEssai"
-                className="mt-0.5 h-4 w-4 accent-amber-400"
-              />
-              <span>
-                <span className="text-sm font-medium text-slate-200">
-                  Commencer la vraie partie dès la fin de l&apos;essai
+            // LE FORMULAIRE COURT (séance d'essai, P2-7) : l'entreprise, les
+            // équipes, la durée et le niveau à la vue ; le reste se replie sous
+            // « Plus de réglages », avec les paramètres économiques et l'IPG.
+            principal={
+              <>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Équipes (élèves)
                 </span>
-                <span className="mt-0.5 block text-sm text-slate-400">
-                  Sans cette case, c&apos;est vous qui la lancez, une fois les résultats de
-                  l&apos;essai commentés avec la classe.
-                </span>
-              </span>
-            </label>
-          </fieldset>
-          <label className="block sm:col-span-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Niveau de difficulté
-            </span>
-            <select
-              name="level"
-              defaultValue={niveauParDefaut}
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              {DIFFICULTY_PRESETS.map((p) => {
-                // Un niveau fermé reste dans la liste, marqué : l'étendue est l'argument.
-                // Avec une entreprise ouverte à tous les niveaux (réglage d'admin), le
-                // choix reste possible et le serveur tranche selon l'entreprise.
-                const fermeIci = p.level > niveauMaxSansLicence;
-                // Hors du niveau de la licence (offre Classe) : visible, marqué de l'offre
-                // qui l'ouvre, non choisissable ; le serveur le refuse aussi.
-                const horsDuNiveau = marque({ niveau: p.level });
-                return (
-                  <option
-                    key={p.level}
-                    value={p.level}
-                    disabled={(fermeIci && !aDeuxEtages(regle)) || horsDuNiveau !== null}
-                  >
-                    {p.level} · {p.name} : {p.tagline}
-                    {fermeIci ? ` · ${MARQUE_DE_L_ARENE}` : ""}
-                    {horsDuNiveau ? ` · ${horsDuNiveau}` : ""}
-                  </option>
-                );
-              })}
-            </select>
-            {niveauMaxSansLicence < NIVEAU_MAX ? (
-              <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">
-                <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-                <strong className="font-semibold text-slate-200">
-                  {niveauxFermes(regle)} · {MARQUE_DE_L_ARENE}.
-                </strong>{" "}
-                {messageNiveauxReserves(regle)}{" "}
-                <Link
-                  href={LIEN_TARIFS}
-                prefetch={false}
-                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                <select
+                  name="humanTeamsCount"
+                  defaultValue={4}
+                  className="mt-1 w-full champ px-3 py-2 text-sm"
                 >
-                  Voir les offres
-                </Link>
-              </span>
-            ) : null}
-          </label>
+                  {CHOIX_D_EQUIPES.map((n) => (
+                    <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Concurrents bots
+                </span>
+                <select
+                  name="botCount"
+                  defaultValue={1}
+                  className="mt-1 w-full champ px-3 py-2 text-sm"
+                >
+                  {[0, 1, 2, 3, 4].map((n) => (
+                    <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Périodicité
+                </span>
+                <select
+                  name="periodicity"
+                  defaultValue="quarter"
+                  className="mt-1 w-full champ px-3 py-2 text-sm"
+                >
+                  <option value="month">Un mois par tour</option>
+                  <option value="quarter">Un trimestre par tour</option>
+                  <option value="year">Une année par tour</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Tours joués
+                </span>
+                {/* LIBRE (décision du propriétaire) : vide, la partie écrite du secteur (au mois,
+                    une année) ; au trimestre, jusqu'à douze tours, au mois dix-huit. Au-delà, le
+                    service refuse avec la raison (`services/game-creation.service.ts`). */}
+                <ChampNombre
+                  name="roundsCount"
+                  min={1}
+                  max={Math.max(TOURS_MAX_AU_TRIMESTRE, MOIS_MAX)}
+                  step={1}
+                  inputMode="numeric"
+                  placeholder="Toute la partie"
+                  className="mt-1 w-full champ px-3 py-2 text-sm"
+                />
+                <span className="mt-1 block text-sm text-slate-400">
+                  Vide : toute la partie écrite du secteur. Au trimestre, jusqu&apos;à{" "}
+                  {TOURS_MAX_AU_TRIMESTRE} tours ; au mois, {MOIS_PAR_DEFAUT} mois sans autre choix,{" "}
+                  {MOIS_MAX} au plus. Au-delà de la partie écrite, plus de nouvelle situation, mais les
+                  événements et les courriers continuent.
+                </span>
+                {/* LA DURÉE ANNONCÉE EN SÉANCES (séance d'essai, P0-1) : elle suit
+                    chaque réglage du formulaire. */}
+                <DureeDeLaPartie
+                  estimations={estimationsDesEntreprises}
+                  moisParDefaut={MOIS_PAR_DEFAUT}
+                  sansQuestions="off"
+                  codeParDefaut={entrepriseParDefaut}
+                  niveauParDefaut={niveauParDefaut}
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Mois de départ (partie au mois)
+                </span>
+                {/* LE CALENDRIER DES PARTIES AU MOIS (config/scenarios/calendrier-mensuel.ts) :
+                    ignoré au trimestre et à l'année. */}
+                <select name="moisDeDepart" defaultValue="1" className="mt-1 w-full champ px-3 py-2 text-sm">
+                  {NOMS_DES_MOIS.map((m, i) => (
+                    <option key={m} value={i + 1}>
+                      {m.charAt(0).toUpperCase() + m.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <input
-              type="checkbox"
-              name="variableWorld"
-              defaultChecked
-              className="mt-0.5 h-4 w-4 accent-amber-400"
-            />
-            <span>
-              <span className="text-sm font-medium text-slate-200">
-                Monde variable · chaque partie diffère
-              </span>
-              <span className="mt-0.5 block text-sm text-slate-400">
-                Croissance des segments, saisonnalité, événements et commandes exceptionnelles
-                varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
-                équipes jouent le même monde). Décochez pour le scénario classique, identique
-                à vos supports imprimés.
-              </span>
-            </span>
-          </label>
-
-          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <input
-              type="checkbox"
-              name="investmentStories"
-              defaultChecked
-              className="mt-0.5 h-4 w-4 accent-amber-400"
-            />
-            <span>
-              <span className="text-sm font-medium text-slate-200">
-                Histoires d&apos;investissement · des courriers qui appellent la décision
-              </span>
-              <span className="mt-0.5 block text-sm text-slate-400">
-                Selon le niveau : un client qui annonce du volume, une banque qui baisse ses taux, un
-                concurrent qui investit, puis une demande qui retombe. Décochez pour un atelier au
-                déroulé calibré, où chaque séance n&apos;ouvre qu&apos;un levier.
-              </span>
-            </span>
-          </label>
-
-          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <input
-              type="checkbox"
-              name="evaluationDesPairs"
-              className="mt-0.5 h-4 w-4 accent-amber-400"
-            />
-            <span>
-              <span className="text-sm font-medium text-slate-200">
-                Évaluation entre coéquipiers · à la fin de la partie
-              </span>
-              <span className="mt-0.5 block text-sm text-slate-400">
-                Chaque membre de l&apos;équipe note la contribution de ses coéquipiers ; un facteur individuel module la
-                note d&apos;équipe. Critères, moments et bornes se règlent ensuite depuis la partie.
-              </span>
-            </span>
-          </label>
-
-          <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-              <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
-              Questions posées dans les situations
-            </legend>
-            <div className="mt-1 space-y-2">
-              {QUIZ_MODES.map((m) => (
-                <label key={m.code} className="flex items-start gap-3">
+              {/* LE TOUR D'ESSAI (config/tour-d-essai.ts) : un ou deux tours pour de faux
+                  avant la vraie partie. Aucun reste le défaut : une partie se crée comme
+                  avant tant que l'enseignant ne le demande pas. */}
+              <fieldset
+                data-tour-d-essai-choix=""
+                className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3"
+              >
+                <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <Icone nom="recommencer" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                  Tour d&apos;essai
+                </legend>
+                <p className="mt-1 text-sm text-slate-400">{EXPLICATION_DU_TOUR_D_ESSAI}</p>
+                <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+                  <label className="flex items-center gap-2 text-sm text-slate-200">
+                    <input
+                      type="radio"
+                      name="toursDEssai"
+                      value=""
+                      defaultChecked
+                      className="h-4 w-4 accent-amber-400"
+                    />
+                    Aucun
+                  </label>
+                  {TOURS_D_ESSAI.map((n) => (
+                    <label key={n} className="flex items-center gap-2 text-sm text-slate-200">
+                      <input
+                        type="radio"
+                        name="toursDEssai"
+                        value={n}
+                        className="h-4 w-4 accent-amber-400"
+                      />
+                      {compter(n, "tour")}
+                    </label>
+                  ))}
+                </div>
+                <label className="mt-3 flex items-start gap-3 border-t border-white/5 pt-3">
                   <input
-                    type="radio"
-                    name="quizMode"
-                    value={m.code}
-                    defaultChecked={m.code === DEFAULT_QUIZ_MODE}
+                    type="checkbox"
+                    name="enchainementDeLEssai"
                     className="mt-0.5 h-4 w-4 accent-amber-400"
                   />
                   <span>
-                    <span className="text-sm font-medium text-slate-200">{m.name}</span>
-                    <span className="mt-0.5 block text-sm text-slate-400">{m.help}</span>
+                    <span className="text-sm font-medium text-slate-200">
+                      Commencer la vraie partie dès la fin de l&apos;essai
+                    </span>
+                    <span className="mt-0.5 block text-sm text-slate-400">
+                      Sans cette case, c&apos;est vous qui la lancez, une fois les résultats de
+                      l&apos;essai commentés avec la classe.
+                    </span>
                   </span>
                 </label>
-              ))}
-            </div>
-            <div className="mt-3 border-t border-white/5 pt-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
-                Format des réponses
-              </p>
-              <div className="mt-1 space-y-2">
-                {ANSWER_FORMATS.map((f) => (
-                  <label key={f.code} className="flex items-start gap-3">
-                    <input
-                      type="radio"
-                      name="answerFormat"
-                      value={f.code}
-                      defaultChecked={f.code === DEFAULT_ANSWER_FORMAT}
-                      className="mt-0.5 h-4 w-4 accent-amber-400"
-                    />
-                    <span>
-                      <span className="text-sm font-medium text-slate-200">{f.name}</span>
-                      <span className="mt-0.5 block text-sm text-slate-400">{f.help}</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
-              débriefées gardent le score obtenu sous l&apos;ancien réglage.
-            </p>
-          </fieldset>
+              </fieldset>
+              <label className="block sm:col-span-3">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Niveau de difficulté
+                </span>
+                <select
+                  name="level"
+                  defaultValue={niveauParDefaut}
+                  className="mt-1 w-full champ px-3 py-2 text-sm"
+                >
+                  {DIFFICULTY_PRESETS.map((p) => {
+                    // Un niveau fermé reste dans la liste, marqué : l'étendue est l'argument.
+                    // Avec une entreprise ouverte à tous les niveaux (réglage d'admin), le
+                    // choix reste possible et le serveur tranche selon l'entreprise.
+                    const fermeIci = p.level > niveauMaxSansLicence;
+                    // Hors du niveau de la licence (offre Classe) : visible, marqué de l'offre
+                    // qui l'ouvre, non choisissable ; le serveur le refuse aussi.
+                    const horsDuNiveau = marque({ niveau: p.level });
+                    return (
+                      <option
+                        key={p.level}
+                        value={p.level}
+                        disabled={(fermeIci && !aDeuxEtages(regle)) || horsDuNiveau !== null}
+                      >
+                        {p.level} · {p.name} : {p.tagline}
+                        {fermeIci ? ` · ${MARQUE_DE_L_ARENE}` : ""}
+                        {horsDuNiveau ? ` · ${horsDuNiveau}` : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+                {niveauMaxSansLicence < NIVEAU_MAX ? (
+                  <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">
+                    <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+                    <strong className="font-semibold text-slate-200">
+                      {niveauxFermes(regle)} · {MARQUE_DE_L_ARENE}.
+                    </strong>{" "}
+                    {messageNiveauxReserves(regle)}{" "}
+                    <Link
+                      href={LIEN_TARIFS}
+                    prefetch={false}
+                      className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                    >
+                      Voir les offres
+                    </Link>
+                  </span>
+                ) : null}
+              </label>
+
+              <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+                <input
+                  type="checkbox"
+                  name="evaluationDesPairs"
+                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                />
+                <span>
+                  <span className="text-sm font-medium text-slate-200">
+                    Évaluation entre coéquipiers · à la fin de la partie
+                  </span>
+                  <span className="mt-0.5 block text-sm text-slate-400">
+                    Chaque membre de l&apos;équipe note la contribution de ses coéquipiers ; un facteur individuel module la
+                    note d&apos;équipe. Critères, moments et bornes se règlent ensuite depuis la partie.
+                  </span>
+                </span>
+              </label>
+
+              </>
+            }
+            avance={
+              <>
+              <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+                <input
+                  type="checkbox"
+                  name="variableWorld"
+                  defaultChecked
+                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                />
+                <span>
+                  <span className="text-sm font-medium text-slate-200">
+                    Monde variable · chaque partie diffère
+                  </span>
+                  <span className="mt-0.5 block text-sm text-slate-400">
+                    Croissance des segments, saisonnalité, événements et commandes exceptionnelles
+                    varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
+                    équipes jouent le même monde). Décochez pour le scénario classique, identique
+                    à vos supports imprimés.
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+                <input
+                  type="checkbox"
+                  name="investmentStories"
+                  defaultChecked
+                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                />
+                <span>
+                  <span className="text-sm font-medium text-slate-200">
+                    Histoires d&apos;investissement · des courriers qui appellent la décision
+                  </span>
+                  <span className="mt-0.5 block text-sm text-slate-400">
+                    Selon le niveau : un client qui annonce du volume, une banque qui baisse ses taux, un
+                    concurrent qui investit, puis une demande qui retombe. Décochez pour un atelier au
+                    déroulé calibré, où chaque séance n&apos;ouvre qu&apos;un levier.
+                  </span>
+                </span>
+              </label>
+
+              <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+                <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                  Questions posées dans les situations
+                </legend>
+                <div className="mt-1 space-y-2">
+                  {QUIZ_MODES.map((m) => (
+                    <label key={m.code} className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="quizMode"
+                        value={m.code}
+                        defaultChecked={m.code === DEFAULT_QUIZ_MODE}
+                        className="mt-0.5 h-4 w-4 accent-amber-400"
+                      />
+                      <span>
+                        <span className="text-sm font-medium text-slate-200">{m.name}</span>
+                        <span className="mt-0.5 block text-sm text-slate-400">{m.help}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3 border-t border-white/5 pt-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                    Format des réponses
+                  </p>
+                  <div className="mt-1 space-y-2">
+                    {ANSWER_FORMATS.map((f) => (
+                      <label key={f.code} className="flex items-start gap-3">
+                        <input
+                          type="radio"
+                          name="answerFormat"
+                          value={f.code}
+                          defaultChecked={f.code === DEFAULT_ANSWER_FORMAT}
+                          className="mt-0.5 h-4 w-4 accent-amber-400"
+                        />
+                        <span>
+                          <span className="text-sm font-medium text-slate-200">{f.name}</span>
+                          <span className="mt-0.5 block text-sm text-slate-400">{f.help}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                  Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
+                  débriefées gardent le score obtenu sous l&apos;ancien réglage.
+                </p>
+              </fieldset>
+
+              </>
+            }
+          />
 
           <FormPendingProgress label={ATTENTES.creationPartie} className="sm:col-span-3" />
           <SubmitButton

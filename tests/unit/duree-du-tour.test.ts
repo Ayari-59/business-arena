@@ -58,7 +58,7 @@ describe("le modèle", () => {
 
   it("le total est la somme de ses postes, et jamais nul", () => {
     const d = dureeDuTour({ ...FAITS, premierTour: true });
-    expect(d.minutes).toBe(d.lecture + d.saisie + d.analyse + d.priseEnMain);
+    expect(d.minutes).toBe(d.lecture + d.saisie + d.analyse + d.priseEnMain + (d.resultats ?? 0));
     expect(dureeDuTour({ signesDeCadrage: 0, signesDeSituation: 0, champs: 0, premierTour: false, avecQuiz: false }).minutes).toBe(1);
   });
 });

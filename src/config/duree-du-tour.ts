@@ -58,6 +58,22 @@ export const MINUTES_PRISE_EN_MAIN = 8;
 export const MINUTES_ANALYSE_SITUATION = 4;
 
 /**
+ * LA LECTURE DES RÉSULTATS, à partir du deuxième tour : le résultat du tour,
+ * le prévu contre le réel, le marché, la Gazette. La séance d'essai du
+ * 13 novembre 2026 a mesuré 600 à 700 mots de plus par tour qu'au premier,
+ * lus d'un œil : trois minutes.
+ */
+export const MINUTES_LECTURE_DES_RESULTATS = 3;
+
+/**
+ * LA SECONDE SITUATION, à partir du deuxième tour : à l'essai, deux situations
+ * étaient à analyser à chaque tour (« 0/2 rendues »), celle du calendrier et
+ * celle que les résultats déclenchent. La seconde est plus courte à lire et la
+ * grille d'analyse est déjà connue : trois minutes, lecture comprise.
+ */
+export const MINUTES_SECONDE_SITUATION = 3;
+
+/**
  * Les champs qu'un élève remplit quoi qu'il arrive : le prix, le volume, le
  * budget de communication, et la note qui justifie les choix.
  */
@@ -162,6 +178,13 @@ export interface FaitsDuTour {
   premierTour: boolean;
   /** Les questions de connaissances sont-elles posées dans cette partie ? */
   avecQuiz: boolean;
+  /**
+   * Une partie de classe jouée de bout en bout : à partir du deuxième tour,
+   * l'équipe lit d'abord ses résultats et analyse une seconde situation. Le
+   * déroulé d'un atelier les donne à ses phases de débriefing : il ne les
+   * passe pas (`config/ateliers/duree-des-seances.ts`).
+   */
+  enClasse?: boolean;
 }
 
 export interface DureeDuTour {
@@ -172,6 +195,8 @@ export interface DureeDuTour {
   saisie: number;
   analyse: number;
   priseEnMain: number;
+  /** La lecture des résultats du tour précédent, en classe à partir du tour 2 (absente : 0). */
+  resultats?: number;
 }
 
 /** L'estimation, poste par poste. Arrondie à la minute, jamais en dessous d'une. */
@@ -184,14 +209,35 @@ export function dureeDuTour(faits: FaitsDuTour): DureeDuTour {
   const saisie = Math.round((faits.champs * SECONDES_PAR_CHAMP) / 60);
   // Sans situation à ce tour, il n'y a rien à analyser : le temps est nul, même
   // si les questions sont activées dans la partie.
+  // En classe, à partir du deuxième tour, une seconde situation s'analyse :
+  // celle que les résultats déclenchent.
+  const suite = faits.enClasse === true && !faits.premierTour;
   const analyse =
-    faits.avecQuiz && faits.signesDeSituation > 0 ? MINUTES_ANALYSE_SITUATION : 0;
+    (faits.avecQuiz && faits.signesDeSituation > 0 ? MINUTES_ANALYSE_SITUATION : 0) +
+    (suite && faits.avecQuiz ? MINUTES_SECONDE_SITUATION : 0);
   const priseEnMain = faits.premierTour ? MINUTES_PRISE_EN_MAIN : 0;
+  const resultats = suite ? MINUTES_LECTURE_DES_RESULTATS : 0;
   return {
-    minutes: Math.max(1, lecture + saisie + analyse + priseEnMain),
+    minutes: Math.max(1, lecture + saisie + analyse + priseEnMain + resultats),
     lecture,
     saisie,
     analyse,
     priseEnMain,
+    resultats,
   };
 }
+
+// LA PARTIE EN SÉANCES vit dans `config/seances.ts`, sans dépendance, pour
+// que le formulaire de création la calcule dans le navigateur.
+export {
+  MINUTES_INSTALLATION,
+  MINUTES_PAR_SEANCE,
+  MINUTES_REPRISE,
+  MINUTES_REVELATION,
+  dernierTourDeSaSeance,
+  dureesDeLaPartie,
+  planDesSeances,
+  seanceDuTour,
+  seancesEnClair,
+  type PlanDesSeances,
+} from "./seances";

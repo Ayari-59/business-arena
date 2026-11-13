@@ -41,6 +41,12 @@ export interface FaitsDeLaPartie {
   /** Minutes à prévoir pour un tour ordinaire, et pour le premier. */
   minutesTourCourant: number;
   minutesPremierTour: number;
+  /**
+   * Combien de séances de 55 min la partie demande (`config/duree-du-tour`,
+   * `planDesSeances`), et combien de tours tient une séance ordinaire.
+   */
+  seances: number;
+  toursParSeance: number;
   /** Ce nombre vient-il d'une mesure sur cette partie, ou du modèle ? */
   mesure: boolean;
   /** Nombre d'équipes humaines. */
@@ -72,21 +78,21 @@ export function etapesEleve(f: FaitsDeLaPartie): Etape[] {
     },
     {
       titre: "Lisez la situation",
-      texte: `Onglet « Situation » : l'entreprise${f.entreprise ? ` (${f.entreprise})` : ""} vous met devant un cas réel. Lisez-le en entier avant de toucher à quoi que ce soit : tout ce qu'il faut pour décider y est, et rien n'y est décoratif.`,
+      texte: `Étapes « Briefing » : l'entreprise${f.entreprise ? ` (${f.entreprise})` : ""} vous met devant un cas réel. Lisez-les en entier avant de toucher à quoi que ce soit : tout ce qu'il faut pour décider y est, et rien n'y est décoratif.`,
     },
     {
       titre: "Analysez avant de décider",
       texte: f.avecQuiz
-        ? `Onglet « Analyser » : cochez votre diagnostic, choisissez le modèle d'analyse qui convient, répondez aux questions. Les indices existent et coûtent des points : cinq indices laissent tout de même 80 % du score. Chercher d'abord vaut mieux ; demander de l'aide ne disqualifie pas.`
-        : `Onglet « Analyser » : cochez le diagnostic qui vous paraît juste et choisissez le modèle d'analyse qui convient. Les indices existent et coûtent des points : cinq indices laissent tout de même 80 % du score.`,
+        ? `Étape « Analyse » : cochez votre diagnostic, choisissez le modèle d'analyse qui convient, répondez aux questions. À partir du tour 2, il peut y avoir deux situations : le compteur dit combien sont rendues. Les indices coûtent des points ; demander de l'aide ne disqualifie pas.`
+        : `Étape « Analyse » : cochez le diagnostic qui vous paraît juste et choisissez le modèle d'analyse qui convient. À partir du tour 2, il peut y avoir deux situations : le compteur dit combien sont rendues.`,
     },
     {
       titre: "Décidez",
-      texte: `Onglet « Décider » : ${f.champs} champs répartis en étapes. Chaque champ arrive avec une valeur proposée : la reconduire sans y toucher, c'est ne pas décider, et l'enseignant le voit. Votre saisie est gardée au fur et à mesure : un onglet fermé par erreur ne coûte rien.`,
+      texte: `Étapes « Décision » : une décision par écran, et le compteur en haut dit où vous en êtes. Chaque décision arrive avec une valeur proposée : la reconduire sans y toucher, c'est ne pas décider, et l'enseignant le voit. Votre saisie est gardée au fur et à mesure.`,
     },
     {
       titre: "Écrivez ce que vous attendez",
-      texte: `Au premier tour, une phrase est demandée : ce que vous attendez de ces choix. Elle vous reviendra au tour suivant, en face du résultat. C'est la comparaison entre les deux qui apprend quelque chose, pas la phrase.`,
+      texte: `La dernière étape vous recommande une phrase : ce que vous attendez de ces choix. Elle n'est pas obligatoire, mais elle vous reviendra au tour suivant, en face du résultat. C'est la comparaison entre les deux qui apprend quelque chose, pas la phrase.`,
     },
     {
       titre: "Validez avant l'échéance",
@@ -106,7 +112,7 @@ export function etapesEnseignant(f: FaitsDeLaPartie): Etape[] {
   return [
     {
       titre: "Avant la séance",
-      texte: `Vérifiez le niveau (${f.niveau.rang} · ${f.niveau.nom}, ${f.champs} décisions ouvertes) et le nombre de tours (${f.tours}). Si vous voulez borner le temps, posez les fenêtres dans « Planning des tours » : l'élève verra alors l'heure de fermeture et un décompte. Imprimez cette fiche et la fiche élève.`,
+      texte: `Vérifiez le niveau (${f.niveau.rang} · ${f.niveau.nom}) et le nombre de tours (${f.tours}) : ${f.seances > 1 ? `comptez environ ${f.seances} séances de 55 min, ${f.toursParSeance} tours par séance ; la partie attend telle quelle d'une séance à l'autre` : "la partie tient dans une séance de 55 min"}. Pour borner le temps, posez les fenêtres dans « Planning des tours ».`,
     },
     {
       titre: "Les cinq premières minutes",
@@ -122,7 +128,7 @@ export function etapesEnseignant(f: FaitsDeLaPartie): Etape[] {
     },
     {
       titre: "La clôture",
-      texte: `« Clore le tour et simuler » : l'écran dit combien d'équipes ont validé et ce que feront les autres : elles reconduisent leurs décisions du tour précédent. Le geste est irréversible et la simulation prend une quinzaine de secondes.`,
+      texte: `« Clore le tour et simuler » : l'écran dit combien d'équipes ont validé et ce que feront les autres : elles reconduisent leurs décisions du tour précédent. Le geste est irréversible et la simulation ne prend que quelques secondes.`,
     },
     {
       titre: "Le débriefing",
