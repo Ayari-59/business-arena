@@ -41,7 +41,7 @@ const SOURCES: SituationDef[] = [
     category: "prise_de_poste",
     title: "Prise en main",
     narrative:
-      "Vous venez de reprendre NOVA. L'ancien dirigeant vous laisse un atelier, quatre opérateurs, un produit apprécié, et un marché où SoundBox casse les prix pendant qu'Auris vise le haut de gamme.",
+      "Vous venez de reprendre NOVA. L'ancien dirigeant vous laisse un atelier, quatre opérateurs, un produit apprécié, et un marché où les uns cassent les prix pendant que les autres visent le haut de gamme.",
     problem:
       "Avant de fixer votre prix et votre production : de quoi votre entreprise a-t-elle besoin chaque période pour ne pas perdre d'argent ?",
     diagnosticOptions: [
@@ -287,7 +287,12 @@ const SOURCES: SituationDef[] = [
       "Une analyse de capacité, croisée avec la saisonnalité, dirait quoi produire dès maintenant.",
       "Produisez au plafond dès ce tour pour stocker : {{le pic du tour quatre}} dépassera largement vos {{entier: capacite_initiale}} unités.",
     ]),
-    trigger: { round: 3, supposeUnTourJoue: true },
+    // SERVIE APRÈS UNE VRAIE RUPTURE (séance d'essai, P2-6) : l'énoncé raconte un atelier qui a
+    // plafonné et des clients repartis les mains vides. Servie à Sonora, qui produisait 4 500
+    // enceintes sur un atelier de 7 000 sans rien refuser, elle racontait un tour qu'elle n'avait
+    // pas joué. Elle attend désormais que les résultats le montrent (`capacity_saturated` :
+    // l'atelier à plein ET de la demande perdue).
+    trigger: { round: 3, requires: "capacity_saturated", supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "productionPlan", direction: "up", hint: "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus." },

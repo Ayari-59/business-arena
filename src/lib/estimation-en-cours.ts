@@ -16,6 +16,8 @@ import { useSyncExternalStore } from "react";
 export interface EstimationEnCours {
   /** Aucune vente estimée : la barre invite à estimer, elle n'écrit pas de zéros. */
   vide: boolean;
+  /** « si vous vendez 4 500 enceintes » : la condition du chiffre, dite à côté de lui (P1-7). */
+  condition: string;
   resultatNet: number;
   tresorerieNette: number;
   chiffreDAffaires: number;

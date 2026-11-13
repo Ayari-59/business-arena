@@ -99,6 +99,7 @@ import {
   quoiDeLaCroissance,
 } from "@/components/decisions-du-groupe";
 import { modulesSaisis, type DecisionDeModule } from "@/config/modules-saisis";
+import { CLE_DU_RESTE, QUESTION_DU_RESTE, cartesARepliser } from "@/config/le-reste";
 import {
   CARTE_DES_MODULES,
   etapeDeModule,
@@ -153,6 +154,13 @@ type ErreurPosee = ErreurDeChamp & { serveur?: boolean; module?: DecisionDeModul
 
 /** La cible d'un refus qui mène à un module plutôt qu'à un champ : `module:<décision>`. */
 const CIBLE_DE_MODULE = "module:";
+
+/**
+ * LE BOUTON D'UNE ÉQUIPE QUI A DÉJÀ VALIDÉ (séance d'essai, P1-3 et P1-4). Il disait
+ * « Mettre à jour mes décisions validées », en aplat plein : le coéquipier y lisait une
+ * invitation à refaire, et son envoi écrasait celui de l'autre.
+ */
+export const LIBELLE_REMPLACER = "Remplacer les décisions validées";
 
 /** La carte du parcours (téléphone) qui porte les modules d'une étape. */
 const PREFIXE_CARTE_DES_MODULES = "modules-";
@@ -2594,6 +2602,48 @@ function Family({
   );
 }
 
+/**
+ * « LE RESTE, COMME AU TOUR DERNIER » (séance d'essai, P1-8) : les leviers que l'équipe
+ * garde, un par ligne, avec leur valeur. Toucher une ligne déplie le levier dessous, à
+ * modifier comme sur sa propre carte ; la toucher encore le replie.
+ */
+function LeResteCommeAuTourDernier({
+  lignes,
+  ouvert,
+  basculer,
+}: {
+  lignes: { cle: string; nom: string; valeur: string }[];
+  ouvert: string | null;
+  basculer: (cle: string) => void;
+}) {
+  return (
+    <div data-le-reste="" className="space-y-2">
+      <p className="text-sm leading-relaxed text-slate-300">
+        Ces décisions restent celles du tour dernier. Touchez-en une pour la modifier.
+      </p>
+      <ul className="panneau-info divide-y divide-white/10 overflow-hidden">
+        {lignes.map((l) => (
+          <li key={l.cle}>
+            <button
+              type="button"
+              aria-expanded={ouvert === l.cle}
+              onClick={() => basculer(l.cle)}
+              className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-1.5 text-left"
+            >
+              <span className="min-w-0 flex-1 text-base text-slate-300">{l.nom}</span>
+              <span className="flex max-w-[58%] shrink-0 items-center gap-2 text-base font-semibold text-slate-50">
+                <span className="line-clamp-2 min-w-0 break-words text-right">{l.valeur}</span>
+                <Chevron className={`shrink-0 text-slate-400 transition-transform ${ouvert === l.cle ? "rotate-90" : ""}`} />
+                <span className="sr-only">{ouvert === l.cle ? "Replier" : "Modifier"}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function DecisionForm({
   gameId,
   roundIndex,
@@ -2603,6 +2653,7 @@ export function DecisionForm({
   kind,
   alreadySubmitted,
   valideAuTourPasse = null,
+  decisionsDuTourPasse = null,
   telephone = false,
   enTeteDuRecapitulatif = null,
   reperes = null,
@@ -2720,6 +2771,12 @@ export function DecisionForm({
    * proposées ne revient pas sur eux (`pivotsAConfirmer`). Absent : comme avant.
    */
   valideAuTourPasse?: { price: number; productionPlan: number } | null;
+  /**
+   * Ce que l'équipe a joué au tour précédent : sur téléphone, les leviers qu'elle garde
+   * se replient en « Le reste, comme au tour dernier » (`config/le-reste.ts`). Absent ou
+   * `null` (tour 1) : rien ne se replie.
+   */
+  decisionsDuTourPasse?: RoundDecisions | null;
   kind: "solo" | "class";
   alreadySubmitted: boolean;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
@@ -3165,8 +3222,13 @@ export function DecisionForm({
    * exceptionnelle — `null` tant qu'il n'a rien dit, pour qu'aucun des deux
    * boutons ne paraisse déjà choisi.
    */
-  const [carte, setCarte] = useState(0);
+  // L'ÉQUIPE A DÉJÀ VALIDÉ, EN CLASSE (séance d'essai, P1-3) : la feuille s'ouvre sur son
+  // récapitulatif, « Validé par … à … » en tête, et non sur la première question.
+  const ouvrirSurLeRecapitulatif = telephone && alreadySubmitted && kind === "class";
+  const [carte, setCarte] = useState(() => (ouvrirSurLeRecapitulatif ? Number.MAX_SAFE_INTEGER : 0));
   const [donneesRecap, setDonneesRecap] = useState<FormData | null>(null);
+  // « LE RESTE, COMME AU TOUR DERNIER » : le levier replié qu'on a déplié pour le modifier.
+  const [levierOuvert, setLevierOuvert] = useState<string | null>(null);
   const [commandeAcceptee, setCommandeAcceptee] = useState<boolean | null>(null);
   const [prixSaisi, setPrixSaisi] = useState<number | null>(null);
   // LE RÉSULTAT ESTIMÉ, RECALCULÉ À LA FRAPPE. Le calcul est celui du moteur,
@@ -3215,10 +3277,28 @@ export function DecisionForm({
   /** Afficher une carte : on repart du haut de l'écran, et le récapitulatif se relit. */
   const allerALaCarte = (i: number) => {
     setCarte(i);
+    setLevierOuvert(null);
     // Le début de la carte, sous la barre et l'ardoise repliée : pas le haut de
     // la page, où l'ardoise reprenait la place du champ (voir debut-d-etape).
     allerAuDebutDEtape(formRef.current);
-    if (cartes[i]?.cle === "recap") relireLEngagement();
+    if (cartes[i]?.cle === "recap" || cartes[i]?.cle === CLE_DU_RESTE) relireLEngagement();
+  };
+  /**
+   * Aller à la carte qui porte l'une de ces clés. Un levier replié se retrouve dans
+   * « Le reste », déplié. Faux si aucune carte ne les porte.
+   */
+  const allerALaCarteDeCle = (cles: readonly string[]): boolean => {
+    const i = cartes.findIndex((c) => cles.includes(c.cle));
+    if (i >= 0) {
+      if (i !== carteIdx) allerALaCarte(i);
+      return true;
+    }
+    const repliee = cles.find((c) => repliees.includes(c));
+    const iReste = cartes.findIndex((c) => c.cle === CLE_DU_RESTE);
+    if (!repliee || iReste < 0) return false;
+    if (iReste !== carteIdx) allerALaCarte(iReste);
+    setLevierOuvert(repliee);
+    return true;
   };
 
   /** Le seul chemin pour changer d'étape : il retient qu'on y est passé. */
@@ -3249,8 +3329,7 @@ export function DecisionForm({
       // En parcours, le champ fautif se retrouve par sa carte.
       const bloc = cible.closest?.("[data-carte]") as HTMLElement | null;
       const cles = bloc?.dataset.carte?.split(" ") ?? [];
-      const i = cartes.findIndex((c) => cles.includes(c.cle));
-      if (i >= 0) allerALaCarte(i);
+      allerALaCarteDeCle(cles);
       return;
     }
     const famille = cible.closest?.("details") as HTMLDetailsElement | null;
@@ -3392,6 +3471,7 @@ export function DecisionForm({
     defautDesVentesEstimees({
       deposee: estimation?.deposees?.[code],
       venduAuTourPasse: reperesEstimes[code]?.vendu,
+      aPartEgale: estimation?.aPartEgale?.[code],
       planDeProduction,
       premierTour: premierTourDEstimation,
     });
@@ -3837,11 +3917,45 @@ export function DecisionForm({
       .map((x) => x.c);
     cartes.splice(0, cartes.length, ...triees);
   }
+  // « LE RESTE, COMME AU TOUR DERNIER » (séance d'essai, P1-8) : à partir du tour 2, les
+  // leviers que l'équipe garde se replient en une carte, posée à la place du premier.
+  // Jugé sur la proposition du tour, stable jusqu'à la clôture : une carte qui se
+  // déplierait après « Valider » décalerait le parcours sous les doigts.
+  const toutesLesCartes = [...cartes];
+  const repliees = modeCartes
+    ? cartesARepliser({
+        cles: cartes.map((c) => c.cle),
+        tour: roundIndex,
+        proposees: proposed ?? defaults,
+        precedentes: decisionsDuTourPasse,
+      })
+    : [];
+  if (repliees.length > 0) {
+    const premiere = cartes.findIndex((c) => repliees.includes(c.cle));
+    const sansElles = cartes.filter((c) => !repliees.includes(c.cle));
+    sansElles.splice(premiere, 0, {
+      cle: CLE_DU_RESTE,
+      etape: CLE_DU_RESTE,
+      nom: "",
+      question: QUESTION_DU_RESTE,
+    });
+    cartes.splice(0, cartes.length, ...sansElles);
+  }
+  const cartesDuReste = toutesLesCartes.filter((c) => repliees.includes(c.cle));
   const carteIdx = Math.min(carte, Math.max(0, cartes.length - 1));
+  /** Les décisions de l'équipe sont déjà validées ce tour : un nouvel envoi les remplace. */
+  const remplacement = kind === "class" && alreadySubmitted;
   const carteCourante = modeCartes ? cartes[carteIdx] : undefined;
   const derniere = modeCartes ? carteCourante?.cle === "recap" : courante === total - 1;
+  // Sur « Le reste », le levier déplié se montre : sa carte, et la section qui la porte.
+  const levierDuReste =
+    carteCourante?.cle === CLE_DU_RESTE && levierOuvert
+      ? (cartesDuReste.find((c) => c.cle === levierOuvert) ?? null)
+      : null;
   const masquee = (cle: EtapeDuFormulaire) =>
-    modeCartes ? carteCourante?.etape !== cle : courante !== idx(cle);
+    modeCartes
+      ? carteCourante?.etape !== cle && levierDuReste?.etape !== cle
+      : courante !== idx(cle);
 
   // ── LA HIÉRARCHIE DE LA FEUILLE ──────────────────────────────────────────
   // Le repère du tour passé, à côté de la décision majeure qu'il éclaire. Il
@@ -3877,7 +3991,9 @@ export function DecisionForm({
    * Après le montage, jamais pendant le rendu : le serveur n'a pas de formulaire.
    */
   useEffect(() => {
-    if (!modeCartes) relireLEngagement();
+    // Sur téléphone aussi quand la feuille s'ouvre sur son récapitulatif (P1-3) : il se lit
+    // sur le formulaire, et rien ne l'aurait lu, puisqu'on n'y est pas arrivé en avançant.
+    if (!modeCartes || carteCourante?.cle === "recap") relireLEngagement();
     // Une seule fois : ensuite, c'est `onChange` qui suit la saisie.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modeCartes]);
@@ -3940,8 +4056,7 @@ export function DecisionForm({
       const cles = code
         ? [`ref-${code}`]
         : ((champ.closest("[data-carte]") as HTMLElement | null)?.dataset.carte?.split(" ") ?? []);
-      const i = cartes.findIndex((c) => cles.includes(c.cle));
-      if (i >= 0 && i !== carteIdx) allerALaCarte(i);
+      allerALaCarteDeCle(cles);
     } else {
       const i = Number((champ.closest("[data-etape]") as HTMLElement | null)?.dataset.etape);
       if (!Number.isNaN(i) && i !== courante) allerALEtape(i);
@@ -3976,8 +4091,7 @@ export function DecisionForm({
     if (!bloc) return false;
     if (modeCartes) {
       const cles = (bloc.closest("[data-carte]") as HTMLElement | null)?.dataset.carte?.split(" ") ?? [];
-      const i = cartes.findIndex((c) => cles.includes(c.cle));
-      if (i >= 0 && i !== carteIdx) allerALaCarte(i);
+      allerALaCarteDeCle(cles);
     } else {
       const i = Number((bloc.closest("[data-etape]") as HTMLElement | null)?.dataset.etape);
       if (!Number.isNaN(i) && i !== courante) allerALEtape(i);
@@ -4067,7 +4181,7 @@ export function DecisionForm({
   // SUR TÉLÉPHONE, LE RÉSULTAT ESTIMÉ PASSE À LA BARRE (lot P7) : un résumé en
   // nombres, publié à chaque rendu (le magasin ne prévient la barre que si un
   // chiffre a changé), retiré quand la feuille s'en va.
-  const resumeEstime = modeCartes && estimation ? resumeDeLEstimation(estime, v.units) : null;
+  const resumeEstime = modeCartes && estimation ? resumeDeLEstimation(estime, v.units, v.unit) : null;
   useEffect(() => {
     definirEstimationEnCours(resumeEstime, allerAuChampDesVentes);
   });
@@ -4340,7 +4454,7 @@ export function DecisionForm({
   return (
     <TelephoneContexte.Provider value={telephone}>
     <CartesContexte.Provider
-      value={{ actif: modeCartes, courante: carteCourante?.cle ?? "" }}
+      value={{ actif: modeCartes, courante: levierDuReste?.cle ?? carteCourante?.cle ?? "" }}
     >
     <RefusDesChamps.Provider value={carteDesRefus}>
     <form
@@ -4362,7 +4476,7 @@ export function DecisionForm({
         // carte : ailleurs, il n'est pas affiché. SUR ORDINATEUR, l'engagement
         // est relu à chaque frappe : le total des budgets se lit sous les
         // budgets, et chaque option ponctuelle repliée annonce ce qu'elle porte.
-        if (derniere || !modeCartes) relireLEngagement();
+        if (derniere || !modeCartes || carteCourante?.cle === CLE_DU_RESTE) relireLEngagement();
       }}
       onInvalidCapture={revelerFamilleInvalide}
       data-debut-d-etape=""
@@ -4583,6 +4697,17 @@ export function DecisionForm({
       </nav>
 
 
+      {modeCartes && carteCourante?.cle === CLE_DU_RESTE ? (
+        <LeResteCommeAuTourDernier
+          lignes={cartesDuReste.map((c) => ({
+            cle: c.cle,
+            nom: c.nom,
+            valeur: donneesRecap && c.resume ? c.resume(donneesRecap) : "",
+          }))}
+          ouvert={levierOuvert}
+          basculer={(cle) => setLevierOuvert((o) => (o === cle ? null : cle))}
+        />
+      ) : null}
       <section
         data-etape={idx("vendre")}
         hidden={masquee("vendre")}
@@ -5660,15 +5785,14 @@ export function DecisionForm({
         <RecapDesDecisions
           lignes={fusionnerLesEngagements(
             fusionnerFinancerEtInvestir(
-              cartes
+              toutesLesCartes
                 .filter((c) => c.resume)
                 .map((c) => ({ cle: c.cle, nom: c.nom, valeur: c.resume!(donneesRecap) })),
             ),
             donneesRecap,
           )}
           surModifier={(cle) => {
-            const i = cartes.findIndex((c) => c.cle === cle);
-            if (i >= 0) allerALaCarte(i);
+            allerALaCarteDeCle([cle]);
           }}
         />
       ) : null}
@@ -5824,14 +5948,21 @@ export function DecisionForm({
                 // LE GESTE QUI FAIT RÉPONDRE LE MARCHÉ (lot 6E) : le grand bouton
                 // orange plein, le seul aplat orange de son écran — sauf tant que
                 // le courrier attend d'être ouvert, où c'est lui l'orange (`aplat`).
-                className={`${aplat(`${bouton({ taille: "l" })} bouton-valider`)} active:scale-[0.98] order-3 max-sm:flex-1`}
+                // DÉJÀ VALIDÉ, EN CLASSE (séance d'essai, P1-3 et P1-4) : plus d'aplat plein qui
+                // invite à refaire. Le remplacement reste possible, en filet, et il se dit
+                // pour ce qu'il est ; l'action pleine de l'écran est celle de l'attente.
+                className={`${
+                  remplacement
+                    ? `${bouton({ variante: "secondaire", taille: "l" })} bouton-remplacer`
+                    : aplat(`${bouton({ taille: "l" })} bouton-valider`)
+                } active:scale-[0.98] order-3 max-sm:flex-1`}
               >
                 {pending
                   ? "Envoi en cours…"
                   : kind === "solo"
                     ? "Valider et simuler"
-                    : alreadySubmitted
-                      ? "Mettre à jour mes décisions validées"
+                    : remplacement
+                      ? LIBELLE_REMPLACER
                       : "Valider les décisions de l'équipe"}
               </button>
             ) : modeCartes && carteCourante?.cle === "commande" ? (

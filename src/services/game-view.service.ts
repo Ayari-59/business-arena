@@ -50,7 +50,7 @@ import { peekEventDraw } from "@/engine/events";
 import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
 import { departDuFormulaire, proposedDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
-import { expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
+import { expurgerLeScenario, repartitionDesVentes, ventesAPartEgale } from "@/engine/estimation";
 import { subventionQuiDegele } from "@/engine/estimation/degel";
 import { marcheSansAdoption, segmentsDAdoptionCaches } from "@/services/adoption-cachee";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
@@ -646,6 +646,12 @@ export interface GameView {
     reperes: { code: string; tour: number; vendu: number; manque: number }[];
     /** Les ventes estimées déjà validées pour CE tour (mode classe) ; null sinon. */
     deposees: Record<string, number> | null;
+    /**
+     * Au premier tour, la demande d'une part de marché égale, référence par référence :
+     * la proposition du champ des ventes estimées (`ventesAPartEgale`). `null` ensuite,
+     * où la proposition est ce que l'équipe a vendu.
+     */
+    aPartEgale: Record<string, number> | null;
   } | null;
   /**
    * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
@@ -1870,6 +1876,22 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       repartition: repartitionDesVentes(snapshot, game.currentRound, lastResult),
       reperes: manquesDuDernier,
       deposees: pendingDecisions?.salesEstimate?.byProduct ?? null,
+      aPartEgale: lastResult
+        ? null
+        : ventesAPartEgale({
+            scenario: snapshot,
+            state: moi.state as CompanyState,
+            decisions: proposedDecisionsFor({
+              snapshot,
+              state: moi.state as CompanyState,
+              roundIndex: game.currentRound,
+              previousPayload: null,
+              leviers: leviersFigesDuProfil(game.difficultyProfile),
+            }),
+            concurrents: teamRows.length,
+            roundIndex: game.currentRound,
+            events: miens,
+          }),
     };
   })();
 

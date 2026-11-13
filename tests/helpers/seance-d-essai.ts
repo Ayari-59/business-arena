@@ -101,7 +101,12 @@ export interface ReglageDeLaSeance {
    */
   commeAvant?: boolean;
   /** Pour mesurer : la sortie brute de chaque tour, avec les décisions jouées. */
-  espion?: (tour: number, sortie: ReturnType<typeof simulateRound>, decisions: Record<string, RoundDecisions>) => void;
+  espion?: (
+    tour: number,
+    sortie: ReturnType<typeof simulateRound>,
+    decisions: Record<string, RoundDecisions>,
+    ouverture: { scenario: EngineScenarioConfig; etats: CompanyState[]; evenements: EventInstance[]; equipes: { id: string; nom: string }[] },
+  ) => void;
 }
 
 export const EQUIPES_DE_LA_SEANCE: NonNullable<ReglageDeLaSeance["equipes"]> = [
@@ -209,7 +214,12 @@ export function jouerLaSeance(r: ReglageDeLaSeance): LigneDuTour[] {
       decisions[e.id] = appliquer(proposee, e.h!.trajectoire(tour));
     }
     const sortie = simulateRound({ scenario, roundIndex: tour, companies: etats, decisions, activeEvents: evenements, seed: r.graine });
-    r.espion?.(tour, sortie, decisions);
+    r.espion?.(tour, sortie, decisions, {
+      scenario,
+      etats,
+      evenements,
+      equipes: equipes.filter((e) => !e.profil).map((e) => ({ id: e.id, nom: e.nom })),
+    });
     for (const e of equipes) {
       if (e.profil) continue;
       const res = sortie.results[e.id]!;

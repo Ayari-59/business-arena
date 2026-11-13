@@ -100,6 +100,19 @@ export const TITRE_ESTIME = "Résultat estimé";
 export const SOUS_TITRE_ESTIME = "selon vos ventes estimées";
 
 /**
+ * « SI VOUS VENDEZ 4 500 ENCEINTES » (séance d'essai, P1-7). Le chiffre estimé, posé en
+ * haut de chaque écran de décision, se lisait comme une promesse : il ne vaut que si les
+ * ventes estimées se réalisent. La condition se dit à côté de lui.
+ */
+export function siVousVendez(
+  ventes: number,
+  v: Pick<ScenarioVocabulary, "unit" | "units">,
+): string {
+  const n = Math.round(ventes);
+  return `si vous vendez ${formatUnits(n)} ${n > 1 ? v.units : v.unit}`;
+}
+
+/**
  * L'aide courte sous le champ : ce que le tour passé a vendu, et ce qui a
  * manqué. Rien au premier tour — il n'y a aucun repère à rappeler, et un zéro
  * s'y lirait comme un fait.
@@ -126,10 +139,12 @@ export function aideDesVentesEstimees(
 export function resumeDeLEstimation(
   estime: ResultatEstime | null,
   unites: string,
+  unite: string = unites,
 ): EstimationEnCours | null {
   if (!estime) return null;
   return {
     vide: estime.ventesEstimees <= 0,
+    condition: siVousVendez(estime.ventesEstimees, { unit: unite, units: unites }),
     resultatNet: estime.resultatNet,
     tresorerieNette: estime.tresorerieNette,
     chiffreDAffaires: estime.chiffreDAffaires,
@@ -218,7 +233,7 @@ function AnnonceEstimee({ resume }: { resume: EstimationEnCours | null }) {
           ? `${INVITATION_A_ESTIMER}.`
           : `Résultat net estimé ${formatEuro(resume.resultatNet)}, trésorerie estimée ${formatEuro(
               resume.tresorerieNette,
-            )}.`}
+            )}, ${resume.condition}.`}
     </p>
   );
 }
@@ -282,7 +297,7 @@ export function EncartResultatEstime({
     return () => veille.disconnect();
   }, []);
 
-  const resume = resumeDeLEstimation(estime, v.units);
+  const resume = resumeDeLEstimation(estime, v.units, v.unit);
   const vide = !estime || estime.ventesEstimees <= 0;
   const manque = !vide && estime.manquantes >= 1;
   const tresorerieNegative = !vide && estime.tresorerieNette < 0;
@@ -293,7 +308,7 @@ export function EncartResultatEstime({
     <section
       ref={cadran}
       data-resultat-estime
-      aria-label={`${TITRE_ESTIME} · ${SOUS_TITRE_ESTIME}`}
+      aria-label={`${TITRE_ESTIME} · ${vide ? SOUS_TITRE_ESTIME : siVousVendez(estime.ventesEstimees, v)}`}
       // LE CADRAN DU COCKPIT (lot P7) : ni panneau d'information plat, ni
       // panneau de décision. Collant, relevé, l'arête du métier.
       className="cadran-estime"
@@ -306,7 +321,9 @@ export function EncartResultatEstime({
           />
           <span className="leading-tight">
             <span className="block text-sm font-semibold text-slate-50">{TITRE_ESTIME}</span>
-            <span className="block text-xs text-slate-300">{SOUS_TITRE_ESTIME}</span>
+            <span data-condition-estimee="" className="block text-xs text-slate-300">
+              {vide ? SOUS_TITRE_ESTIME : siVousVendez(estime.ventesEstimees, v)}
+            </span>
           </span>
         </p>
         {vide ? (
@@ -575,7 +592,7 @@ export function LigneEstimeeCompacte({
     <>
     <details ref={repli} data-ligne-estimee="" className="min-w-0">
       <summary
-        aria-label={`${TITRE_ESTIME} : résultat net ${formatEuro(e.resultatNet)}. Voir le détail`}
+        aria-label={`${TITRE_ESTIME} : résultat net ${formatEuro(e.resultatNet)}, ${e.condition}. Voir le détail`}
         className="cible-etendue flex cursor-pointer list-none items-center justify-end gap-1 [&::-webkit-details-marker]:hidden"
       >
         {/* Le chevron commun, en tête du résumé (lot P5). */}
@@ -590,7 +607,7 @@ export function LigneEstimeeCompacte({
       {/* LE TIROIR, sous la barre et par-dessus la carte : la carte ne défile pas. */}
       <div className="tiroir-estime absolute inset-x-2 top-full z-10 mt-1 p-4 text-left normal-case tracking-normal">
         <p className="text-sm font-semibold text-slate-50">
-          {TITRE_ESTIME} <span className="font-normal text-slate-300">· {SOUS_TITRE_ESTIME}</span>
+          {TITRE_ESTIME} <span className="font-normal text-slate-300">· {e.condition}</span>
         </p>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
           <div>

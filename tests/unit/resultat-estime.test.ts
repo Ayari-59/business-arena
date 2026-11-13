@@ -63,7 +63,7 @@ describe("l'encart « Résultat estimé »", () => {
     const estime = estimerLeTour(dossier, decisions, { [CODE]: 1_500 });
     const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toContain("Résultat estimé");
-    expect(html).toContain("selon vos ventes estimées");
+    expect(html).toMatch(/si vous vendez 1[\s\u202f]500 enceintes/);
     for (const titre of [
       "Chiffre d'affaires",
       "Résultat net",

@@ -57,7 +57,10 @@ export function ventesEstimeesParReference(
  * LA VALEUR DE DÉPART DU CHAMP (lot P4). Dans l'ordre :
  *   1. ce que l'équipe a déjà validé ce tour-ci (mode classe) ;
  *   2. ce qu'elle a VENDU au tour passé : son propre chiffre, sous ses yeux ;
- *   3. au PREMIER tour seulement, où il n'y a rien à reprendre : son plan de
+ *   3. au PREMIER tour, la demande d'une part de marché égale, quand le serveur l'a
+ *      calculée (séance d'essai, P1-7 : le plan de production faisait croire qu'on
+ *      vendrait tout ce qu'on fabrique) ;
+ *   3 bis. sinon, au PREMIER tour seulement, où il n'y a rien à reprendre : son plan de
  *      production, le volume que la feuille lui propose déjà dans le champ
  *      d'à côté. Ce n'est pas une donnée du moteur (ni la demande, ni la part
  *      de marché, qui sont cachées) : c'est un chiffre qu'elle a sous les yeux,
@@ -71,17 +74,26 @@ export function ventesEstimeesParReference(
 export function ventesEstimeesParDefaut({
   deposee,
   venduAuTourPasse,
+  aPartEgale,
   planDeProduction,
   premierTour,
 }: {
   deposee?: number | undefined;
   venduAuTourPasse?: number | undefined;
+  /**
+   * Au premier tour, la demande d'une part de marché égale (`ventesAPartEgale`,
+   * engine/estimation) : elle passe avant le plan de production (séance d'essai, P1-7).
+   */
+  aPartEgale?: number | undefined;
   planDeProduction?: number | undefined;
   premierTour: boolean;
 }): { valeur: number; proposition: boolean } {
   if (deposee !== undefined) return { valeur: Math.round(deposee), proposition: false };
   if (venduAuTourPasse !== undefined) {
     return { valeur: Math.round(venduAuTourPasse), proposition: false };
+  }
+  if (premierTour && aPartEgale !== undefined && aPartEgale > 0) {
+    return { valeur: Math.round(aPartEgale), proposition: true };
   }
   if (premierTour && planDeProduction !== undefined && planDeProduction > 0) {
     return { valeur: Math.round(planDeProduction), proposition: true };

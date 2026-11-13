@@ -210,6 +210,48 @@ export function estimerLeTour(
   };
 }
 
+/**
+ * LES VENTES À PART ÉGALE (séance d'essai, P1-7). Au premier tour, il n'y a aucune vente
+ * passée à reprendre, et la feuille proposait le plan de production : l'équipe estimait
+ * vendre tout ce qu'elle fabriquait, et le résultat estimé la rassurait à tort (Écho
+ * Premium : −1 € estimé, −36 296 € réels). La proposition devient la demande qu'aurait
+ * chaque entreprise si toutes jouaient la même chose : `concurrents` copies de l'entreprise
+ * d'ouverture, les mêmes décisions, le même tour, le marché partagé à parts égales.
+ *
+ * Calculé côté serveur, avec le scénario complet : le navigateur ne reçoit que le nombre,
+ * une proportion du marché, jamais ses paramètres. La demande, pas les ventes : servies
+ * ou manquées, ce sont les clients qui seraient venus.
+ */
+export function ventesAPartEgale(args: {
+  scenario: EngineScenarioConfig;
+  state: CompanyState;
+  decisions: RoundDecisions;
+  concurrents: number;
+  roundIndex: number;
+  /** Les seuls événements de marché comptent : une carte ciblée viserait une copie. */
+  events: EventInstance[];
+}): Record<string, number> {
+  const n = Math.max(1, Math.round(args.concurrents));
+  const copies = Array.from({ length: n }, (_, i) => ({ ...args.state, id: `part-egale-${i}` }));
+  const sortie = simulateRound({
+    scenario: args.scenario,
+    roundIndex: args.roundIndex,
+    companies: copies,
+    decisions: Object.fromEntries(copies.map((c) => [c.id, args.decisions])),
+    activeEvents: args.events.filter((e) => e.scope === "market"),
+    seed: 0,
+  });
+  const resultat = sortie.results[copies[0]!.id]!;
+  const parReference: Record<string, number> = {};
+  for (const p of toGamme(args.scenario)) {
+    parReference[p.code] = p.market.segments.reduce((s, seg) => {
+      const d = resultat.market.bySegment[seg.code];
+      return s + (d?.sold ?? 0) + (d?.lost ?? 0);
+    }, 0);
+  }
+  return parReference;
+}
+
 /** Ce que la validation garde de l'estimation, avec les décisions du tour. */
 export function estimationAConserver(
   ventes: Record<string, number>,

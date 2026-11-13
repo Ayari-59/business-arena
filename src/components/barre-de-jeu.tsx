@@ -117,9 +117,9 @@ export function BarreDeJeu({
         {avecTitre ? (
           <h2
             data-titre-etape=""
-            className="line-clamp-2 min-w-0 flex-1 text-lg font-semibold leading-tight text-slate-50"
+            className={`line-clamp-2 min-w-0 flex-1 ${classeDuTitreDEtape(enTete?.titre ?? "")} font-semibold leading-tight text-slate-50`}
           >
-            {enTete?.titre}
+            {titreInsecable(enTete?.titre ?? "")}
           </h2>
         ) : (
           <div className="min-w-0 flex-1 text-center leading-tight">
@@ -189,6 +189,13 @@ export function BarreDeJeu({
           )}
         </div>
       ) : null}
+      {/* LA CONDITION DU CHIFFRE (séance d'essai, P1-7) : le résultat estimé ne vaut que si
+          les ventes estimées se réalisent. Elle se lit sous lui, à droite, en petit. */}
+      {enTete && estimeALaPlace && estimation && !estimation.vide ? (
+        <p data-condition-estimee="" className="px-4 pb-0.5 text-right text-xs leading-tight text-slate-400">
+          {estimation.condition}
+        </p>
+      ) : null}
 
       {/* La barre du tour, en segments : un par temps (résultats, briefing, analyse, courrier,
           décisions), chacun dans sa teinte, plus ou moins rempli. */}
@@ -236,4 +243,20 @@ export function BarreDeJeu({
       </div>
     </div>
   );
+}
+
+/**
+ * LE TITRE D'ÉTAPE TIENT SUR SA LIGNE À 390 PX (séance d'essai, P2-9). « Chez qui vous
+ * approvisionnez-vous ? » passait sur deux lignes, le « ? » seul sur la seconde. Deux
+ * gestes : l'espace avant la ponctuation haute devient insécable (le signe ne part plus
+ * seul), et un titre long prend un cran de moins.
+ */
+export const TITRE_D_ETAPE_LONG = 30;
+
+export function titreInsecable(titre: string): string {
+  return titre.replace(/ ([?!:;»])/g, "\u00a0$1");
+}
+
+export function classeDuTitreDEtape(titre: string): string {
+  return titre.length > TITRE_D_ETAPE_LONG ? "text-base" : "text-lg";
 }
