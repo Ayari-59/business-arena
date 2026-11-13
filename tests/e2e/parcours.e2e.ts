@@ -237,6 +237,9 @@ describe("parcours enseignant et élève", () => {
     await prof
       .getByRole("button", { name: "Clore et simuler", exact: true })
       .click();
+    // Le tour clos, le bandeau propose d'abord le podium : « Révéler le classement »
+    // prend la place de la clôture (retour du propriétaire, 13 novembre).
+    await prof.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
     await prof.waitForSelector("text=/Clore le tour 2 et simuler/", {
       timeout: 60_000,
     });

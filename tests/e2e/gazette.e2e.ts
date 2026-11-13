@@ -382,6 +382,9 @@ describe("le pilotage enseignant", () => {
     await aller(prof, urlPartie);
     await prof.getByRole("button", { name: /Clore le tour 1 et simuler/ }).click({ timeout: 30_000 });
     await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
+    // Le tour clos, le bandeau propose d'abord le podium : « Révéler le classement »
+    // prend la place de la clôture (retour du propriétaire, 13 novembre).
+    await prof.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
     await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 120_000 });
 
     // Un vrai rechargement : changer seulement l'ancre ne recharge pas la page.

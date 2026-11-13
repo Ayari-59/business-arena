@@ -529,6 +529,9 @@ describe.skip("une partie de classe à deux équipes : l'enchère", () => {
     await aller(page, urlPartie);
     await page.getByRole("button", { name: /Clore le tour 1 et simuler/ }).click({ timeout: 30_000 });
     await page.getByRole("button", { name: "Clore et simuler", exact: true }).click();
+    // Le tour clos, le bandeau propose d'abord le podium : « Révéler le classement »
+    // prend la place de la clôture (retour du propriétaire, 13 novembre).
+    await page.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
     await page.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 180_000 });
   }, 300_000);
 
@@ -556,6 +559,9 @@ describe.skip("une partie de classe à deux équipes : l'enchère", () => {
     await aller(page, urlPartie);
     await page.getByRole("button", { name: /Clore le tour 2 et simuler/ }).click({ timeout: 30_000 });
     await page.getByRole("button", { name: "Clore et simuler", exact: true }).click();
+    // Le tour clos, le bandeau propose d'abord le podium : « Révéler le classement »
+    // prend la place de la clôture (retour du propriétaire, 13 novembre).
+    await page.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
     await page.waitForSelector("text=/Clore le tour 3 et simuler/", { timeout: 180_000 });
   }, 400_000);
 

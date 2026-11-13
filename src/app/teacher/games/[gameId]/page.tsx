@@ -131,6 +131,10 @@ async function TeacherGamePage({
   const dernierTourClos = [...view.rounds]
     .filter((r) => r.status === "resolved")
     .sort((a3, b3) => b3.index - a3.index)[0];
+  // Le classement du tour clos attend son moment : le bandeau le propose avant
+  // tout autre geste. Pas pendant l'essai, qui a son propre déroulé.
+  const aReveler =
+    dernierTourClos && !dernierTourClos.rankingRevealed && !essaiEnJeu ? dernierTourClos : null;
 
   // Synthèse IA des justifications (facultative) : droit du compte + réglage
   // admin + clé API.
@@ -289,7 +293,38 @@ async function TeacherGamePage({
               : EXPLICATION_DU_TOUR_D_ESSAI}
           </p>
         ) : null}
-        {!finished && !essaiTermine ? (
+        {/* LE PODIUM D'ABORD (retour du propriétaire, 13 novembre : « je n'avais
+            pas de podium à la clôture du tour »). Le bouton qui le joue était en
+            bas de la page, dans la rubrique « Lire ». Tant que le classement du
+            tour clos n'est pas révélé, c'est lui le geste du bandeau, à la place
+            de « Clore le tour » : un clic, et la projection joue le podium. */}
+        {aReveler ? (
+          <div data-podium-a-reveler="" className="mt-4 space-y-3">
+            <p className="max-w-2xl text-sm text-slate-300">
+              Le {periodLabel(view.roundDays, aReveler.index).toLowerCase()} est clos. Les élèves ne voient pas
+              encore le classement : révélez-le, et la projection joue le podium devant la classe.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <GuardedForm
+                action={setRankingRevealedAction.bind(null, view.gameId)}
+                label="révélation du classement"
+              >
+                <input type="hidden" name="roundIndex" value={aReveler.index} />
+                <input type="hidden" name="revealed" value="1" />
+                <SubmitButton className={bouton({ variante: "principal", taille: "l" })}>
+                  <Icone nom="trophee" /> Révéler le classement
+                </SubmitButton>
+              </GuardedForm>
+              <Link
+                href={`/teacher/games/${gameId}/projection`}
+                className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                <Icone nom="ecran" /> Ouvrir la projection d&apos;abord →
+              </Link>
+            </div>
+          </div>
+        ) : null}
+        {!finished && !essaiTermine && !aReveler ? (
           <CloseRoundForm
             gameId={view.gameId}
             tour={view.currentRound}
@@ -632,22 +667,25 @@ async function TeacherGamePage({
                 ? `Classement du ${periodLabel(view.roundDays, dernierTourClos.index)} révélé aux élèves.`
                 : `Les élèves ne voient pas encore le classement du ${periodLabel(view.roundDays, dernierTourClos.index)}.`}
             </span>
-            <GuardedForm
-              action={setRankingRevealedAction.bind(null, view.gameId)}
-              label="révélation du classement"
-            >
-              <input type="hidden" name="roundIndex" value={dernierTourClos.index} />
-              <input
-                type="hidden"
-                name="revealed"
-                value={dernierTourClos.rankingRevealed ? "0" : "1"}
-              />
-              {/* Un bouton à filet : le seul geste orange de l'écran est la
-                  clôture du tour, dans le bandeau. */}
-              <SubmitButton className={bouton({ variante: "secondaire", taille: "s" })}>
-                {dernierTourClos.rankingRevealed ? "Masquer" : "Révéler le classement"}
-              </SubmitButton>
-            </GuardedForm>
+            {/* À révéler, le geste est dans le bandeau « Ce tour », en haut :
+                un seul bouton « Révéler le classement » sur la page. Ici restent
+                « Masquer » et la révélation du tour d'essai. */}
+            {aReveler ? null : (
+              <GuardedForm
+                action={setRankingRevealedAction.bind(null, view.gameId)}
+                label="révélation du classement"
+              >
+                <input type="hidden" name="roundIndex" value={dernierTourClos.index} />
+                <input
+                  type="hidden"
+                  name="revealed"
+                  value={dernierTourClos.rankingRevealed ? "0" : "1"}
+                />
+                <SubmitButton className={bouton({ variante: "secondaire", taille: "s" })}>
+                  {dernierTourClos.rankingRevealed ? "Masquer" : "Révéler le classement"}
+                </SubmitButton>
+              </GuardedForm>
+            )}
           </div>
         ) : null}
         {view.ranking.length === 0 ? (

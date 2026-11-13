@@ -169,8 +169,14 @@ describe("le pilotage enseignant", () => {
 
   it("la clôture est le seul geste orange de l'écran", () => {
     // Le bouton plein vit dans CloseRoundForm ; la page elle-même n'en pose
-    // aucun, ni par la fonction de classes, ni par un aplat écrit à la main.
-    expect(PILOTAGE.match(/bouton\(\)|variante: "principal"/g) ?? []).toEqual([]);
+    // qu'un, « Révéler le classement », et À LA PLACE de la clôture (retour du
+    // propriétaire, 13 novembre) : jamais les deux à la fois.
+    expect(PILOTAGE.match(/bouton\(\)|variante: "principal"/g) ?? []).toEqual([
+      'variante: "principal"',
+    ]);
+    const bloc = PILOTAGE.slice(PILOTAGE.indexOf("data-podium-a-reveler"));
+    expect(bloc.slice(0, 1500)).toContain('variante: "principal"');
+    expect(PILOTAGE).toMatch(/!finished && !essaiTermine && !aReveler \? \(\s*<CloseRoundForm/);
     expect(PILOTAGE.match(/\bbg-amber-[45]00\b(?!\/)/g) ?? []).toEqual([]);
   });
 
