@@ -523,7 +523,8 @@ async function parcoursDeLaClasse(monde: Monde): Promise<void> {
   await aller(mur, `${urlPartie}/projection`);
   await prof.getByRole("button", { name: /Clore le tour 1 et simuler/ }).click({ timeout: 30_000 });
   await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
-  await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 120_000 });
+  // Le tour clos, le bandeau propose le podium avant la clôture suivante.
+  await prof.waitForSelector("[data-podium-a-reveler]", { timeout: 120_000 });
   await etape("enseignant/revelation", async () => {
     await aller(mur, `${urlPartie}/projection`);
     await mur.getByRole("button", { name: /Classement/ }).first().click();
@@ -570,6 +571,12 @@ async function parcoursDeLaClasse(monde: Monde): Promise<void> {
     await jusquALaDerniereRubrique(lea);
     await validerLaFeuille(lea).catch(() => undefined);
     await aller(prof, urlPartie);
+    // Le classement du tour précédent d'abord, s'il attend encore sa révélation.
+    const podium = prof.locator("[data-podium-a-reveler] button");
+    if (await podium.isVisible().catch(() => false)) {
+      await podium.click();
+      await prof.waitForSelector(`text=/Clore le tour ${tour} et simuler/`, { timeout: 60_000 });
+    }
     await prof.getByRole("button", { name: new RegExp(`Clore le tour ${tour} et simuler`) }).click({ timeout: 30_000 });
     await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
     await prof.waitForLoadState("networkidle");

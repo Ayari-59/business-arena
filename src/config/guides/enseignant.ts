@@ -181,7 +181,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
       faire: [
         "Gardez la page « Projeter pour la classe » ouverte sur le vidéoprojecteur, onglet « Classement ».",
         "Après la clôture, le classement reste sous embargo : les élèves ne le voient pas encore.",
-        "Au moment choisi, cliquez sur « Révéler le classement » dans votre page de pilotage. Le mur joue la révélation seul, sans que vous touchiez au second écran.",
+        "Au moment choisi, cliquez sur « Révéler le classement » : après la clôture, ce bouton prend la place de « Clore le tour » en haut de votre page de pilotage. Le mur joue la révélation seul, sans que vous touchiez au second écran.",
         "Pour la revoir, utilisez « Rejouer la révélation » ; la touche Échap la passe.",
       ],
       voir: "Les équipes apparaissent une à une, avec leurs résultats, jusqu'au podium.",

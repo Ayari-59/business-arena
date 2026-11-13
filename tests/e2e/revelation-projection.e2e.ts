@@ -133,7 +133,11 @@ describe("la révélation du classement en projection", () => {
       .getByRole("button", { name: /Clore le tour 1 et simuler/ })
       .click({ timeout: 30_000 });
     await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
-    await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 120_000 });
+    // Le tour clos, le bandeau propose le podium à la place de la clôture du
+    // tour suivant (retour du propriétaire, 13 novembre), et rien d'autre.
+    await prof.waitForSelector("[data-podium-a-reveler]", { timeout: 120_000 });
+    expect(await prof.getByRole("button", { name: /Clore le tour 2 et simuler/ }).count()).toBe(0);
+    expect(await prof.getByRole("button", { name: /Révéler le classement/ }).count()).toBe(1);
 
     // Le mur a appris la clôture par le pilotage ; le classement, lui, n'est
     // pas encore révélé aux élèves : il reste sous embargo.

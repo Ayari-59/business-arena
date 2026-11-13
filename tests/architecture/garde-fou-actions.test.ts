@@ -43,7 +43,7 @@ const COMPOSANTS_GARDES = [
 const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/teacher/page.tsx", formulaires: 3 }, // création de partie, rangement depuis la liste, sortie de rangement
   { file: "src/app/admin/offres/page.tsx", formulaires: 7 }, // affichage des prix, mise en avant, module (et sa création), Découverte, essai, code promo (la suppression : ConfirmForm)
-  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 12 }, // … et le tuteur IA de la partie (activé ou désactivé)
+  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 13 }, // … et le tuteur IA de la partie (activé ou désactivé), et « Révéler le classement » dans le bandeau du tour
   { file: "src/app/lti/activite/page.tsx", formulaires: 5 }, // activité LTI : relier ou créer, partie ou cohorte ; relier un examen
   { file: "src/app/teacher/examens/page.tsx", formulaires: 1 }, // création d'un examen individuel
   { file: "src/app/teacher/examens/[id]/page.tsx", formulaires: 3 }, // publication (ou son retrait), clôture
