@@ -25,7 +25,7 @@ import {
 import {
   PRODUCT_FIELD_PREFIX,
   pivotFieldsFor,
-  pivotsNonTouches,
+  pivotsAConfirmer,
   productFieldName,
   readProductFields,
   type PivotField,
@@ -2602,6 +2602,7 @@ export function DecisionForm({
   proposed,
   kind,
   alreadySubmitted,
+  valideAuTourPasse = null,
   telephone = false,
   enTeteDuRecapitulatif = null,
   reperes = null,
@@ -2714,6 +2715,11 @@ export function DecisionForm({
    * `defaults`, qui reprend aussi ce que l'équipe a déjà validé ce tour.
    */
   proposed?: RoundDecisions;
+  /**
+   * Les pivots que l'équipe a validés au tour précédent : le garde-fou des valeurs
+   * proposées ne revient pas sur eux (`pivotsAConfirmer`). Absent : comme avant.
+   */
+  valideAuTourPasse?: { price: number; productionPlan: number } | null;
   kind: "solo" | "class";
   alreadySubmitted: boolean;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
@@ -3094,9 +3100,10 @@ export function DecisionForm({
     const saisie = products
       ? scalarsOfGamme(products)
       : { price: lire("price"), productionPlan: lire("productionPlan") };
-    const intacts = pivotsNonTouches(
+    const intacts = pivotsAConfirmer(
       { price: saisie.price, productionPlan: saisie.productionPlan },
       { price: reference.price, productionPlan: reference.productionPlan },
+      valideAuTourPasse,
     );
     if (intacts.length === 0) return;
     e.preventDefault();

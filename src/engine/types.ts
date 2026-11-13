@@ -535,6 +535,15 @@ export interface EngineScenarioConfig {
      */
     crisisRoundsBeforeFailure?: number;
     /**
+     * LE PREMIER TOUR OÙ L'ARRÊT PEUT TOMBER. Avant lui, les tours de cessation
+     * de paiements se comptent (la crise reste dite, la banque la retient), mais
+     * l'entreprise continue de produire et de vendre. Absent = 1, la règle
+     * historique. Posé par la partie de classe au niveau 3 (décision du
+     * propriétaire, novembre 2026 : « pas avant le tour 4 »), voir
+     * `DifficultyPreset.premierTourDeDefaillanceEnClasse`.
+     */
+    premierTourDeDefaillance?: number;
+    /**
      * FINANCEMENT DE SAUVETAGE OBLIGATOIRE. Après un tour clos en cessation de
      * paiements, l'équipe ne peut valider le suivant qu'en réunissant de quoi
      * repasser sous le plafond de découvert (emprunt + apport des associés).

@@ -1394,6 +1394,7 @@ async function ArenaPage({
       // qui ne reconduit aucune dépense ponctuelle du tour précédent.
       defaults={view.pendingDecisions ?? view.proposedDecisions}
       proposed={view.proposedDecisions}
+      valideAuTourPasse={view.pivotsValidesAuTourPasse}
       kind={view.kind}
       alreadySubmitted={view.pendingDecisions !== null}
       insuranceOffer={

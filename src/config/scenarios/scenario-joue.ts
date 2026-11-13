@@ -105,6 +105,13 @@ export interface ReglagesDuScenarioJoue {
    * vrai pour une partie créée avec lui ; absent, le moteur d'avant, au bit près.
    */
   creditBail?: boolean;
+  /**
+   * LE GENRE DE LA PARTIE : la classe d'un enseignant, ou une partie à un seul joueur.
+   * Seule la classe porte le premier tour de défaillance de son niveau
+   * (`premierTourDeDefaillanceEnClasse`). Absent : rien ne change, au bit près
+   * (solo, examen, atelier, cours, concours et rejeu du bilan).
+   */
+  genre?: "class";
 }
 
 /**
@@ -201,10 +208,26 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   // identique au bit près, comme pour les concurrents.
   const avecLeParcSeul = r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
   const avecLeParc = r.impotSurLExercice === true ? { ...avecLeParcSeul, impotSurLExercice: true } : avecLeParcSeul;
-  const avecLeCreditBail = r.creditBail === true && avecLeParc.equipment ? { ...avecLeParc, creditBail: true } : avecLeParc;
+  const avecLeCreditBailSeul = r.creditBail === true && avecLeParc.equipment ? { ...avecLeParc, creditBail: true } : avecLeParc;
+  const avecLeCreditBail = avecLePremierTourDeDefaillance(avecLeCreditBailSeul, r.genre, preset);
   return r.propositionALaDemande === true
     ? { ...laQualiteProposeeDuJeu(avecLeCreditBail, true), propositionALaDemande: true }
     : laQualiteProposeeDuJeu(avecLeCreditBail, false);
+}
+
+/**
+ * LE PREMIER TOUR OÙ L'ARRÊT PEUT TOMBER, pour la seule partie de classe d'un niveau
+ * qui le fixe (`premierTourDeDefaillanceEnClasse`, le niveau 3). Sinon, l'objet est
+ * rendu tel quel, sans clé ajoutée.
+ */
+function avecLePremierTourDeDefaillance(
+  scenario: EngineScenarioConfig,
+  genre: ReglagesDuScenarioJoue["genre"],
+  preset: DifficultyPreset | undefined,
+): EngineScenarioConfig {
+  const premier = preset?.premierTourDeDefaillanceEnClasse;
+  if (genre !== "class" || premier === undefined) return scenario;
+  return { ...scenario, finance: { ...scenario.finance, premierTourDeDefaillance: premier } };
 }
 
 /**
