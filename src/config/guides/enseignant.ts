@@ -79,7 +79,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
       titre: "Régler le niveau, la durée et les questions",
       faire: [
         "Choisissez la périodicité : un mois, un trimestre ou une année par tour.",
-        "Dans « Tours joués », raccourcissez la partie pour qu'elle tienne dans vos séances : juste dessous, le formulaire annonce combien de séances de 55 min elle demandera (environ 3 pour les 6 tours proposés).",
+        "Dans « Tours joués », raccourcissez la partie pour qu'elle tienne dans vos séances : juste dessous, le formulaire annonce combien de séances d'une heure de cours elle demandera.",
         "Choisissez le niveau de difficulté, de {{premierNiveau}} à {{dernierNiveau}} : il règle les décisions ouvertes aux élèves, le plafond d'indices et la fréquence des événements.",
         "Sous « Plus de réglages », laissez cochée l'option « Monde variable » pour que chaque partie diffère, ou décochez-la pour rejouer le scénario de vos supports imprimés.",
         "Dans « Tour d'essai », laissez « Aucun » ou choisissez un ou deux tours pour de faux avant la vraie partie : les équipes s'entraînent, rien ne compte, la partie repart ensuite de zéro.",
@@ -97,7 +97,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
         reperes: [
           // « Tours joués » est un champ de saisie, pas une liste (séance d'essai, P2-11).
           { cible: 'input[name="roundsCount"]', legende: "Le nombre de tours, pour tenir dans vos séances." },
-          { cible: "[data-duree-de-la-partie]", legende: "La durée de la partie, en séances de 55 min." },
+          { cible: "[data-duree-de-la-partie]", legende: "La durée de la partie, en séances d'une heure de cours." },
           { cible: 'select[name="level"]', legende: "Le niveau de difficulté." },
           { cible: "[data-plus-de-reglages] > summary", legende: "Plus de réglages : monde variable, courriers, questions." },
         ],
