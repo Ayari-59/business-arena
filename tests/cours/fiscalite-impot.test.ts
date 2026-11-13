@@ -306,7 +306,7 @@ describe("l'impôt sur les sociétés de NOVA en N+1", () => {
       "Acomptes versés en N+1": 4 * acompte,
       "Solde du 15 mai N+2": impot - 4 * acompte,
     });
-    expect(juste(ch, "les-conditions-du-taux-reduit", nova)).toBe("Non : son capital n'est pas détenu à 75 % par des personnes physiques");
+    expect(juste(ch, "les-conditions-du-taux-reduit", nova)).toBe("Non : la condition de détention du capital manque");
     expect(PIXEL_ET_LE_TAUX_REDUIT.partDesPersonnesPhysiques).toBeLessThan(0.75);
     expect(juste(ch, "au-31-decembre", nova)).toBe("Une dette de 5 628 € envers l'État");
   });

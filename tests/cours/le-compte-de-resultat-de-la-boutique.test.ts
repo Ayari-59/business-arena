@@ -99,8 +99,8 @@ describe("le compte de résultat de la boutique", () => {
     const ebeSans = centime(ebe1 + 1.5 * q1);
     expect(attendus(ch, "sans-les-remises")).toEqual({ "Marge commerciale": q1 * 33, "Excédent brut d'exploitation": ebeSans, "Taux d'EBE (%)": centime((ebeSans / (q1 * 57.5)) * 100) });
     expect(attendus(ch, "le-prix-de-n-moins-2")).toEqual({ "Marge commerciale d'un article": 33, "Prix moyen d'un article": 57.5, "Chiffre d'affaires de N − 2": q2 * 57.5 });
-    expect(juste(ch, "ebe-ou-resultat-net")).toMatch(/^Le résultat net mêle la provision/);
-    expect(juste(ch, "decider")).toBe("Réduire les remises : elles ont coûté 38\u202f988 € d'EBE");
+    expect(juste(ch, "ebe-ou-resultat-net")).toBe("La gestion se juge sur l'EBE, pas sur le résultat net");
+    expect(juste(ch, "decider")).toBe("Réduire les remises : 38\u202f988 € d'EBE");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

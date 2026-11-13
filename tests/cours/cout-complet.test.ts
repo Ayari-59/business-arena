@@ -310,7 +310,7 @@ describe("le coût complet, au mois de janvier de NOVA", () => {
     // En cascade : l'entretien d'abord (1 600,80 €), puis l'administration, dont les 10 % rendus à l'entretien se perdent.
     const adminCascade = c(primaire.administration + 0.2 * primaire.entretien);
     expect([adminCascade, c(0.1 * adminCascade)]).toEqual([3_929.31, 392.93]);
-    expect(juste(ch, "oublier-la-reciprocite")).toBe(`Son tableau perd 392,93 € : les centres principaux ne retrouvent plus toutes les charges`);
+    expect(juste(ch, "oublier-la-reciprocite")).toBe(`Son tableau perd 392,93 € de charges`);
   });
 
   it("les unités d'œuvre et la chaîne des coûts", () => {
@@ -349,7 +349,7 @@ describe("le coût complet, au mois de janvier de NOVA", () => {
       },
     });
     expect([c(57.61 * 1_591), cv * 1_591 + cf, c((cv * 1_591 + cf) / 1_591)]).toEqual([91_657.51, 91_641, 57.6]);
-    expect(juste(ch, "predire-le-volume")).toBe("Plus bas : les charges fixes se partageraient sur plus d'unités");
+    expect(juste(ch, "predire-le-volume")).toBe("Plus bas : les charges fixes se partagent sur plus d'unités");
   });
 
   it("l'imputation rationnelle, jusqu'au résultat", () => {
@@ -437,12 +437,12 @@ describe("le coût complet, au mois de janvier de NOVA", () => {
   });
 
   it("les verdicts : deux méthodes un résultat, la commande sous le coût complet", () => {
-    expect(juste(ch, "meme-resultat")).toBe("Parce que les deux méthodes rangent les mêmes charges autrement : le total ne change pas.");
+    expect(juste(ch, "meme-resultat")).toBe("Ce sont les mêmes charges, rangées autrement.");
     expect(PART_DE_LA_COMMANDE).toBe(0.1);
     const commande = Math.round(q * 0.1);
     const prix = Math.round((cv + (achats + autres + cf) / q) / 2);
     expect([commande, prix, commande * (prix - cv)]).toEqual([159, 48, 1_590]);
-    expect(juste(ch, "commande")).toBe("Oui : chaque unité rapporte sa marge sur coût variable, 10 €, et les charges fixes ne bougent pas.");
+    expect(juste(ch, "commande")).toBe("Oui : chaque unité rapporte sa marge sur coût variable.");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

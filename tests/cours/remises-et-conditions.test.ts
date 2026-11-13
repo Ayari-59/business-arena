@@ -291,7 +291,7 @@ describe("remises et conditions : le chapitre, chez ATLAS CONSEIL du monde du co
     expect(q * parJournee - margeCatalogue).toBe(230);
     // Le pari : au prorata de la remise, 5 % de 40 journées, il en faudrait 2 ; il en faut 3.
     expect(f.journees * f.remise).toBe(2);
-    expect(juste(ch, "predire-la-contrepartie")).toBe("Plus de 2 : chaque journée remisée laisse moins de marge");
+    expect(juste(ch, "predire-la-contrepartie")).toBe("Plus de 2 : une journée remisée laisse moins de marge");
     expect(attendus(ch, "contrepartie")).toEqual({
       "Prix remisé d'une journée (HT)": prixRemise,
       "Marge d'une journée remisée (HT)": parJournee,
@@ -301,7 +301,7 @@ describe("remises et conditions : le chapitre, chez ATLAS CONSEIL du monde du co
   });
 
   it("le crédit se finance hors taxes : la TVA d'un service n'est due qu'à l'encaissement", () => {
-    expect(juste(ch, "qui-avance-la-tva")).toBe("La TVA d'un service n'est due qu'à l'encaissement : le cabinet ne l'avance pas");
+    expect(juste(ch, "qui-avance-la-tva")).toBe("La TVA d'un service n'est due qu'à l'encaissement");
     // La variante : avec l'option pour les débits, le cabinet financerait le TTC.
     const creditTTC = (ttcSansEscompte * f.tauxDeFinancement * f.delai) / 360;
     expect(attendus(ch, "l-option-pour-les-debits")).toEqual({

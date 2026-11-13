@@ -349,7 +349,7 @@ describe("le coût par produit, chez NOVA du monde du cours", () => {
     // À la main, chaque part arrondie seule ; le modèle répartit au centime le plus fort reste (un centime d'écart au plus).
     resultats(0.27).forEach((x, i) => expect(x, `0,27 h : ${i}`).toBeCloseTo([-28.1, 104.61, 4_434.49][i]!, 1));
     resultats(0.28).forEach((x, i) => expect(x, `0,28 h : ${i}`).toBeCloseTo([35.8, -156.8, 4_632][i]!, 1));
-    expect(juste(ch, "predire-les-heures")).toBe("Non : les charges qu'elle ne porte plus iront aux autres références");
+    expect(juste(ch, "predire-les-heures")).toBe("Non : ses charges iront aux autres références");
   });
 
   it("le graphique du laboratoire : les résultats de Go et de One se croisent selon les heures, la gamme reste droite", () => {
@@ -368,7 +368,7 @@ describe("le coût par produit, chez NOVA du monde du cours", () => {
   });
 
   it("l'abandon et la marge sur coûts spécifiques : sans One, −18 616 €", () => {
-    expect(juste(ch, "abandon")).toBe("Il baisse de 23 127 € : ce qu'elle laisse une fois payées ses seules charges propres");
+    expect(juste(ch, "abandon")).toBe("Il baisse de 23 127 € : sa marge après charges propres");
     const ms = (x: typeof go) => ca(x) - direct(x);
     expect(attendus(ch, "marge-specifique")).toEqual({
       "Marge sur coûts spécifiques : NOVA Go": ms(go),

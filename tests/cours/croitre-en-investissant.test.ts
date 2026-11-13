@@ -390,7 +390,7 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
     expect(juste(ch, "les-interets")).toBe("Non : le taux de 8 % rémunère déjà l'argent engagé, emprunté ou non");
     expect(juste(ch, "la-rentabilite-d-une-annee")).toBe("Ce ratio ne juge rien : seule la VAN compte tous les flux de la durée, actualisés");
     expect(croissance(cas).verdict).toBe("attendre-la-demande");
-    expect(juste(ch, "verdict")).toBe("Pas sur la demande prévue : avec son opérateur, il lui faut 4,90 % de demande en plus, chaque année");
+    expect(juste(ch, "verdict")).toBe("Pas sur la demande prévue : il lui faut 4,90 % de demande en plus");
   });
 
   it("le curseur du point mort : la marge des ventes gagnées face aux charges de l'année", () => {

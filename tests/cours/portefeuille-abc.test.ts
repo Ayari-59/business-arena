@@ -400,7 +400,7 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
     const vv = (c: string) => compte(c).marge / compte(c).attrition;
     expect([vv(COMPTE_QUI_SORT), vv(COMPTE_QUI_ENTRE), vv("helianthe")].map(centime)).toEqual([46_666.67, 242_666.67, 104_000]);
     expect(Math.floor(vv(COMPTE_QUI_ENTRE) / vv(COMPTE_QUI_SORT))).toBe(5);
-    expect(juste(ch, "la-valeur-vie-des-comptes")).toBe("La durée du compte : un petit compte fidèle peut valoir bien plus qu'un gros");
+    expect(juste(ch, "la-valeur-vie-des-comptes")).toBe("La durée du compte, que l'année ne montre pas");
     // Les comptes de la conquête sont tous en B.
     expect(new Set(parCa.filter((x) => x.commercial === "conquete").map((x) => x.classe))).toEqual(new Set(["B"]));
     expect(juste(ch, "traiter")).toBe("Elle suit les A de près, fait grandir les B, sert les C à moindre coût");

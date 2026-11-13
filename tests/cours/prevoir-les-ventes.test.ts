@@ -365,12 +365,12 @@ describe("prévoir les ventes, à la boutique du monde du cours", () => {
   });
 
   it("les verdicts sont épinglés", () => {
-    expect(juste(ch, "quelle-serie")).toBe("Sur la demande : les ventes du trimestre fort ont été plafonnées");
+    expect(juste(ch, "quelle-serie")).toBe("Sur la demande : les ventes ont été plafonnées");
     expect(juste(ch, "predire-la-pente")).toBe("107,15 articles par trimestre, saison retirée");
     expect(juste(ch, "predire-la-saison")).toBe("Environ 5 067 : la tendance × le coefficient");
-    expect(juste(ch, "ce-que-dit-janvier")).toBe("La demande est en retard : la saison n'y est pour rien, la prévision la contient déjà");
+    expect(juste(ch, "ce-que-dit-janvier")).toBe("La demande est en retard : la prévision contient déjà la saison");
     expect(juste(ch, "predire-les-trimestres-bruts")).toBe("Plus forte : chaque année finit sur le trimestre de Noël");
-    expect(juste(ch, "pourquoi-la-droite-brute-trompe")).toBe("Le trimestre 4 tombe toujours en fin d'année : la droite prend la saison pour de la croissance");
+    expect(juste(ch, "pourquoi-la-droite-brute-trompe")).toBe("La droite prend la saison pour de la croissance");
   });
 
   it("le curseur de la tendance, refait à la main : le seuil d'une deuxième boutique au rang 21", () => {

@@ -374,7 +374,7 @@ describe("le coût matière et le prix d'un plat, au bistrot du monde du cours",
   });
 
   it("le second cycle : la hausse que la fourchette absorbe, couverts jetés compris, refaite à la main", () => {
-    expect(bonne(LE_COUT_MATIERE, "predire-la-marge-de-manoeuvre", cas).texte).toBe("De moins de 4 % : les couverts jetés prennent leur part");
+    expect(bonne(LE_COUT_MATIERE, "predire-la-marge-de-manoeuvre", cas).texte).toBe("De moins de 4 % : les couverts jetés pèsent");
     // 32 % de 34 € = 10,88 € pour les denrées d'un couvert servi ; il en porte 1,05 préparé : 10,50 € × (1 + h).
     const permis = r2(0.32 * 34);
     const attendu = Math.floor((permis / (10 * 1.05) - 1) * 100);

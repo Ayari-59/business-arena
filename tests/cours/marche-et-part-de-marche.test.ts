@@ -38,7 +38,7 @@ describe("le marché et la part de marché", () => {
   it("le premier trimestre : NOVA 26,4 %, SoundBox 41,36 % (7 487), une part relative de 0,64 ; challenger ; le moins cher vend le plus", () => {
     expect([M1, N1, SOUNDBOX, AURIS]).toEqual([18_100, 4_778, 7_487, 3_237]);
     expect(attendus(MARCHE_ET_PART_DE_MARCHE, "parts")).toEqual([d((N1 / M1) * 100), d((SOUNDBOX / M1) * 100), arrondi2(26.4 / 41.36)]);
-    expect(juste(MARCHE_ET_PART_DE_MARCHE, "position")).toEqual(["Le challenger : deuxième, elle cherche à prendre la place du leader"]);
+    expect(juste(MARCHE_ET_PART_DE_MARCHE, "position")).toEqual(["Le challenger : deuxième, elle brigue la place du leader"]);
     expect(juste(MARCHE_ET_PART_DE_MARCHE, "prix")).toEqual(["L'enseigne la moins chère est celle qui vend le plus"]);
   });
 

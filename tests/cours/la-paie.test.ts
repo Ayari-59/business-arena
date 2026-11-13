@@ -278,7 +278,7 @@ describe("la paie chez NOVA : les chiffres épinglés", () => {
   });
 
   it("les paris et les curseurs : 655 € bruts pour 500 € nets, 2 500 € bruts pour 3 550 € de budget", () => {
-    expect(juste(ch, "predire-le-brut", cas)).toBe("Un peu plus de 641,03 € : il faut aussi couvrir le prélèvement à la source");
+    expect(juste(ch, "predire-le-brut", cas)).toBe("Plus de 641,03 € : le prélèvement s'ajoute");
     expect(curseur(ch, "la-prime-au-curseur", cas)).toEqual({
       attendu: 655,
       bornes: [500, 800],
@@ -315,7 +315,7 @@ describe("la paie chez NOVA : les chiffres épinglés", () => {
       "Charge des primes de l'équipe": -2_840,
     });
     expect(l.aLaSolution).toEqual({ ...l.auDepart, "Cotisations patronales": 200, "Coût employeur par salarié": 700, "Charge des primes de l'équipe": -2_800 });
-    expect(juste(ch, "le-levier-de-l-employeur", cas)).toBe("Le taux ne se décide pas : c'est l'impôt du salarié, et il ne change rien au coût de la prime");
+    expect(juste(ch, "le-levier-de-l-employeur", cas)).toBe("Le taux ne se décide pas, et il ne change rien au coût de la prime");
   });
 });
 

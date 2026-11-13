@@ -503,7 +503,7 @@ describe("la clôture : les étapes", () => {
   it("les verdicts : le pari du stock, le pari du placement, le dégressif ne fait que décaler l'impôt", () => {
     expect(juste(ch, "predire-le-stock")).toBe("Monter le résultat : ces jeux sortent des charges de l'exercice");
     expect(juste(DECIDER_APRES_LA_CLOTURE, "predire-le-placement")).toBe("Coûte : la même somme placée rapporte moins que l'emprunt ne coûte");
-    expect(juste(DECIDER_APRES_LA_CLOTURE, "le-degressif-differe")).toBe("L'impôt n'est que décalé : la ligne s'amortit de 60 000 € en tout, dans les deux modes");
+    expect(juste(DECIDER_APRES_LA_CLOTURE, "le-degressif-differe")).toBe("L'impôt n'est que décalé");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

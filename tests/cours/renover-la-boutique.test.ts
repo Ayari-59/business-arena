@@ -69,7 +69,7 @@ describe("rénover la boutique", () => {
     expect(attendus(ch, "le-credit-bail")).toEqual({ "Total versé": 36_050, "Surcoût du crédit-bail": 6_050 });
     expect(juste(ch, "le-delai-ne-suffit-pas")).toMatch(/^Le délai dit quand l'argent revient/);
     // Après le dividende de 320 000 €, la trésorerie paie la rénovation et garde plus de deux mois de charges.
-    expect(juste(ch, "decider")).toBe(`Investir, et payer sur la trésorerie : il en resterait 74 868,20 €`);
+    expect(juste(ch, "decider")).toBe(`Investir, et payer sur la trésorerie`);
   });
 
   // La garde des textes dépasse les 5 s par défaut sous la suite entière (déjà vrai sur 467c0aa) : elle a sa durée à elle.

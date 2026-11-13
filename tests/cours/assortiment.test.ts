@@ -279,7 +279,7 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
     expect([ponderee33, simple33]).toEqual([27.98, 33.3]);
     // À 33 € par article, le cardigan est au-dessus de l'une et sous l'autre.
     expect(33 > ponderee33 && 33 < simple33).toBe(true);
-    expect(juste(ch, "la-moyenne-ponderee")).toBe("La moyenne simple compte chaque référence pour une, quelles que soient ses ventes : elle mesure les étiquettes, pas ce que rapporte un article vendu");
+    expect(juste(ch, "la-moyenne-ponderee")).toBe("La moyenne simple mesure les étiquettes, pas les ventes");
   });
 
   it("le retrait du bonnet : le curseur de la part reportée et le retrait chiffré, refaits à la main", () => {
@@ -374,7 +374,7 @@ describe("l'assortiment, à la boutique du monde du cours", () => {
   });
 
   it("les verdicts : faut-il retirer le bonnet, et la synthèse", () => {
-    expect(juste(ch, "retirer")).toBe("Pas pour la marge : retiré, il coûterait 725,70 € par mois, et il faudrait 46 % de report");
+    expect(juste(ch, "retirer")).toBe("Pas pour la marge : retiré, il coûterait 725,70 € par mois");
     const t = ch.etapes.find((e) => e.id === "synthese")!.tableau!(cas);
     expect(t.lignes.map((l) => l.valeurs.at(-1))).toEqual(["86,94 %", "aucun", "aucun", "60,03 %", "45,84 %"]);
     expect(t.lignes.map((l) => l.valeurs[3])).toEqual(["Produit de volume", "Locomotive", "Produit de marge", "Produit de volume", "À revoir"]);

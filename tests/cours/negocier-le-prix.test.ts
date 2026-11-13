@@ -280,7 +280,7 @@ describe("négocier le prix, chez le cabinet du monde du cours", () => {
     expect(prixRemise).toBe(640);
     expect(prixRemise - coutComplet).toBe(10);
     expect(prix * 0.75).toBeLessThan(coutComplet);
-    expect(juste(ch, "remise-demandee")).toBe("Oui : le prix remisé reste au-dessus du coût complet");
+    expect(juste(ch, "remise-demandee")).toBe("Oui : il reste au-dessus du coût complet");
     const margeSansRemise = a.journees * (prix - cv);
     const margeRemisee = prixRemise - cv;
     expect(attendus(ch, "contrepartie")).toEqual({

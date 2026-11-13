@@ -341,7 +341,7 @@ describe("la déclaration de TVA", () => {
       ["44566", "credit", 18_000],
       ["44551", "credit", 37_000],
     ]);
-    expect(juste(ch, "l-exigibilite")).toBe("À l'encaissement du prix : MARTEL & FILS fait des travaux, sans option pour les débits");
+    expect(juste(ch, "l-exigibilite")).toBe("À l'encaissement du prix");
     expect(juste(ch, "deductible")).toBe("Sur les matériaux livrés, même pas encore payés au négoce");
   });
 
@@ -396,12 +396,12 @@ describe("la déclaration de TVA", () => {
       "Encaissements du trimestre (HT)": (42_600 + 30_600) / T,
     });
     expect((42_600 + 30_600) / T).toBe(366_000);
-    expect(juste(ENCAISSEMENTS_OU_DEBITS, "l-option-pour-les-debits")).toBe("L'option fait verser plus tôt la TVA des factures pas encore payées : de la trésorerie en moins, pas d'impôt en plus");
+    expect(juste(ENCAISSEMENTS_OU_DEBITS, "l-option-pour-les-debits")).toBe("L'option avance le versement de la TVA, sans impôt en plus");
   });
 
   it("les paris : un crédit au printemps, des clients plus rapides qui le font fondre, une TVA à payer avec l'option", () => {
     expect(juste(ch, "predire-le-credit")).toBe("Un crédit de TVA : l'État devra de l'argent à MARTEL & FILS");
-    expect(juste(ENCAISSEMENTS_OU_DEBITS, "predire-le-delai")).toBe("Fondrait, jusqu'à disparaître : la TVA collectée suit l'argent reçu");
+    expect(juste(ENCAISSEMENTS_OU_DEBITS, "predire-le-delai")).toBe("Fondrait : la TVA collectée suit l'argent reçu");
     expect(juste(ENCAISSEMENTS_OU_DEBITS, "predire-l-option")).toBe("Avec une TVA à payer : la collectée suit les travaux facturés");
   });
 
@@ -614,7 +614,7 @@ describe("la TVA et la trésorerie", () => {
       "Créances clients (HT)": 38_000 / T,
       "Créances clients (TTC)": (38_000 / T) * 1.2,
     });
-    expect(juste(ch, "l-argent-de-la-tva")).toBe(`Cet argent part au trimestre suivant : ${euros(33_800)} à l'État, la TVA du négoce avec ses factures`);
+    expect(juste(ch, "l-argent-de-la-tva")).toBe("Cet argent part au trimestre suivant");
     expect(juste(ch, "predire-l-option")).toBe("Deviendrait négatif : MARTEL & FILS avancerait de la TVA");
     expect(juste(ch, "predire-le-negoce")).toBe("Plus tard, sans sortir du délai légal");
   });

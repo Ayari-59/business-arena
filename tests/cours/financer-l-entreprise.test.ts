@@ -31,7 +31,7 @@ describe("financer la deuxième ligne de NOVA", () => {
 
   it("l'autofinancement suffit : une seule bonne réponse, partout", () => {
     expect(k.choix).toBe("autofinancement");
-    expect(etape(ch, "suffit", "choix").options(NOVA, VIDE).filter((o) => o.juste).map((o) => o.texte)).toEqual(["Oui : sa capacité d'autofinancement couvre le prix"]);
+    expect(etape(ch, "suffit", "choix").options(NOVA, VIDE).filter((o) => o.juste).map((o) => o.texte)).toEqual(["Oui : son autofinancement suffit"]);
     expect(etape(ch, "choisir", "choix").options(NOVA, VIDE).filter((o) => o.juste).map((o) => o.texte)).toEqual(["Par autofinancement"]);
   });
 
