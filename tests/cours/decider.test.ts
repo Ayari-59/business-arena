@@ -320,7 +320,7 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     });
     expect(Object.values(attendus(ch, "les-trois-prix"))).toEqual([5_975, -21_401.2, 3_580, 2_753]);
     expect(juste(ch, "ce-qui-borne")).toBe("Le plan de production : le marché demandait plus que ce qui était fabriqué");
-    expect(juste(ch, "meilleur-prix")).toBe("Prix inchangé (59 €)");
+    expect(juste(ch, "meilleur-prix")).toBe("Prix actuel (59 €)");
     const borne = ch.etapes.find((e) => e.id === "ce-qui-borne") as EtapeChoix;
     expect(borne.question(cas, etatVide)).toBe("À −10 %, la demande monte à 5 975 enceintes, mais les ventes restent à 4 778. Qu'est-ce qui les borne ?");
   });

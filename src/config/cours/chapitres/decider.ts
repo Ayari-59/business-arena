@@ -175,7 +175,7 @@ export function decision(c: Pick<Cas, "code">) {
 
 export type Decision = ReturnType<typeof decision>;
 
-const LIBELLES = (e: number) => [`Prix −${pct(e)}`, "Prix inchangé", `Prix +${pct(e)}`] as const;
+const LIBELLES = (e: number) => [`Prix −${pct(e)}`, "Prix actuel", `Prix +${pct(e)}`] as const;
 
 /** Le trimestre aux trois prix, au plan de production du trimestre : le document des étapes de choix. */
 export function tableauDesTroisPrix(c: Pick<Cas, "code">): TableauDeDonnees {
