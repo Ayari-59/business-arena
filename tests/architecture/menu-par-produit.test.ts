@@ -14,8 +14,9 @@ import { LIENS_LEGAUX, NAVIGATION, liensDAcces, liensDeTete, tousLesLiens } from
  * validée, mot pour mot et dans l'ordre, ses 3 phrases et sa petite ligne légale, et vérifient
  * qu'AUCUNE ADRESSE NE SE PERD : chaque adresse des plans d'avant reste servie, et atteignable
  * depuis le site, par le plan ou par le lien d'une page du plan. Le mot par entrée, les mêmes
- * groupes dans la barre et le menu déplié, les phrases et le légal tels qu'ils sont RENDUS :
- * tests/architecture/menu-en-un-mot.test.ts.
+ * groupes dans la barre, ses panneaux et le menu du téléphone, les phrases et le légal tels qu'ils
+ * sont RENDUS : tests/architecture/menu-en-un-mot.test.ts. Les panneaux de la maquette A (la ligne
+ * et le pictogramme de chaque entrée, le bouton de chaque groupe) : panneaux-du-menu.test.ts.
  */
 
 const lire = (chemin: string) => readFileSync(chemin, "utf8");

@@ -75,7 +75,8 @@ async function auPlusUnPleinParEcran(page: Page): Promise<{ max: number; total: 
     await page.evaluate((v) => window.scrollTo(0, v), y);
     max = Math.max(max, (await pleinsDansLaFenetre(page)).length);
   }
-  const total = await page.evaluate(() => document.querySelectorAll(".bouton-plein").length);
+  // Dans la page : le menu porte un bouton plein par panneau (novembre 2026, la maquette A), fermé au repos.
+  const total = await page.evaluate(() => document.querySelectorAll("main .bouton-plein").length);
   return { max, total };
 }
 
@@ -179,15 +180,19 @@ describe("le site mène aux tarifs", () => {
   });
 
   it("le menu porte « Offres », vers /tarifs, sur téléphone aussi", async () => {
-    // Sur téléphone, la barre ne montre pas ses mots : « Offres », titre de son groupe dans le menu
-    // déplié (config/navigation.ts), y mène comme dans la barre.
+    // Sur téléphone, la barre ne montre pas ses mots : « Offres », dans la liste des groupes du menu,
+    // ouvre son groupe, dont le bouton (« Voir les offres », config/navigation.ts) mène à la page.
     const contexte = await navigateur.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR" });
     const page = await contexte.newPage();
     await aller(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    const lien = page.locator('#plan-du-site [data-groupe-du-menu="offres"] [data-titre-du-groupe]');
+    const groupe = page.locator('#plan-du-site [data-groupe-du-menu="offres"]');
+    await groupe.waitFor({ state: "visible" });
+    expect((await groupe.locator("[data-titre-du-groupe]").innerText()).trim()).toBe("Offres");
+    await groupe.click();
+    const lien = page.locator('#plan-du-site [data-groupe-du-plan="offres"] [data-appel-du-groupe]');
     await lien.waitFor({ state: "visible" });
-    expect((await lien.innerText()).trim()).toBe("Offres");
+    expect((await lien.innerText()).trim()).toBe("Voir les offres");
     expect(await lien.getAttribute("href")).toBe("/tarifs");
     await lien.click();
     await page.waitForURL(/\/tarifs$/);
@@ -203,10 +208,11 @@ describe("« Tarifs » se trouve sans ouvrir le menu (audit C-07)", () => {
       const page = await contexte.newPage();
       await aller(page, "/enseignants");
       const enTete = page.locator("header").first();
-      // Le mot de la barre : le menu déplié porte le même lien, sous le même mot, caché tant qu'il est fermé.
-      const lien = enTete.getByRole("navigation", { name: "Navigation principale" }).locator('a[href="/tarifs"]');
-      expect(await lien.isVisible()).toBe(true);
-      expect((await lien.innerText()).trim()).toBe("Offres");
+      // Le mot de la barre, sans bouton « Menu » (novembre 2026, la maquette A) : « Offres » se lit
+      // dans la barre, et son panneau mène à la page des offres.
+      const mot = enTete.getByRole("navigation", { name: "Navigation principale" }).getByRole("button", { name: "Offres", exact: true });
+      expect(await mot.isVisible()).toBe(true);
+      expect(await enTete.getByRole("button", { name: "Menu" }).isVisible()).toBe(false);
       const mesure = await enTete.evaluate((h) => {
         const barre = h.getBoundingClientRect();
         const enfants = [...h.querySelectorAll("a, button")].filter((e) => (e as HTMLElement).offsetParent);
@@ -227,6 +233,14 @@ describe("« Tarifs » se trouve sans ouvrir le menu (audit C-07)", () => {
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
       ).toBeLessThanOrEqual(0);
+      // Le mot ouvre son panneau : son bouton mène aux offres.
+      await mot.click();
+      const lien = enTete.locator('[data-panneau-du-groupe="offres"] [data-appel-du-groupe]');
+      await lien.waitFor({ state: "visible" });
+      expect([(await lien.innerText()).trim(), await lien.getAttribute("href")]).toEqual(["Voir les offres", "/tarifs"]);
+      await lien.click();
+      await page.waitForURL(/\/tarifs$/);
+      expect(await page.locator("main h1").innerText()).toBe("Offres");
       await contexte.close();
     });
   }

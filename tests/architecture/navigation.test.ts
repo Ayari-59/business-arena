@@ -169,8 +169,9 @@ describe("plan du site", () => {
   });
 
   it("la barre et le menu portent les mêmes titres, vers les mêmes pages", () => {
-    // Un visiteur qui lit « Arène » dans la barre trouve, dans le menu déplié, le
-    // groupe « Arène » sous le même mot, vers la même page : la rangée à plat est
+    // Un visiteur qui lit « Arène » dans la barre trouve, dans le menu du
+    // téléphone, le groupe « Arène » sous le même mot ; le bouton de son panneau
+    // (et de son groupe, au téléphone) mène à la même page : la rangée à plat est
     // la liste des groupes, sous leur titre, dans leur ordre.
     expect(liensDeTete().map((l) => l.libelle)).toEqual(NAVIGATION.map((g) => g.titre));
     expect(liensDeTete().map((l) => l.href)).toEqual(NAVIGATION.map((g) => g.entree));
@@ -205,9 +206,9 @@ describe("plan du site", () => {
     // qu'on trouve par Google et jamais depuis le site : c'était le cas de
     // /integration, /reprendre, /examen et /profile.
     //
-    // Le plan : les mots de la barre (aussi titres du menu déplié, sur
-    // téléphone), les entrées, les portes et la petite ligne légale du pied de
-    // page. Une exception, l'accueil (le logo de la barre y mène, sur toutes les
+    // Le plan : les pages des groupes (le bouton de chaque panneau y mène, sur
+    // grand écran comme sur téléphone), les entrées, les portes et la petite
+    // ligne légale du pied de page. Une exception, l'accueil (le logo de la barre y mène, sur toutes les
     // pages). Deux pages ont quitté le menu en novembre 2026 (la pédagogie en
     // avant) : une page du plan y mène, et le lien est vérifié ici. Les pages
     // par code (ateliers, guides, concours) sont les enfants d'une page du plan.

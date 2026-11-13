@@ -136,13 +136,17 @@ describe("/lycees, pour le proviseur", () => {
     const c = await contexte(1280);
     const page = await c.newPage();
     await aller(page, "/tarifs");
-    await page.getByRole("button", { name: "Menu" }).click();
-    const offres = page.locator('#plan-du-site [data-groupe-du-menu="offres"] ul a');
+    // Sur grand écran, le mot « Offres » ouvre son panneau (novembre 2026, la maquette A) : chaque entrée
+    // y est une carte, nommée par son mot.
+    await page.locator('[data-mot-de-la-barre="offres"]').click();
+    const offres = page.locator('[data-panneau-du-groupe="offres"] [data-entree-du-panneau]');
     await offres.first().waitFor({ state: "visible" });
-    const entrees = await offres.evaluateAll((xs) => xs.map((x) => [x.textContent?.trim(), x.getAttribute("href")]));
+    const entrees = await offres.evaluateAll((xs) =>
+      xs.map((x) => [document.getElementById(x.getAttribute("aria-labelledby") ?? "")?.textContent?.trim(), x.getAttribute("href")]),
+    );
     const i = entrees.findIndex(([, h]) => h === "/enseignants");
     expect(entrees[i + 1]).toEqual(["Lycées", "/lycees"]);
-    await page.locator('#plan-du-site a[href="/lycees"]').click();
+    await page.locator('[data-panneau-du-groupe="offres"] a[href="/lycees"]').click();
     await page.waitForURL(/\/lycees$/);
     // Sans compte : chaque chapitre libre, et son cas, s'ouvrent (aucun contenu réservé).
     for (const e of ESSAIS_DES_LYCEES) {
@@ -383,12 +387,17 @@ describe("les autres écrans changés, à 390 px", () => {
     const c = await contexte(390);
     const page = await c.newPage();
     await aller(page, "/");
+    // Sur téléphone, « Menu » ouvre la liste des groupes, puis le groupe « Offres » (novembre 2026, la maquette A).
     await page.getByRole("button", { name: "Menu" }).click();
-    const lycees = page.locator('#plan-du-site a[href="/lycees"]');
+    await page.locator('#plan-du-site [data-groupe-du-menu="offres"]').click();
+    const groupe = page.locator('#plan-du-site [data-groupe-du-plan="offres"]');
+    const lycees = groupe.locator('a[href="/lycees"]');
     await lycees.waitFor({ state: "visible" });
-    expect((await lycees.textContent())?.trim()).toBe("Lycées");
-    // L'écran, menu ouvert, le groupe « Offres » au milieu (le plan défile dans son cadre).
-    await capturer(page, "menu-lycees-390", { cible: '#plan-du-site [data-groupe-du-menu="offres"]', milieu: true });
+    expect(await groupe.getByRole("link", { name: "Lycées", exact: true }).getAttribute("href")).toBe("/lycees");
+    const entrees = await groupe.locator("[data-entree-du-menu]").evaluateAll((xs) => xs.map((x) => x.getAttribute("href")));
+    expect(entrees[entrees.indexOf("/enseignants") + 1]).toBe("/lycees");
+    // L'écran, le groupe « Offres » ouvert, « Lycées » au milieu (le menu défile dans son cadre).
+    await capturer(page, "menu-lycees-390", { cible: '#plan-du-site [data-groupe-du-plan="offres"] a[href="/lycees"]', milieu: true });
     await c.close();
   });
 

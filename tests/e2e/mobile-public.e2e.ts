@@ -87,7 +87,18 @@ describe("aucun scroll horizontal, aux six largeurs", () => {
 });
 
 describe("le menu, rangé par produit", () => {
-  it("les deux portes en tête, puis les 5 groupes dépliés, d'au moins 44 px au doigt", async () => {
+  // Sur téléphone, « Menu » ouvre la liste des groupes, puis un groupe (novembre 2026, la maquette A).
+  const liste = (page: Page) => page.locator("#plan-du-site [data-liste-des-groupes]");
+  const groupe = (page: Page, code: string) => page.locator(`#plan-du-site [data-groupe-du-plan="${code}"]`);
+  /** Ce qui se touche dans un bloc visible, avec sa hauteur. */
+  const cibles = (bloc: ReturnType<Page["locator"]>) =>
+    bloc.locator("a, button").evaluateAll((els) =>
+      els
+        .filter((e) => (e as HTMLElement).offsetParent)
+        .map((e) => ({ mot: (e.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 40), haut: e.getBoundingClientRect().height })),
+    );
+
+  it("les deux portes en tête, puis les 5 groupes ; chaque groupe, son bouton et ses entrées ; tout fait 44 px au doigt", async () => {
     const { contexte, page } = await telephone();
     await ouvrir(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
@@ -96,54 +107,73 @@ describe("le menu, rangé par produit", () => {
     const portes = menu.locator("[data-portes-du-menu] a");
     await portes.first().waitFor({ state: "visible" });
     expect(await portes.evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()))).toEqual(["Rejoindre", "Connexion"]);
-    // Puis les groupes du plan, dans son ordre, chacun sous le mot de la barre et vers la même page :
-    // sur téléphone, c'est par eux qu'on atteint la présentation de l'arène et les offres.
+    // Puis les groupes du plan, dans son ordre, chacun sous le mot de la barre, avec sa phrase courte
+    // (le début de sa phrase) quand il en a une.
     expect(await menu.locator("[data-groupe-du-menu]").evaluateAll((els) => els.map((e) => e.getAttribute("data-groupe-du-menu")))).toEqual(
       NAVIGATION.map((g) => g.code),
     );
     for (const g of NAVIGATION) {
-      const titre = menu.locator(`[data-groupe-du-menu="${g.code}"] [data-titre-du-groupe]`);
-      expect((await titre.innerText()).trim(), g.code).toBe(g.titre);
-      expect(await titre.getAttribute("href"), g.code).toBe(g.entree);
+      const rangee = menu.locator(`[data-groupe-du-menu="${g.code}"]`);
+      expect((await rangee.locator("[data-titre-du-groupe]").innerText()).trim(), g.code).toBe(g.titre);
+      const courte = rangee.locator("[data-phrase-courte]");
+      if (g.phrase) expect(g.phrase.startsWith((await courte.innerText()).trim()), g.code).toBe(true);
+      else expect(await courte.count(), g.code).toBe(0);
     }
-    // Tout ce qui se touche fait 44 px de haut : les portes, les titres, les entrées.
-    const hauteurs = await menu.locator("a").evaluateAll((els) =>
-      els.map((e) => ({ mot: (e.textContent ?? "").trim(), haut: e.getBoundingClientRect().height })),
-    );
-    expect(hauteurs.length).toBeGreaterThan(NAVIGATION.length + 2);
+    // Tout ce qui se touche fait 44 px de haut : les portes, les groupes.
+    const dansLaListe = await cibles(liste(page));
+    expect(dansLaListe.length).toBeGreaterThanOrEqual(NAVIGATION.length + 2);
     // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7).
-    for (const h of hauteurs) expect(h.haut, `« ${h.mot} » trop bas`).toBeGreaterThanOrEqual(43);
-    // Le solo se voit sans rien déplier ; la barre d'action basse le propose aussi, sous son verbe.
-    await menu.getByRole("link", { name: "Solo", exact: true }).waitFor({ state: "visible" });
-    // Les 3 phrases de la pédagogie se lisent sous leur titre, sans déborder.
-    const phrases = menu.locator("[data-phrase-du-groupe]");
-    expect(await phrases.count()).toBe(NAVIGATION.filter((g) => g.phrase).length);
-    for (let i = 0; i < (await phrases.count()); i += 1) expect(await phrases.nth(i).isVisible()).toBe(true);
+    for (const h of dansLaListe) expect(h.haut, `« ${h.mot} » trop bas`).toBeGreaterThanOrEqual(43);
+    // Chaque groupe : « Retour », son bouton vers sa page, ses entrées et leur ligne, de 44 px au moins.
+    // C'est par lui qu'on atteint, au doigt, la présentation de l'arène et les offres.
+    for (const g of NAVIGATION) {
+      await menu.locator(`[data-groupe-du-menu="${g.code}"]`).click();
+      const vue = groupe(page, g.code);
+      await vue.waitFor({ state: "visible" });
+      const appel = vue.locator("[data-appel-du-groupe]");
+      expect([(await appel.innerText()).trim(), await appel.getAttribute("href")], g.code).toEqual([g.appel, g.entree]);
+      expect(await vue.locator("[data-entree-du-menu]").evaluateAll((els) => els.map((e) => e.getAttribute("href"))), g.code).toEqual(
+        g.liens.map((l) => l.href),
+      );
+      expect(await vue.locator("[data-ligne-de-l-entree]").count(), g.code).toBe(g.liens.length);
+      for (const h of await cibles(vue)) expect(h.haut, `${g.code} : « ${h.mot} » trop bas`).toBeGreaterThanOrEqual(43);
+      await vue.getByRole("button", { name: /^Retour/ }).click();
+      await liste(page).waitFor({ state: "visible" });
+    }
     await contexte.close();
   });
 
-  it("le menu déplié ne déborde pas, aux six largeurs", async () => {
+  it("le menu ne déborde pas, aux six largeurs : ni la liste, ni aucun groupe", async () => {
     const fautes: string[] = [];
     for (const largeur of LARGEURS) {
       const { contexte, page } = await telephone(largeur);
       await ouvrir(page, "/");
       await page.getByRole("button", { name: "Menu" }).click();
-      await page.locator("#plan-du-site [data-titre-du-groupe]").first().waitFor({ state: "visible" });
-      const m = await page.evaluate(() => {
-        const carte = document.querySelector("#plan-du-site .carte")!;
-        const r = carte.getBoundingClientRect();
-        return {
-          page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-          carte: carte.scrollWidth - carte.clientWidth,
-          dehors: [...carte.querySelectorAll("a")]
-            .filter((a) => {
-              const b = a.getBoundingClientRect();
-              return b.left < r.left - 0.5 || b.right > r.right + 0.5;
-            })
-            .map((a) => (a.textContent ?? "").trim()),
-        };
-      });
-      if (m.page > 0 || m.carte > 0 || m.dehors.length > 0) fautes.push(`${largeur} px : ${JSON.stringify(m)}`);
+      await liste(page).waitFor({ state: "visible" });
+      const mesurer = () =>
+        page.evaluate(() => {
+          const cadre = document.querySelector("#plan-du-site")!;
+          const r = cadre.getBoundingClientRect();
+          return {
+            page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            cadre: cadre.scrollWidth - cadre.clientWidth,
+            dehors: [...cadre.querySelectorAll("a, button")]
+              .filter((e) => (e as HTMLElement).offsetParent)
+              .filter((e) => {
+                const b = e.getBoundingClientRect();
+                return b.left < r.left - 0.5 || b.right > r.right + 0.5;
+              })
+              .map((e) => (e.textContent ?? "").trim()),
+          };
+        });
+      const vues = [{ ou: "liste", ...(await mesurer()) }];
+      for (const g of NAVIGATION) {
+        await page.locator(`#plan-du-site [data-groupe-du-menu="${g.code}"]`).click();
+        await groupe(page, g.code).waitFor({ state: "visible" });
+        vues.push({ ou: g.code, ...(await mesurer()) });
+        await groupe(page, g.code).getByRole("button", { name: /^Retour/ }).click();
+      }
+      for (const m of vues) if (m.page > 0 || m.cadre > 0 || m.dehors.length > 0) fautes.push(`${largeur} px, ${m.ou} : ${JSON.stringify(m)}`);
       await contexte.close();
     }
     expect(fautes).toEqual([]);

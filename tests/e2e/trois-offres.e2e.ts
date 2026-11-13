@@ -91,7 +91,8 @@ describe("/tarifs : quatre cartes, un bouton plein sur Programme", () => {
       );
       // Décision d'octobre 2026 : aucun prix affiché, chaque offre de l'arène est « sur devis ».
       expect(prix.slice(1)).toEqual(["Sur devis Sur mesure, établie au devis", "Sur devis Sur mesure, établie au devis", "Sur devis Sur mesure, établie au devis"]);
-      expect(await page.locator(".bouton-plein").count()).toBe(1);
+      // Dans la page : le menu porte un bouton plein par panneau (novembre 2026, la maquette A), fermé au repos.
+      expect(await page.locator("main .bouton-plein").count()).toBe(1);
       expect(await page.locator('[data-offre="programme"] .bouton-plein').getAttribute("href")).toBe(
         "/devis?offre=programme",
       );
