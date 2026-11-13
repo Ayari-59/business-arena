@@ -38,6 +38,7 @@ import {
   type PlafondDInvestissement,
 } from "@/engine/investment/plafond";
 import { teamDisplayName } from "@/config/nom-equipe";
+import { prixMoyenAuMarche } from "@/lib/prix-moyen-au-marche";
 import {
   compositionDesEquipes,
   peutChoisirSonEquipe,
@@ -1166,15 +1167,11 @@ function buildBenchmark(
   if (rows.length === 0) return null;
   const competitors = rows
     .map((row) => {
-      const detail = row.marketDetail as Record<string, { sold?: number }> | null;
-      const units = detail
-        ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
-        : 0;
       const equipe = teamRows.find((t) => t.id === row.teamId);
       return {
         name: teamDisplayName(equipe?.name ?? "?"),
         isPlayer: row.teamId === playerTeamId,
-        avgPrice: units > 1 ? Number(row.revenue) / units : null,
+        avgPrice: prixMoyenAuMarche(row),
         marketShare: Number(row.marketShare),
         revenue: Number(row.revenue),
         style: styleDuConcurrent(equipe?.botProfile, toursClos),
@@ -1504,17 +1501,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         }),
         competitors: lastRows
           .map((row) => {
-            const detail = row.marketDetail as Record<
-              string,
-              { sold?: number }
-            > | null;
-            const units = detail
-              ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
-              : 0;
             return {
               name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
               isPlayer: row.teamId === playerTeam.id,
-              avgPrice: units > 1 ? Number(row.revenue) / units : null,
+              avgPrice: prixMoyenAuMarche(row),
               marketShare: Number(row.marketShare),
               revenue: Number(row.revenue),
               netIncome: Number(row.netIncome),
