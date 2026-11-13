@@ -212,7 +212,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
             juste: true,
             retour: `Oui. C'est la réserve : écrite sur le bon, datée, signée, elle prouve que le carton n'est pas arrivé. Vous prévenez ensuite votre responsable, qui réclame les ${l.ecart.pluriel} au fournisseur.`,
           },
-          { texte: "Signer sans rien écrire, et prévenir le fournisseur plus tard", juste: false, retour: `Non. Un bon signé sans réserve dit que tout est arrivé. Le fournisseur pourra répondre que les ${qte(l.manquants)} ${l.ecart.pluriel} ont été livrés.` },
+          { texte: "Signer sans rien écrire, et prévenir le fournisseur plus tard par courriel", juste: false, retour: `Non. Un bon signé sans réserve dit que tout est arrivé. Le fournisseur pourra répondre que les ${qte(l.manquants)} ${l.ecart.pluriel} ont été livrés.` },
           { texte: "Refuser toute la livraison et rendre les cartons", juste: false, retour: `Non. ${qte(l.totalRecu)} articles sont bien là, et le magasin en a besoin. On garde ce qui est arrivé, et on écrit ce qui manque.` },
         ];
       },
@@ -256,7 +256,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
             retour: `Oui. Un écart en trop se signale comme un manquant : le fournisseur les facturera peut-être, ou viendra les reprendre. C'est votre responsable qui décide : garder les ${l.enTrop.pluriel}, ou les rendre.`,
           },
           { texte: "Les mettre en rayon : ce sont des ventes en plus", juste: false, retour: `Non. Ces ${l.enTrop.pluriel} ne sont pas commandés : le fournisseur peut les facturer plus tard. Sans rien écrire, le stock ne correspond plus aux papiers.` },
-          { texte: "Les rendre au livreur sans rien noter", juste: false, retour: "Non. Rendre peut être la bonne décision, mais elle se prend avec le responsable, et elle s'écrit sur le bon : sinon, rien ne prouve que le carton est reparti." },
+          { texte: "Les rendre au livreur sans rien noter, puisqu'ils sont en trop", juste: false, retour: "Non. Rendre peut être la bonne décision, mais elle se prend avec le responsable, et elle s'écrit sur le bon : sinon, rien ne prouve que le carton est reparti." },
         ];
       },
     },

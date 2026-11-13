@@ -370,7 +370,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
         const voir = "Faites varier la commande à l'étape suivante : le curseur montre combien de journées paient la remise, et pourquoi.";
         return [
           { texte: `Exactement ${qte(k.journeesAuProrata)} : ${pct(k.remise)} des ${qte(k.journees)} journées`, juste: k.journeesEnPlus > 0 && k.journeesEnPlus <= k.journeesAuProrata, retour: `Pari à vérifier. ${voir}` },
-          { texte: `Plus de ${qte(k.journeesAuProrata)} : chaque journée remisée laisse moins de marge`, juste: k.journeesEnPlus > k.journeesAuProrata, retour: `Bon pari. ${voir}` },
+          { texte: `Plus de ${qte(k.journeesAuProrata)} : une journée remisée laisse moins de marge`, juste: k.journeesEnPlus > k.journeesAuProrata, retour: `Bon pari. ${voir}` },
           { texte: "Aucune : la remise se rattrape sur la commande suivante", juste: k.journeesEnPlus <= 0, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -493,7 +493,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
         const k = conditionsDeKerval(c);
         return [
           {
-            texte: "La TVA d'un service n'est due qu'à l'encaissement : le cabinet ne l'avance pas",
+            texte: "La TVA d'un service n'est due qu'à l'encaissement",
             juste: true,
             retour: `Oui. ${k.entreprise} vend des prestations de services : la TVA de la facture, ${eur(k.tvaSansEscompte)}, ne devient due à l'État que lorsque ${k.client} paie. D'ici là, le cabinet ne la verse pas, et n'a donc à financer que le hors taxes.`,
           },

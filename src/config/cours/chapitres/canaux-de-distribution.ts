@@ -170,7 +170,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
         const k = canauxDeDistribution(c);
         return [
           {
-            texte: "Il lui apporte des clients qu'elle n'atteindrait pas seule",
+            texte: "Il lui apporte des clients nouveaux",
             juste: true,
             retour: `Oui : les ${qte(k.intermediaire.ventes)} ${c.unites} vendues par ${k.nomIndirect} viennent d'étudiants qui achètent en magasin sur leur campus, pas en ligne. Sans lui, ces ventes n'existeraient pas : son coût se compare à une vente perdue, pas à une vente directe.`,
           },

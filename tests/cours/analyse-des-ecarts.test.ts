@@ -256,7 +256,7 @@ describe("l'analyse des écarts, à l'usine du monde du cours", () => {
     const s = syntheseDesEcarts(cas);
     expect(s.sommeSansSigne).toBe(centime(brut.reduce((t, x) => t + x, 0)));
     expect([s.sommeSansSigne, s.sommeTousInverses]).toEqual([20_300, -20_300]);
-    expect(optionJuste(ANALYSE_DES_ECARTS, "le-signe").texte).toBe("Avec le signe contraire : une charge plus forte que prévu retire autant au résultat");
+    expect(optionJuste(ANALYSE_DES_ECARTS, "le-signe").texte).toBe("Avec le signe contraire : une charge en plus retire au résultat");
     expect(optionJuste(ANALYSE_DES_ECARTS, "se-compensent").texte).toBe("Que chacun de ces petits écarts cache deux gros écarts de sens contraire");
   });
 

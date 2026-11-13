@@ -453,7 +453,7 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
       question: (c) => `Un associé ne regarde que le délai de récupération : « ${qte(renovationDeLaBoutique(c).delai)} ans, c'est trop long pour une boutique, je refuse. » Qu'en dites-vous ?`,
       options: () => [
         {
-          texte: "Le délai dit quand l'argent revient, pas ce que le projet rapporte : il ignore les flux d'après et la valeur du temps",
+          texte: "Le délai dit quand l'argent revient, pas ce qu'il rapporte",
           juste: true,
           retour: "Oui. Le délai de récupération mesure un risque : plus il est court, plus vite la boutique retrouve sa mise. Mais il ne compte ni la dernière année et demie de flux, ni le fait qu'un euro de l'année 4 vaut moins qu'aujourd'hui. La VAN, elle, dit si le projet crée de la valeur.",
         },
@@ -526,9 +526,9 @@ export const RENOVER_LA_BOUTIQUE: Chapitre = {
         const x = renovationDeLaBoutique(c);
         return [
           {
-            texte: `Investir, et payer sur la trésorerie : il en resterait ${eur(x.tresorerieApres)}`,
+            texte: "Investir, et payer sur la trésorerie",
             juste: true,
-            retour: `Oui. La VAN est positive (${eur(x.p.van)}) ; la trésorerie paie les ${eur(x.p.investissement)} et garde plus que les ${eur(x.aGarder)} voulus. Emprunter à ${pct(x.emprunt.taux * 100)} pour garder un argent placé à ${pct(FINANCEMENT_DE_LA_RENOVATION.tauxDePlacement * 100)} coûterait la différence ; l'emprunt reste la solution si les associés veulent garder leur trésorerie.`,
+            retour: `Oui : il en resterait ${eur(x.tresorerieApres)}. La VAN est positive (${eur(x.p.van)}) ; la trésorerie paie les ${eur(x.p.investissement)} et garde plus que les ${eur(x.aGarder)} voulus. Emprunter à ${pct(x.emprunt.taux * 100)} pour garder un argent placé à ${pct(FINANCEMENT_DE_LA_RENOVATION.tauxDePlacement * 100)} coûterait la différence ; l'emprunt reste la solution si les associés veulent garder leur trésorerie.`,
           },
           { texte: `Investir, en crédit-bail, pour ne rien sortir`, juste: false, retour: `Le crédit-bail coûte ${eur(x.creditBail.surcout)}, le plus cher des trois ; il se justifie quand la boutique n'a ni trésorerie ni capacité d'emprunt, ce qui n'est pas le cas.` },
           { texte: `Ne pas investir : le délai de ${qte(x.delai)} ans est trop long`, juste: false, retour: `Non : le projet se rembourse avant la fin de sa durée et crée ${eur(x.p.van)} de valeur au taux qu'exigent les associés.` },

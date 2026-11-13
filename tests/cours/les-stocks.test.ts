@@ -345,7 +345,7 @@ describe.each(CODES)("les stocks chez %s, refaits à la main", (code) => {
     });
     expect(attendu).toBe({ boutique: 4_572, ecommerce: 3_778 }[code]);
     // Le pari : le coût des ventes est au-dessus des achats si le stock a baissé.
-    expect(juste(ch, "predire-le-cout-des-ventes", cas)).toBe(t.variation > 0 ? "Plus élevé : les ventes ont puisé dans le stock du début" : "Plus faible : une part des achats reste en stock");
+    expect(juste(ch, "predire-le-cout-des-ventes", cas)).toBe(t.variation > 0 ? "Plus élevé : les ventes puisent dans le stock" : "Plus faible : une part des achats reste en stock");
   });
 
   it("le curseur du prix qui sépare les méthodes : le PEPS l'emporte dès que la seconde livraison coûte autant que les unités anciennes", () => {
@@ -369,7 +369,7 @@ describe.each(CODES)("les stocks chez %s, refaits à la main", (code) => {
     });
     // Au-dessus du croisement, l'écart grandit avec le prix : le PEPS suit les derniers lots.
     expect(stocks(max).peps - stocks(max).cmup).toBeGreaterThan(stocks(attendu).peps - stocks(attendu).cmup);
-    expect(juste(ch, "predire-la-methode", cas)).toBe("Le PEPS : le stock final est fait des derniers lots, les plus chers");
+    expect(juste(ch, "predire-la-methode", cas)).toBe("Le PEPS : le stock final garde les lots les plus chers");
   });
 
   it("la fiche du mois en PEPS, puis au coût moyen après chaque entrée", () => {
@@ -445,8 +445,8 @@ describe.each(CODES)("les stocks chez %s, refaits à la main", (code) => {
 
   it("les verdicts : l'effet sur le résultat, la méthode et la marge, l'inventaire permanent", () => {
     expect(juste(ch, "effet-sur-le-resultat", cas)).toBe(`${t.variation < 0 ? "Plus élevé" : "Plus faible"}, de ${euros(Math.abs(t.variation))}.`);
-    expect(juste(ch, "la-methode-et-la-marge", cas)).toBe("La marge n'est pas meilleure, la hausse attend dans le stock ; et une méthode ne se change pas pour embellir un mois");
-    expect(juste(ch, "inventaire-permanent", cas)).toBe("Oui : la fiche donne le stock théorique, le comptage le stock réel, et l'écart révèle la démarque");
+    expect(juste(ch, "la-methode-et-la-marge", cas)).toBe("La marge n'est pas meilleure : la hausse attend dans le stock");
+    expect(juste(ch, "inventaire-permanent", cas)).toBe("Oui : l'écart avec le comptage révèle la démarque");
     expect(etapeDe<EtapeChoix>(ch, "la-methode-et-la-marge").question(cas, etatVide)).toContain(`plus forte de ${euros(centime(m.peps.marge - m.periode.marge))}`);
   });
 

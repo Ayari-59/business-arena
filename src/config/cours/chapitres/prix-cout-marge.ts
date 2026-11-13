@@ -330,7 +330,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
         const m = prixCoutMarge(c);
         return [
           {
-            texte: `Le prix hors taxes, ${eur(m.prix)} : la TVA ne fait que passer par l'entreprise, elle la reverse à l'État.`,
+            texte: `Le prix hors taxes, ${eur(m.prix)} : la TVA ne fait que passer.`,
             juste: true,
             retour: "C'est cela. L'entreprise collecte la TVA pour l'État et la lui reverse : ce n'est pas un revenu. Les coûts se comptent aussi hors taxes, puisque la TVA payée sur les achats se récupère.",
           },

@@ -569,7 +569,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         const x = bilanDeLExercice(c);
         return [
           {
-            texte: "Ceux du placement suivent le placement en trésorerie ; ceux de l'emprunt, dus le 3 janvier, vont hors exploitation",
+            texte: "Ceux du placement en trésorerie, ceux de l'emprunt hors exploitation",
             juste: true,
             retour: `C'est cela. Le compte à terme échoit le 6 janvier : ${eur(x.placement)}, intérêts compris, reviendront en banque dans l'année ; c'est de la trésorerie active. Les intérêts de l'emprunt seront payés avec l'échéance du 3 janvier : ils ne financent pas durablement, ils sortent des ressources stables et vont au passif hors exploitation.`,
           },
@@ -799,7 +799,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
       options: () => {
         const voir = "Faites varier le délai de reversement à l'étape suivante : le graphique montre ce qui bouge, et ce qui ne bouge pas.";
         return [
-          { texte: "Le fonds de roulement ne bouge pas ; le besoin grossit, et la trésorerie baisse d'autant", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Le fonds de roulement tient, le besoin grossit, la trésorerie baisse", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Le fonds de roulement baisse avec la trésorerie, le besoin ne bouge pas", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: `Rien ne bouge : l'argent arrive quand même, ${PLACE_DE_MARCHE.delai} jours plus tard`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -1030,7 +1030,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         const x = bilanDeLExercice(c);
         return [
           {
-            texte: "De décembre : le dépannage de Composants Express s'ajoute à la facture du mois, et le bilan est une photo de ce jour",
+            texte: "De décembre : le dépannage s'ajoute à la facture du mois",
             juste: true,
             retour: `Oui. Au 31 décembre, ${eur(x.postes.fournisseurs)} restent dus : la facture de décembre d'Électro-Composants, et la facture non parvenue du dépannage, autant que la première. Rapportées aux achats moyens de l'année, elles font ${jours(x.delaiFournisseurs)}. Un ratio du bilan dit la situation d'un jour, pas le contrat.`,
           },
@@ -1126,9 +1126,9 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         const x = bilanDeLExercice(c);
         return [
           {
-            texte: `Garder se défend : la réserve a coûté ${eur(x.coutNetApresImpot)} après impôt, et finance la seconde ligne sans nouveau prêt`,
+            texte: `Garder se défend : la réserve a coûté ${eur(x.coutNetApresImpot)} après impôt`,
             juste: true,
-            retour: `Oui. Le coût d'une trésorerie de précaution se chiffre : ${eur(x.coutNetApresImpot)} sur l'exercice, après impôt. En face, un prêt déjà obtenu, une seconde ligne à financer en N+1, et un besoin qui peut grossir vite (la place de marché l'a montré). Il faut seulement savoir que ${eur(x.postes.emprunt)} de cette trésorerie sont dus à la banque : elle n'est pas un excédent libre.`,
+            retour: `Oui, et elle finance la seconde ligne sans nouveau prêt. Le coût d'une trésorerie de précaution se chiffre : ${eur(x.coutNetApresImpot)} sur l'exercice, après impôt. En face, un prêt déjà obtenu, une seconde ligne à financer en N+1, et un besoin qui peut grossir vite (la place de marché l'a montré). Il faut seulement savoir que ${eur(x.postes.emprunt)} de cette trésorerie sont dus à la banque : elle n'est pas un excédent libre.`,
           },
           {
             texte: `Rembourser : emprunter à ${pct(x.f.pret.tauxAnnuel)} pour placer à ${pct(x.f.placement.tauxAnnuel)}, c'est perdre ${eur(x.ecartDeTauxSurLeCapital)} par an`,

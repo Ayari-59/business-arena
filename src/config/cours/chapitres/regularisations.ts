@@ -266,7 +266,7 @@ export const REGULARISATIONS: Chapitre = {
         const juillet = primeSouscriteLe(x.f, 7).chargeConstateeDAvance;
         const voir = "Déplacez le mois de souscription à l'étape suivante : le curseur montre comment la prime se partage entre les deux exercices.";
         return [
-          { texte: "Plus petite : plus de mois de couverture tombent dans N", juste: juillet < x.prime.chargeConstateeDAvance, retour: `Bon pari. ${voir}` },
+          { texte: "Plus petite : plus de mois couverts en N", juste: juillet < x.prime.chargeConstateeDAvance, retour: `Bon pari. ${voir}` },
           { texte: "La même : la prime ne change pas", juste: juillet === x.prime.chargeConstateeDAvance, retour: `Pari à vérifier. ${voir}` },
           { texte: "Plus grande : le contrat commence plus tôt", juste: juillet > x.prime.chargeConstateeDAvance, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -456,7 +456,7 @@ export const REGULARISATIONS: Chapitre = {
         const x = regularisationsDeNova(c);
         return [
           {
-            texte: `Il retire de l'exercice la part livrée en janvier, ${eur(x.pca)} hors taxes`,
+            texte: `Il retire la part livrée en janvier, ${eur(x.pca)} hors taxes`,
             juste: true,
             retour: `C'est cela : ${qte(x.enJanvier)} × ${eur(x.f.prixDeLEnceinte)} = ${eur(x.pca)}, un produit constaté d'avance. Une vente appartient à l'exercice où l'on livre. La TVA, elle, a été collectée à la facture et reste due.`,
           },
@@ -682,10 +682,10 @@ export const REGULARISATIONS: Chapitre = {
       },
       options: () => [
         {
-          texte: "Extourner les régularisations : passer, le 1er janvier, l'écriture inverse de chacune",
+          texte: "Extourner les régularisations le 1er janvier",
           juste: true,
           retour:
-            "C'est cela. L'extourne annule dans le nouvel exercice ce que le 31 décembre a rattaché à l'ancien : l'achat sort, la facture du 8 janvier le remet, et N+1 n'en porte rien. La charge et le produit constatés d'avance, eux, reviennent dans l'exercice qu'ils concernent.",
+            "C'est cela : passer, le 1er janvier, l'écriture inverse de chacune. L'extourne annule dans le nouvel exercice ce que le 31 décembre a rattaché à l'ancien : l'achat sort, la facture du 8 janvier le remet, et N+1 n'en porte rien. La charge et le produit constatés d'avance, eux, reviennent dans l'exercice qu'ils concernent.",
         },
         {
           texte: "Rien : l'achat et la facture se compensent d'eux-mêmes",
@@ -815,9 +815,9 @@ export const REGULARISATIONS: Chapitre = {
         const x = regularisationsDeNova(c);
         return [
           {
-            texte: `Sans elle, N serait gonflé de ${eur(x.fnp.ht)} et N+1 diminué d'autant, alors que les jeux sont consommés ou en stock en N`,
+            texte: `Sans elle, N serait gonflé de ${eur(x.fnp.ht)}`,
             juste: true,
-            retour: `Oui. Les jeux ont été livrés le 18 décembre : ceux qui ont servi sont une charge de N, ceux qui restent sont au stock final de N. Compter le stock sans l'achat, c'est inventer ${eur(x.fnp.ht)} de résultat, et l'impôt avec.`,
+            retour: `Oui, et N+1 diminué d'autant, alors que les jeux sont consommés ou en stock en N. Les jeux ont été livrés le 18 décembre : ceux qui ont servi sont une charge de N, ceux qui restent sont au stock final de N. Compter le stock sans l'achat, c'est inventer ${eur(x.fnp.ht)} de résultat, et l'impôt avec.`,
           },
           {
             texte: "Il a raison si la facture arrive avant l'arrêté des comptes : elle ira en N+1",

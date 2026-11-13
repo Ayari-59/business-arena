@@ -546,7 +546,7 @@ const LA_CLOTURE_ENTIERE: Chapitre = {
         const voir = "Le laboratoire de l'étape suivante passe chaque travail, et montre de quel côté il pousse le résultat.";
         return [
           { texte: "Monter le résultat : ces jeux sortent des charges de l'exercice", juste: true, retour: `Bon pari. ${voir}` },
-          { texte: "Baisser le résultat : un stock est une dépense de plus", juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Baisser le résultat : un stock est une dépense de plus dans l'exercice", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Ne rien changer au résultat : un stock ne touche que le bilan", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -1145,9 +1145,9 @@ const LA_CLOTURE_ENTIERE: Chapitre = {
         const d = x.degressif;
         return [
           {
-            texte: `L'impôt n'est que décalé : la ligne s'amortit de ${eur(x.f.equipement.ht)} en tout, dans les deux modes`,
+            texte: "L'impôt n'est que décalé",
             juste: true,
-            retour: `Oui. Ce que le dégressif retire au résultat de N, il le rend aux exercices suivants, dont les dotations seront plus faibles ; l'impôt suit. ${x.f.entreprise} garde ${eur(d.impotEnMoins)} un peu plus longtemps, elle ne les gagne pas. Et le mode d'amortissement se choisit pour décrire l'usure de la ligne ; en changer demande une raison, la permanence des méthodes l'exige.`,
+            retour: `Oui. La ligne s'amortit de ${eur(x.f.equipement.ht)} en tout, dans les deux modes : ce que le dégressif retire au résultat de N, il le rend aux exercices suivants, dont les dotations seront plus faibles ; l'impôt suit. ${x.f.entreprise} garde ${eur(d.impotEnMoins)} un peu plus longtemps, elle ne les gagne pas. Et le mode d'amortissement se choisit pour décrire l'usure de la ligne ; en changer demande une raison, la permanence des méthodes l'exige.`,
           },
           {
             texte: `C'est un gain de ${eur(d.impotEnMoins)} pour ${x.f.entreprise}, acquis pour de bon`,

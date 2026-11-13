@@ -33,7 +33,7 @@ describe("le bilan de NOVA", () => {
     expect(el.filter((x) => x.categorie === "actif")).toHaveLength(6);
     expect(el.every((x) => x.pourquoi.length > 0)).toBe(true);
     const juste = etape(ch, "tresorerie", "choix").options(NOVA, VIDE).filter((o) => o.juste);
-    expect(juste.map((o) => o.texte)).toEqual(["Elle a plus d'argent disponible que de découvert : sa trésorerie est positive"]);
+    expect(juste.map((o) => o.texte)).toEqual(["Sa trésorerie est positive : plus d'argent que de découvert"]);
   });
 
   it("le curseur : 161 225 € d'emprunt nouveau, la règle des banques tenue", () => {

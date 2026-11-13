@@ -388,7 +388,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
             retour: `Oui : on juge un coût sur ce que l'usine a réellement fabriqué. L'écart global est de ${ecartDit(x.global)}, et c'est lui qu'on décompose.`,
           },
           {
-            texte: `Au budget du trimestre, ${eur(x.budgetInitial)}`,
+            texte: `Au budget du trimestre, celui qu'on avait prévu, ${eur(x.budgetInitial)}`,
             juste: false,
             retour: `Non : le budget de départ suppose la production prévue. L'écart de ${eur(x.ecartAuBudgetInitial)} mêle ce que le centre a mal fait et ce que la production réelle demandait de plus (${eur(x.preetabliDeLaProduction)} au standard, et non ${eur(x.budgetInitial)}).`,
           },
@@ -443,7 +443,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
         const voir = "Faites tourner le centre à l'étape suivante : le curseur montre de quel côté passe l'écart, et pourquoi.";
         return [
           { texte: "Favorable : les charges fixes se répartissent sur plus d'heures", juste: x.activite < 0, retour: `Bon pari. ${voir}` },
-          { texte: "Défavorable : plus d'heures, c'est plus de charges", juste: x.activite > 0, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Défavorable : plus d'heures, c'est plus de charges pour le centre", juste: x.activite > 0, retour: `Pari à vérifier. ${voir}` },
           { texte: "Nul : le budget flexible suit déjà les heures", juste: x.activite === 0, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -568,7 +568,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
         const x = centreDeMontage(c);
         return [
           {
-            texte: "Ce n'est pas une économie : le centre a payé toutes ses charges fixes, réparties sur plus d'heures",
+            texte: "Pas une économie : toutes les charges fixes ont été payées",
             juste: true,
             retour: `Oui. Les charges fixes restent ${eur(x.k.chargesFixes)} ; ${qte(x.heuresReelles)} heures-machine les ont portées au lieu de ${qte(x.k.activiteNormale)}, d'où ${eur(Math.abs(x.activite))} de fixes mieux absorbés. Aucun euro n'est sorti en moins, et de ces heures en plus, la production n'en demandait que ${qte(x.utiles)}.`,
           },

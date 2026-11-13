@@ -256,7 +256,7 @@ describe("le coût d'acquisition, chez ATLAS CONSEIL", () => {
     expect([centime((50 / 600) * 100), centime((8 / 35) * 100)]).toEqual([8.33, 22.86]);
     // Les taux de transformation des devis, canal par canal : 20 %, 25 %, 20 %, 50 %.
     expect([prospection, salons, digital, apporteurs].map((k) => k.contrats / k.devis)).toEqual([0.2, 0.25, 0.2, 0.5]);
-    expect(juste(ch, "le-canal-le-moins-cher")).toBe("L'apporteur, mais il ne présente que quelques entreprises par an");
+    expect(juste(ch, "le-canal-le-moins-cher")).toBe("L'apporteur, mais il présente peu d'entreprises");
     // Le distracteur : le contact digital est le moins cher (40 €), mais un sur 300 seulement devient un compte.
     expect([prospection, salons, digital, apporteurs].map((k) => centime(k.cout / k.contacts))).toEqual([45, 93, 40, 1_200]);
   });

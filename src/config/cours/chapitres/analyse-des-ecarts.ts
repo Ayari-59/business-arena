@@ -720,7 +720,7 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
         const s = syntheseDesEcarts(c);
         return [
           {
-            texte: "Avec le signe contraire : une charge plus forte que prévu retire autant au résultat",
+            texte: "Avec le signe contraire : une charge en plus retire au résultat",
             juste: true,
             retour: `Oui : ${eur(-s.e.matiere.prix)}. Un écart sur charge change de signe au passage ; un écart sur marge garde le sien.`,
           },

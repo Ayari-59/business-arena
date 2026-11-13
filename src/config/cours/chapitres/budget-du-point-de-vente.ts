@@ -333,7 +333,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
         const x = budgetDuPointDeVente(c);
         return [
           {
-            texte: `Elle est trop basse de ${eur(x.variationDeStock)} : la réserve perd des articles, mais gagne en valeur`,
+            texte: `Elle est trop basse de ${eur(x.variationDeStock)} : la réserve gagne en valeur`,
             juste: true,
             retour: `Oui. Au 31 mars, la réserve vaut ${eur(x.valeurFinale)} contre ${eur(x.valeurInitiale)} au 1er janvier : moins d'écharpes et de bonnets, plus de cardigans. Une part des achats, ${eur(x.variationDeStock)}, reste en réserve et n'est pas encore une charge. La marge est ${eur(x.b.margeCommerciale)}.`,
           },
@@ -515,7 +515,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
       options: () => {
         const voir = "Faites varier leur chiffre d'affaires à l'étape suivante : le curseur montre ce qu'il faut pour tenir le trimestre.";
         return [
-          { texte: "Plus que l'objectif du mois : il faut rattraper janvier", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Plus que l'objectif : il faut rattraper janvier", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "L'objectif du mois : chaque mois a le sien", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Autant que janvier : le rythme du trimestre est pris", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -679,9 +679,9 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
         const x = budgetDuPointDeVente(c);
         return [
           {
-            texte: "Non : la caisse tient, mais avril commence en rupture, sans réassort possible",
+            texte: "Non : avril commence en rupture",
             juste: true,
-            retour: `Oui. Les fins de série ne réassortissent pas : avril s'ouvrirait sous le stock de sécurité de ${qte(x.securite)} articles, avec les délais du façonnier (${x.faconnier.delaiDeLivraison} jours) pour se refaire. La marge gagnée en mars se perdrait en ventes manquées.`,
+            retour: `Oui. La caisse tient, mais avril commence en rupture, sans réassort possible. Les fins de série ne réassortissent pas : avril s'ouvrirait sous le stock de sécurité de ${qte(x.securite)} articles, avec les délais du façonnier (${x.faconnier.delaiDeLivraison} jours) pour se refaire. La marge gagnée en mars se perdrait en ventes manquées.`,
           },
           {
             texte: "Oui : plus de marge, et moins que le plafond décaissé",
@@ -743,9 +743,9 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
       question: (c) => `Le trimestre se termine : ${ficheDe(c).entreprise} a vendu moins que prévu, mais a acheté ce que le budget disait. Que se passe-t-il ?`,
       options: () => [
         {
-          texte: "Le stock final est plus gros que voulu, et l'argent des achats dort en réserve",
+          texte: "Le stock final est plus gros que voulu",
           juste: true,
-          retour: "Oui. Les achats ont été faits pour des ventes qui ne sont pas venues : ce qui n'est pas vendu reste en stock. Il est payé, ou le sera, mais ne rapporte rien tant qu'il n'est pas vendu. D'où l'intérêt de suivre le budget mois par mois, et d'ajuster les commandes.",
+          retour: "Oui, et l'argent des achats dort en réserve. Les achats ont été faits pour des ventes qui ne sont pas venues : ce qui n'est pas vendu reste en stock. Il est payé, ou le sera, mais ne rapporte rien tant qu'il n'est pas vendu. D'où l'intérêt de suivre le budget mois par mois, et d'ajuster les commandes.",
         },
         {
           texte: "Rien : le budget a été respecté puisque les achats sont conformes",

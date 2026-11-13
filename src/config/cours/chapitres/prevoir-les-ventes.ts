@@ -281,7 +281,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
         const n1 = previsionDesVentes(c).fort.n1;
         return [
           {
-            texte: "Sur la demande : les ventes du trimestre fort ont été plafonnées",
+            texte: "Sur la demande : les ventes ont été plafonnées",
             juste: true,
             retour: "Oui. Au trimestre 4, la boutique n'a pas pu servir toute la demande : ses ventes disent ce que la réserve tenait, pas ce que les clients voulaient. Prévoir sur les ventes reconduirait la rupture l'an prochain.",
           },
@@ -661,7 +661,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
         const x = previsionDesVentes(c);
         return [
           {
-            texte: "La demande est en retard : la saison n'y est pour rien, la prévision la contient déjà",
+            texte: "La demande est en retard : la prévision contient déjà la saison",
             juste: true,
             retour: `Oui. La prévision est la tendance × ${dec(x.t1.coefficient, 4)} : un trimestre 1 calme y est déjà compté. Le retard de ${pct(auCentime(-x.ecartDeJanvier * 100))} est celui de la demande ; il se suit en février et en mars, et les réassorts du trimestre s'ajustent.`,
           },
@@ -845,9 +845,9 @@ export const PREVOIR_LES_VENTES: Chapitre = {
       },
       options: () => [
         {
-          texte: "Le trimestre 4 tombe toujours en fin d'année : la droite prend la saison pour de la croissance",
+          texte: "La droite prend la saison pour de la croissance",
           juste: true,
-          retour: "Oui. Dans chaque année, la série monte du trimestre 2 au trimestre 4 ; les moindres carrés lisent ces montées comme une tendance. Les moyennes mobiles comptent chaque saison une fois par point : il ne reste que la tendance.",
+          retour: "Oui. Le trimestre 4 tombe toujours en fin d'année. Dans chaque année, la série monte du trimestre 2 au trimestre 4 ; les moindres carrés lisent ces montées comme une tendance. Les moyennes mobiles comptent chaque saison une fois par point : il ne reste que la tendance.",
         },
         {
           texte: "Elle compte 12 points au lieu de 8, et plus de points donnent plus de pente",

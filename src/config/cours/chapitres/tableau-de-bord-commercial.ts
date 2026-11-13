@@ -958,9 +958,9 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const paie = h.annee.chiffreDAffaires >= h.s.seuilDeLAnnee;
         return [
           {
-            texte: `Non : sur l'année, il signe ${eur(h.annee.chiffreDAffaires)} pour un seuil de ${eur(h.s.seuilDeLAnnee)}`,
+            texte: "Non : sur l'année, il dépasse son seuil",
             juste: paie,
-            retour: `Oui : il est sous son seuil aux T1 et T2 (${eur(h.trimestres[0]!.resultat)} puis ${eur(h.trimestres[1]!.resultat)}), au-dessus ensuite, et il rapporte ${eur(h.annee.resultat)} sur l'année. Deux voyants trompaient pour un nouveau : l'évolution sur N − 1 le comparait à son prédécesseur, et un compte neuf se gagne en plusieurs trimestres. Un tableau de bord alerte ; il ne juge pas seul.`,
+            retour: `Oui : il signe ${eur(h.annee.chiffreDAffaires)} pour un seuil de ${eur(h.s.seuilDeLAnnee)}. Il est sous son seuil aux T1 et T2 (${eur(h.trimestres[0]!.resultat)} puis ${eur(h.trimestres[1]!.resultat)}), au-dessus ensuite, et il rapporte ${eur(h.annee.resultat)} sur l'année. Deux voyants trompaient pour un nouveau : l'évolution sur N − 1 le comparait à son prédécesseur, et un compte neuf se gagne en plusieurs trimestres. Un tableau de bord alerte ; il ne juge pas seul.`,
           },
           {
             texte: `Oui : ${qte(q.voyants.length)} voyants allumés, il ne paie pas son coût`,

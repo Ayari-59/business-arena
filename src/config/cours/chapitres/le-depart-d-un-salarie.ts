@@ -298,7 +298,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         const voir = "Déplacez le salaire à l'étape suivante : le curseur montre où passe le seuil.";
         return [
           { texte: `Oui : ${eur(x.f.operateurs.salaireBrutMensuel)} tombent sous ${pct(x.p.seuil)} du nouveau marché`, juste: x.p.sousLeSeuil, retour: `Bon pari. ${voir}` },
-          { texte: "Non : son salaire n'a pas baissé d'un euro", juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Non : son salaire n'a pas baissé d'un euro depuis N", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: `Non : il reste au-dessus de ${pct(x.p.seuil)} du salaire de N`, juste: !x.p.sousLeSeuil, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -604,7 +604,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         const x = departDUnOperateur(c);
         const voir = "Le laboratoire suivant fait varier la date du recrutement : regardez l'équipe du trimestre.";
         return [
-          { texte: "Non : le premier mois, le remplaçant ne monte que la moitié", juste: x.enFevrier.ventesPerdues > 0, retour: `Bon pari. ${voir}` },
+          { texte: "Non : un remplaçant ne monte d'abord que la moitié", juste: x.enFevrier.ventesPerdues > 0, retour: `Bon pari. ${voir}` },
           { texte: "Oui : l'équipe garde ses opérateurs tout le trimestre", juste: x.enFevrier.ventesPerdues === 0, retour: `Pari à vérifier. ${voir}` },
           { texte: "Non : le poste reste vide le temps du préavis", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -847,7 +847,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         const x = departDUnOperateur(c);
         return [
           {
-            texte: "Le savoir-faire qui part, et les autres opérateurs qui pourraient suivre",
+            texte: "Le savoir-faire qui part, et ceux qui pourraient suivre",
             juste: true,
             retour: `Oui : la simulation ne fait partir qu'un opérateur, et ne fait payer que l'intégration du premier mois. Payés sous le seuil, les ${qte(x.operateurs - 1)} autres le sont aussi ; et un opérateur expérimenté emporte des tours de main que le remplaçant mettra plus d'un mois à retrouver. Le coût calculé est un minimum.`,
           },

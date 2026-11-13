@@ -380,10 +380,10 @@ describe("s'assurer contre les aléas, chez NOVA", () => {
     expect(possibles.reduce((a, b) => (b[1].coutMoyen < a[1].coutMoyen ? b : a))[0]).toBe("basique");
     expect(assuranceDeNova(cas).retenue.choix).toBe("basique");
     expect(assuranceDeNova(cas).laMoinsChere.choix).toBe("sans-assurance");
-    expect(juste(ch, "la-regle")).toBe("La Basique : la moins chère en moyenne des options dont le pire s'encaisse");
-    expect(juste(ch, "predire-l-incendie")).toBe("Non : ni sa trésorerie ni ses capitaux propres ne l'encaissent");
-    expect(juste(ch, "predire-la-probabilite")).toBe("Entre 2 % et 4 % par an");
-    expect(juste(ch, "l-annee-sans-sinistre")).toBe("Elle a coûté sa prime, 6 000 €, et a protégé d'un incendie qui ne s'encaissait pas");
+    expect(juste(ch, "la-regle")).toBe("La Basique : la moins chère des options dont le pire s'encaisse");
+    expect(juste(ch, "predire-l-incendie")).toBe("Non, ni par sa trésorerie ni par ses capitaux propres");
+    expect(juste(ch, "predire-la-probabilite")).toBe("De 2 % à 4 % par an");
+    expect(juste(ch, "l-annee-sans-sinistre")).toBe("Elle a coûté sa prime, 6 000 €, et protégé d'un incendie");
     // La mission « jouez » fait souscrire la formule que la règle retient.
     expect(formuleRetenue("nova").formule.name).toBe("Basique");
   });
@@ -598,9 +598,9 @@ describe("le coût de la non-qualité, chez NOVA", () => {
   it("les verdicts : le coût le plus bas, le piège, la critique", () => {
     expect(juste(ch, "predire-le-double")).toBe("Monte : la prévention ajoutée coûte plus que les défaillances évitées");
     expect(juste(ch, "par-le-cout")).toBe("Au budget actuel");
-    expect(juste(ch, "predire-le-resultat")).toBe("Plus haut qu'au budget actuel : les ventes gardées paient la prévention en plus");
-    expect(juste(ch, "par-le-resultat")).toBe("Le budget au meilleur résultat : les ventes gardées comptent autant que les coûts");
-    expect(juste(ch, "la-critique")).toBe("Il peut exagérer la perte : au trimestre 2 ou 4, un client perdu peut être remplacé par une demande refusée");
+    expect(juste(ch, "predire-le-resultat")).toBe("Plus haut : les ventes gardées paient la prévention");
+    expect(juste(ch, "par-le-resultat")).toBe("Le budget au meilleur résultat, ventes gardées comprises");
+    expect(juste(ch, "la-critique")).toBe("Il peut exagérer la perte, là où l'outil est le goulot");
     // Au-delà du double, le taux de défaut ne baisse plus : le résultat retombe.
     expect(qualite(36_000).resultat).toBe(478_728);
   });

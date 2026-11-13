@@ -370,7 +370,7 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
     });
     expect([coutMoyen, centime(tauxMcv * 100), centime((coutMoyen / centime(tauxMcv * 100)) * 100)]).toEqual([2_390.33, 50.6, 4_723.97]);
     expect(equipeEtPlanning(cas).passagesPourUneEmbauche).toBe(Math.ceil(4_723.97 / centime(panier)));
-    expect(juste(ch, "faut-il-embaucher")).toBe("Pas d'embauche : déplacer 11 h du début de semaine couvre chaque créneau");
+    expect(juste(ch, "faut-il-embaucher")).toBe("Pas d'embauche : déplacer 11 h suffit");
   });
 
   it("le cas : la hausse se paie par les ventes, l'économie proposée casse le planning", () => {

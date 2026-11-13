@@ -451,7 +451,7 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await expect.poll(() => eleve.getByText("Écriture juste.").count()).toBe(1);
     await eleve.getByRole("button", { name: "Étape suivante" }).click();
     const fausse = "Oui : emprunter coûte de l'argent.";
-    const juste = "Non : c'est une ressource, une dette qu'il faudra rembourser.";
+    const juste = "Non : c'est une dette, qu'il faudra rembourser.";
     await eleve.getByRole("radio", { name: fausse }).click();
     await eleve.getByRole("radio", { name: juste }).click();
     await expect.poll(() => eleve.getByRole("button", { name: "Étape suivante" }).count()).toBe(1);

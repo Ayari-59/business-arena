@@ -262,8 +262,8 @@ export const LE_PANIER_MOYEN: Chapitre = {
         const calcul = (a: Article) => `${eur(a.prix)} − ${eur(a.cout)} = ${eur(a.marge)}`;
         return [
           { texte: meilleur.nom, juste: true, retour: `Oui : ${calcul(meilleur)} de marge, le plus du rayon. Le panier monte, et la marge avec.` },
-          { texte: plusVendu.nom, juste: false, retour: `Non : c'est l'un des articles qui se vendent le plus, mais il ne laisse que ${calcul(plusVendu)}. L'article « ${meilleur.nom} » laisse ${eur(meilleur.marge)}.` },
-          { texte: moinsCher.nom, juste: false, retour: `Non : il est facile à ajouter, mais il ne laisse que ${calcul(moinsCher)}. L'article « ${meilleur.nom} » laisse ${eur(meilleur.marge)}.` },
+          { texte: `${plusVendu.nom}, l'un des plus vendus`, juste: false, retour: `Non : c'est l'un des articles qui se vendent le plus, mais il ne laisse que ${calcul(plusVendu)}. L'article « ${meilleur.nom} » laisse ${eur(meilleur.marge)}.` },
+          { texte: `${moinsCher.nom}, facile à ajouter`, juste: false, retour: `Non : il est facile à ajouter, mais il ne laisse que ${calcul(moinsCher)}. L'article « ${meilleur.nom} » laisse ${eur(meilleur.marge)}.` },
         ];
       },
     },

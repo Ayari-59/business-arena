@@ -244,7 +244,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     expect(attendus(ch, "marge-commerciale")).toEqual({ "Marge commerciale d'un pull": 30, "Marge commerciale du mois": 18_000 });
     expect(attendus(ch, "les-deux-taux")).toEqual({ "Taux de marque (%)": 54.55, "Taux de marge (%)": 120 });
     expect(attendus(ch, "coefficient")).toEqual({ "Coefficient HT": 2.2, "Étiquette TTC": 55 * 1.2, "Coefficient TTC": 2.64 });
-    expect(juste(ch, "qui-a-raison")).toBe("Les deux : l'une parle du taux de marque, l'autre du taux de marge.");
+    expect(juste(ch, "qui-a-raison")).toBe("Les deux : ce sont deux taux différents.");
   });
 
   it("les étapes autonomes : la gamme, d'un taux à l'autre, le fournisseur moins cher", () => {
@@ -460,7 +460,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
   });
 
   it("la critique du taux : il est gardé, pas la marge", () => {
-    expect(juste(S_ALIGNER_SUR_LE_CONCURRENT, "la-critique-du-taux")).toBe("Le taux est gardé, pas la marge : 14 680,61 € au lieu de 15 301,50 € vers 60,80 €");
+    expect(juste(S_ALIGNER_SUR_LE_CONCURRENT, "la-critique-du-taux")).toBe("Le taux est gardé, pas la marge du mois");
   });
 
   it("le modèle du chapitre retombe sur la fiche", () => {

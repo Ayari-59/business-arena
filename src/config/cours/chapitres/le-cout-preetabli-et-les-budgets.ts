@@ -742,7 +742,7 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
         const hPre = b.e.preetabliDuReel.heuresMachine;
         return [
           {
-            texte: "Les fixes ne bougent pas au budget flexible, mais le coût préétabli en impute à chaque heure",
+            texte: "Le coût préétabli impute les fixes à l'heure, pas le budget flexible",
             juste: true,
             retour: `Oui. ${fond} Cet écart sur activité mesure une absorption des charges fixes, pas une dépense évitée ou engagée.`,
           },
@@ -921,9 +921,9 @@ const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
         const detail = `Décomposé (chapitre suivant), l'écart de ${eur(e.mainDOeuvre.global)} réunit un écart sur taux de ${ecartDit(e.mainDOeuvre.taux)}, ${pct(partDuTaux)} de ${eur(base)} à lui seul, et un écart sur temps de ${ecartDit(e.mainDOeuvre.temps)}.`;
         return [
           {
-            texte: "Pas sur son seul écart global : deux écarts de sens contraire peuvent s'y compenser",
+            texte: "Pas sur son seul écart global : deux écarts peuvent s'y compenser",
             juste: cache,
-            retour: cache ? `Oui. ${detail} Le seuil s'applique aux écarts décomposés, pas seulement au global.` : `Non. ${detail}`,
+            retour: cache ? `Oui : deux écarts de sens contraire peuvent s'y compenser. ${detail} Le seuil s'applique aux écarts décomposés, pas seulement au global.` : `Non. ${detail}`,
           },
           {
             texte: "Oui : sous le seuil, un écart ne coûte rien à l'usine, inutile d'y revenir",

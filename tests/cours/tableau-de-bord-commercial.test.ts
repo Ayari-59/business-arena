@@ -392,7 +392,7 @@ describe("le tableau de bord commercial, au cabinet du monde du cours", () => {
     expect(voyants(hugo)).toEqual([["objectif", "transformation", "évolution", "seuil"], ["objectif", "évolution", "seuil"], [], []]);
     const question = (ch.etapes.find((e) => e.id === "juger-hugo") as EtapeChoix).question(cas, etatVide);
     expect(question).toContain("4 voyants d'Hugo étaient allumés : l'objectif, la transformation, l'évolution sur N − 1 et le seuil.");
-    expect(juste(ch, "juger-hugo")).toBe("Non : sur l'année, il signe 120 000 € pour un seuil de 96 000 €");
+    expect(juste(ch, "juger-hugo")).toBe("Non : sur l'année, il dépasse son seuil");
   });
 
   it("la synthèse finit sur l'arène", () => {

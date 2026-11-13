@@ -258,7 +258,7 @@ describe("le stock du point de vente : le chapitre", () => {
     expect(attendus(ch, "le-stock-en-valeur")).toEqual({ "Stock au 1er janvier, en valeur": valeurInitiale, "Achats livrés en janvier": achats, "Stock au 31 janvier, en valeur": valeurFinale });
     expect(attendus(ch, "stock-moyen")).toEqual({ "Stock moyen": stockMoyen, "Coût d'achat des marchandises vendues": camv });
     expect(attendus(ch, "rotation")).toEqual({ "Rotation du stock": 1.99, "Durée moyenne de stockage (jours)": centime(30 / 1.99) });
-    expect(juste(ch, "lire-la-rotation")).toBe("Le stock tourne plus vite : moins d'argent dort en réserve pour les mêmes ventes.");
+    expect(juste(ch, "lire-la-rotation")).toBe("Le stock tourne plus vite.");
   });
 
   it("les étapes autonomes : la couverture, le point de commande, le cardigan, qui finance", () => {
@@ -301,9 +301,9 @@ describe("le stock du point de vente : le chapitre", () => {
   });
 
   it("les verdicts : les paris, le délai court", () => {
-    expect(juste(ch, "predire-le-point-de-commande")).toBe("Les ventes du délai, plus une réserve pour le retard");
+    expect(juste(ch, "predire-le-point-de-commande")).toBe("Les ventes du délai, plus une réserve");
     expect(juste(ch, "predire-qui-finance")).toBe("La boutique : elle paierait chaque article avant sa vente");
-    expect(juste(ch, "le-delai-court")).toBe("Le délai baisse le point de commande, pas le stock moyen : c'est la taille de la commande qui l'allège");
+    expect(juste(ch, "le-delai-court")).toBe("Le délai baisse le point de commande, pas le stock moyen");
   });
 
   it("les curseurs, refaits à la main : le point de commande, le délai qui finance le stock", () => {

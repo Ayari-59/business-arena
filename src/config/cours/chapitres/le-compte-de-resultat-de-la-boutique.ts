@@ -495,9 +495,9 @@ export const LE_COMPTE_DE_RESULTAT_DE_LA_BOUTIQUE: Chapitre = {
         const x = exerciceDeLaBoutique(c);
         return [
           {
-            texte: "Le résultat net mêle la provision, les intérêts et l'impôt : la gestion se juge sur l'EBE",
+            texte: "La gestion se juge sur l'EBE, pas sur le résultat net",
             juste: true,
-            retour: `Oui. La provision de ${eur(PROVISION_POUR_LITIGE)} est un risque de l'année qui ne se reproduira pas ; les intérêts baissent avec l'emprunt ; l'impôt suit le bénéfice. L'EBE isole ce que le manager pilote : il a perdu ${eur(-x.ecart.ecart)}, pas ce que dit le résultat net.`,
+            retour: `Oui. Le résultat net mêle la provision, les intérêts et l'impôt. La provision de ${eur(PROVISION_POUR_LITIGE)} est un risque de l'année qui ne se reproduira pas ; les intérêts baissent avec l'emprunt ; l'impôt suit le bénéfice. L'EBE isole ce que le manager pilote : il a perdu ${eur(-x.ecart.ecart)}, pas ce que dit le résultat net.`,
           },
           { texte: "Il a raison : seul compte ce qui reste aux associés", juste: false, retour: "Ce qui reste aux associés compte pour eux ; mais pour juger l'exploitation, il faut un solde qui ne mêle ni le financement, ni l'impôt, ni un risque exceptionnel." },
           { texte: "Il se trompe : il fallait regarder le chiffre d'affaires", juste: false, retour: `Non : le chiffre d'affaires a pris ${pct(x.evolutionDuChiffreDAffaires)} quand l'EBE reculait. Il ne dit rien de ce que la boutique gagne.` },
@@ -540,7 +540,7 @@ export const LE_COMPTE_DE_RESULTAT_DE_LA_BOUTIQUE: Chapitre = {
         const e = x.ecart;
         return [
           {
-            texte: `Réduire les remises : elles ont coûté ${eur(-e.effetPrix)} d'EBE`,
+            texte: `Réduire les remises : ${eur(-e.effetPrix)} d'EBE`,
             juste: true,
             retour: `Oui. C'est la première cause, devant la paie (${eur(-e.effetPersonnel)}) et le loyer (${eur(-e.effetLoyer)}), et le seul levier qui ne dépend pas d'un bail ou d'un contrat de travail. Revenir au prix moyen de N − 2 porterait l'EBE à ${eur(x.sansLesRemises.ebe)} si les ventes tiennent : la promotion doit se chiffrer avant d'être lancée.`,
           },

@@ -89,7 +89,7 @@ describe("le prix qui équilibre le marché", () => {
     expect(juste(LE_PRIX_D_EQUILIBRE, "dans-quel-sens")).toEqual(["Baisser le prix"]);
     expect(attendus(LE_PRIX_D_EQUILIBRE, "le-tatonnement")).toEqual([4_778 - 7_000, demande(47.2) - 7_000]);
     expect(demande(47.2)).toBe(7_173);
-    expect(juste(LE_PRIX_D_EQUILIBRE, "l-intervalle")).toEqual(["Entre 47,20 € et 53,10 €"]);
+    expect(juste(LE_PRIX_D_EQUILIBRE, "l-intervalle")).toEqual(["De 47,20 € à 53,10 €"]);
     expect(attendus(LE_PRIX_D_EQUILIBRE, "au-milieu")).toEqual([demande(50.15) - 7_000]);
     expect(prixDEquilibre(NOVA).equilibre).toBe("sous-le-milieu");
     expect(juste(LE_PRIX_D_EQUILIBRE, "le-prix-trouve")).toEqual(["Entre 47,20 € et 50,15 €"]);

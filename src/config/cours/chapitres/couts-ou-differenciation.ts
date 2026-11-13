@@ -966,7 +966,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
         const renverse = x.meilleure.code !== k.meilleure.code;
         return [
           {
-            texte: "Le classement dépend des clients : moins sensibles à la qualité, ils le renverseraient",
+            texte: "Le classement dépend de la sensibilité des clients à la qualité",
             juste: renverse,
             retour: renverse
               ? `Oui. Si l'attractivité variait comme la qualité puissance ${ELASTICITE_A_LA_QUALITE_DE_LA_CRITIQUE} et non ${k.f.attractivite.elasticiteALaQualite}, la domination par les coûts ferait ${eur(x.couts.resultat)}, le milieu ${eur(x.milieu.resultat)}, la différenciation ${eur(x.differenciation.resultat)}. Et les concurrents ne réagissent pas : face à la stratégie de coûts, ${k.soundbox.nom} passerait de ${eur(k.soundboxDansLAnnee.milieu)} à ${eur(k.soundboxDansLAnnee.couts)}, et ne resterait pas sans rien faire. Une simulation éclaire une décision ; elle vaut ce que valent ses hypothèses.`

@@ -576,9 +576,9 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
           retour: "Ce qui coûte, ce sont les intérêts, qui courent jour après jour et se paient aux échéances : eux sont des charges (compte 661). Le capital emprunté, lui, se rend.",
         },
         {
-          texte: "Non : c'est une ressource, une dette qu'il faudra rembourser.",
+          texte: "Non : c'est une dette, qu'il faudra rembourser.",
           juste: true,
-          retour: "Exactement. L'emprunt ne change pas le résultat : il ajoute la même somme à l'actif (la banque) et au passif (la dette).",
+          retour: "Exactement. C'est une ressource, comme le capital, mais elle se rembourse. L'emprunt ne change pas le résultat : il ajoute la même somme à l'actif (la banque) et au passif (la dette).",
         },
         {
           texte: "Non : c'est un produit, l'entreprise s'enrichit.",
@@ -658,12 +658,12 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
           retour: "L'équipement n'est pas consommé dans le mois : il reste à l'actif. Le compte de résultat ne verra que son usure.",
         },
         {
-          texte: "Non : l'équipement est une immobilisation. Il coûtera au fil de son usage, par l'amortissement.",
+          texte: "Non : il reste à l'actif, et s'amortira.",
           juste: true,
-          retour: "C'est cela. Chaque mois de service, une part de sa valeur deviendra une charge : la dotation aux amortissements (compte 681). Vous la calculerez pour janvier en fin de chapitre.",
+          retour: "C'est cela. L'équipement est une immobilisation : il coûtera au fil de son usage, par l'amortissement. Chaque mois de service, une part de sa valeur deviendra une charge : la dotation aux amortissements (compte 681). Vous la calculerez pour janvier en fin de chapitre.",
         },
         {
-          texte: `Oui, de ${eur(c.immobilisation.ttc)}, taxes comprises.`,
+          texte: `Oui, de ${eur(c.immobilisation.ttc)}, taxes comprises : le total de la facture.`,
           juste: false,
           retour: "Ni le hors taxes ni la TVA ne sont des charges ici : l'équipement est un actif, la TVA une créance sur l'État.",
         },
@@ -1338,9 +1338,9 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
       options: (c) => [
         { texte: "Oui, il a augmenté : le client a payé.", juste: false, retour: "Le client a payé une vente déjà comptée en janvier : la payer ne la compte pas une deuxième fois." },
         {
-          texte: "Non : payer et encaisser ne créent ni charge ni produit. Ils changent la forme de l'actif et du passif.",
+          texte: "Non : un règlement ne crée ni charge ni produit.",
           juste: true,
-          retour: `C'est la leçon du laboratoire, vérifiée au journal : le résultat ${dE(c.entreprise)} est né des factures ; les règlements ne font que transformer une créance ou une dette en argent.`,
+          retour: `C'est la leçon du laboratoire, vérifiée au journal : le résultat ${dE(c.entreprise)} est né des factures ; les règlements ne font que transformer une créance ou une dette en argent. Ils changent la forme de l'actif et du passif.`,
         },
         { texte: "Oui, il a baissé : le fournisseur et l'URSSAF ont été payés.", juste: false, retour: "L'achat et les cotisations étaient déjà comptés en janvier. Les payer ne fait qu'éteindre les dettes." },
       ],
@@ -1437,7 +1437,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
         const j = janvierDe(c);
         return [
           {
-            texte: `Il manque l'usure de l'équipement et les intérêts du mois : le mois complet fait ${eur(j.resultatComplet)}`,
+            texte: `Il manque deux charges : le mois complet fait ${eur(j.resultatComplet)}`,
             juste: true,
             retour: `Oui. Un mois a consommé une part de l'équipement (${eur(j.dotation)}) et fait naître des intérêts (${eur(j.interets)}), payés ou non : ce sont des charges de janvier. Le résultat annoncé surestime le mois de ${eur(auCentime(j.dotation + j.interets))}.`,
           },

@@ -541,7 +541,7 @@ export const IMMOBILISATIONS: Chapitre = {
       options: () => {
         const voir = "Faites varier le prix à l'étape suivante : le curseur montre où passe la frontière.";
         return [
-          { texte: "La valeur nette comptable de l'équipement ce jour-là", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "La valeur nette comptable ce jour-là", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Le prix payé à l'achat, hors taxes", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Zéro : l'équipement est payé, tout prix est un gain", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -826,9 +826,9 @@ export const IMMOBILISATIONS: Chapitre = {
         const p = planDAmortissement(c);
         return [
           {
-            texte: `L'impôt est décalé, pas économisé : les dernières années porteront moins de dotations, ${eur(p.base)} au total dans les deux plans`,
+            texte: "L'impôt est décalé, pas économisé",
             juste: true,
-            retour: `Oui. Sur la vie de l'équipement, les deux plans font ${eur(p.base)} de charges : le dégressif avance ${eur(p.impotDecale)} d'impôt d'un an ou deux, un gain de trésorerie, pas de résultat. Et le plan comptable doit suivre l'usure réelle : si elle est régulière, il reste linéaire, et le supplément fiscal se passe à part, en amortissement dérogatoire (6872 au débit, 145 au crédit), une provision réglementée.`,
+            retour: `Oui. Les dernières années porteront moins de dotations. Sur la vie de l'équipement, les deux plans font ${eur(p.base)} de charges : le dégressif avance ${eur(p.impotDecale)} d'impôt d'un an ou deux, un gain de trésorerie, pas de résultat. Et le plan comptable doit suivre l'usure réelle : si elle est régulière, il reste linéaire, et le supplément fiscal se passe à part, en amortissement dérogatoire (6872 au débit, 145 au crédit), une provision réglementée.`,
           },
           {
             texte: `Il a raison : ${eur(p.impotDecale)} d'impôt économisés pour de bon`,

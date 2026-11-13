@@ -423,9 +423,9 @@ export const LES_STOCKS: Chapitre = {
         const a = arrete(c);
         const voir = "Faites varier les ventes à l'étape suivante : le curseur montre quand le coût des ventes rejoint les achats.";
         return [
-          { texte: "Plus élevé : les ventes ont puisé dans le stock du début", juste: a.variation > 0, retour: `${a.variation > 0 ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
+          { texte: "Plus élevé : les ventes puisent dans le stock", juste: a.variation > 0, retour: `${a.variation > 0 ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
           { texte: "Plus faible : une part des achats reste en stock", juste: a.variation < 0, retour: `${a.variation < 0 ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
-          { texte: "Égal : on ne vend que ce qu'on a acheté", juste: a.variation === 0, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Égal : on ne vend que ce qu'on a acheté dans le mois", juste: a.variation === 0, retour: `Pari à vérifier. ${voir}` },
         ];
       },
     },
@@ -649,7 +649,7 @@ export const LES_STOCKS: Chapitre = {
       options: () => {
         const voir = "Le curseur de l'étape suivante fait varier le prix de la seconde livraison et montre les deux stocks.";
         return [
-          { texte: "Le PEPS : le stock final est fait des derniers lots, les plus chers", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Le PEPS : le stock final garde les lots les plus chers", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Le coût moyen : il porte la hausse sur toutes les unités", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Aucune : les deux méthodes comptent les mêmes unités", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -749,9 +749,9 @@ export const LES_STOCKS: Chapitre = {
       },
       options: () => [
         {
-          texte: "Oui : la fiche donne le stock théorique, le comptage le stock réel, et l'écart révèle la démarque",
+          texte: "Oui : l'écart avec le comptage révèle la démarque",
           juste: true,
-          retour: "C'est cela. La fiche ne voit ni le vol, ni la casse, ni l'erreur de saisie : l'inventaire physique, au moins une fois par exercice, les fait apparaître, et c'est le stock compté qui va au bilan. Le cas du chapitre part de là.",
+          retour: "C'est cela. La fiche donne le stock théorique, le comptage le stock réel. La fiche ne voit ni le vol, ni la casse, ni l'erreur de saisie : l'inventaire physique, au moins une fois par exercice, les fait apparaître, et c'est le stock compté qui va au bilan. Le cas du chapitre part de là.",
         },
         { texte: "Non : la fiche suit chaque mouvement, le stock qu'elle donne est exact", juste: false, retour: "La fiche enregistre ce qui est saisi, pas ce qui disparaît sans facture : vol, casse, erreurs. Seul le comptage le voit." },
         {
@@ -906,10 +906,10 @@ export const LES_STOCKS: Chapitre = {
         const ecart = auCentime(moisValorise(x, "peps").marge - moisValorise(x, "cmup-periode").marge);
         return [
           {
-            texte: "La marge n'est pas meilleure, la hausse attend dans le stock ; et une méthode ne se change pas pour embellir un mois",
+            texte: "La marge n'est pas meilleure : la hausse attend dans le stock",
             juste: true,
             retour:
-              "Oui. Les mêmes unités ont été vendues au même prix : le PEPS reporte la hausse au mois où les lots chers sortiront. Et la permanence des méthodes interdit d'en changer sans raison, faute de quoi les comptes ne se comparent plus d'une période à l'autre ; un changement justifié se dit dans l'annexe.",
+              "Oui. Les mêmes unités ont été vendues au même prix : le PEPS reporte la hausse au mois où les lots chers sortiront. Et une méthode ne se change pas pour embellir un mois : la permanence des méthodes interdit d'en changer sans raison, faute de quoi les comptes ne se comparent plus d'une période à l'autre ; un changement justifié se dit dans l'annexe.",
           },
           { texte: `Oui : ${eur(ecart)} de marge en plus, sans rien changer aux ventes`, juste: false, retour: "Non : aucune vente de plus, aucun achat de moins. La hausse n'a pas disparu ; elle est dans le stock final, et pèsera plus tard." },
           {
@@ -964,10 +964,10 @@ export const LES_STOCKS: Chapitre = {
       },
       options: () => [
         {
-          texte: "De l'argent immobilisé : payé au fournisseur, pas encore revenu des clients.",
+          texte: "De l'argent immobilisé.",
           juste: true,
           retour:
-            "C'est cela. Le stock est un actif, mais il pèse sur la trésorerie : c'est l'un des postes du besoin en fonds de roulement. Il faut assez de stock pour ne pas manquer de ventes, pas plus.",
+            "C'est cela : payé au fournisseur, pas encore revenu des clients. Le stock est un actif, mais il pèse sur la trésorerie : c'est l'un des postes du besoin en fonds de roulement. Il faut assez de stock pour ne pas manquer de ventes, pas plus.",
         },
         {
           texte: "Une perte : ce qui n'est pas vendu est perdu.",

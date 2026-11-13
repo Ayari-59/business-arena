@@ -361,7 +361,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
         const x = ventesEtMarge(c);
         return [
           {
-            texte: "Rien encore : deux gros écarts de sens contraire se compensent, et la marge reste à voir",
+            texte: "Rien encore : deux gros écarts se compensent",
             juste: true,
             retour: `Oui. L'écart sur prix (${eur(x.prix)}) et l'écart sur quantités (${eur(x.quantitesSurCa)}) se compensent presque. Un écart global faible ne veut pas dire que tout va bien, et le chiffre d'affaires ne dit pas ce que les ventes ont rapporté.`,
           },
@@ -528,7 +528,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
         const [a, b] = x.parModele;
         return [
           {
-            texte: "Une enceinte de plus ou de moins change le résultat de sa marge, et la baisse de prix porte sur ce qui a été vendu",
+            texte: "Une enceinte de plus ou de moins change le résultat de sa marge",
             juste: true,
             retour: `Oui. Une ${a!.nom} perdue emporte ${eur(a!.margePreetablie)} de marge, pas ${eur(a!.pp)} : son coût part avec elle. Une ${b!.nom} gagnée apporte ${eur(b!.margePreetablie)}. Et l'écart de prix ne s'applique qu'aux enceintes réellement vendues, d'où les quantités réelles.`,
           },
@@ -729,9 +729,9 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
         const [a, b] = x.parModele;
         return [
           {
-            texte: `Le volume total a baissé : ${qte(Math.abs(x.ecartDeQuantiteTotale))} enceintes de moins coûtent ${eur(Math.abs(x.quantiteGlobale))}, que le mix compense sans les effacer`,
+            texte: "Le volume total a baissé : le mix compense sans effacer",
             juste: true,
-            retour: `Oui. L'écart sur quantité globale, ${eur(x.quantiteGlobale)}, dit que l'usine a vendu moins d'enceintes que prévu ; le glissement vers la ${b!.nom} (${eur(x.composition)}) le masque. Un mix favorable sur un volume en baisse reste une baisse : si la ${a!.nom} continue de reculer, le mix ne suffira plus.`,
+            retour: `Oui : ${qte(Math.abs(x.ecartDeQuantiteTotale))} enceintes de moins coûtent ${eur(Math.abs(x.quantiteGlobale))}, que le mix compense sans les effacer. L'écart sur quantité globale, ${eur(x.quantiteGlobale)}, dit que l'usine a vendu moins d'enceintes que prévu ; le glissement vers la ${b!.nom} (${eur(x.composition)}) le masque. Un mix favorable sur un volume en baisse reste une baisse : si la ${a!.nom} continue de reculer, le mix ne suffira plus.`,
           },
           {
             texte: `Il a raison : l'écart sur volume, ${eur(x.volume)}, est négligeable`,

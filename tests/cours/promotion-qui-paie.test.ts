@@ -269,7 +269,7 @@ describe("la promotion qui paie, à la boutique du monde du cours", () => {
       "Pulls vendus en promotion": venduesA(10, stockPrevu),
       "Gain de la promotion": gainA(10, stockPrevu),
     });
-    expect(juste(ch, "predire-le-rayon")).toBe("Coûtera de la marge : le rayon ne sert pas le volume nécessaire");
+    expect(juste(ch, "predire-le-rayon")).toBe("Coûtera de la marge : le rayon est trop petit");
   });
 
   it("l'étape `pourquoi` : trois issues, et la bonne réponse suit les chiffres de la simulation", () => {
@@ -379,8 +379,8 @@ describe("la promotion qui paie, à la boutique du monde du cours", () => {
   });
 
   it("les verdicts : la critique de la méthode, avant de lancer", () => {
-    expect(juste(ch, "ce-que-le-calcul-ne-voit-pas")).toBe("Les achats avancés : des clientes qui auraient payé le pull au prix plein en mars l'achètent remisé en février");
-    expect(juste(ch, "avant-de-lancer")).toBe("S'assurer que le rayon et la réserve pourront servir le volume nécessaire, et commander en conséquence");
+    expect(juste(ch, "ce-que-le-calcul-ne-voit-pas")).toBe("Les achats avancés, de mars à février");
+    expect(juste(ch, "avant-de-lancer")).toBe("S'assurer de pouvoir servir le volume nécessaire");
     // Au moins deux étapes d'expert à trois montants.
     for (const id of ["la-meilleure-remise", "a-rebours"]) expect(Object.keys(attendus(ch, id)).length, id).toBeGreaterThanOrEqual(3);
     // La synthèse reprend les promotions, refaites à la main.

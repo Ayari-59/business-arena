@@ -342,7 +342,7 @@ describe("le départ d'un salarié : l'équipe qui devient le goulot", () => {
   });
 
   it("le laboratoire du départ : ne perdre aucune vente au moindre coût, c'est rester au seuil", () => {
-    expect(juste(ch, "predire-l-integration")).toBe("Non : le premier mois, le remplaçant ne monte que la moitié");
+    expect(juste(ch, "predire-l-integration")).toBe("Non : un remplaçant ne monte d'abord que la moitié");
     const l = laboratoire(ch, "le-laboratoire-du-depart");
     expect(l.depart).toEqual({ part: 93.75, lancement: 4, demande: 1 });
     expect(l.solution).toEqual({ part: 95, lancement: 4, demande: 1 });
@@ -435,7 +435,7 @@ describe("le départ d'un salarié : l'équipe qui devient le goulot", () => {
     expect((coutR - 3_000 + 3 * coutMensuel) / marge).toBe(1_600);
     // Au trimestre 3, le remplaçant porte l'équipe à 2 100 + 2 400 + 2 400, au-dessus des 6 200 demandées.
     expect(3.5 * parMois + 4 * parMois * 2).toBeGreaterThan(demandeN1[2]!);
-    expect(juste(ch, "ce-que-le-calcul-ne-compte-pas")).toBe("Le savoir-faire qui part, et les autres opérateurs qui pourraient suivre");
+    expect(juste(ch, "ce-que-le-calcul-ne-compte-pas")).toBe("Le savoir-faire qui part, et ceux qui pourraient suivre");
   });
 
   it("le cas : recruter dès l'annonce rapporte dès 5 827 enceintes demandées au trimestre 2", () => {
@@ -516,7 +516,7 @@ describe("entretenir l'outil : la ligne, goulot en N + 1", () => {
   });
 
   it("le pari et le curseur du seuil : la ligne tient dès 3 000 €, mais les défauts restent", () => {
-    expect(juste(ch, "predire-le-seuil")).toBe("Sous un seuil plus bas : la référence répare plus que l'usure");
+    expect(juste(ch, "predire-le-seuil")).toBe("Plus bas : la référence répare plus que l'usure");
     expect(curseur(ch, "le-seuil-au-curseur")).toEqual({
       attendu: seuil,
       bornes: [0, ref],
@@ -672,7 +672,7 @@ describe("entretenir l'outil : la ligne, goulot en N + 1", () => {
       "Effet sur le résultat, sans les défauts": r.sansLesDefauts,
     });
     expect([budget, r.ventes[3], r.sansLesDefauts]).toEqual([1_800, 6_860, -240]);
-    expect(juste(ch, "ce-que-vaut-le-chiffre")).toBe("C'est un maximum : aux trimestres 2 et 4, une demande refusée peut remplacer une vente perdue");
+    expect(juste(ch, "ce-que-vaut-le-chiffre")).toBe("C'est un maximum : une demande refusée peut remplacer une vente perdue");
   });
 
   it("le cas : au seuil, la ligne tient, mais les défauts coûtent plus que l'économie", () => {

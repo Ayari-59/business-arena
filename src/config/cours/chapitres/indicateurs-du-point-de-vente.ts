@@ -393,9 +393,9 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
         const r = k.stockDuCardigan;
         return [
           {
-            texte: `Commander plus de ${r.nom.toLowerCase()}s : le rayon en a eu moins que la demande`,
+            texte: `Commander plus de ${r.nom.toLowerCase()}s`,
             juste: true,
-            retour: `Oui. Le rayon a offert ${qte(k.cardigan.ventes)} ${r.nom.toLowerCase()}s pour ${qte(k.cardigan.demande)} demandés, et il en tient ${qte(r.capaciteDuRayon)}. Une vente manquée est une vente que le client voulait faire : il suffisait d'avoir l'article.`,
+            retour: `Oui : le rayon en a eu moins que la demande. Il a offert ${qte(k.cardigan.ventes)} ${r.nom.toLowerCase()}s pour ${qte(k.cardigan.demande)} demandés, et il en tient ${qte(r.capaciteDuRayon)}. Une vente manquée est une vente que le client voulait faire : il suffisait d'avoir l'article.`,
           },
           {
             texte: "Attirer plus de clients par la publicité",

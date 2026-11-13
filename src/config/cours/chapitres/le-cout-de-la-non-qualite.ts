@@ -465,7 +465,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
         const dit = (j: boolean) => `${j ? "Bon pari." : "Pari à vérifier."} ${voir}`;
         return [
           { texte: "Plus bas qu'au budget actuel : le coût total y est plus haut", juste: moins, retour: dit(moins) },
-          { texte: "Plus haut qu'au budget actuel : les ventes gardées paient la prévention en plus", juste: plus, retour: dit(plus) },
+          { texte: "Plus haut : les ventes gardées paient la prévention", juste: plus, retour: dit(plus) },
           { texte: "Le même : les ventes ne dépendent pas de la qualité", juste: !plus && !moins, retour: dit(!plus && !moins) },
         ];
       },
@@ -582,7 +582,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
         const memes = b.prevention === x.leMoinsCher.prevention;
         return [
           {
-            texte: "Le budget au meilleur résultat : les ventes gardées comptent autant que les coûts",
+            texte: "Le budget au meilleur résultat, ventes gardées comprises",
             juste: !memes,
             retour: `Oui : ${eur(b.resultat)} de résultat ${ouEst(b)}, contre ${eur(x.leMoinsCher.resultat)} ${ouEst(x.leMoinsCher)}. Le budget au coût le plus bas oublie ${qte(arrondi2(x.leMoinsCher.ventesPerdues - b.ventesPerdues))} ventes que la qualité perçue fait perdre de plus.`,
           },
@@ -803,7 +803,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
         const x = qualiteDeNova(c);
         return [
           {
-            texte: "Il peut exagérer la perte : au trimestre 2 ou 4, un client perdu peut être remplacé par une demande refusée",
+            texte: "Il peut exagérer la perte, là où l'outil est le goulot",
             juste: true,
             retour: `Oui. Le modèle compte les ventes perdues sur l'année entière, sans regarder la capacité. Là où l'outil est le goulot, la ligne aurait de toute façon tourné à plein : un client déçu y laisse sa place à un client refusé, et la marge perdue est moindre. Le résultat de la qualité est donc une borne haute de ce que la qualité perçue coûte ; ${x.f.entreprise} doit la lire trimestre par trimestre avant de décider.`,
           },

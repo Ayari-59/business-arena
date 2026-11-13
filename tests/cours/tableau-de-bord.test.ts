@@ -311,9 +311,9 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     expect(premier.nom).toBe("mai");
     expect(juste(ch, "les-voyants")).toBe("Mai");
     expect([dixieme(MOIS[0]!.part * 100), dixieme(MOIS[5]!.part * 100)]).toEqual([26.5, 23.4]);
-    expect(juste(ch, "part-de-marche")).toBe("La position face aux concurrents : on peut gagner de l'argent sur un marché qui grandit tout en y perdant du terrain.");
-    expect(juste(ch, "resultat-et-tresorerie")).toBe("Le résultat compte les ventes et les charges quand elles naissent, la trésorerie quand elles se paient : délais, TVA et emprunt les séparent.");
-    expect(juste(ch, "choisir")).toBe("Le nombre d'écritures passées dans le journal ce mois-ci.");
+    expect(juste(ch, "part-de-marche")).toBe("La position face aux concurrents.");
+    expect(juste(ch, "resultat-et-tresorerie")).toBe("Délais, TVA et emprunt séparent le résultat de la trésorerie.");
+    expect(juste(ch, "choisir")).toBe("Le nombre d'écritures du journal ce mois-ci.");
     const t = ch.etapes.find((e) => e.id === "les-voyants")!.tableau!(cas);
     expect(t.lignes.find((l) => l.libelle === "Indice de sécurité")!.valeurs).toEqual(MOIS.map((m) => `${c(m.indice * 100).toLocaleString("fr-FR", { minimumFractionDigits: 2 }).replace("-", "−")} %`));
     // Le tableau de la question ne donne pas les voyants : c'est à l'élève de les lire.
@@ -321,7 +321,7 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
   });
 
   it("le pari et le curseur du voyant de l'indice : il s'allume sous 1 564 enceintes, avant la perte", () => {
-    expect(juste(ch, "predire-l-alerte")).toBe("Avant celui du résultat, quand NOVA gagne encore de l'argent");
+    expect(juste(ch, "predire-l-alerte")).toBe("Avant : NOVA gagne encore de l'argent à ce niveau");
     const seuilQ = Math.ceil(FIXES / (PRIX - CV));
     const alerteQ = Math.ceil(c(SEUIL / (1 - 0.05)) / PRIX);
     expect([seuilQ, alerteQ]).toEqual([1_485, 1_564]);
@@ -424,7 +424,7 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
   });
 
   it("les verdicts d'expert, et la synthèse", () => {
-    expect(juste(ch, "les-limites")).toBe("Ses voyants constatent le mois écoulé : le budget voyait le découvert d'avril dès janvier");
+    expect(juste(ch, "les-limites")).toBe("Ses voyants constatent le mois écoulé, ils ne prévoient pas");
     const synthese = ch.etapes.find((e) => e.id === "synthese")!;
     if (synthese.type !== "lecture") throw new Error("lecture attendue");
     expect(synthese.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");

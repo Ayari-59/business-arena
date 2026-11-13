@@ -228,7 +228,7 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
       },
       options: () => [
         {
-          texte: `Le taux des pénalités de retard et l'indemnité de ${eur(INDEMNITE_FORFAITAIRE)}`,
+          texte: `Les pénalités de retard et l'indemnité de ${eur(INDEMNITE_FORFAITAIRE)}`,
           juste: true,
           retour: `Oui. Entre professionnels, la facture doit annoncer ce qu'un retard coûtera : le taux des pénalités et l'indemnité forfaitaire de ${eur(INDEMNITE_FORFAITAIRE)} pour frais de recouvrement, et les conditions d'escompte (ici, l'escompte pour paiement comptant). Une mention manquante expose la boutique à une amende administrative.`,
         },
@@ -518,7 +518,7 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
       },
       options: () => [
         {
-          texte: "Il oublie ce que l'affacturage achète en plus : la garantie de l'impayé et le recouvrement",
+          texte: "Il oublie la garantie de l'impayé et le recouvrement",
           juste: true,
           retour: "Oui. Le découvert finance la créance, rien de plus : si le comité ne paie pas, la perte reste à la boutique. L'affacturage se compare donc à un financement plus une assurance et un service de relance ; il se justifie quand les clients sont nombreux ou fragiles.",
         },
@@ -539,13 +539,13 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
       },
       options: () => [
         {
-          texte: "Une LCR : la boutique la présente elle-même à l'échéance, et peut l'escompter",
+          texte: "Une LCR, que la boutique peut escompter",
           juste: true,
           retour: "Oui. Avec la LCR, c'est la boutique qui déclenche le paiement le jour de l'échéance, sans attendre le bon vouloir du comité, et elle peut la remettre à l'escompte si sa trésorerie manque. Le virement, moins cher, laisse l'initiative au comité.",
         },
-        { texte: "Des espèces, sans frais bancaires", juste: false, retour: `Non : entre professionnels, un paiement en espèces est plafonné à 1 000 €, et la facture en fait près de trois fois plus.` },
-        { texte: "Un chèque, qui ne coûte rien", juste: false, retour: "Il ne coûte rien, mais il arrive quand le comité l'envoie, ne s'encaisse qu'après sa remise en banque, et peut revenir impayé." },
-        { texte: "La carte bancaire, garantie", juste: false, retour: "Elle est garantie, mais elle se paie à la commande : elle supprime le crédit au lieu de l'organiser, et coûte un pourcentage du montant." },
+        { texte: "Des espèces, sans frais bancaires ni délai", juste: false, retour: `Non : entre professionnels, un paiement en espèces est plafonné à 1 000 €, et la facture en fait près de trois fois plus.` },
+        { texte: "Un chèque, qui ne coûte rien à encaisser", juste: false, retour: "Il ne coûte rien, mais il arrive quand le comité l'envoie, ne s'encaisse qu'après sa remise en banque, et peut revenir impayé." },
+        { texte: "La carte bancaire, garantie et immédiate", juste: false, retour: "Elle est garantie, mais elle se paie à la commande : elle supprime le crédit au lieu de l'organiser, et coûte un pourcentage du montant." },
       ],
     },
     {
@@ -559,9 +559,9 @@ export const FACTURER_ET_SE_FAIRE_PAYER: Chapitre = {
         const x = facturationDuComite(c);
         return [
           {
-            texte: `Garder les ${qte(x.delai)} jours et financer au découvert : ${eur(x.decouvert.cout)} contre ${eur(x.comptant.escompte)}`,
+            texte: `Garder les ${qte(x.delai)} jours et financer au découvert`,
             juste: true,
-            retour: `Oui. L'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} coûte un crédit à ${pct(x.tauxAnnuel)} l'an ; le découvert finance les mêmes jours pour ${eur(x.decouvert.cout)}. Il faudrait un escompte d'au plus ${pct(auCentime(x.escompteQuiEgale))} pour qu'il ne coûte pas plus. Avec une LCR, la boutique garde la main sur l'échéance.`,
+            retour: `Oui : ${eur(x.decouvert.cout)} contre ${eur(x.comptant.escompte)}. L'escompte de ${pct(CONDITIONS_DE_VENTE.escompte * 100)} coûte un crédit à ${pct(x.tauxAnnuel)} l'an ; le découvert finance les mêmes jours pour ${eur(x.decouvert.cout)}. Il faudrait un escompte d'au plus ${pct(auCentime(x.escompteQuiEgale))} pour qu'il ne coûte pas plus. Avec une LCR, la boutique garde la main sur l'échéance.`,
           },
           { texte: `Pousser l'escompte : ${pct(CONDITIONS_DE_VENTE.escompte * 100)} est moins cher que ${pct(BANQUE_DE_LA_BOUTIQUE.decouvert.taux * 100)}`, juste: false, retour: `Non : c'est comparer un taux sur ${qte(x.delai)} jours à un taux sur un an. Rapporté à l'année, l'escompte coûte ${pct(x.tauxAnnuel)}.` },
           { texte: "Passer à l'affacturage pour toutes les factures des comités", juste: false, retour: `Non : il coûte ${eur(x.affacturage.cout)} par facture comme celle-ci, pour une garantie dont la boutique a peu besoin avec quelques comités fidèles.` },

@@ -580,9 +580,9 @@ export const LA_PAIE: Chapitre = {
         const voir = "Déplacez le curseur à l'étape suivante : il montre le net que touche le salarié pour chaque prime brute.";
         return [
           {
-            texte: `Un peu plus de ${eur(x.sansLePrelevement)} : il faut aussi couvrir le prélèvement à la source`,
+            texte: `Plus de ${eur(x.sansLePrelevement)} : le prélèvement s'ajoute`,
             juste: x.primeBrute > x.sansLePrelevement,
-            retour: `Bon pari. ${voir}`,
+            retour: `Bon pari : il faut aussi couvrir le prélèvement à la source. ${voir}`,
           },
           { texte: `${eur(x.tauxSurLeNet)} : le net plus ${pct(x.tauxSalarial)} de cotisations`, juste: x.primeBrute === x.tauxSurLeNet, retour: `Pari à vérifier. ${voir}` },
           {
@@ -839,9 +839,9 @@ export const LA_PAIE: Chapitre = {
       },
       options: () => [
         {
-          texte: "Le taux ne se décide pas : c'est l'impôt du salarié, et il ne change rien au coût de la prime",
+          texte: "Le taux ne se décide pas, et il ne change rien au coût de la prime",
           juste: true,
-          retour: "Oui. L'employeur collecte le prélèvement au taux que l'administration lui transmet, pour chaque salarié ; il n'en décide pas. Et l'impôt du salarié resterait dû : il se régularise sur l'année. Le coût de la prime, le brut et les cotisations patronales, n'en dépend pas.",
+          retour: "Oui. C'est l'impôt du salarié : l'employeur collecte le prélèvement au taux que l'administration lui transmet, pour chaque salarié ; il n'en décide pas. Et l'impôt du salarié resterait dû : il se régularise sur l'année. Le coût de la prime, le brut et les cotisations patronales, n'en dépend pas.",
         },
         {
           texte: "Bonne idée : le prélèvement est une charge de l'entreprise, le supprimer allège la prime",

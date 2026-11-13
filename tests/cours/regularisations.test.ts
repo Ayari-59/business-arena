@@ -363,7 +363,7 @@ describe("les régularisations de fin d'exercice, à l'exercice de NOVA du monde
     // Au mois de la fiche, le curseur redonne la charge constatée d'avance de l'étape suivante.
     const e = ch.etapes.find((x) => x.id === "le-mois-de-souscription") as EtapeCurseur;
     expect(Object.fromEntries(e.lecture(cas, SOUSCRIPTION).map((l) => [l.libelle, l.montant]))["Charge constatée d'avance"]).toBe(CCA);
-    expect(juste(ch, "predire-la-prime")).toBe("Plus petite : plus de mois de couverture tombent dans N");
+    expect(juste(ch, "predire-la-prime")).toBe("Plus petite : plus de mois couverts en N");
   });
 
   it("le laboratoire des pièces : un effet net nul, et deux régularisations encore à passer", () => {
@@ -427,9 +427,9 @@ describe("les régularisations de fin d'exercice, à l'exercice de NOVA du monde
   });
 
   it("les verdicts : la facture trop tôt, l'extourne, la facture qu'on voudrait laisser à N+1", () => {
-    expect(juste(ch, "facture-d-avance")).toBe("Il retire de l'exercice la part livrée en janvier, 7 080 € hors taxes");
-    expect(juste(ch, "extourne")).toBe("Extourner les régularisations : passer, le 1er janvier, l'écriture inverse de chacune");
-    expect(juste(ch, "la-facture-oubliee")).toBe("Sans elle, N serait gonflé de 34 500 € et N+1 diminué d'autant, alors que les jeux sont consommés ou en stock en N");
+    expect(juste(ch, "facture-d-avance")).toBe("Il retire la part livrée en janvier, 7 080 € hors taxes");
+    expect(juste(ch, "extourne")).toBe("Extourner les régularisations le 1er janvier");
+    expect(juste(ch, "la-facture-oubliee")).toBe("Sans elle, N serait gonflé de 34 500 €");
     // Le distracteur TVA comprise vaut bien le hors taxes × 1,2.
     const options = (ch.etapes.find((x) => x.id === "facture-d-avance") as EtapeChoix).options(cas, etatVide).map((o) => o.texte);
     expect(options).toContain("Il retire 8 496 €, la part livrée en janvier TVA comprise");

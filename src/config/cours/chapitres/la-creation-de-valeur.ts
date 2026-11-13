@@ -307,7 +307,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
         const voir = "Faites varier le résultat d'exploitation à l'étape suivante : le curseur montre ce que l'outil doit rapporter pour couvrir le capital.";
         const moins = x.v.eva < x.a.resultatNet;
         return [
-          { texte: "Moins que son résultat net : il faut d'abord payer ce qu'exigent les associés", juste: moins, retour: `${moins ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          { texte: "Moins que son résultat net : les associés exigent leur part", juste: moins, retour: `${moins ? "Bon pari." : "Pari à vérifier."} ${voir}` },
           { texte: "Égale à son résultat net : tout bénéfice est de la valeur créée", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Plus que son résultat net : la dette ne coûte presque rien après impôt", juste: !moins, retour: `${!moins ? "Bon pari." : "Pari à vérifier."} ${voir}` },
         ];
@@ -586,10 +586,10 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
         const detruit = x.variationDeLEva < 0;
         return [
           {
-            texte: "Non : elle rapporte moins que ne coûte le capital qu'elle mobilise, même si le résultat net monte",
+            texte: "Non : elle rapporte moins que le coût du capital mobilisé",
             juste: detruit,
             retour: detruit
-              ? `C'est cela : ${pct(x.rentabiliteDeLaSalle)} après impôt sur ${eur(x.capitalDeLaSalle)}, sous le CMPC. Un investissement crée de la valeur quand il rapporte plus que le coût du capital qui le finance, pas seulement plus que le taux de son emprunt.`
+              ? `C'est cela, même si le résultat net monte : ${pct(x.rentabiliteDeLaSalle)} après impôt sur ${eur(x.capitalDeLaSalle)}, sous le CMPC. Un investissement crée de la valeur quand il rapporte plus que le coût du capital qui le finance, pas seulement plus que le taux de son emprunt.`
               : `Non : l'EVA monte de ${eur(x.variationDeLEva)}.`,
           },
           {
@@ -767,7 +767,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
         "Sans marge de crédit, le laboratoire montre un CMPC qui baisse sans fin avec la dette. Modigliani et Miller en tirent, en 1963, qu'avec l'impôt la valeur de l'entreprise monte avec sa dette. Pourquoi les entreprises ne s'endettent-elles pas au maximum ?",
       options: () => [
         {
-          texte: "Au-delà d'un certain levier, la dette coûte plus cher et le risque de défaillance a un coût",
+          texte: "Au-delà d'un certain levier, la dette et le risque coûtent",
           juste: true,
           retour:
             "Oui. L'économie d'impôt sur les intérêts pousse à s'endetter ; le coût d'une défaillance possible (la banque qui renchérit, les clients et les fournisseurs qui se méfient) pousse en sens inverse. C'est la théorie du compromis : le CMPC en U du laboratoire, dont le fond fixe une structure cible.",

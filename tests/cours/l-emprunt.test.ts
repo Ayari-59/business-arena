@@ -462,7 +462,7 @@ describe.each(ENTREPRISES_DU_COURS)("l'emprunt chez %s, refait à la main", (cod
   });
 
   it("les verdicts, et des textes propres", () => {
-    expect(juste(ch, "pourquoi-baisse", cas)).toMatch(/^Ils se calculent sur le capital qui reste dû/);
+    expect(juste(ch, "pourquoi-baisse", cas)).toBe("Ils portent sur un capital dû plus petit.");
     expect(juste(ch, "predire-le-cout", cas)).toBe("Plus d'intérêts : la dette baisse moins vite au début");
     expect(juste(ch, "quel-mode", cas)).toBe("Au même taux, aucun n'est plus cher : on choisit selon la trésorerie des premières années");
     verifierLesTextes(ch, cas);

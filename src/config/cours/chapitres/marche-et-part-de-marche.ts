@@ -154,8 +154,8 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
         const m = marcheEtPart(c);
         const position = m.rang === 1 ? "leader" : m.rang === 2 ? "challenger" : "suiveur";
         const options = [
-          { code: "leader", texte: "Le leader : elle vend plus que tous ses concurrents", vrai: `Oui : ${c.entreprise} est devant ${m.premierConcurrent.nom}. Le leader défend sa place : il fixe souvent les prix du marché, et les autres se situent par rapport à lui.` },
-          { code: "challenger", texte: "Le challenger : deuxième, elle cherche à prendre la place du leader", vrai: `Oui : ${c.entreprise} vient derrière ${m.leader.nom}, devant les autres. Le challenger attaque le leader : par le prix, l'innovation ou la communication.` },
+          { code: "leader", texte: "Le leader : elle vend plus que chacun de ses concurrents", vrai: `Oui : ${c.entreprise} est devant ${m.premierConcurrent.nom}. Le leader défend sa place : il fixe souvent les prix du marché, et les autres se situent par rapport à lui.` },
+          { code: "challenger", texte: "Le challenger : deuxième, elle brigue la place du leader", vrai: `Oui : ${c.entreprise} vient derrière ${m.leader.nom}, devant les autres. Le challenger attaque le leader : par le prix, l'innovation ou la communication.` },
           { code: "suiveur", texte: "Le suiveur : loin derrière, elle s'aligne sur les autres", vrai: `Oui : ${c.entreprise} est loin derrière ${m.leader.nom}. Le suiveur s'aligne sur le marché, ou se spécialise sur une clientèle que les grands servent mal.` },
         ];
         return options.map((o) => ({
@@ -194,7 +194,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
             retour: lePlusCherVendLePlus ? `Oui : ${m.plusCher.nom} vend le plus malgré le prix le plus haut.` : `Non : la plus chère, ${m.plusCher.nom} (${eur(m.plusCher.prix)}), vend moins que ${m.leader.nom}.`,
           },
           {
-            texte: "Le leader n'est ni le plus cher ni le moins cher",
+            texte: "Le leader n'est ni le plus cher ni le moins cher des trois",
             juste: !leMoinsCherVendLePlus && !lePlusCherVendLePlus,
             retour:
               !leMoinsCherVendLePlus && !lePlusCherVendLePlus

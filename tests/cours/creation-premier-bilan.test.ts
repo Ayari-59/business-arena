@@ -248,7 +248,7 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
     const options = (ch.etapes[3] as EtapeChoix).options(casDeLEntreprise("nova"), { soldes: {} }).map((o) => [o.texte, o.juste]);
     expect(options).toEqual([
       ["Oui : emprunter coûte de l'argent.", false],
-      ["Non : c'est une ressource, une dette qu'il faudra rembourser.", true],
+      ["Non : c'est une dette, qu'il faudra rembourser.", true],
       ["Non : c'est un produit, l'entreprise s'enrichit.", false],
     ]);
     // Le gabarit : deux paris, un curseur, deux laboratoires, trois étapes d'expert, la synthèse.
@@ -505,7 +505,7 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
     const balance = (ch.etapes.find((e) => e.id === "le-mois-complet") as EtapeMontants).tableau!(cas);
     const lire = (s: string) => (s ? Number(s.replace(/[\s €]/g, "").replace(",", ".")) : 0);
     expect(centime(balance.lignes.reduce((t, l) => t + lire(l.valeurs[0]!), 0))).toBe(centime(balance.lignes.reduce((t, l) => t + lire(l.valeurs[1]!), 0)));
-    expect(juste(ch, cas, "critique")).toBe(`Il manque l'usure de l'équipement et les intérêts du mois : le mois complet fait ${new Intl.NumberFormat("fr-FR", { minimumFractionDigits: Number.isInteger(m.resultatComplet) ? 0 : 2 }).format(m.resultatComplet).replace(/^-/, "−")} €`);
+    expect(juste(ch, cas, "critique")).toBe(`Il manque deux charges : le mois complet fait ${new Intl.NumberFormat("fr-FR", { minimumFractionDigits: Number.isInteger(m.resultatComplet) ? 0 : 2 }).format(m.resultatComplet).replace(/^-/, "−")} €`);
   });
 
   it("le délai du client : CampusTech paie à 80 jours, 20 jours au-delà des 60 jours convenus (décision du propriétaire)", () => {
@@ -529,7 +529,7 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
     const e = deroule.etapes.find((x) => x.id === "apres-echeances") as EtapeComparaison;
     const a = etatAvant(deroule, cas, indexDeLEtape(deroule, e.avantLEtape));
     const b = etatAvant(deroule, cas, indexDeLEtape(deroule, "apres-echeances"));
-    expect(e.options(cas, a, b).find((o) => o.juste)!.texte).toBe("Non : payer et encaisser ne créent ni charge ni produit. Ils changent la forme de l'actif et du passif.");
+    expect(e.options(cas, a, b).find((o) => o.juste)!.texte).toBe("Non : un règlement ne crée ni charge ni produit.");
     expect(compteDeResultat(a.soldes).resultat).toBe(compteDeResultat(b.soldes).resultat);
   });
 });

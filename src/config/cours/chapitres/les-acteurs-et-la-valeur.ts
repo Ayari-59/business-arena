@@ -225,7 +225,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
         return [
           { texte: "Surtout les associés, et l'État pour une part", juste: k.quiPaie === "associes", retour: k.quiPaie === "associes" ? `Oui : les associés en paient ${pct(k.partDesAssocies)} par un résultat net plus petit, l'État ${pct(k.partDeLEtat)} par un impôt plus petit. ${chiffres}` : `Non. ${chiffres}` },
           { texte: "Surtout l'État, qui perd de l'impôt", juste: k.quiPaie === "etat", retour: k.quiPaie === "etat" ? `Oui : l'impôt baisse plus que le résultat net. ${chiffres}` : `Non : l'État n'en paie que ${pct(k.partDeLEtat)}, par un impôt plus petit. ${chiffres}` },
-          { texte: "Les clients, par des prix plus hauts", juste: false, retour: `Non : les clients paient exactement la même chose, ${eur(k.apres.ventes)} dans les deux années. Les prix n'ont pas bougé.` },
+          { texte: "Les clients, par des prix plus hauts que l'an passé", juste: false, retour: `Non : les clients paient exactement la même chose, ${eur(k.apres.ventes)} dans les deux années. Les prix n'ont pas bougé.` },
         ];
       },
     },

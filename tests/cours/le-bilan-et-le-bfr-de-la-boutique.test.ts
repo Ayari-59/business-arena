@@ -76,7 +76,7 @@ describe("le bilan et le BFR de la boutique", () => {
       "Trésorerie nette": centime(dispo - 320_000),
       "Autonomie financière (%)": centime((cpApres / (passif - 320_000)) * 100),
     });
-    expect(juste(ch, "la-provision-justifiee")).toMatch(/^Le fonds de roulement et le BFR baissent du même montant/);
+    expect(juste(ch, "la-provision-justifiee")).toBe("Le fonds de roulement et le BFR baissent ensemble");
     expect(juste(ch, "le-decouvert")).toMatch(/^Qu'un découvert finance un creux passager/);
     expect(juste(ch, "decider")).toMatch(/^Verser 320 000 €/);
   });

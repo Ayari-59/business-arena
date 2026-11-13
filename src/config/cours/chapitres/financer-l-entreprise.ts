@@ -177,7 +177,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
         const oui = k.caf >= k.montant;
         return [
           {
-            texte: "Oui : sa capacité d'autofinancement couvre le prix",
+            texte: "Oui : son autofinancement suffit",
             juste: oui,
             retour: oui
               ? `Oui : ${eur(k.caf)} pour ${eur(k.montant)}. L'entreprise peut s'autofinancer : elle n'a pas à s'endetter davantage, et ne paie pas d'intérêts de plus.`

@@ -282,7 +282,7 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
     });
     expect(Object.values(attendus(ch, "les-ratios"))).toEqual([24.43, 24.04, 82.18, 79.4]);
     expect(juste(ch, "le-voyant-rouge")).toBe("Le trafic : il faut faire venir, ceux qui entrent achètent mieux");
-    expect(juste(ch, "predire-sans-trafic")).toBe("D'environ 6 %, ce qui manque au chiffre d'affaires");
+    expect(juste(ch, "predire-sans-trafic")).toBe("D'environ 6 %, ce qui manque aux ventes");
     const passages = Math.ceil((cible - comites) / panier);
     expect(attendus(ch, "la-transformation-qui-eteint")).toEqual({
       "Chiffre d'affaires du seuil du voyant": centime(cible),
@@ -360,9 +360,9 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
       "Panier moyen de février": centime((caFevrier - comites) / 925),
     });
     expect([caFevrier, centime((caFevrier - comites) / 925)]).toEqual([93_718.17, 90.29]);
-    expect(juste(ch, "critique-de-l-objectif")).toBe("Il dit vrai sur l'écart, mais un tiers par mois suppose trois mois égaux : l'objectif se répartit selon la saison");
+    expect(juste(ch, "critique-de-l-objectif")).toBe("Il dit vrai, mais l'objectif se répartit selon la saison");
     // Le reporting (complément C5) : une note courte sur l'outil partagé, puis la réunion qui décide.
-    expect(juste(ch, "le-reporting")).toBe("Une note d'une page sur l'outil partagé : les deux voyants, leur cause, l'action proposée ; puis on en décide en réunion");
+    expect(juste(ch, "le-reporting")).toBe("Une note d'une page : voyants, cause, action ; puis la réunion décide");
     expect(ch.etapes.find((e) => e.id === "le-reporting")!.tableau!(cas).lignes.map((l) => l.libelle)).toEqual(["Note de synthèse", "Tableau de bord sur un outil partagé", "Réunion", "Message instantané"]);
   });
 

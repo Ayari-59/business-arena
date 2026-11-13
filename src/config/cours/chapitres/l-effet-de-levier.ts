@@ -391,7 +391,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
         const { r, verdict } = levierDeLEscale(c);
         const voir = "Faites varier le résultat d'exploitation à l'étape suivante : le curseur montre de quel côté joue la dette, et jusqu'où.";
         return [
-          { texte: `Plus haute que ${pct(r.re)} : la dette rapporte à l'outil plus qu'elle ne coûte`, juste: verdict === "levier", retour: `${verdict === "levier" ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          { texte: `Plus haute que ${pct(r.re)} : la dette rapporte plus`, juste: verdict === "levier", retour: `${verdict === "levier" ? "Bon pari." : "Pari à vérifier."} ${voir}` },
           { texte: `Plus basse que ${pct(r.re)} : il faut d'abord payer les intérêts`, juste: verdict === "massue", retour: `${verdict === "massue" ? "Bon pari." : "Pari à vérifier."} ${voir}` },
           { texte: `La même, ${pct(r.re)} : la dette ne change que le partage`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -523,7 +523,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
         const voir = "Faites monter le taux à l'étape suivante : le curseur montre où la dette se retourne, et pourquoi.";
         return [
           { texte: `Jusqu'à ${pct(r.re)}, la rentabilité économique de l'outil`, juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: `Un peu au-delà de ${pct(r.re)} : les intérêts se déduisent de l'impôt`, juste: tauxLimite > r.re, retour: `${tauxLimite > r.re ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          { texte: `Un peu au-delà de ${pct(r.re)} : les intérêts se déduisent`, juste: tauxLimite > r.re, retour: `${tauxLimite > r.re ? "Bon pari." : "Pari à vérifier."} ${voir}` },
           { texte: `En deçà de ${pct(r.re)} : la dette coûte aussi ce qu'elle rembourse`, juste: tauxLimite <= r.re, retour: `${tauxLimite <= r.re ? "Bon pari." : "Pari à vérifier."} ${voir}` },
         ];
       },
@@ -665,14 +665,14 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
         const massueJoue = verdict === "massue" && !rcpBaisse;
         return [
           {
-            texte: "Elle baisse : moins de dette, c'est moins de levier sur une rentabilité qui dépasse son coût",
+            texte: "Elle baisse : moins de dette, c'est moins de levier",
             juste: levierJoue,
             retour: levierJoue
               ? `Oui : l'outil rapportait ${pct(r.re)}, plus que les ${pct(r.i)} que coûtait l'endettement net. Chaque euro de dette remplacé par un euro des associés retire un gain qui leur revenait : la Rcp descend vers la rentabilité économique.`
               : `Non : elle passe de ${pct(r.rcp)} à ${pct(r2.rcp)}, et la dette coûtait plus que l'outil ne rapportait.`,
           },
           {
-            texte: "Elle monte : moins de dette, c'est moins de massue sur une rentabilité sous son coût",
+            texte: "Elle monte : moins de dette, c'est moins de massue",
             juste: massueJoue,
             retour: massueJoue
               ? `Oui : l'endettement net coûtait ${pct(r.i)}, plus que les ${pct(r.re)} que rapportait l'outil. La Rcp remonte vers la rentabilité économique.`
@@ -854,7 +854,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
         "Le gérant conclut : « Tant que l'outil rapporte plus que la dette ne coûte, chaque euro emprunté enrichit les associés : endettons-nous au maximum. » Que lui répondez-vous ?",
       options: () => [
         {
-          texte: "La Rcp monte avec le levier, mais son risque aussi, et une dette plus chère rapproche le seuil de massue",
+          texte: "La Rcp monte avec le levier, mais son risque aussi",
           juste: true,
           retour:
             "Oui. La relation donne la rentabilité d'une année, pas son risque : plus le levier est fort, plus la rentabilité des associés varie avec l'exploitation, et la mauvaise année l'a montré. Le laboratoire l'a montré aussi : une banque qui prête plus cher à mesure que la dette grossit relève le seuil de massue, et la Rcp finit par redescendre.",

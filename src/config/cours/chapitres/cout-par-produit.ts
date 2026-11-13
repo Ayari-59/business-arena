@@ -468,7 +468,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
       options: () => {
         const voir = "Le laboratoire de l'étape suivante vous laisse essayer : les heures, le prix, la clé.";
         return [
-          { texte: "Non : les charges qu'elle ne porte plus iront aux autres références", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Non : ses charges iront aux autres références", juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Oui : les autres références ne changent pas", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Oui, et la gamme gagnera ce que la référence ne porte plus", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -560,7 +560,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
         const k = coutsParProduit(c);
         return [
           {
-            texte: `Il baisse de ${eur(k.x.margeSpecifique)} : ce qu'elle laisse une fois payées ses seules charges propres`,
+            texte: `Il baisse de ${eur(k.x.margeSpecifique)} : sa marge après charges propres`,
             juste: true,
             retour: `C'est cela. ${k.x.nom} paie ses charges propres et laisse ${eur(k.x.margeSpecifique)} pour les charges communes. Sans elle, ces charges retombent sur les autres, et le résultat de la gamme passe de ${eur(k.h.resultat)} à ${eur(k.sansX)}.`,
           },
