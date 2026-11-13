@@ -421,7 +421,7 @@ async function parcoursDeLaClasse(monde: Monde): Promise<void> {
     await photographier(prof, "enseignant", "nouvelle-partie");
   });
   await prof.selectOption('select[name="periodicity"]', "quarter");
-  await prof.selectOption('select[name="roundsCount"]', "3");
+  await prof.locator('input[name="roundsCount"]').fill("3");
   await prof.selectOption('select[name="level"]', "2");
   // L'évaluation entre coéquipiers, cochée à la création : la carte paraîtra au bilan.
   await prof.locator('input[name="evaluationDesPairs"]').check();
@@ -891,7 +891,7 @@ async function parcoursDeLEssai(monde: Monde): Promise<void> {
   await prof.selectOption('select[name="scenarioCode"]', "nova").catch(() => undefined);
   await prof.selectOption('select[name="humanTeamsCount"]', "2");
   await prof.selectOption('select[name="botCount"]', "1");
-  await prof.selectOption('select[name="roundsCount"]', "3");
+  await prof.locator('input[name="roundsCount"]').fill("3");
   await prof.locator('input[name="toursDEssai"][value="1"]').check();
   await prof.getByRole("button", { name: /Créer la partie/ }).click();
   await prof.waitForURL(/\/teacher\/games\//, { timeout: 60_000 });
