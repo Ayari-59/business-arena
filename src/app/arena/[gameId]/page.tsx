@@ -1732,15 +1732,31 @@ async function ArenaPage({
                 {/* « Rejouer » est l'action de la clôture : le grand bouton plein,
                     le seul orange de l'ardoise. Changer de métier est l'autre
                     chemin, en filet. */}
-                <Link
-                  href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
-                  className={`${bouton({ taille: "l" })} sm:min-w-56`}
-                >
-                  Rejouer {view.intro.company}
-                </Link>
-                <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
-                  Un autre métier
-                </Link>
+                {/* EN CLASSE, ON NE QUITTE PAS LA PARTIE (séance d'essai, P2-8) :
+                    « Rejouer » ouvrait une partie solo et sortait l'élève de la
+                    classe au moment du débrief. On relit plutôt ses tours. */}
+                {view.kind === "class" ? (
+                  <>
+                    <Link href="#tours-joues" className={`${bouton({ taille: "l" })} sm:min-w-56`}>
+                      Revoir mes tours
+                    </Link>
+                    <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
+                      Jouer seul
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
+                      className={`${bouton({ taille: "l" })} sm:min-w-56`}
+                    >
+                      Rejouer {view.intro.company}
+                    </Link>
+                    <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
+                      Un autre métier
+                    </Link>
+                  </>
+                )}
               </BilanDePartie>
             );
           })()
@@ -1775,7 +1791,7 @@ async function ArenaPage({
         on lit ses résultats avant de décider, et c'est le lien en tête du
         tour en cours qui y mène.
       */}
-      <div className="space-y-4">
+      <div id="tours-joues" className="scroll-mt-24 space-y-4">
         {/* ── Période active : le tour en cours, ouvert ── */}
         {hasActivePeriod ? (
           <section
