@@ -158,9 +158,9 @@ describe("les budgets sont groupés, avec leur total", () => {
   it("sur ordinateur, l'engagement est relu à chaque frappe et dès l'arrivée", () => {
     // Sans quoi le total resterait vide jusqu'à la première modification, et un
     // repli annoncerait « aucune » alors qu'une valeur reconduite l'habite.
-    expect(FORMULAIRE).toContain("if (derniere || !modeCartes) relireLEngagement();");
+    expect(FORMULAIRE).toContain("if (derniere || !modeCartes || carteCourante?.cle === CLE_DU_RESTE) relireLEngagement();");
     expect(FORMULAIRE).toMatch(
-      /useEffect\(\(\) => \{\s*\n?\s*if \(!modeCartes\) relireLEngagement\(\);/,
+      /useEffect\(\(\) => \{[\s\S]{0,300}?if \(!modeCartes \|\| carteCourante\?\.cle === "recap"\) relireLEngagement\(\);/,
     );
   });
 });

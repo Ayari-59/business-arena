@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { db } from "@/db";
 import { games, rounds, teams, decisions } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export async function GET(
   _request: Request,
@@ -20,12 +20,16 @@ export async function GET(
   const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
   const humanTeams = teamRows.filter((t) => t.controller === "human");
 
-  const currentRoundRow = (
-    await db
-      .select({ id: rounds.id, status: rounds.status })
-      .from(rounds)
-      .where(and(eq(rounds.gameId, gameId), eq(rounds.index, game.currentRound)))
-  )[0];
+  // Les tours de la partie, en une requête : le tour courant, et le dernier
+  // classement révélé (le mur et le pilotage le suivent aussi).
+  const toursDeLaPartie = await db
+    .select({ id: rounds.id, index: rounds.index, status: rounds.status, revele: rounds.rankingRevealedAt })
+    .from(rounds)
+    .where(eq(rounds.gameId, gameId));
+  const currentRoundRow = toursDeLaPartie.find((t) => t.index === game.currentRound);
+  const dernierTourRevele = toursDeLaPartie
+    .filter((t) => t.revele !== null)
+    .reduce<number | null>((max, t) => (max === null || t.index > max ? t.index : max), null);
 
   let submittedCount = 0;
   if (currentRoundRow) {
@@ -44,6 +48,7 @@ export async function GET(
       roundStatus: currentRoundRow?.status ?? "pending",
       submittedCount,
       totalHumanTeams: humanTeams.length,
+      dernierTourRevele,
     },
     { headers: { "cache-control": "no-store" } },
   );

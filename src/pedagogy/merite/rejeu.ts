@@ -47,6 +47,7 @@ import {
   BPI_V2_DIMENSIONS,
   computeRoundScoresV2,
   gameBpi,
+  resultatHorsSubvention,
   scoringWeightsByName,
   type PedagogyInputsV2,
 } from "@/scoring/bpi";
@@ -385,8 +386,9 @@ export function rejouer(
     resultatParTour.push(auCentime(sortie.results[partie.joueur]!.incomeStatement.netIncome));
 
     // Ce que le tour suivant relira de la base.
+    // Hors subvention, comme le service de scoring le lit en base.
     netPrecedent = Object.fromEntries(
-      ids.map((id) => [id, auCentime(sortie.results[id]!.incomeStatement.netIncome)]),
+      ids.map((id) => [id, auCentime(resultatHorsSubvention(sortie.results[id]!.incomeStatement))]),
     );
     precedentes = commeEnBase(decisions);
     resultatsPrecedents = sortie.results;

@@ -17,6 +17,7 @@ import { BarreDeJeu } from "@/components/barre-de-jeu";
 import { StockageDurable } from "@/components/stockage-durable";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { AnalyseDuTour, SituationCard, SituationDebrief } from "@/components/situation-panel";
+import { EnAttenteDeLaCloture } from "@/components/en-attente-de-la-cloture";
 import { SaisonDuTour } from "@/components/saison-du-tour";
 import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
@@ -1308,7 +1309,23 @@ async function ArenaPage({
           soumissionsNode ||
           (!finished && view.playLock.playable && view.playLock.closesAt)) ? (
           <div className="space-y-2">
-            {etatDesDecisions}
+            {/* L'ÉQUIPE A VALIDÉ (séance d'essai, P1-3 et P1-4) : qui, quand, ce que vaut un
+                nouvel envoi, et quoi faire en attendant la clôture. */}
+            {view.kind !== "solo" && view.pendingDecisionsPar ? (
+              <EnAttenteDeLaCloture
+                gameId={gameId}
+                mention={mentionDeValidation(
+                  view.pendingDecisionsPar.nom,
+                  new Date(view.pendingDecisionsPar.quand),
+                )}
+                situationsARendre={
+                  statutSituations ? statutSituations.total - statutSituations.rendues : 0
+                }
+                codeDeReprise={view.currentRound === 1 ? codeDeReprise : null}
+              />
+            ) : (
+              etatDesDecisions
+            )}
             {soumissionsNode}
             {!finished && view.playLock.playable && view.playLock.closesAt ? (
               <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
@@ -1394,6 +1411,8 @@ async function ArenaPage({
       // qui ne reconduit aucune dépense ponctuelle du tour précédent.
       defaults={view.pendingDecisions ?? view.proposedDecisions}
       proposed={view.proposedDecisions}
+      valideAuTourPasse={view.pivotsValidesAuTourPasse}
+      decisionsDuTourPasse={view.lastDecisions}
       kind={view.kind}
       alreadySubmitted={view.pendingDecisions !== null}
       insuranceOffer={
@@ -1713,15 +1732,31 @@ async function ArenaPage({
                 {/* « Rejouer » est l'action de la clôture : le grand bouton plein,
                     le seul orange de l'ardoise. Changer de métier est l'autre
                     chemin, en filet. */}
-                <Link
-                  href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
-                  className={`${bouton({ taille: "l" })} sm:min-w-56`}
-                >
-                  Rejouer {view.intro.company}
-                </Link>
-                <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
-                  Un autre métier
-                </Link>
+                {/* EN CLASSE, ON NE QUITTE PAS LA PARTIE (séance d'essai, P2-8) :
+                    « Rejouer » ouvrait une partie solo et sortait l'élève de la
+                    classe au moment du débrief. On relit plutôt ses tours. */}
+                {view.kind === "class" ? (
+                  <>
+                    <Link href="#tours-joues" className={`${bouton({ taille: "l" })} sm:min-w-56`}>
+                      Revoir mes tours
+                    </Link>
+                    <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
+                      Jouer seul
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
+                      className={`${bouton({ taille: "l" })} sm:min-w-56`}
+                    >
+                      Rejouer {view.intro.company}
+                    </Link>
+                    <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
+                      Un autre métier
+                    </Link>
+                  </>
+                )}
               </BilanDePartie>
             );
           })()
@@ -1756,7 +1791,7 @@ async function ArenaPage({
         on lit ses résultats avant de décider, et c'est le lien en tête du
         tour en cours qui y mène.
       */}
-      <div className="space-y-4">
+      <div id="tours-joues" className="scroll-mt-24 space-y-4">
         {/* ── Période active : le tour en cours, ouvert ── */}
         {hasActivePeriod ? (
           <section
@@ -1888,6 +1923,7 @@ async function ArenaPage({
                   // SUR TÉLÉPHONE, UN PARCOURS ET NON DES ONGLETS : briefing en
                   // cartes, analyse, puis les décisions, avec un seul bouton en bas.
                   <ParcoursMobile
+                    ouvrirSurLesDecisions={view.kind !== "solo" && view.pendingDecisions !== null}
                     briefing={briefingCartes}
                     analyse={analyseCartes}
                     courrier={courrierCarte}

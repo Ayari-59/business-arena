@@ -8,7 +8,7 @@ import { getTeacherGameView } from "@/services/game.service";
 import { getObservationSeance } from "@/services/observation.service";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { SITE_URL } from "@/config/site";
-import { dureeDuTour } from "@/config/duree-du-tour";
+import { dureeDuTour, dureesDeLaPartie, planDesSeances } from "@/config/duree-du-tour";
 import { etapesEleve, etapesEnseignant, type FaitsDeLaPartie } from "@/config/fiches";
 import { scenarioByCode } from "@/config/scenarios/registry";
 import { CodeQr } from "@/components/code-qr";
@@ -95,11 +95,23 @@ async function FichesPage({
   const mesure = [...(observation?.tours ?? [])]
     .filter((t) => t.clos && t.minutesMedianes !== null)
     .sort((a, b) => b.index - a.index)[0];
+  // Une partie de classe : à partir du tour 2, la lecture des résultats et la
+  // seconde situation comptent, comme au pilotage.
   const estimationCourante = dureeDuTour({
     ...view.chargeDuTour,
     premierTour: view.currentRound === 1,
+    enClasse: true,
   });
-  const estimationPremier = dureeDuTour({ ...view.chargeDuTour, premierTour: true });
+  const estimationPremier = dureeDuTour({ ...view.chargeDuTour, premierTour: true, enClasse: true });
+  const estimationSuivante = dureeDuTour({ ...view.chargeDuTour, premierTour: false, enClasse: true });
+  // La partie en séances de 55 min, comme le formulaire de création l'annonce.
+  const plan = planDesSeances(
+    dureesDeLaPartie({
+      tours: view.roundsCount,
+      premier: estimationPremier.minutes,
+      suivant: estimationSuivante.minutes,
+    }),
+  );
 
   const definition = scenarioByCode(view.scenarioCode);
   const faits: FaitsDeLaPartie = {
@@ -115,6 +127,8 @@ async function FichesPage({
     minutesTourCourant: mesure?.minutesMedianes ?? estimationCourante.minutes,
     minutesPremierTour: estimationPremier.minutes,
     mesure: mesure !== undefined,
+    seances: plan.seances,
+    toursParSeance: Math.max(...plan.toursParSeance.map((t) => t.length)),
     equipes: view.teams.filter((t) => t.controller === "human").length,
     premierTourDejaJoue: view.currentRound > 1,
   };
@@ -219,8 +233,9 @@ async function FichesPage({
             <>
               <strong>Ce qui compte à la fin.</strong> L&apos;IPG, indice de performance
               globale, mesure six dimensions : l&apos;économique, le financier, le commercial,
-              la RSE, le pilotage et la maîtrise de vos décisions. Une entreprise qui gagne de
-              l&apos;argent en cassant sa trésorerie ne monte pas au classement.
+              la RSE, le pilotage et la maîtrise de vos décisions. Le résultat compte, mais pas
+              seul : au mur, chaque équipe lit ses points forts et ses points faibles. Une
+              subvention de l&apos;enseignant ne compte pas au classement.
             </>
           ) : (
             <>

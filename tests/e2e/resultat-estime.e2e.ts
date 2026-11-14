@@ -89,17 +89,17 @@ describe("le résultat estimé, de la saisie au verdict", () => {
         : "apres";
     });
     expect(ordre, "les ventes estimées doivent précéder le prix").toBe("avant");
-    // LOT P4 : AU PREMIER TOUR, UNE PROPOSITION PLAUSIBLE, MARQUÉE. Le champ part
-    // du plan de production que la feuille propose déjà (un chiffre sous les
-    // yeux du joueur, rien du moteur), il est marqué « Proposition — à
-    // ajuster », et le résultat estimé parle d'emblée.
+    // LOT P4 : AU PREMIER TOUR, UNE PROPOSITION PLAUSIBLE, MARQUÉE. Séance d'essai, P1-7 :
+    // le champ part de la demande d'une part de marché égale (`ventesAPartEgale`), et non
+    // plus du plan de production ; il est marqué « Proposition — à ajuster », et le
+    // résultat estimé parle d'emblée.
     await page.waitForTimeout(900);
     const plan = Number(await page.locator('input[name="productionPlan"]').first().inputValue());
     expect(plan, "le plan de production proposé").toBeGreaterThan(0);
-    expect(Number(await champ.inputValue())).toBe(Math.round(plan));
+    expect(Number(await champ.inputValue()), "la part égale proposée").toBeGreaterThan(0);
     const marque = page.locator("[data-proposition-de-ventes]:visible");
     expect(await marque.count()).toBe(1);
-    expect(await marque.innerText()).toMatch(/Proposition — à ajuster/);
+    expect(await marque.innerText()).toMatch(/Proposition à ajuster\s+une part de marché égale/);
     expect(await page.locator('input[name="propositionDeVentes"]').count()).toBe(1);
     const propose = await encart(page);
     expect(propose, "le résultat estimé reste muet au premier tour").not.toBeNull();
@@ -139,7 +139,7 @@ describe("le résultat estimé, de la saisie au verdict", () => {
       ]),
     );
     // Le libellé est sans ambiguïté.
-    await dit(page, "Résultat estimé", "selon vos ventes estimées");
+    await dit(page, "Résultat estimé", "si vous vendez");
 
     // Deux fois plus de ventes estimées : le chiffre d'affaires estimé monte.
     await champ.fill("2400");
@@ -279,8 +279,8 @@ describe("le résultat estimé, de la saisie au verdict", () => {
     await q.waitForTimeout(900);
     const ligne = q.locator("[data-ligne-estimee]:visible");
     expect(await ligne.count()).toBe(1);
-    // LOT P7 : la ligne vit dans la barre du parcours, « Rés. estimé … ».
-    expect(await ligne.innerText()).toMatch(/Rés\. estimé\s+−?[\d\s\u202f\u00a0]+€/);
+    // LOT P7 : la ligne vit dans la barre du parcours ; P1-7 : « … € si vous vendez N ».
+    expect(await ligne.innerText()).toMatch(/−?[\d\s\u202f\u00a0]+€\s+si [\d\s\u202f\u00a0]+ ventes?/);
     // LOT 3A : une seule barre fixe au bas de l'écran, et la ligne n'en fait
     // pas une seconde — elle vit dans le flux de la carte (mesuré : posée dans
     // le pied fixe, elle coûtait 65 px à CHAQUE carte, et quatre cartes déjà

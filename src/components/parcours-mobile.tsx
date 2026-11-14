@@ -56,6 +56,12 @@ export interface EnteteDeCarte {
   titre: string;
   /** Remplace « Temps · rang » quand l'écran sait mieux compter (les analyses rendues). */
   amorce?: string;
+  /**
+   * LES ANALYSES QUI RESTENT À RENDRE (séance d'essai, P1-9). « Continuer » passait à la
+   * suite après une seule des deux situations, et l'équipe ne savait pas qu'elle en
+   * laissait une : le bouton le dit, comme un champ dit ce qui lui manque.
+   */
+  reste?: number;
 }
 
 interface ContexteDuParcours {
@@ -65,6 +71,13 @@ interface ContexteDuParcours {
   rapporterDecision: (courante: number, total: number) => void;
   /** Reculer depuis la première carte de décision : retour à l'analyse. */
   reculerAvantLesDecisions: () => void;
+  /**
+   * Aller à une carte du parcours par sa clé (« analyse », « chiffres », « arbitrage ») :
+   * ce que la carte d'attente propose après « Valider ». Faux si la carte n'existe pas.
+   */
+  allerALaCarteDuParcours: (cle: string) => boolean;
+  /** Les clés des cartes du parcours, pour ne proposer que celles qui existent. */
+  clesDuParcours: readonly string[];
 }
 
 const ParcoursContexte = createContext<ContexteDuParcours | null>(null);
@@ -79,7 +92,15 @@ export function ParcoursMobile({
   analyse,
   courrier,
   decisions,
+  ouvrirSurLesDecisions = false,
 }: {
+  /**
+   * L'ÉQUIPE A DÉJÀ VALIDÉ (séance d'essai, P1-3) : le coéquipier qui ouvre l'arène
+   * retombait sur « Briefing · 1 sur 7 », « Continuer » en plein, sans voir que c'était
+   * fait. Le parcours s'ouvre alors sur les décisions, que la feuille ouvre sur son
+   * récapitulatif.
+   */
+  ouvrirSurLesDecisions?: boolean;
   briefing: CarteDuParcours[];
   analyse: AnalyseDuParcours[];
   /** Le courrier du tour (solo) : une carte avant les décisions, qui en dépendent. */
@@ -143,9 +164,10 @@ export function ParcoursMobile({
     return liste;
   }, [briefing, analyse, courrier, decisions]);
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => (ouvrirSurLesDecisions ? Number.MAX_SAFE_INTEGER : 0));
   const [decision, setDecision] = useState({ courante: 0, total: 0 });
-  const courante = etapes[Math.min(index, etapes.length - 1)]!;
+  const indexAffiche = Math.min(index, etapes.length - 1);
+  const courante = etapes[indexAffiche]!;
   const derniere = etapes.length - 1;
 
   // Le parcours lui-même : c'est à son début qu'on revient d'une carte à l'autre.
@@ -168,7 +190,7 @@ export function ParcoursMobile({
     const veille = new MutationObserver(relire);
     veille.observe(el, { childList: true, subtree: true });
     return () => veille.disconnect();
-  }, [index]);
+  }, [indexAffiche]);
   // Un geste de l'utilisateur (bouton ou glissement) se sent dans la main ; un lien « #decisions »
   // ne le doit pas, et le navigateur refuserait de vibrer sans toucher.
   const allerAuToucher = useCallback(
@@ -181,8 +203,8 @@ export function ParcoursMobile({
   const glisser = useGlisser({
     // Pas sur les décisions : leur formulaire a ses propres cartes, donc son propre geste.
     actif: courante.phase !== "decision",
-    suivant: index < derniere ? () => allerAuToucher(index + 1) : undefined,
-    precedent: index > 0 ? () => allerAuToucher(index - 1) : undefined,
+    suivant: indexAffiche < derniere ? () => allerAuToucher(indexAffiche + 1) : undefined,
+    precedent: indexAffiche > 0 ? () => allerAuToucher(indexAffiche - 1) : undefined,
   });
 
   // Un lien « #decisions » ou « #situation » ailleurs dans la page mène à la bonne
@@ -201,7 +223,9 @@ export function ParcoursMobile({
   const [enteteEnfant, setEnteteEnfant] = useState<EnteteDeCarte | null>(null);
   const definirEntete = useCallback((e: EnteteDeCarte | null) => {
     setEnteteEnfant((cur) =>
-      cur === e || (cur && e && cur.titre === e.titre && cur.amorce === e.amorce) ? cur : e,
+      cur === e || (cur && e && cur.titre === e.titre && cur.amorce === e.amorce && cur.reste === e.reste)
+        ? cur
+        : e,
     );
   }, []);
 
@@ -211,6 +235,16 @@ export function ParcoursMobile({
   const reculerAvantLesDecisions = useCallback(
     () => aller(Math.max(0, derniere - 1)),
     [aller, derniere],
+  );
+  const clesDuParcours = useMemo(() => etapes.map((e) => e.cle), [etapes]);
+  const allerALaCarteDuParcours = useCallback(
+    (cle: string) => {
+      const i = etapes.findIndex((e) => e.cle === cle);
+      if (i < 0) return false;
+      aller(i);
+      return true;
+    },
+    [aller, etapes],
   );
 
   // La progression du tour entier, pour la barre du haut. Une carte de briefing ou
@@ -227,7 +261,7 @@ export function ParcoursMobile({
     [etapes, cartesDeDecision],
   );
   const total = poids.reduce((a, b) => a + b, 0);
-  const avant = poids.slice(0, index).reduce((a, b) => a + b, 0);
+  const avant = poids.slice(0, indexAffiche).reduce((a, b) => a + b, 0);
   const dedans = courante.phase === "decision" ? decision.courante : 0;
   useEffect(() => {
     const libelle = enRecapitulatif ? "Dernière étape" : PHASES[courante.phase].libelle;
@@ -292,13 +326,22 @@ export function ParcoursMobile({
   // Quitter la page efface la progression : la barre n'affiche plus rien.
   useEffect(() => () => definirProgression(null), []);
 
-  const prochaine = etapes[index + 1]?.phase;
+  const prochaine = etapes[indexAffiche + 1]?.phase;
   const libelleSuivant =
     prochaine === "decision" ? "Décider" : prochaine === "analyse" ? "Analyser" : "Continuer";
 
+  // Les analyses qui restent à rendre se disent sur le bouton (P1-9).
+  const resteAAnalyser = courante.phase === "analyse" ? (enteteEnfant?.reste ?? 0) : 0;
+
   const contexte = useMemo(
-    () => ({ rapporterDecision, reculerAvantLesDecisions, definirEntete }),
-    [rapporterDecision, reculerAvantLesDecisions, definirEntete],
+    () => ({
+      rapporterDecision,
+      reculerAvantLesDecisions,
+      definirEntete,
+      allerALaCarteDuParcours,
+      clesDuParcours,
+    }),
+    [rapporterDecision, reculerAvantLesDecisions, definirEntete, allerALaCarteDuParcours, clesDuParcours],
   );
 
   return (
@@ -327,10 +370,10 @@ export function ParcoursMobile({
           {/* La place de la barre : sans elle, la fin de la carte passerait dessous. */}
           <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))]" />
           <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2.5 border-t border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden">
-            {index > 0 ? (
+            {indexAffiche > 0 ? (
               <button
                 type="button"
-                onClick={() => allerAuToucher(index - 1)}
+                onClick={() => allerAuToucher(indexAffiche - 1)}
                 className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 shrink-0 active:scale-[0.98]`}
               >
                 Retour
@@ -338,19 +381,33 @@ export function ParcoursMobile({
             ) : null}
             <button
               type="button"
-              onClick={() => allerAuToucher(index + 1)}
+              onClick={() => allerAuToucher(indexAffiche + 1)}
               className={`${
                 actionPropre
                   ? bouton({ variante: "secondaire", taille: "l" })
                   : bouton({ taille: "l" })
-              } min-h-12 flex-1 active:scale-[0.98]`}
+              } min-h-12 flex-1 active:scale-[0.98] ${resteAAnalyser > 0 ? "flex-col gap-0 py-1.5" : ""}`}
             >
-              {libelleSuivant}
-              <span aria-hidden>→</span>
+              <span>
+                {libelleSuivant}
+                <span aria-hidden> →</span>
+              </span>
+              {resteAAnalyser > 0 ? (
+                <span data-reste-a-analyser="" className="text-xs font-medium">
+                  {resteAAnalyserEnClair(resteAAnalyser)}
+                </span>
+              ) : null}
             </button>
           </div>
         </>
       ) : null}
     </ParcoursContexte.Provider>
   );
+}
+
+/** « Il vous reste 1 situation à analyser » : la phrase du bouton de l'étape Analyse. */
+export function resteAAnalyserEnClair(reste: number): string {
+  return reste > 1
+    ? `Il vous reste ${reste} situations à analyser`
+    : "Il vous reste 1 situation à analyser";
 }

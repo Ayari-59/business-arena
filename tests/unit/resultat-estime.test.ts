@@ -63,7 +63,7 @@ describe("l'encart « Résultat estimé »", () => {
     const estime = estimerLeTour(dossier, decisions, { [CODE]: 1_500 });
     const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toContain("Résultat estimé");
-    expect(html).toContain("selon vos ventes estimées");
+    expect(html).toMatch(/si vous vendez 1[\s\u202f]500 enceintes/);
     for (const titre of [
       "Chiffre d'affaires",
       "Résultat net",
@@ -145,7 +145,9 @@ describe("l'encart « Résultat estimé »", () => {
     const estime = estimerLeTour(dossier, decisions, { [CODE]: 1_500 });
     const resume = resumeDeLEstimation(estime, v.units);
     const html = rendu(createElement(LigneEstimeeCompacte, { estimation: resume }));
-    expect(html).toContain("Rés. estimé");
+    // P1-7 : la condition du chiffre, à côté de lui.
+    expect(html).toMatch(/si 1[\s\u202f]500 ventes</);
+    expect(html).toMatch(/si vous vendez 1[\s\u202f]500 enceintes/);
     expect(html).toContain("data-resultat-net-estime");
     // Le détail : chiffre d'affaires, stock, trésorerie, dans un tiroir fermé.
     expect(html).toContain("<details");

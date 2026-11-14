@@ -191,6 +191,7 @@ function Chiffre({
   libelles,
   teinte,
   avecZero,
+  arret = false,
 }: {
   titre: string;
   /** L'intitulé entier, pour l'infobulle et pour les lecteurs d'écran. */
@@ -204,13 +205,20 @@ function Chiffre({
    */
   teinte: "encre" | "signe" | "niveau";
   avecZero: boolean;
+  /**
+   * L'entreprise est à l'arrêt ce tour (ni ventes, ni charges) : son écart au
+   * tour précédent n'est pas un progrès, et l'ardoise ne le peint pas en vert.
+   */
+  arret?: boolean;
 }) {
   const derniere = valeurs.at(-1) ?? 0;
-  const { ecart, sens } = ecartDe(valeurs);
+  const { ecart, sens } = arret ? { ecart: null, sens: null } : ecartDe(valeurs);
+  // UN RÉSULTAT NUL N'EST NI UN GAIN NI UNE PERTE (séance d'essai, P2-5) : une
+  // entreprise à l'arrêt lisait « Résultat 0 € » en vert, avec « ▲ +33 180 € ».
   const couleur =
-    teinte === "encre" || (teinte === "niveau" && derniere >= 0)
+    teinte === "encre" || (teinte === "niveau" && derniere >= 0) || Math.round(derniere) === 0
       ? "text-slate-50"
-      : derniere >= 0
+      : derniere > 0
         ? "text-emerald-300"
         : "text-red-300";
   return (
@@ -232,7 +240,9 @@ function Chiffre({
       {/* L'ÉCART, AVEC SON SIGNE ÉCRIT. La flèche seule serait un signal de
           couleur et de forme ; le signe le dit en toutes lettres, et « stable »
           évite le « −0 € » qu'un écart nul afficherait. */}
-      {sens === null ? (
+      {arret ? (
+        <dd className="mt-1.5 text-sm text-slate-400">entreprise à l&apos;arrêt</dd>
+      ) : sens === null ? (
         <dd className="mt-1.5 text-sm text-slate-400">premier tour</dd>
       ) : sens === "stable" ? (
         <dd className="mt-1.5 text-sm text-slate-400">stable</dd>
@@ -312,6 +322,10 @@ export function TableauDeBord({
   if (tours.length === 0 && !entete) return null;
   const libelles = tours.map((t) => t.libelle);
   const avecRang = Boolean(entete && (entete.rang || entete.rangVoile));
+  // À L'ARRÊT : un tour sans chiffre d'affaires ni résultat. Une entreprise qui
+  // tourne a toujours des charges ; seule une entreprise gelée finit à zéro.
+  const dernier = tours.at(-1);
+  const arret = dernier !== undefined && Math.round(dernier.ca) === 0 && Math.round(dernier.resultat) === 0;
   return (
     <section
       id="ardoise-du-dirigeant"
@@ -376,6 +390,7 @@ export function TableauDeBord({
               libelles={libelles}
               teinte="signe"
               avecZero
+              arret={arret}
             />
             <Chiffre
               titre="Trésorerie"
@@ -436,7 +451,7 @@ export function LigneDeLArdoise({
           <span className={item}>
             <span className={etiquette}>Rés.</span>
             <span
-              className={`font-semibold ${dernier.resultat >= 0 ? "text-emerald-300" : "text-red-300"}`}
+              className={`font-semibold ${Math.round(dernier.resultat) === 0 ? "text-slate-50" : dernier.resultat > 0 ? "text-emerald-300" : "text-red-300"}`}
             >
               {euroSigne(dernier.resultat)}
             </span>

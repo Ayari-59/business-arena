@@ -25,6 +25,8 @@ const FAITS: FaitsDeLaPartie = {
   minutesTourCourant: 10,
   minutesPremierTour: 19,
   mesure: false,
+  seances: 3,
+  toursParSeance: 2,
   equipes: 5,
   premierTourDejaJoue: false,
 };
@@ -52,16 +54,23 @@ describe("la fiche élève", () => {
     expect(tout).toContain("Après l'échéance");
   });
 
-  it("nomme les onglets tels qu'ils s'appellent à l'écran", () => {
+  it("nomme les étapes telles qu'elles s'appellent sur le téléphone", () => {
+    // Séance d'essai (P2-1) : sur téléphone, ce sont des étapes « Briefing »,
+    // « Analyse », « Décision », pas des onglets.
     const tout = texte(etapes);
-    for (const onglet of ["Situation", "Analyser", "Décider"]) {
-      expect(tout, onglet).toContain(`« ${onglet} »`);
+    for (const etape of ["Briefing", "Analyse", "Décision"]) {
+      expect(tout, etape).toContain(`« ${etape} »`);
     }
+    expect(tout).not.toMatch(/Onglet/);
   });
 
-  it("annonce le nombre de champs de la partie, pas un nombre en général", () => {
-    expect(texte(etapes)).toContain("10 champs");
-    expect(texte(etapesEleve({ ...FAITS, champs: 23 }))).toContain("23 champs");
+  it("ne promet pas un nombre d'étapes ou de champs qui change avec la feuille de décision", () => {
+    expect(texte(etapes)).not.toMatch(/\d+ (champs|étapes)/);
+  });
+
+  it("ne dit pas la note obligatoire : elle est recommandée", () => {
+    expect(texte(etapes)).toContain("recommande");
+    expect(texte(etapes)).not.toContain("une phrase est demandée");
   });
 
   it("sans questions de connaissances, elle ne les promet pas", () => {
@@ -97,6 +106,15 @@ describe("la fiche enseignant", () => {
     ]) {
       expect(tout, ecran).toContain(ecran);
     }
+  });
+
+  it("annonce la partie en séances de 55 min, et la reprise d'une séance à l'autre", () => {
+    expect(texte(etapes)).toContain("environ 3 séances de 55 min, 2 tours par séance");
+    expect(texte(etapesEnseignant({ ...FAITS, seances: 1 }))).toContain("tient dans une séance");
+  });
+
+  it("ne promet plus une simulation d'une quinzaine de secondes", () => {
+    expect(texte(etapes)).not.toContain("quinzaine");
   });
 
   it("annonce les deux durées au premier tour, une seule ensuite", () => {

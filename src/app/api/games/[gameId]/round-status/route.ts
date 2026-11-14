@@ -58,12 +58,17 @@ export async function GET(
     .from(teams)
     .where(and(eq(teams.gameId, gameId), eq(teams.controller, "human")));
   let submittedCount = 0;
-  const roundId = (
-    await db
-      .select({ id: rounds.id })
-      .from(rounds)
-      .where(and(eq(rounds.gameId, gameId), eq(rounds.index, row.currentRound)))
-  )[0]?.id;
+  // Les tours de la partie, en une requête : le tour courant pour compter qui a
+  // rendu, et le dernier classement révélé, que l'élève attend pour voir son
+  // rang (il ne change ni le tour ni son statut).
+  const toursDeLaPartie = await db
+    .select({ id: rounds.id, index: rounds.index, revele: rounds.rankingRevealedAt })
+    .from(rounds)
+    .where(eq(rounds.gameId, gameId));
+  const roundId = toursDeLaPartie.find((t) => t.index === row.currentRound)?.id;
+  const dernierTourRevele = toursDeLaPartie
+    .filter((t) => t.revele !== null)
+    .reduce<number | null>((max, t) => (max === null || t.index > max ? t.index : max), null);
   if (roundId && equipes.length > 1) {
     const rendues = await db
       .select({ teamId: decisions.teamId, status: decisions.status })
@@ -81,6 +86,7 @@ export async function GET(
       gameStatus: row.gameStatus,
       submittedCount,
       totalHumanTeams: equipes.length,
+      dernierTourRevele,
     },
     { headers: { "cache-control": "no-store" } },
   );
