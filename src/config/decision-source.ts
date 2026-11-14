@@ -58,6 +58,27 @@ export function pivotsNonTouches(
   return PIVOT_FIELDS.filter((champ) => memeValeur(champ, saisie[champ], proposees[champ]));
 }
 
+/**
+ * LES PIVOTS SUR LESQUELS LE GARDE-FOU INTERROGE L'ÉQUIPE AVANT D'ENVOYER.
+ *
+ * Ceux qu'elle n'a pas touchés, SAUF ceux qui valent ce qu'elle a elle-même validé au
+ * tour précédent. Mesuré dans la séance d'essai : « Vous validez avec les valeurs
+ * proposées pour : Prix de vente. C'est un choix ? » revenait à chaque tour, à une
+ * équipe qui avait choisi 65 € et le gardait (elle l'avait même ressaisi). Garder son
+ * prix est une décision ; le garde-fou ne vise que la valeur qu'on n'a jamais tranchée.
+ * `valideAuTourPasse` : les pivots de la décision que l'équipe a VALIDÉE au tour
+ * précédent ; `null` au premier tour, ou quand la clôture a reconduit ses décisions.
+ */
+export function pivotsAConfirmer(
+  saisie: Pick<RoundDecisions, PivotField>,
+  proposees: Pick<RoundDecisions, PivotField>,
+  valideAuTourPasse: Pick<RoundDecisions, PivotField> | null | undefined,
+): PivotField[] {
+  return pivotsNonTouches(saisie, proposees).filter(
+    (champ) => !valideAuTourPasse || !memeValeur(champ, saisie[champ], valideAuTourPasse[champ]),
+  );
+}
+
 /** La source de chaque pivot d'une décision validée par l'équipe. */
 export function decisionSourceOf(
   payload: Pick<RoundDecisions, PivotField>,

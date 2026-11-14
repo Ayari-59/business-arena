@@ -180,6 +180,7 @@ export const engineScenarioConfigSchema = z.object({
     maxCapitalIncreaseTotal: z.number().positive().optional(),
     maxDebtToEquity: z.number().positive().optional(),
     crisisRoundsBeforeFailure: z.number().int().positive().optional(),
+    premierTourDeDefaillance: z.number().int().positive().optional(),
     rescueFinancingRequired: z.boolean().optional(),
     /**
      * Dossier bancaire. Ce schéma est la frontière que traverse le snapshot

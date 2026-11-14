@@ -10,7 +10,8 @@ import {
 import { aleasDuTour, type AleaDuTour } from "@/components/lecture-du-resultat";
 import { seuilDEntretien } from "@/engine/production";
 import { parcActifDuTour, referenceDEntretien } from "@/engine/simulation";
-import { cadreDeLaDefaillance, type CadreDeLaDefaillance } from "@/config/defaillance";
+import { cadreDeLaDefaillance, toursAvantLArret, type CadreDeLaDefaillance } from "@/config/defaillance";
+import { estReconduite, lireSource } from "@/config/decision-source";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { lireLEssai, type TourDEssai } from "@/config/tour-d-essai";
@@ -50,7 +51,7 @@ import { peekEventDraw } from "@/engine/events";
 import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
 import { departDuFormulaire, proposedDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
-import { expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
+import { expurgerLeScenario, repartitionDesVentes, ventesAPartEgale } from "@/engine/estimation";
 import { subventionQuiDegele } from "@/engine/estimation/degel";
 import { marcheSansAdoption, segmentsDAdoptionCaches } from "@/services/adoption-cachee";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
@@ -385,6 +386,13 @@ export interface GameView {
   playerDimensions: Partial<Record<string, number>> | null;
   lastDecisions: RoundDecisions | null;
   /**
+   * Les pivots (prix, volume) que l'équipe a VALIDÉS au tour précédent ; `null` au
+   * premier tour, ou quand la clôture a reconduit ses décisions. Le garde-fou des
+   * valeurs proposées ne l'interroge pas sur une valeur qu'elle a déjà tranchée
+   * (`pivotsAConfirmer`, config/decision-source.ts).
+   */
+  pivotsValidesAuTourPasse: { price: number; productionPlan: number } | null;
+  /**
    * Le point de départ du secteur, servi au tour 1 quand il n'y a encore rien
    * à reconduire. Calculé ici parce que c'est ici qu'on a le scénario joué ET
    * l'état de l'entreprise : la page, elle, proposait les chiffres de NOVA à
@@ -639,6 +647,12 @@ export interface GameView {
     reperes: { code: string; tour: number; vendu: number; manque: number }[];
     /** Les ventes estimées déjà validées pour CE tour (mode classe) ; null sinon. */
     deposees: Record<string, number> | null;
+    /**
+     * Au premier tour, la demande d'une part de marché égale, référence par référence :
+     * la proposition du champ des ventes estimées (`ventesAPartEgale`). `null` ensuite,
+     * où la proposition est ce que l'équipe a vendu.
+     */
+    aPartEgale: Record<string, number> | null;
   } | null;
   /**
    * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
@@ -1267,6 +1281,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   let lastResult: CompanyRoundResult | null = null;
   let lastEvents: string[] = [];
   let lastDecisions: RoundDecisions | null = null;
+  let pivotsValidesAuTourPasse: GameView["pivotsValidesAuTourPasse"] = null;
   if (lastRound) {
     const row = gameResults.find((r) => r.roundId === lastRound.id && r.teamId === playerTeam.id);
     if (row) {
@@ -1276,6 +1291,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     }
     const decisionRow = playerDecisionRows.find((d) => d.roundId === lastRound.id);
     if (decisionRow) lastDecisions = decisionRow.payload;
+    if (decisionRow && !estReconduite(lireSource(decisionRow.decisionSource))) {
+      pivotsValidesAuTourPasse = {
+        price: decisionRow.payload.price,
+        productionPlan: decisionRow.payload.productionPlan,
+      };
+    }
   }
 
   // Tableau de bord complet de CHAQUE tour résolu (accordéon de l'arène) : on
@@ -1681,7 +1702,14 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       crise,
       defaillante,
       toursConsecutifs: streak,
-      toursAvantDefaillance: snapshot.finance.crisisRoundsBeforeFailure ?? 2,
+      // Le compte à rebours de l'alerte, premier tour de défaillance compris (la classe
+      // au niveau 3 ne s'arrête pas avant le tour 4) : `config/defaillance.ts`.
+      toursAvantDefaillance: toursAvantLArret({
+        toursAvantDefaillance: snapshot.finance.crisisRoundsBeforeFailure ?? 2,
+        toursConsecutifs: streak,
+        premierTourDeDefaillance: snapshot.finance.premierTourDeDefaillance,
+        tourAJouer: game.currentRound,
+      }),
       tresorerieNette: tresorerie,
       plafondDecouvert: plafond,
       manque: Math.max(0, -tresorerie - plafond),
@@ -1838,6 +1866,22 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       repartition: repartitionDesVentes(snapshot, game.currentRound, lastResult),
       reperes: manquesDuDernier,
       deposees: pendingDecisions?.salesEstimate?.byProduct ?? null,
+      aPartEgale: lastResult
+        ? null
+        : ventesAPartEgale({
+            scenario: snapshot,
+            state: moi.state as CompanyState,
+            decisions: proposedDecisionsFor({
+              snapshot,
+              state: moi.state as CompanyState,
+              roundIndex: game.currentRound,
+              previousPayload: null,
+              leviers: leviersFigesDuProfil(game.difficultyProfile),
+            }),
+            concurrents: teamRows.length,
+            roundIndex: game.currentRound,
+            events: miens,
+          }),
     };
   })();
 
@@ -2068,6 +2112,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     playerBpi,
     playerDimensions,
     lastDecisions,
+    pivotsValidesAuTourPasse,
     // Le point de départ et les valeurs proposées viennent du même calcul que
     // celui du serveur (decision-baseline) : ce que le formulaire propose est
     // exactement ce à quoi la validation sera comparée.

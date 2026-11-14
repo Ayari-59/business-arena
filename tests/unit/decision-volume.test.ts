@@ -84,7 +84,7 @@ describe("le formulaire prévient avant d'envoyer des valeurs proposées", () =>
   const source = readFileSync(join(process.cwd(), "src", "components", "decision-form.tsx"), "utf8");
 
   it("compare les pivots aux valeurs proposées au moment de la soumission", () => {
-    expect(source).toContain("pivotsNonTouches(");
+    expect(source).toContain("pivotsAConfirmer(");
     expect(source).toContain("onSubmit={verifierPivots}");
     expect(source).toContain("proposed?: RoundDecisions");
   });

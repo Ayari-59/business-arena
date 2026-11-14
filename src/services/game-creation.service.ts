@@ -357,6 +357,9 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   // Le pipeline du snapshot vit dans `config/scenarios/scenario-joue.ts` : le
   // rejeu du bilan (pedagogy/merite) recompose le monde d'une autre graine avec
   // exactement le même calcul.
+  // LA CLASSE D'UN ENSEIGNANT (hors concours) : son niveau peut retarder l'arrêt d'une
+  // entreprise (`premierTourDeDefaillanceEnClasse`). Le solo, l'examen et le concours non.
+  const genre = args.kind === "class" && (args.mode ?? "learning") === "learning" ? ("class" as const) : undefined;
   const scenarioJoue = composerLeScenarioJoue({
     scenario: definition.scenario,
     seed,
@@ -369,6 +372,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     periodicity: args.periodicity,
     moisDeDepart,
     investmentStories: args.investmentStories,
+    genre,
     // Les concurrents corrigés, le parc sans doublon, la proposition à la demande et
     // le bon gestionnaire qui la tient, figés à la création : une partie déjà
     // commencée garde les siens jusqu'à son dernier tour.
@@ -394,6 +398,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
             periodicity: args.periodicity,
             moisDeDepart,
             investmentStories: args.investmentStories,
+            genre,
             ...CORRECTIFS_DES_PARTIES_NOUVELLES,
           }),
           args.essai.tours,

@@ -2594,8 +2594,13 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // c'est une règle de jeu, pas une loi. L'enseignant la fixe dans son
     // espace selon la durée de sa séance.
     const toursAvantDefaillance = scenario.finance.crisisRoundsBeforeFailure ?? 2;
+    // Et pas avant un tour donné, quand la partie le fixe (la classe au niveau 3) :
+    // les tours de crise d'avant se comptent, l'arrêt attend ce tour-là.
+    const premierTourDeDefaillance = scenario.finance.premierTourDeDefaillance ?? 1;
     const statut: "active" | "defaillant" =
-      crisisStreak >= toursAvantDefaillance ? "defaillant" : "active";
+      crisisStreak >= toursAvantDefaillance && roundIndex >= premierTourDeDefaillance
+        ? "defaillant"
+        : "active";
 
     const functionalBalance = computeFunctionalBalance(finance.closing);
     // CE tour n'est jugeable qu'une fois joué : ce que la banque en retient

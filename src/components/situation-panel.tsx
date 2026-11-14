@@ -554,10 +554,11 @@ function AnalyseDuTourBrut({
   const definirEntete = parcours?.definirEntete;
   const titreDeLEcran = situations.length > 1 ? "Vos situations à analyser" : "Votre situation à analyser";
   const amorce = `Analyse · ${rendues}/${situations.length} rendue${situations.length > 1 ? "s" : ""}`;
+  const reste = situations.length - rendues;
   useEffect(() => {
-    definirEntete?.({ titre: titreDeLEcran, amorce });
+    definirEntete?.({ titre: titreDeLEcran, amorce, reste });
     return () => definirEntete?.(null);
-  }, [definirEntete, titreDeLEcran, amorce]);
+  }, [definirEntete, titreDeLEcran, amorce, reste]);
 
   return (
     <div className="space-y-4">

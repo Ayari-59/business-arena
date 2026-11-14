@@ -74,6 +74,30 @@ export function remedeALaDefaillance(
         "l'entreprise reste à l'arrêt jusqu'à la fin de la partie.";
 }
 
+/**
+ * LE COMPTE À REBOURS DIT À L'ÉQUIPE EN CRISE, rendu comme un nombre de tours de crise
+ * (`toursAvantDefaillance`, dont l'alerte retranche les tours déjà passés en crise).
+ *
+ * Sans premier tour de défaillance, c'est la règle de la partie, telle quelle. Avec lui
+ * (la classe au niveau 3 : pas d'arrêt avant le tour 4), l'arrêt attend ce tour-là même
+ * quand les tours de crise sont réunis : dire « encore un tour » au tour 2 serait faux.
+ * L'arrêt tombe au premier tour r ≥ `tourAJouer` où la série atteint la règle ET où
+ * r ≥ le premier tour ; il reste donc max(règle − série, premier − tourAJouer + 1) tours
+ * de crise à traverser, soit, compté comme l'alerte le compte, la valeur rendue ici.
+ */
+export function toursAvantLArret(args: {
+  toursAvantDefaillance: number;
+  toursConsecutifs: number;
+  premierTourDeDefaillance: number | undefined;
+  tourAJouer: number;
+}): number {
+  const premier = args.premierTourDeDefaillance ?? 1;
+  return Math.max(
+    args.toursAvantDefaillance,
+    args.toursConsecutifs + premier - args.tourAJouer + 1,
+  );
+}
+
 /** Le constat, en tête des deux bandeaux : combien de tours, et ce que cela gèle. */
 export function constatDeLaDefaillance(toursAvantDefaillance: number): string {
   const tours =

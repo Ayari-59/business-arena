@@ -17,6 +17,7 @@ import { BarreDeJeu } from "@/components/barre-de-jeu";
 import { StockageDurable } from "@/components/stockage-durable";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { AnalyseDuTour, SituationCard, SituationDebrief } from "@/components/situation-panel";
+import { EnAttenteDeLaCloture } from "@/components/en-attente-de-la-cloture";
 import { SaisonDuTour } from "@/components/saison-du-tour";
 import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
@@ -1308,7 +1309,23 @@ async function ArenaPage({
           soumissionsNode ||
           (!finished && view.playLock.playable && view.playLock.closesAt)) ? (
           <div className="space-y-2">
-            {etatDesDecisions}
+            {/* L'ÉQUIPE A VALIDÉ (séance d'essai, P1-3 et P1-4) : qui, quand, ce que vaut un
+                nouvel envoi, et quoi faire en attendant la clôture. */}
+            {view.kind !== "solo" && view.pendingDecisionsPar ? (
+              <EnAttenteDeLaCloture
+                gameId={gameId}
+                mention={mentionDeValidation(
+                  view.pendingDecisionsPar.nom,
+                  new Date(view.pendingDecisionsPar.quand),
+                )}
+                situationsARendre={
+                  statutSituations ? statutSituations.total - statutSituations.rendues : 0
+                }
+                codeDeReprise={view.currentRound === 1 ? codeDeReprise : null}
+              />
+            ) : (
+              etatDesDecisions
+            )}
             {soumissionsNode}
             {!finished && view.playLock.playable && view.playLock.closesAt ? (
               <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
@@ -1394,6 +1411,8 @@ async function ArenaPage({
       // qui ne reconduit aucune dépense ponctuelle du tour précédent.
       defaults={view.pendingDecisions ?? view.proposedDecisions}
       proposed={view.proposedDecisions}
+      valideAuTourPasse={view.pivotsValidesAuTourPasse}
+      decisionsDuTourPasse={view.lastDecisions}
       kind={view.kind}
       alreadySubmitted={view.pendingDecisions !== null}
       insuranceOffer={
@@ -1888,6 +1907,7 @@ async function ArenaPage({
                   // SUR TÉLÉPHONE, UN PARCOURS ET NON DES ONGLETS : briefing en
                   // cartes, analyse, puis les décisions, avec un seul bouton en bas.
                   <ParcoursMobile
+                    ouvrirSurLesDecisions={view.kind !== "solo" && view.pendingDecisions !== null}
                     briefing={briefingCartes}
                     analyse={analyseCartes}
                     courrier={courrierCarte}

@@ -118,6 +118,16 @@ export interface DifficultyPreset {
   };
   /** Multiplicateur des probabilités d'événements aléatoires (les 0 restent 0). */
   eventProbabilityMultiplier: number;
+  /**
+   * EN CLASSE, LE PREMIER TOUR OÙ UNE ENTREPRISE PEUT S'ARRÊTER. Absent : dès que
+   * les tours de crise sont réunis, comme toujours. Décision du propriétaire
+   * (novembre 2026, séance d'essai) : au niveau 3, l'arrêt reste possible, mais pas
+   * avant le tour 4 ; une classe qui découvre la trésorerie ne doit pas jouer la
+   * moitié de la partie à l'arrêt. Seule la partie de classe le fige
+   * (`composerLeScenarioJoue`, `genre`) : la partie solo, l'examen, l'atelier et le
+   * concours gardent leur règle.
+   */
+  premierTourDeDefaillanceEnClasse?: number;
 }
 
 export type LeviersDuNiveau = DifficultyPreset["decisions"];
@@ -172,6 +182,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     hintMaxLevel: 3,
     decisions: { ...FERME, quality: true, maintenance: true, hr: true, creances: true },
     eventProbabilityMultiplier: 1,
+    premierTourDeDefaillanceEnClasse: 4,
   },
   {
     level: 4,
