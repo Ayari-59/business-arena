@@ -18,6 +18,8 @@ export interface EstimationEnCours {
   vide: boolean;
   /** « si vous vendez 4 500 enceintes » : la condition du chiffre, dite à côté de lui (P1-7). */
   condition: string;
+  /** La même, courte, pour la ligne de la barre du téléphone : « si 4 500 ventes ». */
+  conditionCourte: string;
   resultatNet: number;
   tresorerieNette: number;
   chiffreDAffaires: number;

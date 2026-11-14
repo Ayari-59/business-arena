@@ -145,6 +145,8 @@ export function resumeDeLEstimation(
   return {
     vide: estime.ventesEstimees <= 0,
     condition: siVousVendez(estime.ventesEstimees, { unit: unite, units: unites }),
+    // Sur la ligne de la barre (390 px), la phrase entière coupait le nombre : « si 4 500 ventes ».
+    conditionCourte: `si ${formatUnits(Math.round(estime.ventesEstimees))} vente${Math.round(estime.ventesEstimees) > 1 ? "s" : ""}`,
     resultatNet: estime.resultatNet,
     tresorerieNette: estime.tresorerieNette,
     chiffreDAffaires: estime.chiffreDAffaires,
@@ -598,7 +600,7 @@ export function LigneEstimeeCompacte({
         {/* Le chevron commun, en tête du résumé (lot P5). */}
         <Chevron className="text-slate-400" />
         {/* LA CONDITION DU CHIFFRE, À CÔTÉ DE LUI (séance d'essai, P1-7) : « Rés. estimé » cède
-            la place à « si vous vendez N », sur la même ligne (la barre ne grandit pas). Le
+            la place à « si N ventes », sur la même ligne (la barre ne grandit pas). Le
             tiroir dit la phrase entière, unité comprise. */}
         <ValeurRafraichie valeur={formatEuro(e.resultatNet)}>
           <span data-resultat-net-estime="" className="whitespace-nowrap font-semibold tabular-nums text-slate-50">
@@ -606,7 +608,7 @@ export function LigneEstimeeCompacte({
           </span>
         </ValeurRafraichie>{" "}
         <span data-condition-estimee="" className="min-w-0 truncate text-xs text-slate-400">
-          {e.condition.replace(/ [^ ]+$/, "")}
+          {e.conditionCourte}
         </span>
       </summary>
       {/* LE TIROIR, sous la barre et par-dessus la carte : la carte ne défile pas. */}

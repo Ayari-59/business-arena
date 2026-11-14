@@ -146,7 +146,8 @@ describe("l'encart « Résultat estimé »", () => {
     const resume = resumeDeLEstimation(estime, v.units);
     const html = rendu(createElement(LigneEstimeeCompacte, { estimation: resume }));
     // P1-7 : la condition du chiffre, à côté de lui.
-    expect(html).toMatch(/si vous vendez 1[\s\u202f]500</);
+    expect(html).toMatch(/si 1[\s\u202f]500 ventes</);
+    expect(html).toMatch(/si vous vendez 1[\s\u202f]500 enceintes/);
     expect(html).toContain("data-resultat-net-estime");
     // Le détail : chiffre d'affaires, stock, trésorerie, dans un tiroir fermé.
     expect(html).toContain("<details");

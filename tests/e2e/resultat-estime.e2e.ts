@@ -280,7 +280,7 @@ describe("le résultat estimé, de la saisie au verdict", () => {
     const ligne = q.locator("[data-ligne-estimee]:visible");
     expect(await ligne.count()).toBe(1);
     // LOT P7 : la ligne vit dans la barre du parcours ; P1-7 : « … € si vous vendez N ».
-    expect(await ligne.innerText()).toMatch(/−?[\d\s\u202f\u00a0]+€\s+si vous vendez [\d\s\u202f\u00a0]+/);
+    expect(await ligne.innerText()).toMatch(/−?[\d\s\u202f\u00a0]+€\s+si [\d\s\u202f\u00a0]+ ventes?/);
     // LOT 3A : une seule barre fixe au bas de l'écran, et la ligne n'en fait
     // pas une seconde — elle vit dans le flux de la carte (mesuré : posée dans
     // le pied fixe, elle coûtait 65 px à CHAQUE carte, et quatre cartes déjà
