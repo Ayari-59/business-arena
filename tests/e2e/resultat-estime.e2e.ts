@@ -99,7 +99,7 @@ describe("le résultat estimé, de la saisie au verdict", () => {
     expect(Number(await champ.inputValue()), "la part égale proposée").toBeGreaterThan(0);
     const marque = page.locator("[data-proposition-de-ventes]:visible");
     expect(await marque.count()).toBe(1);
-    expect(await marque.innerText()).toMatch(/Proposition — à ajuster/);
+    expect(await marque.innerText()).toMatch(/Proposition à ajuster\s+une part de marché égale/);
     expect(await page.locator('input[name="propositionDeVentes"]').count()).toBe(1);
     const propose = await encart(page);
     expect(propose, "le résultat estimé reste muet au premier tour").not.toBeNull();

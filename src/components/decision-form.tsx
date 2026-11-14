@@ -3494,7 +3494,12 @@ export function DecisionForm({
   const [propositionTouchee, setPropositionTouchee] = useState(false);
   const propositionEnCours = propositionPresente && !propositionTouchee;
   const aideEstimee = aideDesVentesEstimees(repereEstimeMono, v);
-  const marqueMono = <MarqueDeProposition source="votre plan de production" />;
+  // P1-7 : la proposition dit d'où elle vient, la part égale quand le serveur l'a donnée.
+  const marqueMono = (
+    <MarqueDeProposition
+      source={estimation?.aPartEgale?.[codeMonoProduit] ? "une part de marché égale" : "votre plan de production"}
+    />
+  );
 
   // Répartition des leviers en étapes courtes (anti-scroll) : plutôt qu'un long
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
@@ -4724,7 +4729,7 @@ export function DecisionForm({
         <Carte cle="ventes-estimees">
           {propositionEnCours ? (
             <p className="mb-3">
-              <MarqueDeProposition source="vos plans de production" />
+              <MarqueDeProposition source={estimation?.aPartEgale ? "une part de marché égale" : "vos plans de production"} />
             </p>
           ) : null}
           <div className="space-y-2">
