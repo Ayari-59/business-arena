@@ -192,7 +192,7 @@ export async function submitDiagnosis(args: {
     args.selectedOptionIds,
     optionsDuDiagnostic(
       def.diagnosticOptions,
-      game ? presetFromProfile(game.difficultyProfile).level : NIVEAU_STANDARD,
+      modelCtxOf(game)?.analyse ?? NIVEAU_STANDARD,
     ),
   );
   await db

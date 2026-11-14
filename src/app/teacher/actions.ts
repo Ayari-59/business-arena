@@ -44,7 +44,11 @@ import { setMissedPolicy } from "@/services/debrief.service";
 import { activerParDefaut } from "@/services/pairs.service";
 import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
-import { DEFAULT_ANSWER_FORMAT, DEFAULT_QUIZ_MODE } from "@/config/difficulty";
+import {
+  DEFAULT_AIDE_AU_DIAGNOSTIC,
+  DEFAULT_ANSWER_FORMAT,
+  DEFAULT_QUIZ_MODE,
+} from "@/config/difficulty";
 import {
   ACCENTS_CONCOURS,
   DESCRIPTION_MAX,
@@ -207,6 +211,8 @@ const createGameSchema = z.object({
   quizMode: z.enum(["full", "model", "off"]).catch(DEFAULT_QUIZ_MODE),
   // Comment l'élève y répond : en cochant (QCM) ou en écrivant (questions ouvertes).
   answerFormat: z.enum(["qcm", "open"]).catch(DEFAULT_ANSWER_FORMAT),
+  // Diagnostics plus faciles que le niveau (voir AIDES_AU_DIAGNOSTIC).
+  aideAuDiagnostic: z.enum(["niveau", "guide", "tres-guide"]).catch(DEFAULT_AIDE_AU_DIAGNOSTIC),
 });
 
 /** Champ numérique optionnel : vide = valeur du scénario (jamais de dur). */
@@ -253,6 +259,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     scenarioCode: formData.get("scenarioCode"),
     quizMode: formData.get("quizMode"),
     answerFormat: formData.get("answerFormat"),
+    aideAuDiagnostic: formData.get("aideAuDiagnostic"),
   });
   const economicOverrides = {
     taxRate: optionalRate(formData.get("taxRate")),
@@ -315,6 +322,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       scenarioCode,
       quizMode: parsed.quizMode,
       answerFormat: parsed.answerFormat,
+      aideAuDiagnostic: parsed.aideAuDiagnostic,
       roundsCount: parsed.roundsCount,
       moisDeDepart: parsed.moisDeDepart,
       // Aucun (le défaut), 1 ou 2 tours d'essai avant la vraie partie.

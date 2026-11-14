@@ -11,7 +11,9 @@ import {
   type QuizQuestionDef,
 } from "@/config/scenarios/situation-kit";
 import {
+  aideAuDiagnosticFromProfile,
   answerFormatFromProfile,
+  niveauDuDiagnostic,
   presetFromProfile,
   quizModeFromProfile,
   type AnswerFormat,
@@ -93,7 +95,7 @@ export async function retakeSituation(args: {
   for (const [q, o] of Object.entries(args.answers)) if (validIds.has(q)) cleanAnswers[q] = o;
   const diagScore = evaluateDiagnosis(
     args.selectedOptionIds,
-    optionsDuDiagnostic(def.diagnosticOptions, modelCtxOf(game)?.level ?? NIVEAU_STANDARD),
+    optionsDuDiagnostic(def.diagnosticOptions, modelCtxOf(game)?.analyse ?? NIVEAU_STANDARD),
   );
   const quizScore = hasQuizQuestions ? evaluateQuiz(cleanAnswers, asked) : null;
   const raw = computeRawSituationScore({ diagnosisScore: diagScore, quizScore, hasQuizQuestions });
@@ -172,7 +174,7 @@ export async function resolveOpenAnswers(args: {
   return {
     options: optionsReconnues(
       args.freeText,
-      optionsDuDiagnostic(def.diagnosticOptions, ctx?.level ?? NIVEAU_STANDARD),
+      optionsDuDiagnostic(def.diagnosticOptions, ctx?.analyse ?? NIVEAU_STANDARD),
     ),
     answers,
     texts,
@@ -207,13 +209,21 @@ export async function setMissedPolicy(args: {
  */
 /** Niveau + graine d'une partie : reconstruit la question du modèle par niveau (P8). */
 export interface ModelCtx {
+  /** Le niveau de la partie. */
   level: number;
+  /** Le niveau auquel se posent les diagnostics : le niveau, ou moins avec l'aide au diagnostic. */
+  analyse: number;
   seed: number;
 }
 
 export function modelCtxOf(game: typeof games.$inferSelect | undefined): ModelCtx | undefined {
   if (!game) return undefined;
-  return { level: presetFromProfile(game.difficultyProfile).level, seed: Number(game.seed) };
+  const level = presetFromProfile(game.difficultyProfile).level;
+  return {
+    level,
+    analyse: niveauDuDiagnostic(level, aideAuDiagnosticFromProfile(game.difficultyProfile)),
+    seed: Number(game.seed),
+  };
 }
 
 /**
@@ -228,11 +238,11 @@ export function askedQuestions(def: SituationDef, mode: QuizMode, ctx?: ModelCtx
   const base = mode === "model" ? def.quiz.filter((q) => q.id === MODEL_QUESTION_ID) : def.quiz;
   if (!ctx) return base;
   const adaptees = base.map((q) =>
-    q.id === MODEL_QUESTION_ID ? modelQuestionFor(def, ctx.level, ctx.seed) : q,
+    q.id === MODEL_QUESTION_ID ? modelQuestionFor(def, ctx.analyse, ctx.seed) : q,
   );
   // Aux niveaux 1-2, une question de plus : « augmenter ou diminuer le prix ? »
   // (config/analyse-par-niveau). Absente des situations sans levier à sens unique.
-  const levier = questionDuLevier(def, ctx.level);
+  const levier = questionDuLevier(def, ctx.analyse);
   return levier ? [...adaptees, levier] : adaptees;
 }
 
@@ -393,12 +403,12 @@ export function toView(
     aboveGameLevel: modelCtx ? situationLevel(def.conceptCodes) > modelCtx.level : false,
     // Les causes proposées suivent le niveau de la partie (config/analyse-par-niveau).
     // Sans contexte de partie, le niveau Standard : toutes les options.
-    diagnosticOptions: optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.level ?? NIVEAU_STANDARD).map(
+    diagnosticOptions: optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.analyse ?? NIVEAU_STANDARD).map(
       ({ id, label }) => ({ id, label }),
     ),
     // Seules les questions réellement posées sont servies : en mode « model »
     // la question du modèle uniquement, en mode « off » aucune.
-    diagnosticUnique: diagnosticAChoixUnique(modelCtx?.level ?? NIVEAU_STANDARD),
+    diagnosticUnique: diagnosticAChoixUnique(modelCtx?.analyse ?? NIVEAU_STANDARD),
     quizQuestions: asked.map((q) => ({
       id: q.id,
       prompt: q.prompt,
@@ -447,12 +457,12 @@ export function toView(
     retaken,
     debrief: debriefed
       ? {
-          correctOptionIds: optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.level ?? NIVEAU_STANDARD)
+          correctOptionIds: optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.analyse ?? NIVEAU_STANDARD)
             .filter((o) => o.correct)
             .map((o) => o.id),
           autresCauses: (() => {
             const proposees = new Set(
-              optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.level ?? NIVEAU_STANDARD).map((o) => o.id),
+              optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.analyse ?? NIVEAU_STANDARD).map((o) => o.id),
             );
             return def.diagnosticOptions
               .filter((o) => o.correct && !proposees.has(o.id))

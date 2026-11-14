@@ -38,6 +38,7 @@ import {
   sanitizeScoringWeightOverrides,
   type EconomicOverrides,
   type QuizMode,
+  type AideAuDiagnostic,
   type AnswerFormat,
   type ScoringWeightOverrides,
 } from "@/config/difficulty";
@@ -209,6 +210,8 @@ export interface CreateGameArgs {
   quizMode?: QuizMode;
   /** Comment l'élève y répond : en cochant (QCM) ou en écrivant (questions ouvertes). */
   answerFormat?: AnswerFormat;
+  /** Diagnostics plus faciles que le niveau : « guidés » (niveau 3) ou « très guidés » (niveaux 1-2). */
+  aideAuDiagnostic?: AideAuDiagnostic;
   /**
    * GRAINE IMPOSÉE. Absente, elle est tirée au hasard — c'est le cas de toutes
    * les parties réelles, et il ne doit pas changer. Le monde de démonstration,
@@ -439,6 +442,10 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         // parties d'avant le réglage : leur comportement ne change pas.
         ...(args.quizMode ? { quizMode: args.quizMode } : {}),
         ...(args.answerFormat === "open" ? { answerFormat: "open" } : {}),
+        // Absent = selon le niveau, comme les parties d'avant ce réglage.
+        ...(args.aideAuDiagnostic && args.aideAuDiagnostic !== "niveau"
+          ? { aideAuDiagnostic: args.aideAuDiagnostic }
+          : {}),
       },
       status: "running",
       currentRound: 1,
@@ -723,6 +730,7 @@ export async function createClassGame(args: {
   scenarioCode?: string;
   quizMode?: QuizMode;
   answerFormat?: AnswerFormat;
+  aideAuDiagnostic?: AideAuDiagnostic;
   /** Tours joués. Absent = tous ceux du scénario ; jamais plus. */
   roundsCount?: number;
   /** Au mois, le mois où commence la partie (1 = janvier). */
@@ -769,6 +777,7 @@ export async function createClassGame(args: {
     scenarioCode: args.scenarioCode,
     quizMode: args.quizMode,
     answerFormat: args.answerFormat,
+    aideAuDiagnostic: args.aideAuDiagnostic,
     roundsCount: args.roundsCount,
     moisDeDepart: args.moisDeDepart,
     seed: args.seed,
