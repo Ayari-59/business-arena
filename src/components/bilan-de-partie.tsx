@@ -162,7 +162,7 @@ export function BilanDePartie({
                   <span className="text-3xl font-medium text-slate-200">
                     sur {place.total}
                     <span className="sr-only">
-                      {metal ? `, médaille ${metal === "or" ? "d'or" : `de ${metal}`}` : ""}
+                      {metal ? `, ${medailleEnToutesLettres(metal)}` : ""}
                     </span>
                   </span>
                 </p>
@@ -397,6 +397,15 @@ export function BilanDePartie({
       ) : null}
     </div>
   );
+}
+
+/**
+ * « médaille d'or », « médaille d'argent », « médaille de bronze » : l'élision
+ * devant une voyelle (séance d'essai, P2-3 : le lecteur d'écran disait
+ * « médaille de argent »).
+ */
+export function medailleEnToutesLettres(metal: string): string {
+  return /^[aeiouyéèêàâîôûh]/i.test(metal) ? `médaille d'${metal}` : `médaille de ${metal}`;
 }
 
 /**

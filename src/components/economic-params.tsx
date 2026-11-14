@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Choix du secteur ET paramètres économiques, réunis dans un seul composant
@@ -99,15 +99,35 @@ const BPI_FIELDS: { name: string; label: string; hint: string }[] = [
 export function EconomicParams({
   scenarios,
   defaultCode,
+  partie = "tout",
 }: {
   scenarios: ScenarioOption[];
   defaultCode: string;
+  /**
+   * LE FORMULAIRE COURT (séance d'essai, P2-7) : le choix du secteur reste à
+   * la vue (`secteur`), les paramètres économiques et les pondérations de
+   * l'IPG se rangent sous « Plus de réglages » (`avance`). La partie avancée
+   * suit le secteur choisi en lisant le formulaire qui l'entoure.
+   */
+  partie?: "tout" | "secteur" | "avance";
 }) {
   const [code, setCode] = useState(defaultCode);
   const selected = scenarios.find((s) => s.code === code) ?? scenarios[0]!;
+  const ici = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (partie !== "avance") return;
+    const choix = ici.current?.closest("form")?.querySelector<HTMLSelectElement>('select[name="scenarioCode"]');
+    if (!choix) return;
+    const suivre = () => setCode(choix.value);
+    suivre();
+    choix.addEventListener("change", suivre);
+    return () => choix.removeEventListener("change", suivre);
+  }, [partie]);
 
   return (
     <>
+      {partie !== "avance" ? (
       <label className="block sm:col-span-3">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
           Secteur d&apos;activité
@@ -132,6 +152,10 @@ export function EconomicParams({
         </span>
       </label>
 
+      ) : null}
+
+      {partie !== "secteur" ? (
+      <div ref={ici} className="contents">
       <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
           Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
@@ -213,6 +237,8 @@ export function EconomicParams({
           ))}
         </div>
       </details>
+      </div>
+      ) : null}
     </>
   );
 }

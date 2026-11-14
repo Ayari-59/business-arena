@@ -67,6 +67,12 @@ export interface LigneClassement {
   tresorerie?: string | null;
   /** Trésorerie en découvert : une alerte, donc le rouge. */
   decouvert?: boolean;
+  /** Le résultat cumulé de la partie, hors subvention, déjà formaté. */
+  cumul?: string | null;
+  /** La subvention de l'enseignant au dernier tour, à part : « hors subvention de 270 800 € ». */
+  subvention?: string | null;
+  /** Pourquoi ce rang, en mots simples. */
+  explication?: string | null;
 }
 
 const ONGLETS: { cle: Panneau; libelle: string; icone: NomDIcone }[] = [
@@ -445,6 +451,9 @@ export function VueDeProjection({
                   sens: row.sens ?? null,
                   tresorerie: row.tresorerie ?? null,
                   decouvert: row.decouvert ?? false,
+                  cumul: row.cumul ?? null,
+                  subvention: row.subvention ?? null,
+                  explication: row.explication ?? null,
                 }),
               )}
             />

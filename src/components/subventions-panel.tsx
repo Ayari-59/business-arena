@@ -43,7 +43,8 @@ export function SubventionsPanel({
   const tranchees = demandes.filter((d) => d.statut !== "pending");
 
   return (
-    <section className="carte p-3 sm:p-5">
+    // L'ancre du rappel du bandeau « Ce tour » (« 2 demandes d'aide »).
+    <section id="demandes-d-aide" className="carte scroll-mt-4 p-3 sm:p-5">
       <h2 className="text-sm font-semibold text-slate-100">
         <Icone nom="alerte" className="mr-1.5 h-4 w-4 text-amber-400" />
         Demandes de subvention exceptionnelle

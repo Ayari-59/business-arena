@@ -9,6 +9,7 @@ import {
   scoringWeightsByName,
   type PedagogyInputs,
   type PedagogyInputsV2,
+  resultatHorsSubvention,
 } from "@/scoring/bpi";
 import { situationByCode } from "@/config/scenarios/registry";
 import type { DecisionSourceMap } from "@/config/decision-source";
@@ -81,10 +82,21 @@ async function readPreviousNetIncome(gameId: string, roundIndex: number): Promis
   )[0];
   if (!prev) return new Map();
   const rows = await db
-    .select({ teamId: roundResults.teamId, netIncome: roundResults.netIncome })
+    .select({
+      teamId: roundResults.teamId,
+      netIncome: roundResults.netIncome,
+      rescueSubsidy: sql<string | null>`${roundResults.incomeStatement}->>'rescueSubsidy'`,
+    })
     .from(roundResults)
     .where(eq(roundResults.roundId, prev.id));
-  return new Map(rows.map((r) => [r.teamId, Number(r.netIncome)]));
+  // Hors subvention : la variation financière du tour se compare à ce que
+  // l'équipe a fait seule, pas à l'aide de l'enseignant.
+  return new Map(
+    rows.map((r) => [
+      r.teamId,
+      resultatHorsSubvention({ netIncome: Number(r.netIncome), rescueSubsidy: Number(r.rescueSubsidy ?? 0) }),
+    ]),
+  );
 }
 
 /**
@@ -191,6 +203,8 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
           roundId: roundResults.roundId,
           netIncome: roundResults.netIncome,
           netTreasury: roundResults.netTreasury,
+          // La subvention de l'enseignant, seule clé lue dans le compte de résultat.
+          rescueSubsidy: sql<string | null>`${roundResults.incomeStatement}->>'rescueSubsidy'`,
         })
         .from(roundResults)
         .where(inArray(roundResults.roundId, roundIds))
@@ -236,7 +250,14 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
     }
     const roundBpis = roundScores.map((r) => r.bpi);
     const teamResults = resultRows.filter((r) => r.teamId === teamId);
-    const cumulativeNetIncome = teamResults.reduce((sum, r) => sum + Number(r.netIncome), 0);
+    // Le résultat cumulé du classement est HORS SUBVENTION ; les subventions
+    // reçues se gardent à part, pour être montrées à côté.
+    const cumulativeNetIncome = teamResults.reduce(
+      (sum, r) =>
+        sum + resultatHorsSubvention({ netIncome: Number(r.netIncome), rescueSubsidy: Number(r.rescueSubsidy ?? 0) }),
+      0,
+    );
+    const cumulativeSubsidy = teamResults.reduce((sum, r) => sum + Number(r.rescueSubsidy ?? 0), 0);
     const lastTreasury = teamResults.length
       ? Number(
           teamResults.sort(
@@ -250,6 +271,7 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
       bpi: gameBpi(roundScores),
       roundBpis,
       cumulativeNetIncome,
+      cumulativeSubsidy,
       lastTreasury,
       defaillant: defaillantByTeam.get(teamId) ?? false,
       financialAvg: financialAvg ? financialAvg.sum / financialAvg.n : 0,
@@ -291,6 +313,7 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
           rank: i + 1,
           detail: {
             cumulativeNetIncome: entry.cumulativeNetIncome,
+            ...(entry.cumulativeSubsidy > 0 ? { cumulativeSubsidy: entry.cumulativeSubsidy } : {}),
             roundBpis: entry.roundBpis.map((v) => Math.round(v * 100) / 100),
             dimensions: entry.dimensions,
             defaillant: entry.defaillant,

@@ -4,7 +4,13 @@ import { BoutonCopierLeMessage } from "@/components/bouton-copier-le-message";
 import { messageDeLaPartie } from "@/lib/message-cahier-de-textes";
 import Link from "next/link";
 import { mentionDeValidation } from "@/config/validation-du-tour";
-import { dureeDuTour } from "@/config/duree-du-tour";
+import {
+  dernierTourDeSaSeance,
+  dureeDuTour,
+  dureesDeLaPartie,
+  planDesSeances,
+  seanceDuTour,
+} from "@/config/duree-du-tour";
 import { DureeDuTourAffichee } from "@/components/duree-du-tour";
 import { getObservationSeance } from "@/services/observation.service";
 import { notFound, redirect } from "next/navigation";
@@ -118,6 +124,7 @@ async function TeacherGamePage({
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
+  const demandesEnAttente = view.aidRequests.filter((d) => d.statut === "pending").length;
   // Une partie VIERGE : jamais jouée, personne dedans. C'est la seule qu'on
   // puisse supprimer, et c'est aussi la seule à qui proposer le bouton — le
   // service refuse les autres, mais un bouton qu'on ne peut pas cliquer avec
@@ -164,7 +171,31 @@ async function TeacherGamePage({
   const dureeEstimee = dureeDuTour({
     ...view.chargeDuTour,
     premierTour: view.currentRound === 1,
+    // Une partie de classe : à partir du tour 2, la lecture des résultats et
+    // la seconde situation comptent (séance d'essai du 13 novembre 2026).
+    enClasse: true,
   });
+  // LA PARTIE EN SÉANCES (séance d'essai, P0-1) : « Séance 1 sur 3 environ »,
+  // et, au dernier tour d'une séance, comment reprendre à la suivante. Le tour
+  // d'essai joué passe devant la vraie partie.
+  const toursDEssaiJoues = essai?.phase === "fini" ? essai.tours : 0;
+  const planDeLaPartie = planDesSeances(
+    dureesDeLaPartie({
+      tours: view.roundsCount,
+      toursDEssai: toursDEssaiJoues,
+      premier: dureeDuTour({ ...view.chargeDuTour, premierTour: true, enClasse: true }).minutes,
+      suivant: dureeDuTour({ ...view.chargeDuTour, premierTour: false, enClasse: true }).minutes,
+    }),
+  );
+  // Le tour dont on parle : celui à révéler s'il y en a un, sinon le tour en cours.
+  const tourDeLaSeance = toursDEssaiJoues + (aReveler ? aReveler.index : view.currentRound);
+  const seanceEnCours = seanceDuTour(planDeLaPartie, tourDeLaSeance);
+  const finDeSeance =
+    !finished &&
+    !essaiEnJeu &&
+    planDeLaPartie.seances > 1 &&
+    seanceEnCours < planDeLaPartie.seances &&
+    dernierTourDeSaSeance(planDeLaPartie, tourDeLaSeance);
   const observation = await getObservationSeance(gameId, session.userId);
   const tourMesure = [...(observation?.tours ?? [])]
     .filter((t) => t.clos && t.minutesMedianes !== null)
@@ -259,6 +290,14 @@ async function TeacherGamePage({
             {!finished && !essaiTermine && view.moisDeDepart !== null ? (
               <p className="mt-1 text-sm text-slate-300">{nomDuMois(view.currentRound, view.moisDeDepart)}</p>
             ) : null}
+            {/* LA SÉANCE, PAS SEULEMENT LE TOUR : une partie par défaut tient
+                en trois séances de 55 min, et l'enseignant planifie en heures
+                de cours. */}
+            {!finished && !essaiEnJeu && planDeLaPartie.seances > 1 ? (
+              <p data-seance-en-cours="" className="mt-1 text-sm text-slate-300">
+                Séance {seanceEnCours} sur {planDeLaPartie.seances} environ
+              </p>
+            ) : null}
           </div>
           {!finished && !essaiTermine ? (
             <dl className="flex flex-wrap gap-x-8 gap-y-3">
@@ -284,6 +323,20 @@ async function TeacherGamePage({
             </dl>
           ) : null}
         </div>
+        {/* EN FIN DE SÉANCE, COMMENT REPRENDRE. Rien ne se ferme : la partie
+            attend la séance suivante telle qu'elle est. */}
+        {finDeSeance ? (
+          <p data-fin-de-seance="" className="mt-3 max-w-2xl text-sm text-slate-300">
+            <Icone nom="duree" className="mr-1.5 h-4 w-4" />
+            <strong className="font-semibold text-slate-100">
+              Fin de séance prévue après {aReveler ? "la révélation" : "ce tour"}.
+            </strong>{" "}
+            La partie vous attend telle quelle : à la séance {seanceEnCours + 1}, rouvrez ce pilotage
+            et la projection. Les élèves rouvrent la partie sur leur téléphone ; sur un autre
+            appareil, ils entrent leur code de reprise sur{" "}
+            <span className="font-mono text-slate-100">/reprendre</span>.
+          </p>
+        ) : null}
         {essaiEnJeu ? (
           <p className="mt-3 max-w-2xl text-sm text-slate-300" data-tour-d-essai={essai.phase}>
             {essaiTermine
@@ -323,6 +376,37 @@ async function TeacherGamePage({
               </Link>
             </div>
           </div>
+        ) : null}
+        {/* LES ÉQUIPES QUI ATTENDENT L'ENSEIGNANT (séance d'essai, P1-10). Les
+            entreprises à l'arrêt et les demandes de subvention étaient à
+            mi-page, sous le code et la Gazette : rien ici ne disait « 2 équipes
+            vous demandent de l'aide ». Le rappel tient en une ligne, avec le
+            lien vers les demandes. */}
+        {!finished && (defaillantes.length > 0 || demandesEnAttente > 0) ? (
+          <p
+            data-rappel-des-aides=""
+            className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-amber-200"
+          >
+            <Icone nom="alerte" className="h-4 w-4" />
+            <span>
+              {[
+                defaillantes.length > 0
+                  ? `${compter(defaillantes.length, "équipe")} à l'arrêt`
+                  : null,
+                demandesEnAttente > 0
+                  ? compter(demandesEnAttente, "demande d'aide", "demandes d'aide")
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+            <Link
+              href={demandesEnAttente > 0 ? "#demandes-d-aide" : "#equipes-a-l-arret"}
+              className="font-normal text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              {demandesEnAttente > 0 ? "Lire les demandes →" : "Voir les équipes à l'arrêt →"}
+            </Link>
+          </p>
         ) : null}
         {!finished && !essaiTermine && !aReveler ? (
           <CloseRoundForm
@@ -570,6 +654,12 @@ async function TeacherGamePage({
                     {t.lastNetIncome === null
                       ? "—"
                       : `${t.lastNetIncome > 0 ? "+" : ""}${formatEuro(t.lastNetIncome)}`}
+                    {/* Le résultat est hors subvention ; l'aide se lit à part. */}
+                    {t.lastRescueSubsidy > 0 ? (
+                      <span className="block text-xs font-normal text-slate-400">
+                        hors subvention de {formatEuro(t.lastRescueSubsidy)}
+                      </span>
+                    ) : null}
                   </td>
                   <td
                     className={`whitespace-nowrap py-2 text-right tabular-nums ${
@@ -723,6 +813,9 @@ async function TeacherGamePage({
                     <span className="font-semibold text-slate-100">IPG {formatDecimal(row.bpi)}</span>
                     <span className="ml-2 text-xs text-slate-400">
                       {formatEuro(row.cumulativeNetIncome)} cumulés
+                      {row.cumulativeSubsidy > 0
+                        ? `, hors subvention de ${formatEuro(row.cumulativeSubsidy)}`
+                        : ""}
                     </span>
                   </span>
                 )}

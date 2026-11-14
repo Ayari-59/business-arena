@@ -42,6 +42,7 @@ export function DureeDuTourAffichee({
   }
 
   const postes = [
+    (estimation.resultats ?? 0) > 0 ? `${estimation.resultats} min de lecture des résultats` : null,
     estimation.lecture > 0 ? `${estimation.lecture} min de lecture` : null,
     estimation.saisie > 0 ? `${estimation.saisie} min de saisie` : null,
     estimation.analyse > 0 ? `${estimation.analyse} min d'analyse` : null,

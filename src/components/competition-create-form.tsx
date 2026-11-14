@@ -144,7 +144,9 @@ export function CompetitionCreateForm({
       <button
         type="submit"
         disabled={pending}
-        className={`${bouton()} sm:col-span-2`}
+        // UN SEUL BOUTON PLEIN SUR LA PAGE (séance d'essai, P2-7) : celui de la
+        // partie de classe. Le concours, usage rare, prend le filet.
+        className={`${bouton({ variante: "secondaire" })} sm:col-span-2`}
       >
         {pending ? "Création du concours…" : "Créer le concours et ouvrir les inscriptions"}
       </button>

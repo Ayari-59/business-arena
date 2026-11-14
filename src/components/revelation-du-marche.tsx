@@ -78,6 +78,22 @@ export interface LigneDeRevelation {
   decouvert: boolean;
   ipg: number | null;
   defaillant: boolean;
+  /**
+   * Le résultat cumulé de la partie, hors subvention, déjà formaté : la classe
+   * le lit à côté du résultat du tour, parce que le rang se fait sur la partie.
+   */
+  cumul?: string | null;
+  /**
+   * La subvention de l'enseignant, montrée à part : le résultat affiché et
+   * l'IPG ne la comptent pas (décision du propriétaire). « Subvention de
+   * 270 800 € hors classement », écrite sous le nom ; null sans aide.
+   */
+  subvention?: string | null;
+  /**
+   * Pourquoi ce rang, en mots simples (`scoring/pourquoi-ce-rang`) : écrit
+   * sous le nom, il arrive en fin de révélation, avec le podium.
+   */
+  explication?: string | null;
 }
 
 const TEINTE = { gain: "text-emerald-300", perte: "text-red-300" } as const;
@@ -106,6 +122,9 @@ export function RevelationDuMarche({
   const n = lignes.length;
   const rythme = rythmeDeRevelation(n);
   const colonnes = lignes.some((l) => l.resultat !== null || l.tresorerie !== null);
+  // CHAQUE LIGNE PORTE DEUX ÉTAGES (pourquoi ce rang, le cumul) : le mur serre
+  // ses lignes et son podium pour tenir sans défiler.
+  const detaille = lignes.some((l) => l.explication || l.cumul);
   const style = {
     "--revelation-pas": `${rythme.pas}s`,
     "--revelation-fin": `${rythme.podium}s`,
@@ -126,7 +145,9 @@ export function RevelationDuMarche({
         <h2 className="mt-1 text-[clamp(1.5rem,min(4vw,5.3vh),3.2rem)] font-semibold leading-tight text-slate-50">
           {titre}
         </h2>
-        {mention ? (
+        {/* Le mur détaillé dit déjà, sous chaque équipe, ce qui fait son rang :
+            la mention cède sa ligne pour que tout tienne sans défiler. */}
+        {mention && !detaille ? (
           <p className="mt-1 text-[clamp(0.9rem,1.8vw,1.5rem)] text-slate-400">{mention}</p>
         ) : null}
       </div>
@@ -159,14 +180,32 @@ export function RevelationDuMarche({
               // pastille du rang se dimensionne en `em` (`pastille-rang-reduite`)
               // et se réduisait à douze pixels quand la ligne restait au corps
               // par défaut — une médaille d'or invisible à huit mètres.
-              className={`flex items-center gap-[clamp(0.5rem,1.5vw,1.5rem)] rounded-xl border border-white/5 bg-slate-950 px-[clamp(0.8rem,2vw,2rem)] py-[clamp(0.2rem,0.6vh,0.9rem)] text-[clamp(1.1rem,min(2.6vw,3.6vh),2.2rem)] ${classeLigneDeRang(l.rang)}`}
+              className={`flex items-center gap-[clamp(0.5rem,1.5vw,1.5rem)] rounded-xl border border-white/5 bg-slate-950 px-[clamp(0.8rem,2vw,2rem)] py-[clamp(0.2rem,0.6vh,0.9rem)] ${detaille ? "text-[clamp(1.1rem,min(2.4vw,2.8vh),2.1rem)]" : "text-[clamp(1.1rem,min(2.6vw,3.6vh),2.2rem)]"} ${classeLigneDeRang(l.rang)}`}
             >
               <PastilleDeRang rang={l.rang} className="pastille-rang-reduite" />
               {/* Le nom à gauche, contre sa médaille : la vue de projection
                   centre tout son message, et un classement ne se lit pas
                   centré. */}
-              <span className="min-w-0 flex-1 truncate text-left font-semibold text-slate-100">
-                {l.nom}
+              <span className="flex min-w-0 flex-1 flex-col text-left">
+                <span className={`truncate font-semibold text-slate-100 ${detaille ? "leading-tight" : ""}`}>{l.nom}</span>
+                {/* POURQUOI CE RANG : les deux composantes de l'IPG qui ont le
+                    plus pesé, en mots simples. Elle arrive avec le podium. */}
+                {l.explication || l.subvention ? (
+                  <span
+                    data-revelation-explication=""
+                    className="truncate text-[clamp(1.125rem,min(1.3vw,2vh),1.5rem)] leading-none text-slate-300"
+                  >
+                    {/* LA SUBVENTION, À PART : le résultat et l'IPG ne la
+                        comptent pas (décision du propriétaire). */}
+                    {l.subvention ? (
+                      <span data-revelation-subvention="" className="text-amber-200">
+                        {l.subvention}
+                        {l.explication ? " · " : ""}
+                      </span>
+                    ) : null}
+                    {l.explication}
+                  </span>
+                ) : null}
               </span>
               {l.defaillant ? (
                 <span
@@ -184,12 +223,21 @@ export function RevelationDuMarche({
                 <>
                   {/* LE RÉSULTAT DU TOUR, SIGNÉ, VERT OU ROUGE FRANCS : c'est
                       un résultat, et c'est le chiffre que la classe cherche. */}
-                  <span
-                    className={`w-[clamp(6rem,14vw,13rem)] shrink-0 text-right font-display text-[clamp(1.1rem,min(2.8vw,3.9vh),2.4rem)] font-bold tabular-nums ${
-                      l.sens ? TEINTE[l.sens] : "text-slate-200"
-                    }`}
-                  >
-                    {l.resultat ?? "—"}
+                  <span className="flex w-[clamp(6rem,14vw,13rem)] shrink-0 flex-col items-end text-right">
+                    <span
+                      className={`font-display ${detaille ? "text-[clamp(1.1rem,min(2.6vw,2.9vh),2.3rem)]" : "text-[clamp(1.1rem,min(2.8vw,3.9vh),2.4rem)]"} font-bold leading-tight tabular-nums ${
+                        l.sens ? TEINTE[l.sens] : "text-slate-200"
+                      }`}
+                    >
+                      {l.resultat ?? "—"}
+                    </span>
+                    {/* À CÔTÉ DU TOUR, LA PARTIE : le cumul hors subvention, et
+                        la subvention de l'enseignant à part, jamais comptée. */}
+                    {l.cumul ? (
+                      <span className="whitespace-nowrap text-[clamp(1.125rem,min(1.3vw,2vh),1.5rem)] leading-none tabular-nums text-slate-300">
+                        cumul {l.cumul}
+                      </span>
+                    ) : null}
                   </span>
                   {/* La trésorerie est un NIVEAU : à l'encre claire, et au
                       rouge seulement en découvert. */}
@@ -216,6 +264,7 @@ export function RevelationDuMarche({
       <div data-temps="3" className="w-full max-w-3xl">
         <PodiumDesEquipes
           taille="projection"
+          serre={detaille}
           etiquette="Podium du classement"
           marches={lignes.map((l) => ({
             nom: l.nom,

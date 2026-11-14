@@ -170,6 +170,16 @@ async function ProjectionPage({
                   : ("perte" as const),
             tresorerie: tresorerie === null ? null : formatEuro(tresorerie),
             decouvert: (tresorerie ?? 0) < 0,
+            // LA SUBVENTION HORS CLASSEMENT (décision du propriétaire) : le
+            // résultat projeté est hors subvention, et l'aide de l'enseignant
+            // se lit à part, jamais comptée.
+            subvention:
+              (equipe?.lastRescueSubsidy ?? 0) > 0
+                ? `Subvention de ${formatEuro(equipe!.lastRescueSubsidy)} hors classement`
+                : null,
+            // Le rang se fait sur la partie : le cumul à côté du tour.
+            cumul: resultat === null ? null : euroSigne(row.cumulativeNetIncome),
+            explication: row.explication || null,
           };
         })}
         classementRevele={dernierTourClos?.rankingRevealed ?? false}

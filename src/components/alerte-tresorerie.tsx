@@ -72,8 +72,14 @@ export function AlerteTresorerie({
         </p>
         <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
           Elle est à l&apos;arrêt : elle ne produit plus, ne vend plus, et ses décisions ne
-          sont plus simulées. {alerte.toursConsecutifs} tours de suite sous le plafond de
-          découvert sans plus une créance à céder.
+          sont plus simulées.{" "}
+          {/* LA RÈGLE, PAS LE COMPTEUR (séance d'essai, P2-5) : l'élève lisait
+              « 3 tours de suite » quand le pilotage disait « 2 tours
+              consécutifs ». Les deux disent désormais la règle de la partie. */}
+          {alerte.toursAvantDefaillance <= 1
+            ? "Un tour"
+            : `${alerte.toursAvantDefaillance} tours consécutifs`}{" "}
+          sous le plafond de découvert sans plus une créance à céder ont suffi.
         </p>
         {/* Le remède est celui que lit l'enseignant au même instant
             (`config/defaillance.ts`) : les deux bandeaux ne peuvent plus se

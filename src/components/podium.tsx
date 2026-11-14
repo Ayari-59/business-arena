@@ -57,6 +57,13 @@ const ECHELLE = {
   },
 } as const;
 
+/** Les marches du mur quand les lignes du classement portent leur explication. */
+const HAUTEURS_SERREES = [
+  "min-h-[clamp(5rem,10vh,10rem)]",
+  "min-h-[clamp(4rem,8vh,8rem)]",
+  "min-h-[clamp(3.25rem,6.5vh,6.5rem)]",
+] as const;
+
 /** La marche dite en toutes lettres, pour le lecteur d'écran. */
 const MARCHES_EN_LETTRES = ["Première", "Deuxième", "Troisième"] as const;
 
@@ -69,9 +76,15 @@ export function PodiumDesEquipes({
   marches,
   taille = "carte",
   etiquette,
+  serre = false,
 }: {
   marches: readonly MarcheDuPodium[];
   taille?: keyof typeof ECHELLE;
+  /**
+   * Au mur, quand chaque équipe porte sa ligne « pourquoi ce rang » : les
+   * marches baissent, l'escalier reste lisible, et le mur tient sans défiler.
+   */
+  serre?: boolean;
   /** Ce que le lecteur d'écran annonce : « Podium du classement final ». */
   etiquette: string;
 }) {
@@ -93,7 +106,7 @@ export function PodiumDesEquipes({
           >
             <div
               className={`marche-de-podium marche-de-podium-${m.rang} bg-slate-900 text-center ${e.marche} ${
-                e.hauteur[m.rang - 1]
+                (serre && taille === "projection" ? HAUTEURS_SERREES : e.hauteur)[m.rang - 1]
               } ${m.moi ? "ligne-moi" : ""}`}
             >
               {/* LE RANG, DIT PAR LA MÉDAILLE SEULE (lot P5). La mention

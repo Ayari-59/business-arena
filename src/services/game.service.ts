@@ -28,6 +28,9 @@ import {
 } from "@/config/difficulty";
 import { pseudoAffichable } from "@/config/invite";
 import { champsOuverts, signesDeCadrage, signesDeSituation } from "@/config/duree-du-tour";
+import { resultatHorsSubvention, scoringWeightsByName } from "@/scoring/bpi";
+import { pourquoiCeRang } from "@/scoring/pourquoi-ce-rang";
+import type { EngineScenarioConfig } from "@/engine/types";
 import { dureeDuTourDe, moisDeDepartDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { emblemeParCode } from "@/config/emblemes";
 import { validerNomEquipe } from "@/config/nom-equipe";
@@ -810,7 +813,14 @@ export interface TeacherGameView {
      * sans lui. Null pour un bot ou tant que rien n'est validé.
      */
     validation: { nom: string | null; quand: string } | null;
+    /**
+     * Le résultat net du dernier tour clos, HORS SUBVENTION de l'enseignant
+     * (`scoring/bpi`, `resultatHorsSubvention`) : c'est celui que le mur et le
+     * classement montrent. La subvention du tour se lit à part.
+     */
     lastNetIncome: number | null;
+    /** La subvention exceptionnelle reçue au dernier tour clos ; 0 sans aide. */
+    lastRescueSubsidy: number;
     lastNetTreasury: number | null;
   }[];
   ranking: {
@@ -822,7 +832,16 @@ export interface TeacherGameView {
      */
     teamId: string;
     name: string;
+    /** Le résultat cumulé de la partie, hors subvention. */
     cumulativeNetIncome: number;
+    /** Les subventions reçues sur la partie, montrées à part ; 0 sans aide. */
+    cumulativeSubsidy: number;
+    /**
+     * Pourquoi ce rang, en mots simples : les deux composantes de l'IPG qui
+     * ont le plus pesé (`scoring/pourquoi-ce-rang`). Le mur l'écrit en fin de
+     * révélation.
+     */
+    explication: string;
     rank: number;
     bpi: number;
     /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
@@ -869,6 +888,16 @@ export async function getTeacherGameView(
     : [];
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
+  // Pourquoi chaque équipe a son rang : les moyennes par composante que le
+  // classement garde, avec les poids du scénario, inchangés.
+  const explications = pourquoiCeRang(
+    rankingRows.map((r) => ({
+      teamId: r.teamId,
+      defaillant: Boolean((r.detail as { defaillant?: boolean } | null)?.defaillant),
+      dimensions: (r.detail as { dimensions?: Record<string, number> } | null)?.dimensions ?? {},
+    })),
+    scoringWeightsByName((game.scenarioSnapshot as EngineScenarioConfig).scoring),
+  );
   const demandes = await demandesDeLaPartie(gameId);
   const snapshotDefinition = await resolveScenarioDefinition(
     (game.scenarioSnapshot as { code?: string } | null)?.code,
@@ -981,16 +1010,21 @@ export async function getTeacherGameView(
             quand: d.validatedAt.toISOString(),
           };
         })(),
-        lastNetIncome: last ? Number(last.netIncome) : null,
+        lastNetIncome: last ? resultatHorsSubvention({ netIncome: Number(last.netIncome), rescueSubsidy: last.incomeStatement?.rescueSubsidy }) : null,
+        lastRescueSubsidy: last?.incomeStatement?.rescueSubsidy ?? 0,
         lastNetTreasury: last ? Number(last.netTreasury) : null,
       };
     }),
     ranking: rankingRows
       .map((r) => ({
+        explication: explications.get(r.teamId) ?? "",
         teamId: r.teamId,
         name: teamDisplayName(teamRows.find((t) => t.id === r.teamId)?.name ?? "?"),
         cumulativeNetIncome: Number(
           (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,
+        ),
+        cumulativeSubsidy: Number(
+          (r.detail as { cumulativeSubsidy?: number })?.cumulativeSubsidy ?? 0,
         ),
         rank: r.rank,
         bpi: Number(r.bpi),
