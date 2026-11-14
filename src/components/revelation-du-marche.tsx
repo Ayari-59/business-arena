@@ -190,19 +190,22 @@ export function RevelationDuMarche({
                 <span className={`truncate font-semibold text-slate-100 ${detaille ? "leading-tight" : ""}`}>{l.nom}</span>
                 {/* POURQUOI CE RANG : les deux composantes de l'IPG qui ont le
                     plus pesé, en mots simples. Elle arrive avec le podium. */}
-                {l.explication || l.subvention ? (
+                {/* LA SUBVENTION, À PART : le résultat et l'IPG ne la
+                    comptent pas (décision du propriétaire). Sa propre ligne :
+                    sur la même que l'explication, celle-ci était coupée. */}
+                {l.subvention ? (
+                  <span
+                    data-revelation-subvention=""
+                    className="truncate text-[clamp(1.125rem,min(1.3vw,2vh),1.5rem)] leading-none text-amber-200"
+                  >
+                    {l.subvention}
+                  </span>
+                ) : null}
+                {l.explication ? (
                   <span
                     data-revelation-explication=""
                     className="truncate text-[clamp(1.125rem,min(1.3vw,2vh),1.5rem)] leading-none text-slate-300"
                   >
-                    {/* LA SUBVENTION, À PART : le résultat et l'IPG ne la
-                        comptent pas (décision du propriétaire). */}
-                    {l.subvention ? (
-                      <span data-revelation-subvention="" className="text-amber-200">
-                        {l.subvention}
-                        {l.explication ? " · " : ""}
-                      </span>
-                    ) : null}
                     {l.explication}
                   </span>
                 ) : null}
