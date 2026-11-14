@@ -139,7 +139,7 @@ describe("le résultat estimé, de la saisie au verdict", () => {
       ]),
     );
     // Le libellé est sans ambiguïté.
-    await dit(page, "Résultat estimé", "selon vos ventes estimées");
+    await dit(page, "Résultat estimé", "si vous vendez");
 
     // Deux fois plus de ventes estimées : le chiffre d'affaires estimé monte.
     await champ.fill("2400");
