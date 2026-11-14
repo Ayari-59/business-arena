@@ -597,12 +597,17 @@ export function LigneEstimeeCompacte({
       >
         {/* Le chevron commun, en tête du résumé (lot P5). */}
         <Chevron className="text-slate-400" />
-        <span className="whitespace-nowrap text-slate-400">Rés. estimé</span>{" "}
+        {/* LA CONDITION DU CHIFFRE, À CÔTÉ DE LUI (séance d'essai, P1-7) : « Rés. estimé » cède
+            la place à « si vous vendez N », sur la même ligne (la barre ne grandit pas). Le
+            tiroir dit la phrase entière, unité comprise. */}
         <ValeurRafraichie valeur={formatEuro(e.resultatNet)}>
           <span data-resultat-net-estime="" className="whitespace-nowrap font-semibold tabular-nums text-slate-50">
             {formatEuro(e.resultatNet)}
           </span>
-        </ValeurRafraichie>
+        </ValeurRafraichie>{" "}
+        <span data-condition-estimee="" className="min-w-0 truncate text-xs text-slate-400">
+          {e.condition.replace(/ [^ ]+$/, "")}
+        </span>
       </summary>
       {/* LE TIROIR, sous la barre et par-dessus la carte : la carte ne défile pas. */}
       <div className="tiroir-estime absolute inset-x-2 top-full z-10 mt-1 p-4 text-left normal-case tracking-normal">

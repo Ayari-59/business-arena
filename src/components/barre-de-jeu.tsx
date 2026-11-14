@@ -189,13 +189,7 @@ export function BarreDeJeu({
           )}
         </div>
       ) : null}
-      {/* LA CONDITION DU CHIFFRE (séance d'essai, P1-7) : le résultat estimé ne vaut que si
-          les ventes estimées se réalisent. Elle se lit sous lui, à droite, en petit. */}
-      {enTete && estimeALaPlace && estimation && !estimation.vide ? (
-        <p data-condition-estimee="" className="px-4 pb-0.5 text-right text-xs leading-tight text-slate-400">
-          {estimation.condition}
-        </p>
-      ) : null}
+
 
       {/* La barre du tour, en segments : un par temps (résultats, briefing, analyse, courrier,
           décisions), chacun dans sa teinte, plus ou moins rempli. */}
