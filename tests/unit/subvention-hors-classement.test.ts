@@ -72,8 +72,10 @@ describe("le mur montre le résultat hors subvention, et la subvention à part",
     expect(service).toMatch(/lastNetIncome: last \? resultatHorsSubvention\(/);
   });
 
-  it("la projection écrit la subvention à part, « hors subvention de … »", () => {
-    expect(lire("src/components/revelation-du-marche.tsx")).toContain("hors subvention");
-    expect(lire("src/app/teacher/games/[gameId]/projection/page.tsx")).toContain("lastRescueSubsidy");
+  it("la projection écrit la subvention à part, « Subvention de … hors classement »", () => {
+    expect(lire("src/components/revelation-du-marche.tsx")).toContain("data-revelation-subvention");
+    const projection = lire("src/app/teacher/games/[gameId]/projection/page.tsx");
+    expect(projection).toContain("lastRescueSubsidy");
+    expect(projection).toContain("hors classement");
   });
 });

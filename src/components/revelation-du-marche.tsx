@@ -85,8 +85,8 @@ export interface LigneDeRevelation {
   cumul?: string | null;
   /**
    * La subvention de l'enseignant, montrée à part : le résultat affiché et
-   * l'IPG ne la comptent pas (décision du propriétaire). « hors subvention de
-   * 270 800 € » ; null sans aide.
+   * l'IPG ne la comptent pas (décision du propriétaire). « Subvention de
+   * 270 800 € hors classement », écrite sous le nom ; null sans aide.
    */
   subvention?: string | null;
   /**

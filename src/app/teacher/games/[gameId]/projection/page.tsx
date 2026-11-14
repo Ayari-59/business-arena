@@ -175,7 +175,7 @@ async function ProjectionPage({
             // se lit à part, jamais comptée.
             subvention:
               (equipe?.lastRescueSubsidy ?? 0) > 0
-                ? `hors subvention de ${formatEuro(equipe!.lastRescueSubsidy)}`
+                ? `Subvention de ${formatEuro(equipe!.lastRescueSubsidy)} hors classement`
                 : null,
             // Le rang se fait sur la partie : le cumul à côté du tour.
             cumul: resultat === null ? null : euroSigne(row.cumulativeNetIncome),
