@@ -531,6 +531,51 @@ export function answerFormatFromProfile(profile: unknown): AnswerFormat {
  * `quizMode` explicite, puis l'ancien drapeau booléen des parties créées avant
  * ce réglage (absent = tout servi, comme à l'époque).
  */
+/**
+ * L'AIDE AU DIAGNOSTIC (demande du propriétaire, 14 novembre) : rendre les
+ * diagnostics plus faciles qu'à leur niveau, sans toucher au reste de la partie.
+ * Aux niveaux 4 à 6, le diagnostic propose quatre causes et quatre modèles sans
+ * aide ; l'enseignant peut le ramener à celui du niveau 3 (« guidés ») ou des
+ * niveaux 1 et 2 (« très guidés »). Jamais plus difficile que le niveau.
+ */
+export type AideAuDiagnostic = "niveau" | "guide" | "tres-guide";
+
+export const DEFAULT_AIDE_AU_DIAGNOSTIC: AideAuDiagnostic = "niveau";
+
+export const AIDES_AU_DIAGNOSTIC: readonly { code: AideAuDiagnostic; name: string; help: string }[] = [
+  {
+    code: "niveau",
+    name: "Selon le niveau",
+    help: "Le diagnostic suit le niveau de la partie : aux niveaux 4 à 6, quatre causes et quatre modèles, sans aide.",
+  },
+  {
+    code: "guide",
+    name: "Guidés",
+    help: "Comme au niveau 3 : trois causes dont une juste, trois modèles, chacun avec la phrase qui dit à quoi il sert.",
+  },
+  {
+    code: "tres-guide",
+    name: "Très guidés",
+    help: "Comme aux niveaux 1 et 2 : un choix entre deux, pour la cause comme pour le modèle.",
+  },
+];
+
+/** Réglage d'une partie ; absent (parties d'avant ce réglage) = selon le niveau. */
+export function aideAuDiagnosticFromProfile(profile: unknown): AideAuDiagnostic {
+  const a = (profile as { aideAuDiagnostic?: unknown } | null)?.aideAuDiagnostic;
+  return a === "guide" || a === "tres-guide" ? a : "niveau";
+}
+
+/**
+ * Le niveau auquel se posent les diagnostics : celui de la partie, plafonné par
+ * l'aide choisie (3 pour « guidés », 2 pour « très guidés »). Jamais au-dessus.
+ */
+export function niveauDuDiagnostic(niveauDeLaPartie: number, aide: AideAuDiagnostic): number {
+  if (aide === "tres-guide") return Math.min(niveauDeLaPartie, 2);
+  if (aide === "guide") return Math.min(niveauDeLaPartie, 3);
+  return niveauDeLaPartie;
+}
+
 export function quizModeFromProfile(profile: unknown): QuizMode {
   const p = profile as { quizMode?: unknown; quizEnabled?: boolean } | null;
   if (p?.quizMode === "full" || p?.quizMode === "model" || p?.quizMode === "off") {

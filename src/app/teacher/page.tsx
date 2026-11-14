@@ -38,7 +38,9 @@ import { archiverPartieAction, createClassGameAction, desarchiverPartieAction } 
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { compter, jourDeCreation } from "@/lib/format";
 import {
+  AIDES_AU_DIAGNOSTIC,
   ANSWER_FORMATS,
+  DEFAULT_AIDE_AU_DIAGNOSTIC,
   DEFAULT_ANSWER_FORMAT,
   DEFAULT_QUIZ_MODE,
   DIFFICULTY_PRESETS,
@@ -703,6 +705,36 @@ async function TeacherDashboard({
                   Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
                   débriefées gardent le score obtenu sous l&apos;ancien réglage.
                 </p>
+                {/* L'AIDE AU DIAGNOSTIC (demande du propriétaire, 14 novembre) :
+                    des diagnostics plus faciles que le niveau, sans rien changer
+                    d'autre à la partie. Se choisit à la création. */}
+                <div data-aide-au-diagnostic="" className="mt-3 border-t border-white/5 pt-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    <Icone nom="cible" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                    Difficulté des diagnostics
+                  </p>
+                  <div className="mt-1 space-y-2">
+                    {AIDES_AU_DIAGNOSTIC.map((a) => (
+                      <label key={a.code} className="flex items-start gap-3">
+                        <input
+                          type="radio"
+                          name="aideAuDiagnostic"
+                          value={a.code}
+                          defaultChecked={a.code === DEFAULT_AIDE_AU_DIAGNOSTIC}
+                          className="mt-0.5 h-4 w-4 accent-amber-400"
+                        />
+                        <span>
+                          <span className="text-sm font-medium text-slate-200">{a.name}</span>
+                          <span className="mt-0.5 block text-sm text-slate-400">{a.help}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                    Se choisit à la création. Les décisions, le marché et le classement gardent le
+                    niveau de la partie ; seul le diagnostic devient plus facile.
+                  </p>
+                </div>
               </fieldset>
 
               <EconomicParams
