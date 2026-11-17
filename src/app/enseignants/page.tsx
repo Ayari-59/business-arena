@@ -6,7 +6,7 @@ import { publicDeLAtelier } from "@/config/formations";
 import { formationsAvecUnePage } from "@/config/couverture";
 import { leCoursEnChiffres } from "@/config/articulation";
 import Link from "next/link";
-import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
+import { ATELIERS, dureeTotaleHeures, NOMBRE_D_ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import {
@@ -35,9 +35,18 @@ export const metadata: Metadata = {
     "Le business game qui mesure une décision, pas un clic, et rend compte au référentiel sans mentir. Ateliers clés en main du bac STMG au DCG, cours de gestion du bac STMG au DSCG, partie créée en 30 secondes.",
 };
 
-/** Les formations qui ont leur page (/parcours/…), et celles qu'un atelier sert. */
-const FORMATIONS_SERVIES = formationsAvecUnePage();
-const FORMATIONS_A_ATELIER = FORMATIONS_SERVIES.filter((f) => ATELIERS.some((a) => a.formations.includes(f.code)));
+/**
+ * Les formations qui ont leur page (/parcours/…), et celles qu'un atelier sert. Une option compte avec
+ * son diplôme (chantier des compteurs, novembre 2026 : la page disait « 13 formations servies » au-dessus
+ * de « 12 formations », l'option BTS MHR B et C comptée à part) : la même règle que l'encart du cours
+ * (`leCoursEnChiffres`, config/articulation.ts). Un diplôme a son atelier quand un atelier sert le
+ * diplôme ou l'une de ses options.
+ */
+const PAGES_DES_FORMATIONS = formationsAvecUnePage();
+const FORMATIONS_SERVIES = PAGES_DES_FORMATIONS.filter((f) => !f.optionDe);
+const FORMATIONS_A_ATELIER = FORMATIONS_SERVIES.filter((f) =>
+  ATELIERS.some((a) => a.formations.some((code) => code === f.code || PAGES_DES_FORMATIONS.some((o) => o.code === code && o.optionDe === f.code))),
+);
 const HEURES_TOTALES = Math.round(
   ATELIERS.reduce((s, a) => s + dureeTotaleHeures(a), 0),
 );
@@ -50,7 +59,7 @@ const HERO_STATS = [
       "Industrie, commerce, hôtellerie, e-commerce, conseil, BTP, transport…",
   },
   {
-    value: `${ATELIERS.length}`,
+    value: `${NOMBRE_D_ATELIERS}`,
     label: "ateliers clés en main",
     detail:
       "Déroulés de séance minutés, livrables et grilles d'évaluation compris",
@@ -125,7 +134,7 @@ const TROIS_TEMPS = [
       // écrits à la main, ils survivraient à un niveau ajouté ou renommé.
       `${DIFFICULTY_PRESETS.length} niveaux, de ${DIFFICULTY_PRESETS[0]!.name} à ${DIFFICULTY_PRESETS.at(-1)!.name} : les leviers s'ouvrent un à un, sans toucher au moteur.`,
       "Un tour vaut un mois, un trimestre ou une année : toute l'économie du scénario suit.",
-      `${ATELIERS.length} ateliers clés en main, ou vos propres scénarios si vous préférez les écrire.`,
+      `${NOMBRE_D_ATELIERS} ateliers clés en main, ou vos propres scénarios si vous préférez les écrire.`,
     ],
   },
   {
@@ -211,7 +220,7 @@ async function EnseignantsPage() {
               surpromettre. Des ateliers clés en main, une partie créée en trente secondes.
             </>
           }
-          preuve={{ valeur: `${ATELIERS.length}`, libelle: "ateliers clés en main" }}
+          preuve={{ valeur: `${NOMBRE_D_ATELIERS}`, libelle: "ateliers clés en main" }}
           actions={
             <>
               <Link href="/orientation" className={bouton({ taille: "l" })}>
@@ -326,7 +335,7 @@ async function EnseignantsPage() {
             Des ateliers clés en main, par diplôme
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-center text-base text-slate-400">
-            {ATELIERS.length} déroulés prêts à animer, {HEURES_TOTALES} heures
+            {NOMBRE_D_ATELIERS} déroulés prêts à animer, {HEURES_TOTALES} heures
             de séance au total, dont {ATELIERS_A_REFERENTIEL.length} adossés au référentiel
             d&apos;un diplôme, chacun livré avec ses livrables et sa grille d&apos;évaluation.
           </p>
@@ -375,7 +384,7 @@ async function EnseignantsPage() {
               href="/animations"
               className="inline-block rounded-lg bouton-filet border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/5"
             >
-              Voir les {ATELIERS.length} ateliers →
+              Voir les {NOMBRE_D_ATELIERS} ateliers →
             </Link>
           </p>
           <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-slate-400">

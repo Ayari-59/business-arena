@@ -5,6 +5,7 @@ import { variablesDuCatalogue } from "@/config/tarifs";
 import { vueDesTarifs } from "@/config/catalogue";
 import { SEMAINES_DU_PARCOURS } from "@/config/episodes/parcours-en-cohorte";
 import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
+import { compterLesDemos } from "@/config/chiffres-du-site";
 
 /**
  * LA PAGE COMMERCIALE DES ENTREPRISES ET DES ORGANISMES DE FORMATION (audit de l'offre, octobre 2026, P1-9 :
@@ -26,7 +27,7 @@ async function OffreEntreprisesPage() {
   const { catalogue, decouverte, affichage } = await lireLEtatDuCatalogue();
   const vue = vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix: affichage.prixPublics });
   const colonnes = vue.episodes?.colonnes.filter((c) => c.public === "entreprises") ?? [];
-  return <OffreDesEntreprises colonnes={colonnes} tarif={vue.episodes?.tarif ?? null} />;
+  return <OffreDesEntreprises colonnes={colonnes} tarif={vue.episodes?.tarif ?? null} demos={compterLesDemos(decouverte)} />;
 }
 
 export default avecTypographie(OffreEntreprisesPage);

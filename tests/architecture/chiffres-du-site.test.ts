@@ -29,7 +29,9 @@ import { LeCoursEnBref } from "@/components/le-cours-en-bref";
  *  1. les nombres de la source unique (config/chiffres-du-cours.ts) ;
  *  2. ceux des quatre briques, de l'encart, de la description et de l'image de partage ;
  *  3. « avec leur laboratoire » seulement quand chaque chapitre en a un ;
- *  4. aucun autre fichier publié ne compte le registre entier ;
+ *  4. aucun fichier publié, hors des sources, ne compte une catégorie lui-même : ni le registre
+ *     entier, ni les chapitres proposés, ni les épisodes, les ateliers ou les démonstrations du code
+ *     (chantier des compteurs, novembre 2026) ;
  *  5. « le premier chapitre est libre » ne s'écrit pas quand le premier listé est réservé.
  */
 
@@ -132,13 +134,38 @@ const sansCommentaires = (source: string) =>
     .filter((l) => !/^\s*(\*|\/\/|\/\*|\{\/\*)/.test(l))
     .join("\n");
 
+/**
+ * LES SOURCES (chantier des compteurs, novembre 2026) : les seuls fichiers qui comptent une catégorie.
+ * Les règles de comptage (config/chiffres-du-site.ts), le cours (config/chiffres-du-cours.ts) et la liste
+ * des chapitres proposés (config/formations-proposees.ts). Les ateliers se comptent dans leur registre
+ * (`NOMBRE_D_ATELIERS`), les épisodes dans leurs familles (`NOMBRE_D_EPISODES`), par ces règles.
+ */
+const SOURCES = new Set(["config/chiffres-du-site.ts", "config/chiffres-du-cours.ts", "config/formations-proposees.ts"]);
+const COMPTAGES_DIRECTS: readonly [string, RegExp][] = [
+  ["le registre entier des chapitres ou des cas", /\b(CHAPITRES|SITUATIONS|CAS_PAR_CHAPITRE|CAS_DE_SYNTHESE)\.length\b/],
+  ["les chapitres ou les cas proposés", /\b(CHAPITRES_PROPOSES|SITUATIONS_PROPOSEES)\.length\b/],
+  ["les épisodes du registre (le nom des pages : NOMBRE_D_EPISODES)", /\bEPISODES\.length\b/],
+  ["les ateliers (le nom des pages : NOMBRE_D_ATELIERS)", /\bATELIERS\.length\b/],
+  ["les démonstrations du code (le réglage de /admin/offres fait foi)", /\bEPISODES_DE_DEMO\.length\b/],
+  ["les épisodes des familles", /\bFAMILLES\.reduce\([^\n]*\.episodes\.length/],
+  ["un registre filtré par la règle de l'offre", /\.filter\((chapitrePropose|situationProposee)\)/],
+  ["les chapitres d'un thème, recomptés", /theme\.chapitres\.map\([^\n]*\.filter\(/],
+];
+
 describe("4. une seule source pour chaque nombre", () => {
-  it("aucun fichier ne compte le registre entier des chapitres ou des cas pour l'afficher", () => {
-    const fautifs = PUBLIES.filter((f) => /\b(CHAPITRES|SITUATIONS)\.length\b/.test(sansCommentaires(readFileSync(f, "utf8")))).map(
-      (f) => relative(SRC, f),
-    );
-    expect(fautifs).toEqual([]);
+  it("la garde lit bien les fichiers publiés, et connaît ses sources", () => {
+    expect(PUBLIES.length).toBeGreaterThan(500);
+    for (const s of SOURCES) expect(PUBLIES.map((f) => relative(SRC, f)), s).toContain(s);
   });
+
+  for (const [quoi, motif] of COMPTAGES_DIRECTS) {
+    it(`aucun fichier publié, hors des sources, ne compte ${quoi}`, () => {
+      const fautifs = PUBLIES.filter((f) => !SOURCES.has(relative(SRC, f)))
+        .filter((f) => motif.test(sansCommentaires(readFileSync(f, "utf8"))))
+        .map((f) => relative(SRC, f));
+      expect(fautifs).toEqual([]);
+    });
+  }
 });
 
 describe("5. un chapitre libre n'est pas dit « premier » du catalogue quand il ne l'est pas", () => {

@@ -24,19 +24,18 @@ import {
 } from "@/config/cours/par-diplome";
 import { LIBELLE_POUR_ALLER_PLUS_LOIN } from "@/config/cours/pour-aller-plus-loin";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
-import { CHAPITRES_PROPOSES, PARCOURS_PROPOSES, chapitrePropose } from "@/config/formations-proposees";
+import { PARCOURS_PROPOSES } from "@/config/formations-proposees";
+import { CHIFFRES_DU_COURS, chapitresDeLaTuile, contenusDuTheme } from "@/config/chiffres-du-cours";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import type { Chapitre } from "@/config/cours/types";
 import { casDuChapitre, type Situation } from "@/config/cours/situations";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
 import { lienDuScenario, scenariosDuChapitre } from "@/config/cours/scenarios";
-import { coursDeLaFormation } from "@/config/couverture";
 import { chapitreLibreParDefaut, essaiDuDiplome } from "@/config/cours/chapitres-libres";
 import { formationDuParcours } from "@/config/cours/competences-affichees";
 import { EssaiDuDiplome } from "@/components/cours/essai-du-diplome";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
-import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { classeDeLEleve, coursOuvert, liberationDeLEleve } from "@/services/cours.service";
@@ -56,12 +55,24 @@ export const metadata: Metadata = {
   alternates: { canonical: "/cours" },
 };
 
-/** Le nombre de chapitres de chaque diplôme, pour ses tuiles : compté une fois, au chargement. */
-const CHAPITRES_PAR_DIPLOME = new Map(
-  diplomesParNiveau().flatMap((g) =>
-    g.formations.map((f) => [f.code, coursDeLaFormation(f.code).reduce((n, x) => n + x.chapitres.length, 0)] as const),
-  ),
-);
+/**
+ * LES TUILES DES DIPLÔMES, comptées une fois, au chargement. Une tuile par diplôme : une option se fond
+ * dans la tuile du sien (le BTS MHR, options B et C, n'a pas de chapitre à lui : son cours est celui du
+ * BTS MHR). Le nombre est celui que la source compte (config/chiffres-du-cours.ts, `chapitresDeLaTuile`) :
+ * les chapitres que le parcours qu'une classe de ce diplôme peut choisir ouvre.
+ */
+const TUILES_DES_DIPLOMES = diplomesParNiveau()
+  .map((g) => ({
+    niveau: g.niveau,
+    tuiles: g.formations
+      .filter((f) => !f.optionDe)
+      .map((f) => ({
+        formation: f,
+        options: diplomesParNiveau().flatMap((x) => x.formations.filter((o) => o.optionDe === f.code)),
+        nombre: chapitresDeLaTuile(f.code),
+      })),
+  }))
+  .filter((g) => g.tuiles.length > 0);
 
 /**
  * LE COURS PAR LA SIMULATION (décision du propriétaire, octobre 2026).
@@ -231,18 +242,17 @@ async function CoursPage({
               </p>
             </div>
             <div className="grid gap-4">
-              {diplomesParNiveau().map((g) => (
+              {TUILES_DES_DIPLOMES.map((g) => (
                 <div key={g.niveau} className="grid gap-2">
                   <h3 className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">{g.niveau}</h3>
                   <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {g.formations.map((f) => {
-                      const nombre = CHAPITRES_PAR_DIPLOME.get(f.code) ?? 0;
-                      const choisi = programme?.formation.code === f.code;
+                    {g.tuiles.map(({ formation: f, options, nombre }) => {
+                      const choisi = programme?.formation.code === f.code || options.some((o) => o.code === programme?.formation.code);
                       return (
                         <li key={f.code}>
                           <Link
                             href={`/cours?diplome=${f.code}#programme`}
-                            title={f.nom}
+                            title={options.length > 0 ? `${f.nom}, avec ${options.map((o) => o.sigle).join(", ")}` : f.nom}
                             data-diplome-tuile={f.code}
                             aria-current={choisi ? "page" : undefined}
                             className={`flex min-h-14 flex-col justify-center rounded-lg border px-3 py-2 transition hover:border-white/35 ${
@@ -527,7 +537,7 @@ async function CoursPage({
                 Le catalogue par thème
               </h2>
               <p className="max-w-3xl text-base text-slate-300">
-                {CHAPITRES_PROPOSES.length} chapitres en {THEMES.length} thèmes, du bac STMG au DSCG, et, dans l&apos;enseignement supérieur, des
+                {CHIFFRES_DU_COURS.chapitres} chapitres en {THEMES.length} thèmes, du bac STMG au DSCG, et, dans l&apos;enseignement supérieur, des
                 épisodes à jouer en situation. Chaque chapitre dit son palier, sa durée indicative et son accès : chaque diplôme a son chapitre
                 libre, avec son cas pratique, et la suite est réservée aux établissements sous licence.
               </p>
@@ -535,13 +545,11 @@ async function CoursPage({
 
             <div className="grid gap-3 md:grid-cols-2">
               {THEMES.map((theme) => {
-                // Les chapitres retirés (config/formations-proposees.ts) ne se proposent plus.
-                const chapitres = theme.chapitres.map((code) => CHAPITRES.find((c) => c.code === code)!).filter(chapitrePropose);
+                // Les chapitres et les cas proposés du thème, et leurs nombres : la source les compte
+                // (config/chiffres-du-cours.ts), sans les chapitres retirés (config/formations-proposees.ts).
+                const { chapitres, casDeSynthese: situations, nombreDeChapitres, nombreDeCas: cas } = contenusDuTheme(theme);
                 const episodes = episodesDuTheme(theme);
                 const aVenir = enPreparationDuTheme(theme);
-                const situations = casDeSyntheseDuTheme(theme);
-                // Les cas pratiques du thème : le cas dédié de chaque chapitre, et les cas de synthèse.
-                const cas = chapitres.filter((c) => casDuChapitre(c.code)).length + situations.length;
                 return (
                   <details
                     key={theme.code}
@@ -558,8 +566,8 @@ async function CoursPage({
                         ▸
                       </span>
                       <span className="text-sm text-slate-400">
-                        {chapitres.length > 0
-                          ? `${chapitres.length} chapitre${chapitres.length > 1 ? "s" : ""}`
+                        {nombreDeChapitres > 0
+                          ? `${nombreDeChapitres} chapitre${nombreDeChapitres > 1 ? "s" : ""}`
                           : "Pas encore de chapitre"}
                         {cas > 0 ? ` · ${cas} cas pratique${cas > 1 ? "s" : ""}` : ""}
                         {episodes.length > 0 ? ` · ${episodes.length} épisode${episodes.length > 1 ? "s" : ""} en situation` : ""}

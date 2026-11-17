@@ -9,7 +9,8 @@ import { unCompteAvecEpisodes } from "@/services/acces.service";
 import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DES_EPISODES, refusDesCohortes } from "@/config/tarifs";
 import { lireLaDecouverte } from "@/services/catalogue.service";
 import { cohortesDeLEnseignant } from "@/services/cohortes.service";
-import { episodeParCode, EPISODES } from "@/pedagogy/episodes/registre";
+import { episodeParCode } from "@/pedagogy/episodes/registre";
+import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import {
   estUnRefusDeCohorte,
   NOM_DE_COHORTE_MAX,
@@ -142,7 +143,7 @@ async function MesCohortesPage({
             </h2>
             <p className="mt-1 text-sm text-slate-400">
               Un nom et des épisodes, c&apos;est tout. La cohorte reçoit un code à donner à
-              la classe ; {EPISODES.length} épisodes sont proposés.
+              la classe ; {NOMBRE_D_EPISODES} épisodes sont proposés.
             </p>
             {/* UN REFUS GARDE LA SAISIE (audit UX du 11 novembre 2026, P2-6) : le formulaire est client
                 (components/nouvelle-cohorte.tsx), le refus revient dans son état, avec le nom tapé et les

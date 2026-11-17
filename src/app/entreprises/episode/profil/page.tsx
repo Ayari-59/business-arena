@@ -10,7 +10,8 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { niveauParCode } from "@/config/episodes/niveaux";
 import { getGuestUserId } from "@/lib/guest";
-import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
+import { episodeParCode } from "@/pedagogy/episodes/registre";
+import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { getSession } from "@/lib/session";
 import { accesAuxEpisodes, episodeOuvert, suitUneCohorte } from "@/services/acces.service";
 import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes, lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
@@ -533,7 +534,7 @@ async function ProfilPage({
                 className="max-w-3xl text-sm leading-relaxed text-slate-300"
                 data-offre-entreprise=""
               >
-                {ceQuOuvrentLesEpisodes(EPISODES.length)}{" "}
+                {ceQuOuvrentLesEpisodes(NOMBRE_D_EPISODES)}{" "}
                 <Link
                   href={lienDuDevis("episodes")}
                   prefetch={false}

@@ -141,7 +141,8 @@ describe("le suivi de l'enseignant (/teacher/cours/[id])", () => {
   });
 
   it("la liste de libération : le parcours de la classe et les chapitres libres, « à libérer » ou « hors de votre offre », une case par chapitre", () => {
-    expect(page).toContain("const montres = sansParcours ? CHAPITRES.filter(chapitrePropose) : duParcours;");
+    // Une classe sans parcours voit les chapitres proposés, la liste que la source compte (config/chiffres-du-cours.ts).
+    expect(page).toContain("const montres = sansParcours ? CHAPITRES_PROPOSES : duParcours;");
     expect(page).toContain('"a-liberer": "à libérer"');
     expect(page).toContain('"hors-offre": "hors de votre offre"');
     expect(page).toContain("<CaseDeLiberation");

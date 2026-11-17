@@ -26,7 +26,7 @@ import { BandeFinale } from "@/components/bande-finale";
 import { BandeOuverture } from "@/components/bande-ouverture";
 import { PiedDePage } from "@/components/pied-de-page";
 import { Bande } from "@/components/bande";
-import { EPISODES } from "@/pedagogy/episodes/registre";
+import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
 
@@ -381,7 +381,7 @@ async function EntreprisesPage() {
                 Nouveau · Épisodes manager
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
-                {EPISODES.length} épisodes dans la peau d&apos;un manager : une agence qui dérape,
+                {NOMBRE_D_EPISODES} épisodes dans la peau d&apos;un manager : une agence qui dérape,
                 une équipe qui s&apos;épuise, des chambres qu&apos;on brade, un forfait vendu sous
                 son coût, un consultant star, des lits d&apos;EHPAD qui restent vides, des yaourts
                 qui périment, un lot à rappeler, un concurrent à racheter… Jugé sur ses décisions

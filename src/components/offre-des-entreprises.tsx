@@ -3,10 +3,8 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ColonneDesEpisodes } from "@/components/page-des-tarifs";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
-import { EPISODES_DE_DEMO } from "@/config/episodes/demos";
-import { DECISIONS_PAR_EPISODE } from "@/config/episodes/familles";
+import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { PARCOURS_EN_COHORTE, SEMAINES_DU_PARCOURS, TEMPS_DU_PARCOURS } from "@/config/episodes/parcours-en-cohorte";
-import { EPISODES } from "@/pedagogy/episodes/registre";
 import { NAVIGATION_ENSEIGNANT } from "@/config/navigation";
 import { VENDEUR } from "@/config/editeur";
 import type { ColonneDEpisodes } from "@/config/catalogue";
@@ -27,15 +25,22 @@ import type { ColonneDEpisodes } from "@/config/catalogue";
  *    (services/vente.service.ts : une licence sans arène ne porte aucun plafond d'enseignants). Leur
  *    différence est donc seulement commerciale, et la page le dit tel quel.
  * Sans prix (tout se chiffre au devis), et rien sur le financement : aucun n'est établi aujourd'hui.
+ *
+ * LES DÉMONSTRATIONS SUIVENT LE RÉGLAGE DE /admin/offres (chantier des compteurs, novembre 2026) : la page
+ * reçoit leur nombre du réglage de la Découverte, lu en base comme les tarifs et la règle d'accès
+ * (services/acces.service.ts), et jamais la constante du code (config/episodes/demos.ts, la valeur par défaut).
  */
 export function OffreDesEntreprises({
   colonnes,
   tarif,
+  demos,
 }: {
   /** Les colonnes « entreprises » de la bande des épisodes, lues au catalogue. */
   colonnes: readonly ColonneDEpisodes[];
   /** « Sur devis ». */
   tarif: string | null;
+  /** Les démonstrations de la Découverte, comptées sur son réglage (config/chiffres-du-site.ts, `compterLesDemos`). */
+  demos: number;
 }) {
   const rubrique = NAVIGATION_ENSEIGNANT.find((p) => p.code === "cohortes")!.libelle;
   const formules = colonnes.flatMap((c) => c.formules);
@@ -45,7 +50,7 @@ export function OffreDesEntreprises({
         <EnTeteDePage
           surtitre="Pour les entreprises et les organismes de formation"
           titre="Former des managers à décider"
-          chapeau={`${EPISODES.length} épisodes manager : un trimestre dans la peau d'un manager, ${DECISIONS_PAR_EPISODE} décisions, et un bilan qui sépare la qualité des décisions du hasard. Pour vos managers, en autonomie ou en cohorte animée.`}
+          chapeau={`${NOMBRE_D_EPISODES} épisodes manager : un trimestre dans la peau d'un manager, ${DECISIONS_PAR_EPISODE} décisions, et un bilan qui sépare la qualité des décisions du hasard. Pour vos managers, en autonomie ou en cohorte animée.`}
         />
         <div className={`${COLONNE_DE_PAGE} space-y-8 pb-12`}>
           <section className="carte grid gap-3 p-6 sm:p-8" aria-labelledby="ce-que-c-est">
@@ -57,13 +62,16 @@ export function OffreDesEntreprises({
               trimestre : il lit ses sources, décide, et reçoit un bilan. Son profil décisionnel se construit d&apos;épisode en
               épisode et recommande le suivant. Les participants entrent par un code de cohorte, sans compte à créer.
             </p>
-            <p className="text-base leading-relaxed text-slate-300">
-              {EPISODES_DE_DEMO.length} épisodes de démonstration se jouent gratuitement, sans compte :{" "}
-              <Link href="/entreprises/episode" className={LIEN_A_L_ENCRE}>
-                voir les épisodes
-              </Link>
-              .
-            </p>
+            {demos > 0 ? (
+              <p className="text-base leading-relaxed text-slate-300" data-demos={demos}>
+                {demos > 1 ? `${demos} épisodes de démonstration se jouent` : "1 épisode de démonstration se joue"} gratuitement, sans
+                compte :{" "}
+                <Link href="/entreprises/episode" className={LIEN_A_L_ENCRE}>
+                  voir les épisodes
+                </Link>
+                .
+              </p>
+            ) : null}
           </section>
 
           <section className="carte p-6 sm:p-8" aria-labelledby="deroule" data-deroule="">
@@ -113,7 +121,7 @@ export function OffreDesEntreprises({
               </div>
               {formules.length > 1 ? (
                 <p className="mt-6 text-base leading-relaxed text-slate-300" data-ce-qui-distingue-les-formules="">
-                  Les {formules.length} formules ouvrent la même chose dans l&apos;application : les {EPISODES.length} épisodes, des
+                  Les {formules.length} formules ouvrent la même chose dans l&apos;application : les {NOMBRE_D_EPISODES} épisodes, des
                   cohortes et des animateurs sans limite, la vue de l&apos;animateur et le profil décisionnel. Ce qui les distingue
                   se fixe au devis, et leur différence est seulement commerciale : le nombre de participants et les prestations
                   humaines (lancement, débrief animé).

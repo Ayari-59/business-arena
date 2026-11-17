@@ -104,8 +104,12 @@ export const THEMES_SECONDE_MG = {
 export const ATELIER_STMG: AtelierDefinition = {
   code: "stmg",
   titre: "Prendre les commandes de Nova en cinq séances",
+  // La seconde option MG est retirée du site public (config/formations-proposees.ts) : le texte public
+  // ne la nomme plus (chantier des compteurs, novembre 2026). Son code reste dans `formations` : les
+  // citations de son programme (THEMES_SECONDE_MG) et le tableau de couverture de la seconde le lisent,
+  // et les libellés « Sert : » le filtrent déjà (config/formations.ts, `formationsDe`).
   formations: ["stmg", "seconde-mg"],
-  annee: "Seconde option MG, première et terminale",
+  annee: "Première et terminale",
   nature: "Animation de découverte",
   traceLabel: "portfolio de compétences",
   referentielLabel: "Thèmes du programme",

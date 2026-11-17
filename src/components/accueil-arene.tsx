@@ -3,7 +3,8 @@ import { Bande } from "@/components/bande";
 import { classeLigneDeRang } from "@/components/rang";
 import { DIFFICULTES, type Difficulte } from "@/config/episodes/difficultes";
 import { formatEuro } from "@/lib/format";
-import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
+import { episodeParCode } from "@/pedagogy/episodes/registre";
+import { NOMBRE_D_EPISODES } from "@/config/familles-des-episodes";
 
 /**
  * LE HAUT DE L'ACCUEIL, COMME LA MAQUETTE « L'ARÈNE ».
@@ -277,7 +278,7 @@ export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
               href="/entreprises/episode"
               className="text-sm font-semibold text-slate-300 underline decoration-1 underline-offset-4 transition hover:text-slate-50 hover:decoration-2"
             >
-              Les {EPISODES.length} épisodes
+              Les {NOMBRE_D_EPISODES} épisodes
               <span aria-hidden className="ml-1.5">
                 →
               </span>

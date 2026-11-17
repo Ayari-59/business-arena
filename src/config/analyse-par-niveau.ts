@@ -113,7 +113,7 @@ export const PREFIXE_QUESTION_LEVIER = "levier_";
  * « Que faites-vous du prix ? — Augmenter / Diminuer ». Un choix entre deux, tiré
  * du premier levier de la situation qui a un sens (hausse ou baisse) : « revoir »
  * n'est pas une réponse binaire, et une situation qui n'a que des leviers à
- * revoir ne pose pas cette question (54 situations sur 137).
+ * revoir ne pose pas cette question (55 situations sur 139 en novembre 2026).
  *
  * La correction est la phrase d'explication que le levier porte déjà.
  */
