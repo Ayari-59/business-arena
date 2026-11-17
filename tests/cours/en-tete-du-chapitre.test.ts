@@ -50,7 +50,7 @@ describe("l'en-tête d'un chapitre", () => {
     const c = CHAPITRES.find((x) => x.code === "creation-premier-bilan")!;
     expect(enTeteDuChapitre(c, null)).toBe(titreDuParcours(c.parcours));
     expect(enTeteDuChapitre(c, "pas-un-diplome")).toBe(titreDuParcours(c.parcours));
-    expect(enTeteDuChapitre(c, "bts-cg")).toBe("BTS CG · Comptabilité générale");
+    expect(enTeteDuChapitre(c, "bts-cg")).toBe("BTS CG · Comptabilité générale et analyse financière");
     // Un chapitre hors de la page du diplôme garde son parcours (un lien d'un chapitre à l'autre garde le diplôme).
     const ailleurs = CHAPITRES.find((x) => !chapitresDeLaPageDuDiplome("bts-mco").some((y) => y.code === x.code))!;
     expect(enTeteDuChapitre(ailleurs, "bts-mco")).toBe(titreDuParcours(ailleurs.parcours));
