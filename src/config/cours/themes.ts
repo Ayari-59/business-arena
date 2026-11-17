@@ -128,7 +128,7 @@ export const THEMES: readonly Theme[] = [
   },
   {
     code: "controle-de-gestion",
-    titre: "Contrôle de gestion",
+    titre: "Coûts, budgets et pilotage",
     description:
       "Des coûts aux décisions : marges, seuil de rentabilité, coûts complets, budgets, écarts et tableaux de bord.",
     chapitres: [
