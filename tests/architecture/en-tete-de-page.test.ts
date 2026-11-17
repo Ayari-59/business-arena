@@ -177,7 +177,10 @@ describe("le pilotage enseignant", () => {
     ]);
     const bloc = PILOTAGE.slice(PILOTAGE.indexOf("data-podium-a-reveler"));
     expect(bloc.slice(0, 1500)).toContain('variante: "principal"');
-    expect(PILOTAGE).toMatch(/!finished && !essaiTermine && !aReveler \? \(\s*<CloseRoundForm/);
+    // Le tour suivant qui attend son lancement (lib/lancement-du-tour.ts) : « Lancer le
+    // tour » prend la place de la clôture, jamais les deux à la fois.
+    expect(PILOTAGE).toMatch(/!finished && !essaiTermine && !aReveler && !view\.lancement \? \(\s*<CloseRoundForm/);
+    expect(PILOTAGE).toMatch(/!finished && !essaiTermine && !aReveler && view\.lancement \? \(\s*<LancerLeTourForm/);
     expect(PILOTAGE.match(/\bbg-amber-[45]00\b(?!\/)/g) ?? []).toEqual([]);
   });
 

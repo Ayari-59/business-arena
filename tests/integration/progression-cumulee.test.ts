@@ -26,10 +26,11 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { concepts, learningProgress, users } from "@/db/schema";
 import { registerTeacher } from "@/services/auth.service";
-import { closeCurrentRound, createClassGame, joinGameByCode } from "@/services/game.service";
+import { createClassGame, joinGameByCode } from "@/services/game.service";
 import { getTeamSituations, submitDiagnosis } from "@/services/pedagogy.service";
 import { situationByCode } from "@/config/scenarios/registry";
 import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 let prof: string;
 let gameId: string;
@@ -49,7 +50,7 @@ async function jouerUnTour(): Promise<string[]> {
     });
     notions.push(...def.conceptCodes);
   }
-  await closeCurrentRound({ gameId, teacherId: prof });
+  await cloreEtLancer({ gameId, teacherId: prof });
   return notions;
 }
 

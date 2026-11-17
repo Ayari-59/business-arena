@@ -566,17 +566,26 @@ async function parcoursDeLaClasse(monde: Monde): Promise<void> {
 
   // La fin de la partie : les deux tours suivants, puis le bilan.
   for (const tour of [2, 3]) {
-    await aller(lea, urlArene);
-    await ouvrirLaFeuille(lea).catch(() => undefined);
-    await jusquALaDerniereRubrique(lea);
-    await validerLaFeuille(lea).catch(() => undefined);
     await aller(prof, urlPartie);
     // Le classement du tour précédent d'abord, s'il attend encore sa révélation.
     const podium = prof.locator("[data-podium-a-reveler] button");
     if (await podium.isVisible().catch(() => false)) {
       await podium.click();
-      await prof.waitForSelector(`text=/Clore le tour ${tour} et simuler/`, { timeout: 60_000 });
+      await prof.waitForLoadState("networkidle");
     }
+    // Puis le tour suivant, qui attend son lancement (lib/lancement-du-tour.ts).
+    const lancer = prof.getByRole("button", { name: `Lancer le tour ${tour}`, exact: true });
+    const aLancer = await lancer
+      .waitFor({ state: "visible", timeout: 30_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (aLancer) await lancer.click();
+    await prof.waitForSelector(`text=/Clore le tour ${tour} et simuler/`, { timeout: 60_000 });
+    await aller(lea, urlArene);
+    await ouvrirLaFeuille(lea).catch(() => undefined);
+    await jusquALaDerniereRubrique(lea);
+    await validerLaFeuille(lea).catch(() => undefined);
+    await aller(prof, urlPartie);
     await prof.getByRole("button", { name: new RegExp(`Clore le tour ${tour} et simuler`) }).click({ timeout: 30_000 });
     await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
     await prof.waitForLoadState("networkidle");

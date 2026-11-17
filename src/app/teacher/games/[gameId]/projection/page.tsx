@@ -6,6 +6,7 @@ import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { dateDeLancement } from "@/lib/lancement-du-tour";
 import { tourAffiche } from "@/config/tour-d-essai";
 import { SITE_URL } from "@/config/site";
 import { RoundStatusPoller } from "@/components/round-status-poller";
@@ -93,7 +94,7 @@ async function ProjectionPage({
   const defaut: Panneau =
     elevesConnectes === 0 && !finished
       ? "code"
-      : (finished || tourCourant?.status !== "open") && dernierTourClos?.rankingRevealed
+      : (finished || tourCourant?.status !== "open" || view.lancement) && dernierTourClos?.rankingRevealed
         ? "classement"
         : "tour";
 
@@ -114,7 +115,9 @@ async function ProjectionPage({
         <RoundStatusPoller
           gameId={gameId}
           currentRound={view.currentRound}
-          roundStatus={tourCourant?.status ?? "open"}
+          // « attente » tant que le tour attend son lancement : le mur se recharge
+          // quand l'enseignant le lance ou que sa date arrive.
+          roundStatus={view.lancement ? "attente" : (tourCourant?.status ?? "open")}
           endpoint="submissions"
           submittedCount={equipes.filter((e) => e.aValide).length}
           insistant
@@ -150,6 +153,13 @@ async function ProjectionPage({
             : periodLabel(view.roundDays, view.currentRound)
         }
         echeance={echeance}
+        attente={
+          view.lancement
+            ? view.lancement.ouvertureAuto
+              ? `Le ${periodLabel(view.roundDays, view.currentRound).toLowerCase()} s'ouvrira le ${dateDeLancement(view.lancement.ouvertureAuto)}.`
+              : `Le ${periodLabel(view.roundDays, view.currentRound).toLowerCase()} n'est pas encore lancé.`
+            : null
+        }
         classement={view.ranking.map((row) => {
           const equipe = chiffresDuTour.get(row.teamId);
           const resultat = equipe?.lastNetIncome ?? null;

@@ -1,6 +1,7 @@
 import { randomInt, randomUUID } from "node:crypto";
 import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { lancementALaCreation } from "@/lib/lancement-du-tour";
 import { horsArchivesDEssai } from "@/services/archives-d-essai";
 import {
   aidRequests,
@@ -408,6 +409,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         )
       : null;
 
+  const lancementInitial = lancementALaCreation({ kind: args.kind, mode: args.mode ?? "learning" });
   const [game] = await db
     .insert(games)
     .values({
@@ -446,6 +448,10 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         ...(args.aideAuDiagnostic && args.aideAuDiagnostic !== "niveau"
           ? { aideAuDiagnostic: args.aideAuDiagnostic }
           : {}),
+        // LE TOUR SUIVANT ATTEND LE PROFESSEUR, OU LE CALENDRIER : la classe créée
+        // désormais porte le marqueur (`lib/lancement-du-tour.ts`). Les parties d'avant,
+        // sans lui, enchaînent leurs tours comme avant ; le solo et le concours aussi.
+        ...(lancementInitial ? { lancementDesTours: lancementInitial } : {}),
       },
       status: "running",
       currentRound: 1,

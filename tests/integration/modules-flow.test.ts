@@ -21,7 +21,6 @@ import { db } from "@/db";
 import { games, users } from "@/db/schema";
 import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   joinGameByCode,
@@ -30,6 +29,7 @@ import {
 import { roundDecisionsSchema } from "@/services/decision-schema";
 import { refusDesModules } from "@/services/modules-offer";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 let teacherId: string;
 let gameId: string;
@@ -80,7 +80,7 @@ describe("modules du scénario, en classe (NOVA, niveau 6)", () => {
     });
     expect(refusDesModules(payload, view.modulesOffer)).toEqual([]);
     await submitTeamDecisions({ gameId, userId: studentId, payload });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
 
     const apres = (await getGameView(gameId, studentId))!;
     expect(apres.lastResult!.rdActionsCost).toBeGreaterThan(0);
@@ -115,7 +115,7 @@ describe("modules du scénario, en classe (NOVA, niveau 6)", () => {
     // Le serveur juge l'envoi comme la feuille : rien à refuser.
     expect(refusDesModules(payload, offre)).toEqual([]);
     await submitTeamDecisions({ gameId, userId: studentId, payload });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
 
     const apres = (await getGameView(gameId, studentId))!;
     const r = apres.lastResult!;

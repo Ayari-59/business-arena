@@ -1,4 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
+import { ouvertureDuTour } from "@/lib/lancement-du-tour";
 import { db } from "@/db";
 import { classes, decisions, games, rounds, teams } from "@/db/schema";
 import { estParDefaut, estReconduite, lireSource } from "@/config/decision-source";
@@ -117,11 +118,20 @@ export async function getObservationSeance(
 
     // QUAND LE TOUR S'EST OUVERT. `opensAt` n'est écrit que par le planning
     // de l'enseignant, et la plupart des séances se pilotent à la main : la
-    // mesure du temps ne se déclenchait donc presque jamais. La clôture du
-    // tour PRÉCÉDENT est le moment où celui-ci est devenu jouable — c'est le
-    // même repère, et il existe toujours. Le premier tour reste sans repère
-    // fiable hors planning : la partie peut avoir été créée la veille.
-    const ouverture = tour.opensAt ?? tours[rang - 1]?.resolvedAt ?? null;
+    // mesure du temps ne se déclenchait donc presque jamais. Pour une partie
+    // qui enchaîne ses tours, la clôture du tour PRÉCÉDENT est le moment où
+    // celui-ci est devenu jouable — c'est le même repère, et il existe
+    // toujours. Pour une classe dont l'enseignant lance chaque tour, c'est
+    // l'heure du lancement (`lib/lancement-du-tour.ts`) : le débrief entre la
+    // clôture et le lancement ne compte pas dans le temps des équipes. Le
+    // premier tour reste sans repère fiable hors planning : la partie peut
+    // avoir été créée la veille.
+    const ouverture = ouvertureDuTour({
+      profil: game.difficultyProfile,
+      essai: game.essai,
+      tour,
+      clotureDuPrecedent: tours[rang - 1]?.resolvedAt ?? null,
+    });
 
     const minutes = validees
       .filter((d) => d.validatedAt && ouverture)

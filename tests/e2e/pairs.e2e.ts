@@ -144,6 +144,10 @@ describe("l'évaluation entre coéquipiers", () => {
       // Le tour clos, le bandeau propose d'abord le podium : « Révéler le classement »
       // prend la place de la clôture (retour du propriétaire, 13 novembre).
       await prof.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
+      // Le tour suivant attend son lancement (lib/lancement-du-tour.ts) : l'enseignant le lance.
+      if (tour < 3) {
+        await prof.getByRole("button", { name: `Lancer le tour ${tour + 1}`, exact: true }).click({ timeout: 120_000 });
+      }
       await prof.waitForSelector(tour < 3 ? `text=/Clore le tour ${tour + 1} et simuler/` : "text=Fin de partie", {
         timeout: 120_000,
       });

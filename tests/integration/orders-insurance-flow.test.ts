@@ -17,7 +17,6 @@ import { db } from "@/db";
 import { games, roundResults, rounds, users } from "@/db/schema";
 import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   distribuerUnCourrier,
   getGameView,
@@ -27,6 +26,7 @@ import {
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 // prix élevé + plan au maximum : l'équipe garde du stock, la commande
 // exceptionnelle peut donc être livrée intégralement
@@ -96,7 +96,7 @@ describe("commande exceptionnelle + assurance catastrophe (bout en bout)", () =>
       teamId: studentTeamId,
     });
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
 
     const view = await getGameView(gameId, studentId);
     const r = view!.lastResult!;
@@ -145,7 +145,7 @@ describe("commande exceptionnelle + assurance catastrophe (bout en bout)", () =>
   it("l'assurance se reconduit avec les décisions : prime payée sans sinistre", async () => {
     // tour 2 sans nouvelle carte : les décisions (assurance comprise) sont reconduites
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
     const view = await getGameView(gameId, studentId);
     expect(view!.lastResult!.insurance).toEqual({ premium: 1500, formulaCode: "basic", neutralizedEvents: [] });
     expect(view!.lastResult!.extraOrders).toBeUndefined();

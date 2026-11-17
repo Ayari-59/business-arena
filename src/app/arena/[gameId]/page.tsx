@@ -1092,7 +1092,8 @@ async function ArenaPage({
     </TableauDeBord>
     );
   })();
-  const soumissionsNode = view.soumissions ? (
+  // Personne ne rend un tour qui n'est pas encore lancé : le compte se tait.
+  const soumissionsNode = view.soumissions && !view.playLock.enAttenteDuLancement ? (
     <div className="px-0.5 py-2">
       <QuiARendu
         validees={view.soumissions.validees}
@@ -1534,6 +1535,7 @@ async function ArenaPage({
         tour={view.currentRound}
         tours={view.roundsCount}
         termine={finished}
+        enAttente={view.playLock.enAttenteDuLancement}
         retour={retour}
         cockpit={`/arena/${view.gameId}/cockpit`}
         compte={
@@ -1551,6 +1553,20 @@ async function ArenaPage({
         tour={view.currentRound}
         vraiTourJoue={periods.length > 0}
       />
+      {/* LE TOUR N'EST PAS ENCORE OUVERT : il attend le professeur ou sa date
+          (lib/lancement-du-tour.ts, planning). La phrase se lit en tête, sans
+          ouvrir la feuille de décision, où « Valider » reste grisé. Les résultats
+          du tour clos restent dessous, comme avant. */}
+      {!finished && !view.playLock.playable && view.playLock.state === "before" && view.playLock.message ? (
+        <p
+          role="status"
+          data-tour-en-attente=""
+          className="encadre-neutre flex items-start gap-2 rounded-lg px-4 py-3 text-sm font-medium text-slate-100"
+        >
+          <Icone nom="verrou" className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{view.playLock.message}</span>
+        </p>
+      ) : null}
       {/* ── L'en-tête du document ──
           Le seul h1 de la page : le nom de l'équipe, précédé de son emblème. Il
           ne s'affiche plus en grand : l'ardoise, juste dessous, porte
@@ -2069,7 +2085,11 @@ async function ArenaPage({
           currentRound={view.currentRound}
           // L'essai terminé, le tour courant est clos : l'arène attend qu'il rouvre,
           // c'est-à-dire que la vraie partie commence (config/tour-d-essai.ts).
-          roundStatus={essaiTermine ? "resolved" : "open"}
+          roundStatus={
+            essaiTermine ? "resolved" : view.playLock.enAttenteDuLancement ? "attente" : "open"
+          }
+          // Le tour suivant qui attend son lancement se lit « attente » : l'arène se
+          // recharge d'elle-même quand le professeur le lance ou que sa date arrive.
           // « submissions » est l'endpoint de l'ENSEIGNANT : il exige d'être le
           // créateur de la partie, et un élève y recevrait 403 en silence. Celui
           // de l'élève rend désormais le même compte, qui bouge sans que le tour

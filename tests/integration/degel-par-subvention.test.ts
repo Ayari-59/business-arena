@@ -33,7 +33,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   joinGameByCode,
@@ -43,6 +42,7 @@ import { demandesDeLaPartie, trancherDemande } from "@/services/subvention.servi
 import { montantDemandable, subventionProposeeAuDegel } from "@/services/sauvetage";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 const { demanderSubventionAction } = await import("@/app/arena/[gameId]/actions");
 
@@ -91,7 +91,7 @@ beforeAll(async () => {
 
 const jouer = async (decisions: RoundDecisions) => {
   await submitTeamDecisions({ gameId, userId: invite, payload: decisions });
-  await closeCurrentRound({ gameId, teacherId: prof });
+  await cloreEtLancer({ gameId, teacherId: prof });
   return (await getGameView(gameId, invite))!;
 };
 

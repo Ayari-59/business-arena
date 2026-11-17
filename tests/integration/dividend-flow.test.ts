@@ -18,7 +18,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   joinGameByCode,
@@ -26,6 +25,7 @@ import {
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 /** Des décisions prudentes : il faut un bénéfice pour avoir à distribuer. */
 const DECISIONS: RoundDecisions = {
@@ -83,7 +83,7 @@ describe("affectation du résultat, niveau 6", () => {
 
   it("un tour bénéficiaire constitue des réserves distribuables", async () => {
     await submitTeamDecisions({ gameId, userId: eleve, payload: DECISIONS });
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
 
     const vue = (await getGameView(gameId, eleve))!;
     expect(vue.lastResult!.incomeStatement.netIncome).toBeGreaterThan(0);
@@ -102,7 +102,7 @@ describe("affectation du résultat, niveau 6", () => {
       userId: eleve,
       payload: { ...DECISIONS, finance: { dividend: verse } },
     });
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
 
     const apres = (await getGameView(gameId, eleve))!;
     const resultat = apres.lastResult!.incomeStatement.netIncome;
@@ -125,7 +125,7 @@ describe("affectation du résultat, niveau 6", () => {
       userId: eleve,
       payload: { ...DECISIONS, finance: { dividend: reserves * 5 } },
     });
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
 
     const apres = (await getGameView(gameId, eleve))!;
     const resultat = apres.lastResult!.incomeStatement.netIncome;

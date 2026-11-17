@@ -24,7 +24,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   joinGameByCode,
@@ -32,6 +31,7 @@ import {
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 /**
  * La décision qui coule une entreprise : produire beaucoup, vendre à perte,
@@ -85,7 +85,7 @@ beforeAll(async () => {
 
 const jouer = async (decisions: RoundDecisions) => {
   await submitTeamDecisions({ gameId, userId: eleve, payload: decisions });
-  await closeCurrentRound({ gameId, teacherId: prof });
+  await cloreEtLancer({ gameId, teacherId: prof });
   return (await getGameView(gameId, eleve))!;
 };
 

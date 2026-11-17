@@ -35,7 +35,6 @@ import { db } from "@/db";
 import { demandesDeDevis, games, orgLicences, organizationMembers, users } from "@/db/schema";
 import {
   archiverPartie,
-  closeCurrentRound,
   createClassGame,
   desarchiverPartie,
   joinGameByCode,
@@ -63,6 +62,7 @@ import { envoyerDemandeDeDevisAction } from "@/app/devis/actions";
 import { envoyerCourriel } from "@/lib/courriel";
 import { instructionsDe, tagsSurDisque } from "../helpers/migrations";
 import type { RoundDecisions } from "@/engine/types";
+import { cloreEtLancer } from "./helpers/lancement";
 
 const JOUR = 24 * 60 * 60 * 1000;
 const DECISIONS: RoundDecisions = {
@@ -374,7 +374,7 @@ describe("expiration et parties en cours", () => {
     await db.delete(orgLicences).where(eq(orgLicences.organizationId, e.orgId));
     await licence(e, "classe", { entreprise: "hotel", niveau: 2 });
     await submitTeamDecisions({ gameId: p.gameId, userId: eleve, payload: DECISIONS });
-    expect((await closeCurrentRound({ gameId: p.gameId, teacherId: e.userId })).roundIndex).toBe(1);
+    expect((await cloreEtLancer({ gameId: p.gameId, teacherId: e.userId })).roundIndex).toBe(1);
 
     // Puis la licence prend fin : la partie continue encore.
     await db
@@ -382,7 +382,7 @@ describe("expiration et parties en cours", () => {
       .set({ startsAt: new Date(Date.now() - 400 * JOUR), endsAt: new Date(Date.now() - JOUR) })
       .where(eq(orgLicences.organizationId, e.orgId));
     await submitTeamDecisions({ gameId: p.gameId, userId: eleve, payload: DECISIONS });
-    expect((await closeCurrentRound({ gameId: p.gameId, teacherId: e.userId })).roundIndex).toBe(2);
+    expect((await cloreEtLancer({ gameId: p.gameId, teacherId: e.userId })).roundIndex).toBe(2);
   });
 });
 

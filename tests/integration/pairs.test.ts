@@ -19,7 +19,7 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { games, pairsEvaluations, pairsMoments, pairsReponses, players, teams, users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
-import { closeCurrentRound, createClassGame, joinGameByCode } from "@/services/game.service";
+import { createClassGame, joinGameByCode } from "@/services/game.service";
 import { createSoloGame, reinitialiserPartie } from "@/services/game-creation.service";
 import {
   PairsRefusError,
@@ -37,6 +37,7 @@ import {
 } from "@/services/pairs.service";
 import { CRITERES_PAR_DEFAUT } from "@/config/pairs/criteres";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 let prof: string;
 let autreProf: string;
@@ -142,7 +143,7 @@ describe("l'enseignant active l'évaluation", () => {
 
 describe("à mi-parcours : réponses partielles, calcul, publication", () => {
   it("la clôture du premier tour ouvre la mi-parcours", async () => {
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
     expect(await carteDeLEtudiant(gameId, equipe1[0]!)).toEqual({ moment: "mi_parcours", etat: "a-faire", coequipiers: 2 });
     const vue = await vueDeLEtudiant(gameId, equipe1[0]!);
     expect(vue?.coequipiers.map((c) => c.userId).sort()).toEqual([equipe1[1], equipe1[2]].sort());
@@ -278,7 +279,7 @@ describe("à mi-parcours : réponses partielles, calcul, publication", () => {
 
 describe("à la fin : notes d'équipe, note individuelle, export", () => {
   it("la fin de partie ouvre le second moment, qui passe devant le premier", async () => {
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
     expect(await carteDeLEtudiant(gameId, equipe1[0]!)).toEqual({ moment: "fin", etat: "a-faire", coequipiers: 2 });
     expect(await resumePourLePilotage(prof, gameId)).toEqual({ active: true, ouverts: 1, publies: 1 });
   });
@@ -314,7 +315,7 @@ describe("recommencer la partie", () => {
     expect(await db.select().from(pairsEvaluations)).toHaveLength(1);
     expect(await carteDeLEtudiant(gameId, equipe1[0]!)).toBeNull();
     // Pour que la suppression ci-dessous ait de quoi effacer.
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
     await enregistrerMesReponses(gameId, equipe1[0]!, "mi_parcours", saisie({ [equipe1[1]!]: 4, [equipe1[2]!]: 4, [equipe1[0]!]: 4 }));
     await publierUnMoment(prof, gameId, "mi_parcours", true);
     expect(await db.select().from(pairsReponses)).toHaveLength(3);

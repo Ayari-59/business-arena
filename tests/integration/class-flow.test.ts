@@ -17,7 +17,6 @@ import { db } from "@/db";
 import { decisions, players, rounds, teams, users } from "@/db/schema";
 import { loginTeacher, registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   getTeacherGameView,
@@ -28,6 +27,7 @@ import {
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -113,8 +113,8 @@ describe("partie de classe complète", () => {
     expect(brunoRow.hasSubmitted).toBe(false);
 
     // un élève ne peut pas clore ; l'enseignant si
-    await expect(closeCurrentRound({ gameId, teacherId: alice })).rejects.toThrow();
-    const r1 = await closeCurrentRound({ gameId, teacherId });
+    await expect(cloreEtLancer({ gameId, teacherId: alice })).rejects.toThrow();
+    const r1 = await cloreEtLancer({ gameId, teacherId });
     expect(r1).toMatchObject({ roundIndex: 1, finished: false });
 
     // la décision de Bruno est marquée reconduite
@@ -165,7 +165,7 @@ describe("partie de classe complète", () => {
     // jouer les 5 tours restants
     for (let round = 2; round <= 6; round++) {
       await submitTeamDecisions({ gameId, userId: alice, payload: DECISIONS });
-      const { finished } = await closeCurrentRound({ gameId, teacherId });
+      const { finished } = await cloreEtLancer({ gameId, teacherId });
       expect(finished).toBe(round === 6);
     }
 

@@ -31,6 +31,7 @@ export function BarreDeJeu({
   retour,
   cockpit,
   compte = null,
+  enAttente = false,
 }: {
   nom: string;
   tour: number;
@@ -42,6 +43,8 @@ export function BarreDeJeu({
   cockpit: string;
   /** Ce qui n'est pas le jeu, en classe : sous quel nom on joue, la clé de reprise, la composition des équipes. */
   compte?: React.ReactNode;
+  /** Le tour attend son lancement (`lib/lancement-du-tour.ts`) : il n'est pas « en cours ». */
+  enAttente?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const id = useId();
@@ -131,7 +134,7 @@ export function BarreDeJeu({
                 ? `Bilan des ${tours} tours`
                 : progression
                   ? `Tour ${tour} sur ${tours}`
-                  : `Tour ${tour} sur ${tours} · en cours`}
+                  : `Tour ${tour} sur ${tours} · ${enAttente ? "pas encore lancé" : "en cours"}`}
             </p>
           </div>
         )}

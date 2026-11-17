@@ -65,6 +65,7 @@ import { computeRseIndex, type RseIndex } from "@/scoring/rse";
 import { RSE_CARD_CODES } from "@/engine/rse";
 import { computeRseReport, type RseReport } from "@/scoring/rse-report";
 import { playWindowFor, playLockMessage } from "@/services/play-lock";
+import { etatDuLancement } from "@/lib/lancement-du-tour";
 import { demandeDuTour, type DemandeDeSubvention } from "@/services/subvention.service";
 import type { ExigenceSauvetage } from "@/services/sauvetage";
 import type {
@@ -184,6 +185,11 @@ export interface GameView {
     message: string | null;
     opensAt: string | null;
     closesAt: string | null;
+    /**
+     * Le tour attend que l'enseignant le lance ou que vienne sa date
+     * (`lib/lancement-du-tour.ts`) : le sondeur de l'arène compare « attente ».
+     */
+    enAttenteDuLancement: boolean;
   };
   roundsCount: number;
   roundDays: number;
@@ -1646,15 +1652,34 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     : null;
 
   const playWindow = await playWindowFor(
-    { opensAt: game.opensAt, closesAt: game.closesAt, competitionStageId: game.competitionStageId },
+    {
+      opensAt: game.opensAt,
+      closesAt: game.closesAt,
+      competitionStageId: game.competitionStageId,
+      // Le tour suivant attend-il son lancement par l'enseignant (`lib/lancement-du-tour`) ?
+      difficultyProfile: game.difficultyProfile,
+      essai: game.essai,
+    },
     currentRoundRow
-      ? { opensAt: currentRoundRow.opensAt, deadline: currentRoundRow.deadline }
+      ? {
+          opensAt: currentRoundRow.opensAt,
+          deadline: currentRoundRow.deadline,
+          id: currentRoundRow.id,
+          index: currentRoundRow.index,
+          status: currentRoundRow.status,
+        }
       : null,
   );
   const playLock = {
     playable: playWindow.playable,
     state: playWindow.state,
     message: playLockMessage(playWindow),
+    enAttenteDuLancement: etatDuLancement({
+      profil: game.difficultyProfile,
+      essai: game.essai,
+      tour: currentRoundRow,
+      now: new Date(),
+    }).enAttente,
     opensAt: playWindow.opensAt ? playWindow.opensAt.toISOString() : null,
     closesAt: playWindow.closesAt ? playWindow.closesAt.toISOString() : null,
   };

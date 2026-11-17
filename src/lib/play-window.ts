@@ -25,6 +25,11 @@ export interface PlayWindowInput {
   roundDeadline?: Date | null;
   stageStartsAt?: Date | null;
   stageEndsAt?: Date | null;
+  /**
+   * Le tour attend que l'enseignant le lance (`lib/lancement-du-tour.ts`) : son numéro.
+   * Absent ou nul : rien à attendre, comme avant.
+   */
+  attenteDuLancement?: { tour: number } | null;
 }
 
 export interface PlayWindow {
@@ -36,6 +41,8 @@ export interface PlayWindow {
   opensAt: Date | null;
   /** Fermeture effective (la plus précoce), ou null si aucune n'est définie. */
   closesAt: Date | null;
+  /** Le tour attend son lancement par l'enseignant : son numéro. */
+  attenteDuLancement?: { tour: number };
 }
 
 function latest(dates: Array<Date | null | undefined>): Date | null {
@@ -60,6 +67,17 @@ export function computePlayWindow(input: PlayWindowInput): PlayWindow {
   }
   if (closesAt && t > closesAt.getTime()) {
     return { playable: false, state: "after", opensAt, closesAt };
+  }
+  // Un tour clôturé par le planning le reste ; sinon, celui qui attend son lancement
+  // n'est pas encore ouvert, quelles que soient les autres fenêtres.
+  if (input.attenteDuLancement) {
+    return {
+      playable: false,
+      state: "before",
+      opensAt,
+      closesAt,
+      attenteDuLancement: { tour: input.attenteDuLancement.tour },
+    };
   }
   return { playable: true, state: "open", opensAt, closesAt };
 }

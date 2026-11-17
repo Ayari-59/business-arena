@@ -67,6 +67,7 @@ import { situationByCode, scenarioByCode } from "@/config/scenarios/registry";
 import { BASCULE_PENDANT_UN_CALCUL, graineDEssai, lireLEssai } from "@/config/tour-d-essai";
 import type { CompanyState, EngineScenarioConfig } from "@/engine/types";
 import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 const DECISIONS = {
   price: 59,
@@ -101,7 +102,9 @@ async function jouerUnTour(partie: string): Promise<void> {
     }
     await submitTeamDecisions({ gameId: partie, userId: eleve, payload: DECISIONS });
   }
-  await closeCurrentRound({ gameId: partie, teacherId: prof });
+  // Après la bascule, la vraie partie attend que l'enseignant lance son tour suivant
+  // (lib/lancement-du-tour.ts) ; pendant l'essai, le lancement ne fait rien.
+  await cloreEtLancer({ gameId: partie, teacherId: prof });
 }
 
 const lire = async (id: string) => (await db.select().from(games).where(eq(games.id, id)))[0]!;

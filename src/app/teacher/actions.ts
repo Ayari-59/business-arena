@@ -18,6 +18,7 @@ import {
 import {
   archiverPartie,
   closeCurrentRound,
+  lancerLeTour,
   createClassGame,
   desarchiverPartie,
   distribuerUnCourrier,
@@ -443,6 +444,30 @@ export async function closeRoundAction(
     if (finished || finDeLEssai) plusTard(() => synchroniserLaPartie(gameId));
   } catch (error) {
     return { error: error instanceof Error ? error.message : "La clôture a échoué." };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return { error: null };
+}
+
+/**
+ * « LANCER LE TOUR N » (`lib/lancement-du-tour.ts`) : le tour que l'enseignant a vu
+ * (champ `roundIndex`), et aucun autre. Un double envoi retombe sur un tour déjà
+ * ouvert : rien de plus, la page se rafraîchit.
+ */
+export async function lancerLeTourAction(
+  gameId: string,
+  _prev: CloseRoundState,
+  formData: FormData,
+): Promise<CloseRoundState> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const brut = Number(formData.get("roundIndex"));
+  if (!Number.isInteger(brut) || brut < 1) return { error: "Tour introuvable." };
+  try {
+    await lancerLeTour({ gameId, teacherId: session.userId, expectedRound: brut });
+  } catch (error) {
+    revalidatePath(`/teacher/games/${gameId}`);
+    return { error: error instanceof Error ? error.message : "Le lancement a échoué." };
   }
   revalidatePath(`/teacher/games/${gameId}`);
   return { error: null };

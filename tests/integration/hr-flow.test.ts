@@ -16,7 +16,6 @@ import { db } from "@/db";
 import { games, users } from "@/db/schema";
 import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   joinGameByCode,
@@ -24,6 +23,7 @@ import {
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -79,7 +79,7 @@ describe("chantier RH en classe (niveau Arbitrage)", () => {
 
   it("tour 1 : embauche facturée, formation payée, arrivée annoncée pour t+1", async () => {
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
     const r = (await getGameView(gameId, studentId))!.lastResult!;
     expect(r.hr).toMatchObject({
       headcount: 4,
@@ -101,7 +101,7 @@ describe("chantier RH en classe (niveau Arbitrage)", () => {
   });
 
   it("tour 2 sans décision : la reconduction garde l'indice de salaire mais ne ré-embauche pas", async () => {
-    await closeCurrentRound({ gameId, teacherId }); // aucune décision soumise → reconduction
+    await cloreEtLancer({ gameId, teacherId }); // aucune décision soumise → reconduction
     const r = (await getGameView(gameId, studentId))!.lastResult!;
     expect(r.hr).toMatchObject({ headcount: 6, hired: 0, fired: 0, trainingBudget: 0 });
     expect(r.hr!.salaryIndex).toBeCloseTo(1.05, 10);

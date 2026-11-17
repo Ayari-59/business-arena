@@ -240,6 +240,8 @@ describe("parcours enseignant et élève", () => {
     // Le tour clos, le bandeau propose d'abord le podium : « Révéler le classement »
     // prend la place de la clôture (retour du propriétaire, 13 novembre).
     await prof.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
+    // Le tour suivant attend son lancement (lib/lancement-du-tour.ts) : l'enseignant le lance.
+    await prof.getByRole("button", { name: "Lancer le tour 2", exact: true }).click({ timeout: 120_000 });
     await prof.waitForSelector("text=/Clore le tour 2 et simuler/", {
       timeout: 60_000,
     });

@@ -532,6 +532,8 @@ describe.skip("une partie de classe à deux équipes : l'enchère", () => {
     // Le tour clos, le bandeau propose d'abord le podium : « Révéler le classement »
     // prend la place de la clôture (retour du propriétaire, 13 novembre).
     await page.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
+    // Le tour suivant attend son lancement (lib/lancement-du-tour.ts) : l'enseignant le lance.
+    await page.getByRole("button", { name: "Lancer le tour 2", exact: true }).click({ timeout: 180_000 });
     await page.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 180_000 });
   }, 300_000);
 
