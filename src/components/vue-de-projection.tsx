@@ -139,6 +139,7 @@ export function VueDeProjection({
   tourRevele,
   finished,
   retour,
+  attente = null,
 }: {
   /** Le panneau d'ouverture, choisi d'après l'état de la partie. */
   defaut: Panneau;
@@ -171,6 +172,11 @@ export function VueDeProjection({
   finished: boolean;
   /** Retour vers le pilotage de la partie. */
   retour: string;
+  /**
+   * Le tour en cours attend son lancement (`lib/lancement-du-tour.ts`) : la phrase que
+   * la classe lit à la place du compte des validations. Null : le tour se joue.
+   */
+  attente?: string | null;
 }) {
   const [panneau, setPanneau] = useState<Panneau>(defaut);
   const valides = equipes.filter((e) => e.aValide).length;
@@ -357,6 +363,13 @@ export function VueDeProjection({
             {finished ? (
               <p className="text-[clamp(2rem,7vw,5rem)] font-bold leading-tight text-slate-100">
                 Tous les tours sont joués.
+              </p>
+            ) : attente ? (
+              <p
+                data-tour-en-attente=""
+                className="max-w-[24ch] text-[clamp(1.6rem,5vw,4rem)] font-bold leading-tight text-slate-100"
+              >
+                {attente}
               </p>
             ) : (
               <>

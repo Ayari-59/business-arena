@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { db } from "@/db";
 import { games, rounds, teams, decisions } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { etatDuLancement, statutSonde } from "@/lib/lancement-du-tour";
 
 export async function GET(
   _request: Request,
@@ -23,7 +24,13 @@ export async function GET(
   // Les tours de la partie, en une requête : le tour courant, et le dernier
   // classement révélé (le mur et le pilotage le suivent aussi).
   const toursDeLaPartie = await db
-    .select({ id: rounds.id, index: rounds.index, status: rounds.status, revele: rounds.rankingRevealedAt })
+    .select({
+      id: rounds.id,
+      index: rounds.index,
+      status: rounds.status,
+      opensAt: rounds.opensAt,
+      revele: rounds.rankingRevealedAt,
+    })
     .from(rounds)
     .where(eq(rounds.gameId, gameId));
   const currentRoundRow = toursDeLaPartie.find((t) => t.index === game.currentRound);
@@ -53,7 +60,17 @@ export async function GET(
   return NextResponse.json(
     {
       currentRound: game.currentRound,
-      roundStatus: currentRoundRow?.status ?? "pending",
+      // « attente » tant que le tour attend son lancement (`lib/lancement-du-tour.ts`) :
+      // le pilotage et le mur se rechargent quand il s'ouvre, au clic ou à sa date.
+      roundStatus: statutSonde(
+        currentRoundRow?.status ?? "pending",
+        etatDuLancement({
+          profil: game.difficultyProfile,
+          essai: game.essai,
+          tour: currentRoundRow,
+          now: new Date(),
+        }),
+      ),
       submittedCount,
       totalHumanTeams: humanTeams.length,
       dernierTourRevele,

@@ -1,7 +1,7 @@
 import { leviersFigesDuProfil, presetFromProfile } from "@/config/difficulty";
 import { investissementPlafonne } from "@/engine/investment/plafond";
 import { randomInt } from "node:crypto";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   companyStates,
@@ -25,6 +25,7 @@ import {
 import { botDecisions, botPersonalityFromSeed, soldByProduct, ventesDuTour, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { assertPlayable } from "@/services/play-lock";
+import { etatDuLancement } from "@/lib/lancement-du-tour";
 import { proposedDecisionsFor } from "@/services/decision-baseline";
 import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
 import {
@@ -897,6 +898,25 @@ export async function closeCurrentRound(args: {
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)
     throw new Error("Seul l'enseignant qui a créé la partie peut clore un tour");
+  // UN TOUR QUI ATTEND SON LANCEMENT NE SE CLÔT PAS : personne n'a pu le jouer. Le
+  // pilotage montre alors « Lancer le tour », pas « Clore » (`lib/lancement-du-tour.ts`).
+  const tourCourant = (
+    await db
+      .select()
+      .from(rounds)
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, game.currentRound)))
+  )[0];
+  const attente = etatDuLancement({
+    profil: game.difficultyProfile,
+    essai: game.essai,
+    tour: tourCourant,
+    now: new Date(),
+  });
+  if (attente.enAttente && (args.expectedRound === undefined || args.expectedRound === game.currentRound)) {
+    throw new Error(
+      `Le tour ${game.currentRound} n'est pas encore lancé : lancez-le avant de le clore.`,
+    );
+  }
   if (args.expectedRound !== undefined) {
     const attendu = (
       await db
@@ -926,4 +946,68 @@ export async function closeCurrentRound(args: {
     }
     throw error;
   }
+}
+
+/**
+ * « LANCER LE TOUR N » : l'enseignant ouvre le tour qui attend, pour toutes les équipes
+ * (`lib/lancement-du-tour.ts`). L'heure est notée sous l'identifiant du tour, en une
+ * seule requête qui ne touche que cette clé du profil : rien d'autre n'est réécrit.
+ *
+ * Les gardes suivent celles de la clôture : seul l'enseignant qui a créé la partie
+ * lance ; le formulaire porte le numéro du tour, et le serveur refuse d'en lancer un
+ * autre que le tour en cours. Un double clic retombe sur un tour déjà ouvert : rien de
+ * plus ne se passe (`dejaLance`).
+ */
+export async function lancerLeTour(args: {
+  gameId: string;
+  teacherId: string;
+  expectedRound: number;
+}): Promise<{ roundIndex: number; dejaLance: boolean }> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  if (game.createdBy !== args.teacherId)
+    throw new Error("Seul l'enseignant qui a créé la partie peut lancer un tour");
+  if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
+  if (game.status !== "running") throw new Error("Cette partie est terminée");
+  if (args.expectedRound !== game.currentRound)
+    throw new Error(`Le tour ${args.expectedRound} n'est pas le tour à lancer.`);
+  const tour = (
+    await db
+      .select()
+      .from(rounds)
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, game.currentRound)))
+  )[0];
+  if (!tour) throw new Error("Tour introuvable");
+  const etat = etatDuLancement({
+    profil: game.difficultyProfile,
+    essai: game.essai,
+    tour,
+    now: new Date(),
+  });
+  if (!etat.enAttente) return { roundIndex: tour.index, dejaLance: true };
+  const quand = new Date().toISOString();
+  // Une seule requête, sur la seule clé du lancement : la condition sur la clé du tour
+  // rend le geste idempotent, même pour deux envois simultanés.
+  await db
+    .update(games)
+    .set({
+      difficultyProfile: sql`jsonb_set(
+        ${games.difficultyProfile},
+        '{lancementDesTours}',
+        coalesce(${games.difficultyProfile} -> 'lancementDesTours', '{"regle":"professeur"}'::jsonb)
+          || jsonb_build_object(
+            'lances',
+            coalesce(${games.difficultyProfile} -> 'lancementDesTours' -> 'lances', '{}'::jsonb)
+              || jsonb_build_object(${tour.id}::text, ${quand}::text)
+          )
+      )`,
+    })
+    .where(
+      and(
+        eq(games.id, args.gameId),
+        eq(games.currentRound, tour.index),
+        sql`not coalesce(${games.difficultyProfile} -> 'lancementDesTours' -> 'lances' ? ${tour.id}::text, false)`,
+      ),
+    );
+  return { roundIndex: tour.index, dejaLance: false };
 }

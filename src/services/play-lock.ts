@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { competitionStages } from "@/db/schema";
 import { computePlayWindow, type PlayWindow } from "@/lib/play-window";
+import { etatDuLancement, messageDAttente } from "@/lib/lancement-du-tour";
 
 /**
  * Le verrou temporel, côté service : réunit les fenêtres (partie + tour +
@@ -18,11 +19,21 @@ export interface GameWindow {
   opensAt: Date | null;
   closesAt: Date | null;
   competitionStageId: string | null;
+  /**
+   * Le profil et l'essai de la partie : le marqueur du lancement des tours y vit
+   * (`lib/lancement-du-tour.ts`). Absents : rien à attendre, comme avant.
+   */
+  difficultyProfile?: unknown;
+  essai?: unknown;
 }
 
 export interface RoundWindow {
   opensAt: Date | null;
   deadline: Date | null;
+  /** L'identité et le statut du tour, pour savoir s'il attend son lancement. */
+  id?: string;
+  index?: number;
+  status?: string;
 }
 
 export async function playWindowFor(
@@ -42,11 +53,26 @@ export async function playWindowFor(
     stageStartsAt = stage?.startsAt ?? null;
     stageEndsAt = stage?.endsAt ?? null;
   }
+  // LE TOUR LANCÉ PAR L'ENSEIGNANT s'ouvre à son lancement, même si le planning
+  // portait une date plus tardive : il l'a ouvert plus tôt.
+  const lancement =
+    round && round.id !== undefined && round.index !== undefined && round.status !== undefined
+      ? etatDuLancement({
+          profil: game.difficultyProfile,
+          essai: game.essai,
+          tour: { id: round.id, index: round.index, status: round.status, opensAt: round.opensAt },
+          now,
+        })
+      : null;
   return computePlayWindow({
     now,
     gameOpensAt: game.opensAt,
     gameClosesAt: game.closesAt,
-    roundOpensAt: round?.opensAt ?? null,
+    roundOpensAt: lancement?.lanceLe ?? round?.opensAt ?? null,
+    attenteDuLancement:
+      lancement?.enAttente && !lancement.ouvertureAuto && round?.index !== undefined
+        ? { tour: round.index }
+        : null,
     roundDeadline: round?.deadline ?? null,
     stageStartsAt,
     stageEndsAt,
@@ -62,6 +88,7 @@ const dateFr = (d: Date) =>
 
 export function playLockMessage(w: PlayWindow): string | null {
   if (w.playable) return null;
+  if (w.attenteDuLancement) return messageDAttente(w.attenteDuLancement.tour);
   if (w.state === "before") {
     return w.opensAt ? `Ce tour ouvre le ${dateFr(w.opensAt)}.` : "Ce tour n'est pas encore ouvert.";
   }

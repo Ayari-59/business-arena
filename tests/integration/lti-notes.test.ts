@@ -98,7 +98,7 @@ import {
 } from "@/services/examen.service";
 import { createClassGame, resolveCurrentRound } from "@/services/game.service";
 import { publierExamenAction, renvoyerLesNotesAction, retirerPublicationAction } from "@/app/teacher/examens/actions";
-import { closeRoundAction, commencerLaVraiePartieAction } from "@/app/teacher/actions";
+import { closeRoundAction, commencerLaVraiePartieAction, lancerLeTourAction } from "@/app/teacher/actions";
 import { neutralDecisions } from "@/engine/bots";
 import { GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
@@ -484,6 +484,8 @@ describe("une partie de classe : la progression, jamais une note", () => {
     for (let tour = 1; tour <= 3; tour += 1) {
       const fd = new FormData();
       fd.set("roundIndex", String(tour));
+      // Le tour suivant attend son lancement (lib/lancement-du-tour.ts) : l'enseignant le lance.
+      if (tour > 1) expect(await lancerLeTourAction(gameId, { error: null }, fd)).toEqual({ error: null });
       expect(await closeRoundAction(gameId, { error: null }, fd)).toEqual({ error: null });
     }
     await jouerLesTaches();
@@ -534,6 +536,8 @@ describe("une partie de classe : la progression, jamais une note", () => {
     for (let tour = 1; tour <= 2; tour += 1) {
       const f = new FormData();
       f.set("roundIndex", String(tour));
+      // Le tour suivant attend son lancement (lib/lancement-du-tour.ts) : l'enseignant le lance.
+      if (tour > 1) expect(await lancerLeTourAction(gameId, { error: null }, f)).toEqual({ error: null });
       expect(await closeRoundAction(gameId, { error: null }, f)).toEqual({ error: null });
     }
     await jouerLesTaches();

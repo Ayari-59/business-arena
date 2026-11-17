@@ -206,8 +206,13 @@ describe("branché à la séance", () => {
   });
 
   it("la mesure ne dépend plus du planning : la clôture du tour précédent suffit", () => {
+    // Le repère vit dans `lib/lancement-du-tour.ts` : le lancement par l'enseignant,
+    // sinon la date du planning, sinon (partie qui enchaîne) la clôture du précédent.
     const obs = lire("src/services/observation.service.ts");
-    expect(obs).toContain("tours[rang - 1]?.resolvedAt");
-    expect(obs).toContain("const ouverture = tour.opensAt ??");
+    expect(obs).toContain("clotureDuPrecedent: tours[rang - 1]?.resolvedAt");
+    expect(obs).toContain("const ouverture = ouvertureDuTour(");
+    const regle = lire("src/lib/lancement-du-tour.ts");
+    expect(regle).toContain("if (args.tour.opensAt) return args.tour.opensAt;");
+    expect(regle).toContain("return enchaine ? args.clotureDuPrecedent : null;");
   });
 });

@@ -3,6 +3,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { db } from "@/db";
 import { games, rounds, players, teams, decisions } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { etatDuLancement, statutSonde } from "@/lib/lancement-du-tour";
 
 export async function GET(
   _request: Request,
@@ -24,6 +25,11 @@ export async function GET(
         currentRound: games.currentRound,
         gameStatus: games.status,
         roundStatus: rounds.status,
+        // De quoi dire si le tour attend son lancement (`lib/lancement-du-tour.ts`).
+        profil: games.difficultyProfile,
+        essai: games.essai,
+        roundId: rounds.id,
+        roundOpensAt: rounds.opensAt,
       })
       .from(games)
       .leftJoin(rounds, and(eq(rounds.gameId, games.id), eq(rounds.index, games.currentRound)))
@@ -82,7 +88,20 @@ export async function GET(
   return NextResponse.json(
     {
       currentRound: row.currentRound,
-      roundStatus: row.roundStatus ?? "pending",
+      // « attente » tant que le tour attend son professeur ou sa date : la page de
+      // l'élève se recharge d'elle-même au lancement, comme à la clôture.
+      roundStatus: statutSonde(
+        row.roundStatus ?? "pending",
+        etatDuLancement({
+          profil: row.profil,
+          essai: row.essai,
+          tour:
+            row.roundId && row.roundStatus
+              ? { id: row.roundId, index: row.currentRound, status: row.roundStatus, opensAt: row.roundOpensAt }
+              : null,
+          now: new Date(),
+        }),
+      ),
       gameStatus: row.gameStatus,
       submittedCount,
       totalHumanTeams: equipes.length,

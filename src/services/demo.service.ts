@@ -6,6 +6,7 @@ import { organizationMembers, organizations, orgInvites, users } from "@/db/sche
 import {
   closeCurrentRound,
   joinGameByCode,
+  lancerLeTour,
   submitTeamDecisions,
 } from "@/services/game.service";
 import { createClassGame } from "@/services/game-creation.service";
@@ -219,6 +220,9 @@ export async function seedDemoWorld(
   }
 
   for (let round = 1; round <= 3; round++) {
+    // Le tour suivant attend son lancement (lib/lancement-du-tour.ts) : la démo le lance,
+    // comme l'enseignant après le débrief. Le tour 4, lui, attend le clic en direct.
+    if (round > 1) await lancerLeTour({ gameId, teacherId, expectedRound: round });
     // Léa (équipe 1) travaille les situations : diagnostics justes, QCM
     // sans faute, un indice — les vues pédagogiques ont de la matière
     const lea = studentIds[0]!;

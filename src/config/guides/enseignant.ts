@@ -186,6 +186,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
         "Après la clôture, le classement reste sous embargo : les élèves ne le voient pas encore.",
         "Au moment choisi, cliquez sur « Révéler le classement » : après la clôture, ce bouton prend la place de « Clore le tour » en haut de votre page de pilotage. Le mur joue la révélation seul, sans que vous touchiez au second écran.",
         "Pour la revoir, utilisez « Rejouer la révélation » ; la touche Échap la passe.",
+        "Après la clôture, débriefez le tour avec la classe, puis cliquez sur le bouton qui lance le tour suivant : il ne s'ouvre pas tout seul, sauf si vous lui avez posé une date d'ouverture dans le planning de la partie.",
       ],
       voir: "Les équipes apparaissent une à une, avec leurs résultats, jusqu'au podium.",
       erreur:

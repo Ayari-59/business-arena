@@ -32,6 +32,8 @@ import { DistributionCourrier } from "@/components/distribution-courrier";
 import { GazetteDuPilotage } from "@/components/gazette-du-pilotage";
 import { gazetteDuPilotage } from "@/services/gazette.service";
 import { CloseRoundForm } from "@/components/close-round-form";
+import { LancerLeTourForm } from "@/components/lancer-le-tour-form";
+import { dateDeLancement } from "@/lib/lancement-du-tour";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
@@ -175,8 +177,9 @@ async function TeacherGamePage({
   // partie demande vraiment (texte à lire, champs ouverts, situation) ; la
   // mesure, quand elle existe, vient du dernier tour clos de cette partie et
   // lui passe devant. Le repère de départ d'un tour est la clôture du
-  // précédent, donc la mesure existe dès le deuxième tour clos, planning ou
-  // non.
+  // précédent, ou son lancement quand il a attendu l'enseignant
+  // (`lib/lancement-du-tour.ts`), donc la mesure existe dès le deuxième tour
+  // clos, planning ou non.
   const dureeEstimee = dureeDuTour({
     ...view.chargeDuTour,
     premierTour: view.currentRound === 1,
@@ -417,7 +420,20 @@ async function TeacherGamePage({
             </Link>
           </p>
         ) : null}
-        {!finished && !essaiTermine && !aReveler ? (
+        {/* LE TOUR SUIVANT ATTEND LE PROFESSEUR, OU LE CALENDRIER (lib/lancement-du-tour) :
+            le tour clos et son classement révélé, « Lancer le tour » prend la place de
+            « Clore ». Le bandeau dit s'il s'ouvrira seul à la date du planning. */}
+        {!finished && !essaiTermine && !aReveler && view.lancement ? (
+          <LancerLeTourForm
+            gameId={view.gameId}
+            tour={view.currentRound}
+            libelle={periodLabel(view.roundDays, view.currentRound)}
+            ouvertureAuto={
+              view.lancement.ouvertureAuto ? dateDeLancement(view.lancement.ouvertureAuto) : null
+            }
+          />
+        ) : null}
+        {!finished && !essaiTermine && !aReveler && !view.lancement ? (
           <CloseRoundForm
             gameId={view.gameId}
             tour={view.currentRound}
@@ -1535,7 +1551,9 @@ async function TeacherGamePage({
         <RoundStatusPoller
           gameId={view.gameId}
           currentRound={view.currentRound}
-          roundStatus={essaiTermine ? "resolved" : "open"}
+          // « attente » tant que le tour attend son lancement : la page se recharge
+          // quand sa date arrive, comme au lancement depuis un autre onglet.
+          roundStatus={essaiTermine ? "resolved" : view.lancement ? "attente" : "open"}
           endpoint="submissions"
           submittedCount={submittedCount}
           derniereDecision={derniereDecision}

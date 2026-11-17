@@ -21,7 +21,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   joinGameByCode,
@@ -29,6 +28,7 @@ import {
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 const DECISIONS: RoundDecisions = {
   price: 74,
@@ -98,7 +98,7 @@ describe("dossier bancaire, de la saisie au bilan", () => {
       userId: eleve,
       payload: { ...DECISIONS, finance: { newLoan: EMPRUNT } },
     });
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
 
     const vue = (await getGameView(gameId, eleve))!;
     expect(vue.lastResult!.bank!.loanRequested).toBe(EMPRUNT);
@@ -123,7 +123,7 @@ describe("dossier bancaire, de la saisie au bilan", () => {
         forecast: { expectedUnits: 3800, expectedCash: 20000 },
       },
     });
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
 
     const apres = (await getGameView(gameId, eleve))!;
     expect(apres.lastResult!.bank!.planFiled).toBe(true);
@@ -146,7 +146,7 @@ describe("dossier bancaire, de la saisie au bilan", () => {
         forecast: { expectedUnits: 400000, expectedCash: 9000000 },
       },
     });
-    await closeCurrentRound({ gameId, teacherId: prof });
+    await cloreEtLancer({ gameId, teacherId: prof });
 
     const apres = (await getGameView(gameId, eleve))!;
     expect(apres.lastResult!.bank!.reliability).toBeLessThan(0.1);

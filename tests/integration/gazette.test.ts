@@ -20,7 +20,6 @@ import { db } from "@/db";
 import { games, users } from "@/db/schema";
 import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   createSoloGame,
   distribuerUnCourrier,
@@ -35,6 +34,7 @@ import { lireLEdition } from "@/config/gazette/edition";
 import type { ArticleDeLaGazette } from "@/config/gazette/types";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -191,7 +191,7 @@ describe("classe : l'enseignant garde la main", () => {
     const luAuTour1 = lu(avant.gazette.article);
 
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
 
     const vue = (await getGameView(gameId, studentId))!;
     expect(vue.currentRound).toBe(2);
@@ -230,7 +230,7 @@ describe("classe : l'enseignant garde la main", () => {
     expect(await consignerLaGazette({ gameId, teacherId, tour: 3, mode: "retire" })).toEqual({ ok: true });
     const lu2 = lu((await getGameView(gameId, studentId))!.gazette.article);
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
     const vue = (await getGameView(gameId, studentId))!;
     expect(vue.currentRound).toBe(3);
     expect(vue.gazette.article).toBeNull();
@@ -241,7 +241,7 @@ describe("classe : l'enseignant garde la main", () => {
     expect(Object.keys(edition.parus).sort()).toEqual(["1", "2"]);
     // Le tour en cours se ferme comme les autres, et le tour 3 paraît « retiré » à sa clôture.
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
-    await closeCurrentRound({ gameId, teacherId });
+    await cloreEtLancer({ gameId, teacherId });
     const [g2] = await db.select().from(games).where(eq(games.id, gameId));
     expect(lireLEdition(g2!.difficultyProfile).parus["3"]).toEqual({ tour: 3, retire: true });
     // Le reste du profil n'a pas bougé : la partie se joue toujours.

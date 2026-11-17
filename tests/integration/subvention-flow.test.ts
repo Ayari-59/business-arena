@@ -24,7 +24,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
-  closeCurrentRound,
   createClassGame,
   getGameView,
   joinGameByCode,
@@ -39,6 +38,7 @@ import {
 import { resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
+import { cloreEtLancer } from "./helpers/lancement";
 
 /** Produire beaucoup, vendre à perte, dépenser le reste : la ruine méthodique. */
 const RUINEUSE: RoundDecisions = {
@@ -86,7 +86,7 @@ beforeAll(async () => {
 
 const jouer = async (decisions: RoundDecisions) => {
   await submitTeamDecisions({ gameId, userId: eleve, payload: decisions });
-  await closeCurrentRound({ gameId, teacherId: prof });
+  await cloreEtLancer({ gameId, teacherId: prof });
   return (await getGameView(gameId, eleve))!;
 };
 

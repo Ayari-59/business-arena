@@ -51,6 +51,7 @@ import {
 import { teamDisplayName } from "@/services/game-view.service";
 import { plafondDEleves, releveOuvert, verifierLaReprise } from "@/services/acces.service";
 import { refusDeLEffectif } from "@/config/tarifs";
+import { etatDuLancement } from "@/lib/lancement-du-tour";
 
 // Re-exports depuis game-creation.service.ts pour compatibilité des consommateurs existants
 export {
@@ -70,6 +71,7 @@ import type { GameKind } from "@/services/game-creation.service";
 export {
   closeCurrentRound,
   distribuerUnCourrier,
+  lancerLeTour,
   resolveCurrentRound,
   submitTeamDecisions,
   type CourrierAnnonce,
@@ -746,6 +748,12 @@ export interface TeacherGameView {
   /** Fenêtre globale de jeu (planning), en ISO ou null. */
   opensAt: string | null;
   closesAt: string | null;
+  /**
+   * LE TOUR EN COURS ATTEND SON LANCEMENT (`lib/lancement-du-tour.ts`) : le pilotage
+   * montre « Lancer le tour N », et dit s'il s'ouvrira seul à une date du planning
+   * (ISO) ou s'il attend le clic. Null : rien à lancer, le tour se joue.
+   */
+  lancement: { enAttente: true; ouvertureAuto: string | null } | null;
   /** Fenêtre de chaque tour (planning fin), triée par index. Dates en ISO ou null. */
   rounds: {
     index: number;
@@ -964,6 +972,17 @@ export async function getTeacherGameView(
     moisDeDepart: (game.scenarioSnapshot as { moisDeDepart?: number }).moisDeDepart ?? null,
     opensAt: game.opensAt ? game.opensAt.toISOString() : null,
     closesAt: game.closesAt ? game.closesAt.toISOString() : null,
+    lancement: (() => {
+      const etat = etatDuLancement({
+        profil: game.difficultyProfile,
+        essai: game.essai,
+        tour: currentRoundRow,
+        now: new Date(),
+      });
+      return etat.enAttente
+        ? { enAttente: true, ouvertureAuto: etat.ouvertureAuto ? etat.ouvertureAuto.toISOString() : null }
+        : null;
+    })(),
     planCapped: Boolean(
       (game.difficultyProfile as { planCapped?: boolean } | null)?.planCapped,
     ),
