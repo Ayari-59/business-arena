@@ -30,7 +30,7 @@ export interface Parcours {
 export const PARCOURS: readonly Parcours[] = [
   {
     code: "comptabilite-generale",
-    titre: "Comptabilité générale",
+    titre: "Comptabilité générale et analyse financière",
     resume: "Du journal au bilan : chaque opération de l'entreprise, passée par l'élève, et les états qu'elle construit.",
   },
   {
@@ -89,7 +89,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "strategie",
-    titre: "Stratégie et management",
+    titre: "Diagnostic et choix stratégiques",
     resume:
       "Le diagnostic, les objectifs, les choix face aux concurrents, la croissance et la responsabilité sociétale : les décisions de direction, chiffrées dans la simulation du cours.",
   },

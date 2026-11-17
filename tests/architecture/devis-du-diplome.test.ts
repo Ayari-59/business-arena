@@ -86,7 +86,7 @@ describe("la liste : les parcours que l'enseignant voit en créant sa classe", (
     expect(PARCOURS_DU_DEVIS[0]!.parcours.map((p) => p.code)).toEqual(["bac-stmg", "stmg", "stmg-gf", "stmg-rh", "stmg-sig", "stmg-management"]);
     expect(PARCOURS_DU_DEVIS[1]!.parcours[0]!.libelle).toMatch(/^BTS CG · Le cours du diplôme · \d+ chapitres$/);
     expect(PARCOURS_DU_DEVIS.at(-1)!.parcours.find((p) => p.code === "comptabilite-generale")!.libelle).toMatch(
-      /^Comptabilité générale · \d+ chapitres · BTS CG, DCG/,
+      /^Comptabilité générale et analyse financière · \d+ chapitres · BTS CG, DCG/,
     );
     for (const p of PARCOURS_DU_DEVIS.flatMap((g) => g.parcours)) expect(p.libelle, p.code).toMatch(/ · \d+ chapitres?( · |$)/);
     // La même liste à la création d'une classe (/teacher/cours) et sur la page d'une classe héritée.
