@@ -30,6 +30,12 @@ interface Props {
    * tombe ensuite recharge la page de l'élève, qui voit alors son rang.
    */
   dernierTourRevele?: number | null;
+  /**
+   * L'heure de la dernière décision envoyée pour le tour en cours, telle que la
+   * page l'a rendue (le pilotage). Sans elle, le premier sondage sert de point
+   * de départ, et une équipe qui valide de nouveau avant lui passerait inaperçue.
+   */
+  derniereDecision?: string | null;
 }
 
 export function RoundStatusPoller({
@@ -40,9 +46,12 @@ export function RoundStatusPoller({
   submittedCount,
   insistant = false,
   dernierTourRevele,
+  derniereDecision,
 }: Props) {
   const router = useRouter();
   const stateRef = useRef({ currentRound, roundStatus, submittedCount, dernierTourRevele });
+  // Lue une fois, au montage : les sondages suivants tiennent la leur.
+  const derniereDecisionInitiale = useRef(derniereDecision);
 
   useEffect(() => {
     stateRef.current = { currentRound, roundStatus, submittedCount, dernierTourRevele };
@@ -58,6 +67,9 @@ export function RoundStatusPoller({
     let dernierMouvement = Date.now();
     // Le dernier tour révélé vu au sondage précédent, quand la page ne l'a pas dit.
     let reveleVu: number | null | undefined = stateRef.current.dernierTourRevele;
+    // L'heure de la dernière décision envoyée, vue au sondage précédent : une
+    // équipe qui valide de nouveau ne change pas le compte, mais ses décisions.
+    let decisionVue: string | null | undefined = derniereDecisionInitiale.current;
 
     const planifier = () => {
       if (stopped) return;
@@ -100,6 +112,10 @@ export function RoundStatusPoller({
           if (data.dernierTourRevele !== undefined) {
             if (reveleVu !== undefined && data.dernierTourRevele !== reveleVu) changed = true;
             reveleVu = data.dernierTourRevele;
+          }
+          if (data.derniereDecision !== undefined) {
+            if (decisionVue !== undefined && data.derniereDecision !== decisionVue) changed = true;
+            decisionVue = data.derniereDecision;
           }
 
           if (changed) router.refresh();
