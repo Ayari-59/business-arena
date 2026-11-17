@@ -510,6 +510,13 @@ export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
     raison: `Un outil de l'espace enseignant. ${PAGE_CLAIRE}`,
   })),
   {
+    fichier: "components/decisions-de-l-equipe.tsx",
+    composant: "Repliable",
+    repere: 'resume="Voir tout"',
+    surface: "cockpit",
+    raison: `Les autres décisions d'une équipe, dans le tableau des équipes du pilotage : des chiffres, pas un document. ${PAGE_CLAIRE}`,
+  },
+  {
     fichier: "components/choix-des-episodes.tsx",
     composant: "Repliable",
     repere: "key={e.secteur.code}",

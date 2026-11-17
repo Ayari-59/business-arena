@@ -72,6 +72,8 @@ import { resumePourLePilotage } from "@/services/pairs.service";
 import { CommencerLaVraiePartie } from "@/components/commencer-la-vraie-partie";
 import { EXPLICATION_DU_TOUR_D_ESSAI } from "@/config/tour-d-essai";
 import { ZoneQuiDefile } from "@/components/zone-qui-defile";
+import { DecisionsDeLEquipe } from "@/components/decisions-de-l-equipe";
+import { Fragment } from "react";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -123,6 +125,13 @@ async function TeacherGamePage({
   const essaiTermine = essai?.phase === "termine" || essai?.phase === "bascule";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
+  // L'heure de la dernière décision envoyée, celle que le sondeur compare
+  // (`api/games/[gameId]/submissions`) : une équipe qui valide de nouveau la change.
+  const derniereDecision = humanTeams.reduce<string | null>((max, t) => {
+    const quand = t.validation?.quand ?? null;
+    return quand !== null && (max === null || quand > max) ? quand : max;
+  }, null);
+  const avecRepere = humanTeams.filter((t) => (t.decisionsAuPilotage?.reperes.length ?? 0) > 0).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
   const demandesEnAttente = view.aidRequests.filter((d) => d.statut === "pending").length;
   // Une partie VIERGE : jamais jouée, personne dedans. C'est la seule qu'on
@@ -565,6 +574,15 @@ async function TeacherGamePage({
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes · état des décisions du {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
         </h2>
+        {/* Les repères, comptés : l'enseignant sait avant de clore combien
+            d'équipes ont une décision à regarder (`config/decisions-au-pilotage`). */}
+        {finished || essaiTermine ? null : (
+          <p className="mb-3 text-sm text-slate-300" data-equipes-avec-repere={avecRepere}>
+            {avecRepere === 0
+              ? "Aucune équipe n'a de repère à regarder."
+              : `${compter(avecRepere, "équipe a", "équipes ont")} un repère à regarder.`}
+          </p>
+        )}
         {/* Sur téléphone, le tableau défile de côté : sa zone est nommée et s'atteint au clavier (audit UX
             du 11 novembre 2026, P2-11). */}
         <ZoneQuiDefile nom="Les équipes et l'état de leurs décisions, tableau qui défile de côté">
@@ -586,7 +604,8 @@ async function TeacherGamePage({
             </thead>
             <tbody className="text-slate-300">
               {view.teams.map((t) => (
-                <tr key={t.teamId} className="border-t border-white/5">
+                <Fragment key={t.teamId}>
+                <tr className="border-t border-white/5">
                   <td className="py-2 pr-3">
                     <span className="whitespace-nowrap">{t.name}</span>
                     {t.controller === "bot" ? (
@@ -669,6 +688,21 @@ async function TeacherGamePage({
                     {t.lastNetTreasury === null ? "—" : formatEuro(t.lastNetTreasury)}
                   </td>
                 </tr>
+                {/* CE QUE L'ÉQUIPE A DÉCIDÉ, sous sa ligne : les décisions
+                    principales, ses repères, et « Voir tout ». Un bot ne
+                    décide rien : c'est le jeu qui décide pour lui. */}
+                {finished || essaiTermine ? null : (
+                  <tr>
+                    <td colSpan={5} className="pb-3 pr-3">
+                      {t.decisionsAuPilotage ? (
+                        <DecisionsDeLEquipe decisions={t.decisionsAuPilotage} />
+                      ) : (
+                        <p className="text-sm text-slate-400">Décidé par le jeu.</p>
+                      )}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -1504,6 +1538,7 @@ async function TeacherGamePage({
           roundStatus={essaiTermine ? "resolved" : "open"}
           endpoint="submissions"
           submittedCount={submittedCount}
+          derniereDecision={derniereDecision}
         />
       ) : null}
     </main>

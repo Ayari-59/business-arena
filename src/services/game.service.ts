@@ -19,6 +19,7 @@ import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 import { choisirSonEquipe, peutChoisirSonEquipe } from "@/services/affectation.service";
 import { attribuerCodeDeReprise } from "@/services/reprise.service";
 import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
+import { lireLaDecisionDuTour, type CadreDeLecture, type DecisionsAuPilotage } from "@/config/decisions-au-pilotage";
 import {
   presetFromProfile,
   quizModeFromProfile,
@@ -814,6 +815,14 @@ export interface TeacherGameView {
      */
     validation: { nom: string | null; quand: string } | null;
     /**
+     * CE QUE L'ÉQUIPE A DÉCIDÉ pour le tour en cours, mis en mots
+     * (`config/decisions-au-pilotage`) : la décision validée, sinon un
+     * brouillon enregistré, et les repères qu'elle appelle. Null pour un bot,
+     * dont le jeu décide. RÉSERVÉ AU PILOTAGE : le mur et l'arène ne le lisent
+     * jamais (`tests/architecture/decisions-au-pilotage.test.ts`).
+     */
+    decisionsAuPilotage: DecisionsAuPilotage | null;
+    /**
      * Le résultat net du dernier tour clos, HORS SUBVENTION de l'enseignant
      * (`scoring/bpi`, `resultatHorsSubvention`) : c'est celui que le mur et le
      * classement montrent. La subvention du tour se lit à part.
@@ -926,6 +935,14 @@ export async function getTeacherGameView(
     avecQuiz: quizModeFromProfile(game.difficultyProfile) !== "off",
   };
 
+  // De quoi mettre en mots les décisions du tour : le scénario de la partie,
+  // les mots de son secteur, et les leviers figés à sa création.
+  const cadreDeLecture: CadreDeLecture = {
+    scenario: game.scenarioSnapshot as EngineScenarioConfig,
+    vocabulaire: snapshotDefinition.vocabulary,
+    drapeaux: presetDuJeu.decisions,
+  };
+
   return {
     gameId,
     essai: essaiAffiche(game.essai),
@@ -1010,6 +1027,13 @@ export async function getTeacherGameView(
             quand: d.validatedAt.toISOString(),
           };
         })(),
+        decisionsAuPilotage:
+          t.controller === "bot"
+            ? null
+            : lireLaDecisionDuTour(
+                submitted.find((d) => d.teamId === t.id),
+                cadreDeLecture,
+              ),
         lastNetIncome: last ? resultatHorsSubvention({ netIncome: Number(last.netIncome), rescueSubsidy: last.incomeStatement?.rescueSubsidy }) : null,
         lastRescueSubsidy: last?.incomeStatement?.rescueSubsidy ?? 0,
         lastNetTreasury: last ? Number(last.netTreasury) : null,

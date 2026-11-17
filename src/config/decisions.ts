@@ -99,11 +99,23 @@ export function leviersDuNiveau(niveau: number, scenario?: EngineScenarioConfig)
   // créées avant son retrait, qui comptent leurs leviers comme les autres.
   const preset = presetByLevel.get(niveau as DifficultyPreset["level"]);
   if (!preset) return [];
+  return leviersOuverts(preset.decisions, scenario);
+}
+
+/**
+ * Les leviers qu'ouvrent les drapeaux d'une partie : ceux du niveau, ou ceux
+ * FIGÉS à sa création (`presetFromProfile`), avec la même règle des leviers
+ * « secteur » que `leviersDuNiveau`.
+ */
+export function leviersOuverts(
+  drapeaux: DifficultyPreset["decisions"],
+  scenario?: EngineScenarioConfig,
+): LevierDeDecision[] {
   return LEVIERS.filter(
     (l) =>
       (l.ouvertPar === "toujours" ||
         l.ouvertPar === "secteur" ||
-        preset.decisions[l.ouvertPar] === true) &&
+        drapeaux[l.ouvertPar] === true) &&
       (!scenario || !l.secteurSi || l.secteurSi(scenario)),
   );
 }

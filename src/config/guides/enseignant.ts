@@ -158,6 +158,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
       titre: "Animer un tour",
       faire: [
         "Laissez les équipes lire la situation, l'analyser et décider. Le tableau des équipes dit en direct qui a validé.",
+        "Avant de clore, lisez sous chaque équipe ses décisions et ses repères : un prix sous le coût variable, une perte ou un découvert estimés, une production très au-dessus des ventes estimées. Vous seul les voyez, jamais le mur ni les élèves.",
         "Si vous le souhaitez, distribuez un courrier : choisissez le destinataire puis le pli, et cliquez sur « Distribuer le courrier ». Il est annoncé aux équipes et s'applique à la clôture.",
         "Quand les équipes ont validé, cliquez sur le bouton qui clôt le tour en cours, puis confirmez avec « Clore et simuler ».",
       ],
