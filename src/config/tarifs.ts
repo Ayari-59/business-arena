@@ -1,8 +1,9 @@
-import { ATELIERS } from "@/config/ateliers";
+import { ATELIERS, NOMBRE_D_ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { FICHES as FICHES_DES_EPISODES } from "@/config/episodes/fiches";
-import { EPISODES_DE_DEMO, NIVEAU_DES_DEMOS } from "@/config/episodes/demos";
+import { NIVEAU_DES_DEMOS } from "@/config/episodes/demos";
+import { compterLesDemos } from "@/config/chiffres-du-site";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { QUI_FACTURE } from "@/config/editeur";
 import { SUR_MESURE } from "@/config/sur-mesure";
@@ -673,12 +674,12 @@ export function variablesDuCatalogue(d: ReglageDeLaDecouverte = DECOUVERTE_PAR_D
     niveauxDecouverte: `${PREMIER_NIVEAU} à ${max}`,
     nomsDesNiveauxDecouverte: enumeration(nomsDesNiveaux(PREMIER_NIVEAU, max)),
     toursSolo: String(TOURS_DE_LA_PARTIE_SOLO),
-    demos: String(d.demos.length),
+    demos: String(compterLesDemos(d)),
     niveauDesDemos: NIVEAUX_DES_EPISODES.find((n) => n.code === d.niveauDesDemos)?.nom ?? d.niveauDesDemos,
     episodes: String(NOMBRE_D_EPISODES),
     /** Les fiches de débrief des épisodes : le registre (config/episodes/fiches), jamais un nombre écrit. */
     fiches: String(FICHES_DES_EPISODES.length),
-    ateliers: String(ATELIERS.length),
+    ateliers: String(NOMBRE_D_ATELIERS),
     ateliersReferentiel: String(ATELIERS_A_REFERENTIEL.length),
     diplomes: DIPLOMES_DES_ATELIERS.map((x) => x.sigle).join(", "),
     entrepriseDesConcours: nomDeLEntreprise(ENTREPRISE_DES_CONCOURS),
@@ -1194,7 +1195,7 @@ export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
   },
   {
     q: "Les épisodes manager sont-ils inclus ?",
-    r: `Non. ${LES_OFFRES_DE_L_ARENE_EN_TETE} ouvrent l'arène. Les épisodes manager se proposent à part, sur devis, en classe comme en entreprise ; ${EPISODES_DE_DEMO.length} démonstrations restent gratuites.`,
+    r: `Non. ${LES_OFFRES_DE_L_ARENE_EN_TETE} ouvrent l'arène. Les épisodes manager se proposent à part, sur devis, en classe comme en entreprise ; ${compterLesDemos(DECOUVERTE_PAR_DEFAUT)} démonstrations restent gratuites.`,
   },
 ];
 
@@ -1256,7 +1257,7 @@ export const REFUS_DU_DOSSIER = `Le dossier enseignant des ateliers, avec ses co
 export const REFUS_DU_RELEVE = `Le relevé de notes est inclus dans ${LES_OFFRES_DE_L_ARENE}, et reste téléchargeable ${CONDITIONS.consultationApresMois} mois après la fin de l'offre.`;
 
 /** Le refus d'une cohorte d'épisodes sans offre qui inclut les épisodes ; `demos` : les démonstrations de la Découverte. */
-export const refusDesCohortes = (demos: number = EPISODES_DE_DEMO.length): string =>
+export const refusDesCohortes = (demos: number = compterLesDemos(DECOUVERTE_PAR_DEFAUT)): string =>
   `Créer une cohorte demande une offre qui inclut les épisodes manager (${MARQUE_DES_EPISODES}). ${LES_OFFRES_DE_L_ARENE_EN_TETE} seules ne les ouvrent pas. ${demos > 1 ? `Les ${demos} épisodes de démonstration se jouent` : demos === 1 ? "L'épisode de démonstration se joue" : "Les épisodes de démonstration se jouent"} sans cohorte, par leur lien.`;
 export const REFUS_DES_COHORTES = refusDesCohortes();
 

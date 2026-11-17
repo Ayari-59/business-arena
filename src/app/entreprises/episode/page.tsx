@@ -5,14 +5,14 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
 import { catalogueDesEpisodes, teinteDuSecteur } from "@/config/episodes/catalogue";
 import type { Episode } from "@/config/episodes/types";
-import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
+import { episodeParCode } from "@/pedagogy/episodes/registre";
 import {
   MARQUE_DEMO,
   NIVEAU_DES_DEMOS,
 } from "@/config/episodes/demos";
 import { MARQUE_DES_EPISODES, OFFRES } from "@/config/tarifs";
 import { NIVEAUX as NIVEAUX_DES_EPISODES, niveauParCode } from "@/config/episodes/niveaux";
-import { DECISIONS_PAR_EPISODE } from "@/config/episodes/familles";
+import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { getGuestUserId } from "@/lib/guest";
@@ -89,7 +89,7 @@ async function EpisodesPage() {
             Un trimestre dans la peau d&apos;un manager
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            {EPISODES.length} épisodes, chacun sur un domaine du métier, dans{" "}
+            {NOMBRE_D_EPISODES} épisodes, chacun sur un domaine du métier, dans{" "}
             {entreprises.length} entreprises :{" "}
             {entreprises
               .map(

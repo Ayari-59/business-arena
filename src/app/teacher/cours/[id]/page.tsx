@@ -8,7 +8,7 @@ import { getStaffContext } from "@/services/admin.service";
 import { classeDeLEnseignant, laClasseDeLEnseignant, parcoursImposeALEnseignant, resumeDeLaClasse } from "@/services/cours.service";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
-import { chapitrePropose } from "@/config/formations-proposees";
+import { CHAPITRES_PROPOSES } from "@/config/formations-proposees";
 import { essaiDuDiplome } from "@/config/cours/chapitres-libres";
 import { formationDuParcours } from "@/config/cours/competences-affichees";
 import { chapitresDuParcoursDansLOrdre } from "@/config/cours/par-diplome";
@@ -152,12 +152,13 @@ async function ClasseDuCoursPage({
     const avec = ouvertAvecUnLibere(liberes, c.code);
     return avec ? { etat: "avec", avec: chapitreParCode(avec) } : { etat: "a-liberer" };
   };
-  // LA LISTE NE MONTRE QUE LE PARCOURS DE LA CLASSE ET LES CHAPITRES LIBRES (P1-3 : elle montrait les
-  // 235 chapitres proposés). Une classe héritée sans parcours garde tout ce qu'on propose. Les chapitres
-  // d'un parcours retiré restent (config/formations-proposees.ts) : une classe garde ce qu'elle avait.
+  // LA LISTE NE MONTRE QUE LE PARCOURS DE LA CLASSE ET LES CHAPITRES LIBRES (P1-3 : elle montrait tous
+  // les chapitres proposés). Une classe héritée sans parcours garde tout ce qu'on propose : la liste que
+  // la source compte (config/formations-proposees.ts, config/chiffres-du-cours.ts). Les chapitres d'un
+  // parcours retiré restent dans le parcours de la classe : une classe garde ce qu'elle avait.
   const sansParcours = classe.parcours === null;
-  const montres = sansParcours ? CHAPITRES.filter(chapitrePropose) : duParcours;
-  const libresEnPlus = sansParcours ? [] : CHAPITRES.filter((c) => c.libre && chapitrePropose(c) && !duParcours.includes(c));
+  const montres = sansParcours ? CHAPITRES_PROPOSES : duParcours;
+  const libresEnPlus = sansParcours ? [] : CHAPITRES_PROPOSES.filter((c) => c.libre && !duParcours.includes(c));
   const ouverts = [...montres, ...libresEnPlus].filter(ouvert).length;
   const liberesDuParcours = montres.filter((c) => !c.libre && liberes.has(c.code)).length;
   // Les chapitres libres s'ouvrent à tous, un par diplôme (config/cours/chapitres-libres.ts) : la page

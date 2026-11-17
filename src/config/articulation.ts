@@ -1,4 +1,4 @@
-import { ATELIERS } from "./ateliers";
+import { NOMBRE_D_ATELIERS } from "./ateliers";
 import { dureeDuChapitre, dureeEnClair } from "./cours/duree";
 import { CHIFFRES_DU_COURS, SITUATIONS_PROPOSEES } from "./chiffres-du-cours";
 import { chapitreLibreParDefaut } from "./cours/chapitres-libres";
@@ -78,7 +78,7 @@ export function briques(): readonly Brique[] {
       texte:
         "En équipe, une entreprise dirigée sur plusieurs tours, face à d'autres : chaque décision se retrouve dans les comptes du tour suivant, et les effets s'additionnent.",
       forme: "En équipe, sur plusieurs séances",
-      compte: `${ATELIERS.length} ateliers prêts à animer`,
+      compte: `${NOMBRE_D_ATELIERS} ateliers prêts à animer`,
       lien: { href: "/animations", libelle: "Les ateliers" },
       essai: { href: "/jouer", libelle: "Une partie solo" },
     },

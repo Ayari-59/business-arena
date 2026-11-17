@@ -15,6 +15,7 @@ import { ATELIER_MHR } from "./mhr";
 import { ATELIER_NDRC } from "./ndrc";
 import { ATELIER_STMG } from "./stmg";
 import type { AtelierDefinition } from "./types";
+import { compterLesAteliers } from "../chiffres-du-site";
 
 export type { AtelierDefinition, AtelierPhase, AtelierSeance } from "./types";
 
@@ -50,6 +51,12 @@ export const ATELIERS: readonly AtelierDefinition[] = [
 ];
 
 export const atelierByCode = new Map(ATELIERS.map((a) => [a.code, a]));
+
+/**
+ * LE NOMBRE D'ATELIERS QUE LE SITE PUBLIE, le seul que les pages lisent : une fiche compte pour une,
+ * quel que soit son nombre de séances (la règle : config/chiffres-du-site.ts).
+ */
+export const NOMBRE_D_ATELIERS = compterLesAteliers(ATELIERS);
 
 /** Durée totale d'un atelier, en heures, calculée et jamais recopiée. */
 export function dureeTotaleHeures(a: AtelierDefinition): number {

@@ -4,7 +4,7 @@ import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
 import { OrientationForm } from "@/components/orientation-form";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
-import { ATELIERS } from "@/config/ateliers";
+import { ATELIERS, NOMBRE_D_ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { OBJECTIFS, vueDOrientation } from "@/config/orientation";
 import { familyOf, scenarioByCode } from "@/config/scenarios/registry";
@@ -98,7 +98,7 @@ function OrientationPage() {
                   du titre qui le dit maintenant. Elle garde ce qu'elle seule peut
                   dire : pourquoi le choix est difficile, et ce que vaut la réponse. */}
               {SCENARIO_CHOICES.length} entreprises, {DIFFICULTY_PRESETS.length} niveaux de
-              difficulté, une durée réglable et {ATELIERS.length} ateliers prêts à animer. Beaucoup
+              difficulté, une durée réglable et {NOMBRE_D_ATELIERS} ateliers prêts à animer. Beaucoup
               de combinaisons, et le mauvais réglage ne se voit qu&apos;en séance trois. Deux
               chemins mènent au bon.
             </>

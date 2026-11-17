@@ -19,9 +19,8 @@ import { LigneDePrix } from "@/components/ligne-de-prix";
 import Link from "next/link";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { COMPETENCES } from "@/config/episodes/competences";
-import { DECISIONS_PAR_EPISODE } from "@/config/episodes/familles";
+import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
-import { EPISODES } from "@/pedagogy/episodes/registre";
 import { FICHES } from "@/config/episodes/fiches";
 import { bouton } from "@/components/bouton";
 import { Bande } from "@/components/bande";
@@ -172,7 +171,7 @@ async function EcolesPage() {
               preuves à l&apos;appui.
             </>
           }
-          preuve={{ valeur: `${EPISODES.length}`, libelle: "épisodes manager" }}
+          preuve={{ valeur: `${NOMBRE_D_EPISODES}`, libelle: "épisodes manager" }}
           actions={
             <>
               {/* DEUX DEVIS, CHACUN SOUS SON NOM (audit du 11 novembre 2026, offre P1-3 et UX P2-10) : le
@@ -195,7 +194,7 @@ async function EcolesPage() {
           contraste={c("ecoles.chiffres")}
           chiffres={[
             {
-              valeur: `${EPISODES.length}`,
+              valeur: `${NOMBRE_D_EPISODES}`,
               libelle: "épisodes manager",
               detail: "Vendre, piloter les chiffres, manager une équipe, conduire le changement…",
             },

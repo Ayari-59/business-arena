@@ -210,9 +210,9 @@ describe("les captures de la page d'accueil", () => {
   it("la carte d'épisode sous le héros mène à un vrai épisode, et compte les autres", () => {
     expect(episodeParCode(EPISODE_DE_L_ACCUEIL), EPISODE_DE_L_ACCUEIL).toBeDefined();
     const composant = readFileSync(join(RACINE, "src", "components", "accueil-arene.tsx"), "utf8");
-    // Le nombre d'épisodes se lit dans le registre : écrit à la main, il serait
-    // faux au prochain épisode ajouté.
-    expect(composant).toContain("{EPISODES.length} épisodes");
+    // Le nombre d'épisodes se lit à sa source, le nom que lisent les pages (config/chiffres-du-site.ts) :
+    // écrit à la main, il serait faux au prochain épisode ajouté.
+    expect(composant).toContain("{NOMBRE_D_EPISODES} épisodes");
     expect(composant).not.toContain(`${EPISODES.length} épisodes`);
   });
 

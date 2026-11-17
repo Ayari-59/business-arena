@@ -43,7 +43,7 @@ describe("les trois temps de l'enseignant", () => {
 
   it("comptent les niveaux et les ateliers dans les registres", () => {
     expect(PAGE).toContain("DIFFICULTY_PRESETS.length");
-    expect(PAGE).toContain("ATELIERS.length");
+    expect(PAGE).toContain("NOMBRE_D_ATELIERS");
     // Les deux bouts de l'échelle aussi : « de Découverte à Executive » est
     // exact aujourd'hui et le resterait faussement demain.
     expect(PAGE).toContain("DIFFICULTY_PRESETS[0]");

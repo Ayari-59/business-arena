@@ -21,7 +21,7 @@ import {
 } from "@/services/episode-parties.service";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes } from "@/config/tarifs";
-import { EPISODES } from "@/pedagogy/episodes/registre";
+import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { getSession } from "@/lib/session";
 import { codeFaux, gardeDesCodes } from "@/lib/garde-des-codes";
 import { accesAuxEpisodes, episodeOuvert, suitUneCohorte } from "@/services/acces.service";
@@ -76,7 +76,7 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
         compte: "decouverte",
         conseil: CONSEIL_SANS_LICENCE,
         // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
-        offre: (await suitUneCohorte(invite)) ? null : ceQuOuvrentLesEpisodes(EPISODES.length),
+        offre: (await suitUneCohorte(invite)) ? null : ceQuOuvrentLesEpisodes(NOMBRE_D_EPISODES),
       };
     }
     const userId = await getOrCreateGuestUserId();
@@ -109,7 +109,7 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
       conseil: acces.licence ? profil.conseil : CONSEIL_SANS_LICENCE,
       // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
       offre:
-        acces.licence || (await suitUneCohorte(userId)) ? null : ceQuOuvrentLesEpisodes(EPISODES.length),
+        acces.licence || (await suitUneCohorte(userId)) ? null : ceQuOuvrentLesEpisodes(NOMBRE_D_EPISODES),
       recommandations: profil.recommandations.map((x) => ({
         code: x.code,
         numero: x.numero,

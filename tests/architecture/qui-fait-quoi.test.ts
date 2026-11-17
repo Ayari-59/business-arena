@@ -57,7 +57,7 @@ describe("qui fait quoi", () => {
 
   it("compte les ateliers dans le registre au lieu de les écrire", () => {
     expect(rendu).toContain(`${ATELIERS.length} ateliers`);
-    expect(codeSeul).toContain("ATELIERS.length");
+    expect(codeSeul).toContain("NOMBRE_D_ATELIERS");
   });
 
   it("ne parle ni de prix ni de palier", () => {

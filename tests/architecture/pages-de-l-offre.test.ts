@@ -35,6 +35,7 @@ import { NAVIGATION, NAVIGATION_ENSEIGNANT } from "@/config/navigation";
 import { SUR_MESURE } from "@/config/sur-mesure";
 import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 import { VENDEUR } from "@/config/editeur";
+import { DECOUVERTE_PAR_DEFAUT } from "@/config/decouverte";
 import { PageDesTarifs } from "@/components/page-des-tarifs";
 import { DevisForm } from "@/components/devis-form";
 import { BandeOuverture } from "@/components/bande-ouverture";
@@ -243,7 +244,7 @@ describe("3 · la page des entreprises, /entreprises/offre", () => {
     const { OffreDesEntreprises } = (await import("@/components/offre-des-entreprises")) as {
       OffreDesEntreprises: ComponentType<Record<string, unknown>>;
     };
-    return rendre(OffreDesEntreprises, { colonnes, tarif: vue.episodes!.tarif });
+    return rendre(OffreDesEntreprises, { colonnes, tarif: vue.episodes!.tarif, demos: DECOUVERTE_PAR_DEFAUT.demos.length });
   };
 
   it("dit le déroulé : le parcours de 8 semaines des écoles, lu au même endroit", async () => {

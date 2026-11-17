@@ -138,7 +138,8 @@ describe("les ouvertures marine des pages vitrines", () => {
       expect(source, `${page} : pas d'ouverture marine`).toContain("<BandeOuverture");
       const preuve = source.match(/preuve=\{\{\s*valeur:\s*([^,]+),/);
       expect(preuve, `${page} : pas de chiffre-preuve`).not.toBeNull();
-      expect(preuve![1], `${page} : un chiffre écrit à la main`).toMatch(/\.length\}?`?$/);
+      // Un registre compté, ou le nombre de sa source (config/chiffres-du-site.ts : NOMBRE_D_ATELIERS, NOMBRE_D_EPISODES).
+      expect(preuve![1], `${page} : un chiffre écrit à la main`).toMatch(/(\.length|\bNOMBRE_D_[A-Z_]+)\}?`?$/);
     }
   });
 

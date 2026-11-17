@@ -1,6 +1,6 @@
 import { Bande } from "@/components/bande";
 import Link from "next/link";
-import { ATELIERS } from "@/config/ateliers";
+import { NOMBRE_D_ATELIERS } from "@/config/ateliers";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
 /**
@@ -45,7 +45,7 @@ const ROLES = [
     faits: [
       "Une partie multi-équipes, des tours qu'il ouvre et qu'il clôt.",
       "La maîtrise de chaque notion, suivie équipe par équipe.",
-      `${ATELIERS.length} ateliers clés en main, et ses propres scénarios s'il le veut.`,
+      `${NOMBRE_D_ATELIERS} ateliers clés en main, et ses propres scénarios s'il le veut.`,
     ],
     lien: { href: "/enseignants", libelle: "Pour les enseignants" },
   },

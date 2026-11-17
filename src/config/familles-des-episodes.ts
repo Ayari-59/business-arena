@@ -1,3 +1,5 @@
+import { compterLesEpisodes } from "./chiffres-du-site";
+
 /**
  * LES SECTEURS ET LES FAMILLES D'ÉPISODES, pour la page de choix.
  *
@@ -438,11 +440,13 @@ export const estUnEpisodeDeDirection = (code: string): boolean =>
   FAMILLES.some((f) => f.direction && f.episodes.includes(code));
 
 /**
- * Le nombre d'épisodes, lu des familles plutôt que du registre : le menu du
- * site le cite sans charger les moteurs des épisodes. Le test des familles
- * garantit que les familles rangent exactement les épisodes du registre.
+ * LE NOMBRE D'ÉPISODES, LE SEUL QUE LES PAGES LISENT : compté dans les familles plutôt que dans le
+ * registre, pour que le menu du site le cite sans charger les moteurs des épisodes. `EPISODES.length`
+ * (pedagogy/episodes/registre.ts) reste interne ; le test des familles garantit qu'elles rangent
+ * exactement les épisodes du registre, et tests/architecture/compteurs-des-contenus.test.ts que les
+ * deux nombres sont égaux. La règle : config/chiffres-du-site.ts.
  */
-export const NOMBRE_D_EPISODES = FAMILLES.reduce((n, f) => n + f.episodes.length, 0);
+export const NOMBRE_D_EPISODES = compterLesEpisodes(FAMILLES);
 
 /**
  * Le nombre de décisions d'un épisode : chacun en compte autant (garde :
