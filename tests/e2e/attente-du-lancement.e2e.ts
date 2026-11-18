@@ -155,9 +155,20 @@ describe("pendant l'attente du lancement, le tour suivant se cache", () => {
     await prof.waitForSelector("[data-lancement-du-tour]", { timeout: 120_000 });
     expect(await prof.getByRole("button", { name: "Lancer le tour 2", exact: true }).count()).toBe(1);
 
-    // Pendant l'attente, le professeur distribue un courrier au marché pour le tour 2.
-    await prof.getByRole("button", { name: "Distribuer le courrier", exact: true }).click({ timeout: 30_000 });
-    await prof.waitForSelector("text=Courriers distribués ce tour", { timeout: 60_000 });
+    // Pendant l'attente, le professeur adresse un pli à chaque entreprise pour le tour 2.
+    // Un pli adressé, et non un courrier « tout le marché » : la gazette raconte ce
+    // dernier, et le bandeau se tait alors partout (règle « pas de doublon »).
+    const destinataire = prof.locator("#courrier-destinataire");
+    const entreprises = await destinataire.locator("option").count();
+    for (let i = 1; i < entreprises; i += 1) {
+      await destinataire.selectOption({ index: i });
+      await prof.getByRole("button", { name: "Distribuer le courrier", exact: true }).click({ timeout: 30_000 });
+      await prof.waitForFunction(
+        (n) => document.querySelectorAll("#courrier-destinataire option")[n]?.textContent?.includes("déjà servie"),
+        i,
+        { timeout: 60_000 },
+      );
+    }
   }, 300_000);
 
   it("sur ordinateur (1280) : le message et les résultats du tour 1, rien du tour 2", async () => {
