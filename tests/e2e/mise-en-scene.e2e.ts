@@ -216,10 +216,21 @@ describe("la vitrine", () => {
       expect(Math.abs(a.x - b.x), "bords gauches").toBeLessThanOrEqual(1);
       expect(Math.abs(a.x + a.width - (b.x + b.width)), "bords droits").toBeLessThanOrEqual(1);
       expect(Math.abs(a.height - b.height), "hauteurs").toBeLessThanOrEqual(1);
-      // La ligne sous les boutons ne promet plus la gratuité, et mène à l'offre :
-      // la grille tarifaire (/tarifs), plus la prise de rendez-vous.
+      // La ligne qui ne promet plus la gratuité mène à l'offre : la grille tarifaire
+      // (/tarifs), plus la prise de rendez-vous. Vitrine premium, lot 1 : elle est descendue
+      // au pied de la bande des quatre formats ; sous les boutons, une seule ligne.
       const licence = page.getByRole("link", { name: "les offres Classe, Programme et Campus" });
       expect(await licence.getAttribute("href")).toBe("/tarifs");
+      expect(await page.locator("[data-pied-des-formats]").getByRole("link", { name: "les offres Classe, Programme et Campus" }).count()).toBe(1);
+      const sousLesBoutons = await page.locator("[data-cta-principal]").evaluate((boutons) => {
+        const lignes: string[] = [];
+        for (let e = boutons.nextElementSibling; e && !e.matches("[data-grille-des-lieux]"); e = e.nextElementSibling) {
+          const t = (e as HTMLElement).innerText.trim();
+          if (t) lignes.push(t);
+        }
+        return lignes;
+      });
+      expect(sousLesBoutons).toEqual(["J'ai un code de mon enseignant"]);
       expect(await page.locator("main").innerText()).not.toContain("Sans compte, sans installation");
       // Les neuf lieux, en 3 × 3 sous les boutons, sans défilement de côté.
       const grille = page.locator("[data-grille-des-lieux]");

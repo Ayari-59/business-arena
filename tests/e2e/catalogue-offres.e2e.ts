@@ -129,6 +129,10 @@ describe("/admin/offres", () => {
     await page.waitForURL(/fait=affichage/);
     await aller(tarifs, "/tarifs");
     expect(espaces(await tarifs.locator('[data-offre="programme"] [data-prix]').innerText())).toContain("1 090 €");
+    // Vitrine premium, lot 1 : le prix de référence se lit « À partir de … € par an », « sur devis » reste.
+    expect(espaces(await tarifs.locator('[data-offre="programme"] [data-prix]').innerText()).replace(/\s+/g, " ")).toBe(
+      "À partir de 1 090 € par an Prix de référence, sur devis",
+    );
     expect(espaces(await tarifs.locator('[data-offre="campus"]').innerText())).toContain(
       "Dès 2 entreprises, moins cher que 2 offres Programme",
     );

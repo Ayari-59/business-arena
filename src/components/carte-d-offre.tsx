@@ -23,7 +23,27 @@ export function ListeInclus({ elements }: { elements: readonly string[] }) {
   );
 }
 
-export function CarteDOffre({ offre, apercu = false }: { offre: CarteDeTarif; apercu?: boolean }) {
+/**
+ * « À PARTIR DE » (vitrine premium, lot 1, décision du propriétaire). Le prix de référence
+ * est un plancher : la carte le dit « À partir de 290 € par an », sur une petite ligne au-dessus
+ * du montant (une carte de /tarifs fait 212 px de large à quatre par rangée : « 1 990 € » en
+ * grand n'a pas la place d'un mot de plus sur sa ligne), et « Prix de référence, sur devis »
+ * reste dessous. Le montant vient du catalogue, jamais d'ici. `reserve` garde la même hauteur
+ * aux cartes sans prix d'une grille chiffrée (l'essai gratuit), pour que les montants
+ * s'alignent ; prix éteints, aucune carte n'a cette ligne et rien ne bouge.
+ */
+const LIBELLE_A_PARTIR_DE = "À partir de";
+
+export function CarteDOffre({
+  offre,
+  apercu = false,
+  reserve = false,
+}: {
+  offre: CarteDeTarif;
+  apercu?: boolean;
+  /** Prix publics allumés : la carte sans montant garde la place de « À partir de ». */
+  reserve?: boolean;
+}) {
   const principal = offre.bouton.principal;
   const idDuTitre = `${apercu ? "apercu-" : ""}offre-${offre.code}`;
   return (
@@ -41,6 +61,9 @@ export function CarteDOffre({ offre, apercu = false }: { offre: CarteDeTarif; ap
       <div data-prix className="mt-5">
         {offre.prixCents !== null ? (
           <>
+            <p data-a-partir-de="" className="text-sm font-medium leading-5 text-slate-300">
+              {LIBELLE_A_PARTIR_DE}
+            </p>
             <p className="flex h-12 items-end gap-2">
               <span className="font-display text-5xl font-bold leading-none tabular-nums text-slate-50">
                 {euros(offre.prixCents)}
@@ -51,6 +74,7 @@ export function CarteDOffre({ offre, apercu = false }: { offre: CarteDeTarif; ap
           </>
         ) : offre.tarif === "gratuit" ? (
           <>
+            {reserve ? <p aria-hidden className="h-5" /> : null}
             <p className="flex h-12 items-end">
               <span className="text-4xl font-bold leading-none text-slate-50">Gratuit</span>
             </p>
@@ -58,6 +82,7 @@ export function CarteDOffre({ offre, apercu = false }: { offre: CarteDeTarif; ap
           </>
         ) : (
           <>
+            {reserve ? <p aria-hidden className="h-5" /> : null}
             <p className="flex h-12 items-end">
               <span className="text-4xl font-bold leading-none text-slate-50">Sur devis</span>
             </p>
