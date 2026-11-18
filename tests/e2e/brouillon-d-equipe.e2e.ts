@@ -62,6 +62,8 @@ async function saisirLePrix(p: Page, valeur: string): Promise<void> {
   await champ.waitFor({ timeout: 30_000 });
   await champ.fill(valeur);
   await p.getByRole("button", { name: /^Suivant/ }).first().click();
+  // L'enregistrement part à la sortie de l'étape ; la mention suit sa réponse.
+  await p.waitForTimeout(2_000);
   await p.waitForFunction(
     () => /Modifié par vous à \d\d:\d\d/.test(document.body.innerText),
     undefined,
@@ -174,6 +176,8 @@ describe("le brouillon d'équipe", () => {
 
   it("Alice change le prix pendant que Bruno a la feuille ouverte : un bandeau, pas un écrasement", async () => {
     const bruno = eleves.Bruno!;
+    // Alice revient à la première étape, où se trouve le prix.
+    await auxDecisions(eleves.Alice!);
     await saisirLePrix(eleves.Alice!, "79");
     // Le sondage de l'arène passe toutes les 12 s en séance.
     await bruno.bringToFront();
@@ -202,7 +206,8 @@ describe("le brouillon d'équipe", () => {
   it("le pilotage le montre « pas encore validé », avec Alice ; le mur et Chloé ne le voient pas", async () => {
     await aller(prof, urlPartie);
     const vu = await texte(prof);
-    expect(vu).toContain("Brouillon · pas encore validé");
+    // Le marqueur est en capitales par la feuille de style : innerText les rend.
+    expect(vu.toLowerCase()).toContain("brouillon · pas encore validé");
     expect(vu).toMatch(/Modifié par Alice à \d\d:\d\d/);
     expect(vu).toContain("79,00 €");
     expect(await prof.locator('[data-decisions-de-l-equipe="brouillon"]').count()).toBe(1);
@@ -245,6 +250,7 @@ describe("le brouillon d'équipe", () => {
 
   it("au tour 2, Alice valide 77 € : c'est ce prix qui est joué", async () => {
     const alice = eleves.Alice!;
+    await auxDecisions(alice);
     await saisirLePrix(alice, "77");
     await aller(alice, urlArene);
     await auxDecisions(alice);
