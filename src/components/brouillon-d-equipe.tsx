@@ -220,7 +220,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
       data-bandeau-du-brouillon=""
       className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-400/60 bg-amber-400/10 px-3 py-2.5 text-sm text-slate-100"
     >
-      <p className="min-w-0 flex-1">
+      <p className="min-w-0 flex-1 basis-full sm:basis-auto">
         <span className="font-semibold">{bandeauDuBrouillon(bandeau.par, new Date(bandeau.quand))}</span>{" "}
         <span className="text-slate-300">
           Votre saisie reste sur cet appareil tant que vous n&apos;avez pas choisi.
