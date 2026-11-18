@@ -24,6 +24,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { getTeamSituations, unlockHint } from "@/services/pedagogy.service";
+import { lancerLeTour } from "@/services/round-resolution.service";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
 
@@ -90,6 +91,8 @@ describe("atelier VAN/TRI (situation détectée « capacity_saturated »)", () =
   });
 
   it("l'indice 5 livre la méthode VAN complète (l'atelier se joue jusqu'au bout)", async () => {
+    // Le tour 2 attend son lancement : ses indices ne se débloquent qu'une fois lancé.
+    await lancerLeTour({ gameId, teacherId, expectedRound: 2 });
     const { current } = await getTeamSituations(gameId, studentId);
     const atelier = current.find((s) => s.code === "detect_capacity_saturated")!;
     let last = { level: 0, text: "" };
