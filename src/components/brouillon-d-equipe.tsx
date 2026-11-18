@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { enregistrerLeBrouillonAction, lireLeBrouillonAction } from "@/app/arena/[gameId]/actions";
 import {
   DELAI_D_ENREGISTREMENT_MS,
@@ -48,7 +47,6 @@ interface Options {
 }
 
 export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie, appliquer }: Options) {
-  const router = useRouter();
   const [dernier, setDernier] = useState<EtatDuBrouillon | null>(actif ? initial : null);
   const [bandeau, setBandeau] = useState<EtatDuBrouillon | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -195,7 +193,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
     setBandeau(null);
     if (!lu) {
       // Plus de brouillon : l'équipe a validé, ou le tour a changé. La page le dira.
-      router.refresh();
+      window.location.reload();
       return;
     }
     baseRef.current = lu.quand;
@@ -218,7 +216,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
     <div
       role="status"
       data-bandeau-du-brouillon=""
-      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-400/60 bg-amber-400/10 px-3 py-2.5 text-sm text-slate-100"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-sky-400/50 bg-sky-400/10 px-3 py-2.5 text-sm text-slate-100"
     >
       <p className="min-w-0 flex-1 basis-full sm:basis-auto">
         <span className="font-semibold">{bandeauDuBrouillon(bandeau.par, new Date(bandeau.quand))}</span>{" "}
@@ -245,7 +243,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
         </>
       ) : null}
       {erreur ? (
-        <span className="block text-amber-300">Brouillon gardé sur cet appareil : {erreur}</span>
+        <span className="block text-slate-300">Brouillon gardé sur cet appareil : {erreur}</span>
       ) : null}
     </p>
   ) : null;
