@@ -8,6 +8,8 @@ import { aller, ouvrirNavigateur, texte } from "./helpers/browser";
  *
  * Deux équipes humaines et un bot. Alice et Bruno sont dans la même équipe, Chloé dans
  * l'autre ; chacun a son navigateur (son contexte, ses cookies, son stockage).
+ *   · le pilotage de l'enseignant est ouvert quand Alice saisit son prix (71 €) : il
+ *     montre le brouillon au sondage suivant, sans rechargement manuel ;
  *   · Alice saisit un prix (71 €) : Bruno ouvre la feuille et le retrouve, « Modifié par
  *     Alice » ;
  *   · Alice le change (79 €) pendant que Bruno a la feuille ouverte : Bruno voit le bandeau
@@ -139,6 +141,44 @@ describe("le brouillon d'équipe", () => {
     const tableau = await texte(prof);
     expect(tableau).toMatch(/Alice[\s\S]*Bruno|Bruno[\s\S]*Alice/);
   }, 240_000);
+
+  it("le pilotage ouvert voit apparaître le brouillon d'Alice, sans rechargement manuel", async () => {
+    // L'enseignant a son pilotage ouvert, sur l'ordinateur et sur un téléphone.
+    await aller(prof, urlPartie);
+    const tel = await seance.newPage();
+    await tel.setViewportSize({ width: 390, height: 844 });
+    await aller(tel, urlPartie);
+    for (const p of [prof, tel]) {
+      expect((await texte(p)).toLowerCase()).not.toContain("brouillon · pas encore validé");
+      // Une marque posée sur la fenêtre : un rechargement complet l'effacerait.
+      await p.evaluate(() => {
+        (window as unknown as { sansRechargement: boolean }).sansRechargement = true;
+      });
+    }
+
+    await auxDecisions(eleves.Alice!);
+    await saisirLePrix(eleves.Alice!, "71");
+
+    // Le sondage du pilotage passe toutes les 12 s : 30 s au plus.
+    for (const [p, nom] of [
+      [prof, "pilotage-brouillon-apparu-1280"],
+      [tel, "pilotage-brouillon-apparu-390"],
+    ] as const) {
+      await p.bringToFront();
+      await p.waitForSelector('[data-decisions-de-l-equipe="brouillon"]', { timeout: 30_000 });
+      const vu = await texte(p);
+      expect(vu.toLowerCase()).toContain("brouillon · pas encore validé");
+      expect(vu).toMatch(/Modifié par Alice à \d\d:\d\d/);
+      expect(vu).toContain("71,00 €");
+      expect(await p.evaluate(() => (window as unknown as { sansRechargement?: boolean }).sansRechargement)).toBe(true);
+      const ligne = p.locator('[data-decisions-de-l-equipe="brouillon"]').first();
+      await ligne.scrollIntoViewIfNeeded();
+      await capture(p, nom);
+    }
+    const deborde = await tel.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(deborde).toBeLessThanOrEqual(0);
+    await tel.close();
+  }, 180_000);
 
   it("Alice saisit un prix ; Bruno, sur un autre navigateur, le retrouve « Modifié par Alice »", async () => {
     await auxDecisions(eleves.Alice!);

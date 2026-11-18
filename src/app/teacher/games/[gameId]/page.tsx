@@ -133,6 +133,12 @@ async function TeacherGamePage({
     const quand = t.validation?.quand ?? null;
     return quand !== null && (max === null || quand > max) ? quand : max;
   }, null);
+  // L'heure du dernier brouillon d'équipe modifié, que le sondeur compare aussi :
+  // une équipe qui enregistre recharge le pilotage, qui montre son brouillon.
+  const dernierBrouillon = humanTeams.reduce<string | null>((max, t) => {
+    const quand = t.decisionsAuPilotage?.modification?.quand ?? null;
+    return quand !== null && (max === null || quand > max) ? quand : max;
+  }, null);
   const avecRepere = humanTeams.filter((t) => (t.decisionsAuPilotage?.reperes.length ?? 0) > 0).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
   const demandesEnAttente = view.aidRequests.filter((d) => d.statut === "pending").length;
@@ -1557,6 +1563,7 @@ async function TeacherGamePage({
           endpoint="submissions"
           submittedCount={submittedCount}
           derniereDecision={derniereDecision}
+          dernierBrouillon={dernierBrouillon}
         />
       ) : null}
     </main>

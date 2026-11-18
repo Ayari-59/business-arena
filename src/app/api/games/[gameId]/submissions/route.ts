@@ -43,9 +43,19 @@ export async function GET(
   // nouveau. Le compte ne bouge pas, ses décisions si : le pilotage qui les
   // montre doit se recharger quand cette heure change.
   let derniereDecision: string | null = null;
+  // LE DERNIER BROUILLON MODIFIÉ (`services/brouillon-equipe.service.ts`) : une
+  // équipe qui enregistre ne change ni le compte ni la dernière validation, mais
+  // le pilotage montre son brouillon. Seule son heure sort d'ici : ni la saisie,
+  // ni le nom de son auteur.
+  let dernierBrouillon: string | null = null;
   if (currentRoundRow) {
     const submitted = await db
-      .select({ teamId: decisions.teamId, status: decisions.status, quand: decisions.validatedAt })
+      .select({
+        teamId: decisions.teamId,
+        status: decisions.status,
+        quand: decisions.validatedAt,
+        modifieLe: decisions.modifieLe,
+      })
       .from(decisions)
       .where(eq(decisions.roundId, currentRoundRow.id));
     submittedCount = humanTeams.filter((t) =>
@@ -53,6 +63,10 @@ export async function GET(
     ).length;
     derniereDecision = submitted.reduce<string | null>((max, d) => {
       const iso = d.quand ? d.quand.toISOString() : null;
+      return iso !== null && (max === null || iso > max) ? iso : max;
+    }, null);
+    dernierBrouillon = submitted.reduce<string | null>((max, d) => {
+      const iso = d.status === "draft" && d.modifieLe ? d.modifieLe.toISOString() : null;
       return iso !== null && (max === null || iso > max) ? iso : max;
     }, null);
   }
@@ -75,6 +89,7 @@ export async function GET(
       totalHumanTeams: humanTeams.length,
       dernierTourRevele,
       derniereDecision,
+      dernierBrouillon,
     },
     { headers: { "cache-control": "no-store" } },
   );

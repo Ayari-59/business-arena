@@ -36,6 +36,13 @@ interface Props {
    * de départ, et une équipe qui valide de nouveau avant lui passerait inaperçue.
    */
   derniereDecision?: string | null;
+  /**
+   * L'heure du dernier brouillon d'équipe modifié pour le tour en cours, telle
+   * que la page l'a rendue (le pilotage). Un brouillon ne change ni le compte ni
+   * la dernière validation : sans elle, l'enseignant devait recharger la page
+   * pour voir le brouillon d'une équipe apparaître ou changer.
+   */
+  dernierBrouillon?: string | null;
 }
 
 export function RoundStatusPoller({
@@ -47,11 +54,13 @@ export function RoundStatusPoller({
   insistant = false,
   dernierTourRevele,
   derniereDecision,
+  dernierBrouillon,
 }: Props) {
   const router = useRouter();
   const stateRef = useRef({ currentRound, roundStatus, submittedCount, dernierTourRevele });
   // Lue une fois, au montage : les sondages suivants tiennent la leur.
   const derniereDecisionInitiale = useRef(derniereDecision);
+  const dernierBrouillonInitial = useRef(dernierBrouillon);
 
   useEffect(() => {
     stateRef.current = { currentRound, roundStatus, submittedCount, dernierTourRevele };
@@ -70,6 +79,8 @@ export function RoundStatusPoller({
     // L'heure de la dernière décision envoyée, vue au sondage précédent : une
     // équipe qui valide de nouveau ne change pas le compte, mais ses décisions.
     let decisionVue: string | null | undefined = derniereDecisionInitiale.current;
+    // L'heure du dernier brouillon d'équipe, vue au sondage précédent.
+    let brouillonVu: string | null | undefined = dernierBrouillonInitial.current;
 
     const planifier = () => {
       if (stopped) return;
@@ -122,6 +133,10 @@ export function RoundStatusPoller({
           if (data.derniereDecision !== undefined) {
             if (decisionVue !== undefined && data.derniereDecision !== decisionVue) changed = true;
             decisionVue = data.derniereDecision;
+          }
+          if (data.dernierBrouillon !== undefined) {
+            if (brouillonVu !== undefined && data.dernierBrouillon !== brouillonVu) changed = true;
+            brouillonVu = data.dernierBrouillon;
           }
 
           if (changed) router.refresh();
