@@ -36,6 +36,7 @@ import { createGameCore } from "@/services/game-creation.service";
 // test par test sur le code d'avant, où la fonction n'existait pas.
 import * as resolution from "@/services/round-resolution.service";
 import type { RoundDecisions } from "@/engine/types";
+import { getTeamSituations, submitDiagnosis, submitQuiz } from "@/services/pedagogy.service";
 import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
@@ -209,6 +210,75 @@ describe("partie de classe neuve : le tour suivant attend", () => {
     const obs = await getObservationSeance(gameId, teacherId);
     const t2 = obs!.tours.find((t) => t.index === 2)!;
     expect(t2.minutesMedianes).toBe(0);
+  });
+});
+
+/** La première situation du tour en cours de l'élève, celle que l'arène lui montrerait. */
+async function situationDuTour(gameId: string, userId: string) {
+  const s = (await getTeamSituations(gameId, userId)).current[0];
+  if (!s) throw new Error("aucune situation ouverte pour ce tour");
+  return s;
+}
+
+describe("la situation du tour qui attend son lancement", () => {
+  it("y répondre est refusé avec les mots de la validation ; après le lancement, c'est accepté", async () => {
+    const { gameId, alice } = await classeNeuve();
+    await closeCurrentRound({ gameId, teacherId, expectedRound: 1 });
+    const s = await situationDuTour(gameId, alice);
+    const options = s.diagnosticOptions.slice(0, 1).map((o) => o.id);
+    const reponses = Object.fromEntries(s.quizQuestions.map((q) => [q.id, q.options[0]!.id]));
+
+    const message = "Le tour 2 n'est pas encore lancé : votre professeur l'ouvrira.";
+    await expect(
+      submitDiagnosis({ instanceId: s.instanceId, userId: alice, selectedOptionIds: options }),
+    ).rejects.toThrow(message);
+    await expect(submitQuiz({ instanceId: s.instanceId, userId: alice, answers: reponses })).rejects.toThrow(
+      message,
+    );
+    // Rien n'a été écrit : la situation reste ouverte.
+    expect((await situationDuTour(gameId, alice)).status).toBe("open");
+
+    await lancer({ gameId, teacherId, expectedRound: 2 });
+    await expect(
+      submitDiagnosis({ instanceId: s.instanceId, userId: alice, selectedOptionIds: options }),
+    ).resolves.toBeTruthy();
+    if (s.quizQuestions.length > 0) {
+      await expect(
+        submitQuiz({ instanceId: s.instanceId, userId: alice, answers: reponses }),
+      ).resolves.toBeTruthy();
+    }
+  });
+
+  it("une date à venir : le refus dit la date, comme la validation", async () => {
+    const { gameId, alice } = await classeNeuve();
+    const demain = new Date(Date.now() + 24 * 3600_000);
+    await setRoundWindows({ gameId, teacherId, windows: [{ index: 2, opensAt: demain, deadline: null }] });
+    await closeCurrentRound({ gameId, teacherId, expectedRound: 1 });
+    const s = await situationDuTour(gameId, alice);
+    const message = (await getGameView(gameId, alice))!.playLock.message!;
+    expect(message).toMatch(/^Ce tour ouvre le /);
+    await expect(submitTeamDecisions({ gameId, userId: alice, payload: DECISIONS })).rejects.toThrow(message);
+    await expect(
+      submitDiagnosis({ instanceId: s.instanceId, userId: alice, selectedOptionIds: [] }),
+    ).rejects.toThrow(message);
+  });
+
+  it("au premier tour, et dans une partie qui enchaîne, rien ne change", async () => {
+    const { gameId, alice } = await classeNeuve();
+    const s1 = await situationDuTour(gameId, alice);
+    await expect(
+      submitDiagnosis({ instanceId: s1.instanceId, userId: alice, selectedOptionIds: [] }),
+    ).resolves.toBeTruthy();
+
+    const avant = await classeNeuve();
+    const [g] = await db.select().from(games).where(eq(games.id, avant.gameId));
+    const { lancementDesTours: _retire, ...profil } = g!.difficultyProfile as Record<string, unknown>;
+    await db.update(games).set({ difficultyProfile: profil }).where(eq(games.id, avant.gameId));
+    await closeCurrentRound({ gameId: avant.gameId, teacherId, expectedRound: 1 });
+    const s2 = await situationDuTour(avant.gameId, avant.alice);
+    await expect(
+      submitDiagnosis({ instanceId: s2.instanceId, userId: avant.alice, selectedOptionIds: [] }),
+    ).resolves.toBeTruthy();
   });
 });
 

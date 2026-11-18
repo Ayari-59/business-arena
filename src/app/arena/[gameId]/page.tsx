@@ -227,7 +227,12 @@ async function ArenaPage({
   // LE TOUR D'ESSAI TERMINÉ (config/tour-d-essai.ts) : il n'y a plus de tour à jouer,
   // seulement des résultats à lire, en attendant que la vraie partie commence.
   const essaiTermine = view.essai?.phase === "termine" || view.essai?.phase === "bascule";
-  const hasActivePeriod = !finished && !essaiTermine;
+  // LE TOUR SUIVANT ATTEND SON LANCEMENT (lib/lancement-du-tour.ts) : ni sa situation,
+  // ni « Passer au tour », ni sa feuille de décision ne s'affichent, sur ordinateur
+  // comme sur téléphone. L'élève lit le message d'attente, puis les résultats du tour
+  // clos. Au lancement, le sondage de round-status recharge la page : tout revient.
+  const tourEnAttente = !finished && !essaiTermine && view.playLock.enAttenteDuLancement;
+  const hasActivePeriod = !finished && !essaiTermine && !tourEnAttente;
 
   // ── Écran intermédiaire « Tour simulé » (solo, après une validation) ──
   // Valider a résolu le tour à l'instant (playRoundAction redirige ici avec
@@ -2040,6 +2045,20 @@ async function ArenaPage({
           </section>
         ) : null}
 
+        {/* Sur téléphone, pendant l'attente du lancement, les résultats du tour clos
+            restent ceux de la première carte du parcours, servis seuls : le parcours
+            du tour suivant ne s'ouvre pas. */}
+        {telephone && tourEnAttente ? (
+          <section data-resultats-en-attente="" className="space-y-4">
+            {alerteTresorerieNode}
+            {resultatsCartes.map((c) => (
+              <div key={c.cle} className="space-y-2">
+                {c.titre ? <h2 className="text-base font-semibold text-slate-100">{c.titre}</h2> : null}
+                {c.noeud}
+              </div>
+            ))}
+          </section>
+        ) : null}
         {telephone && !finished && !essaiTermine ? null : toursPasses}
       </div>
 

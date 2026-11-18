@@ -95,6 +95,27 @@ export function playLockMessage(w: PlayWindow): string | null {
   return w.closesAt ? `Ce tour est clôturé depuis le ${dateFr(w.closesAt)}.` : "Ce tour est clôturé.";
 }
 
+/**
+ * LA SITUATION D'UN TOUR QUI ATTEND SON LANCEMENT (`lib/lancement-du-tour.ts`) : y
+ * répondre est refusé, avec les mots de la validation. Seule cette attente compte ici :
+ * le planning et les autres fenêtres ne changent rien aux réponses aux situations,
+ * comme avant. `null` : rien à refuser.
+ */
+export async function refusDuTourEnAttente(
+  game: GameWindow,
+  round: Required<Pick<RoundWindow, "id" | "index" | "status">> & RoundWindow,
+  now: Date = new Date(),
+): Promise<string | null> {
+  const etat = etatDuLancement({
+    profil: game.difficultyProfile,
+    essai: game.essai,
+    tour: { id: round.id, index: round.index, status: round.status, opensAt: round.opensAt },
+    now,
+  });
+  if (!etat.enAttente) return null;
+  return playLockMessage(await playWindowFor(game, round, now)) ?? messageDAttente(round.index);
+}
+
 /** Lève une erreur (message joueur) si l'on est hors de la fenêtre de jeu. */
 export async function assertPlayable(game: GameWindow, round: RoundWindow | null): Promise<void> {
   const message = playLockMessage(await playWindowFor(game, round));
