@@ -1,6 +1,5 @@
 import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
-import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
 import Link from "next/link";
 import { LesQuatreFormats } from "@/components/accueil-formats";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -461,28 +460,11 @@ async function Home() {
               boutons : l'accueil reste statique et celui de tout le monde ; l'îlot
               lit le cookie de l'appareil et ne rend rien s'il n'y a rien à reprendre. */}
           <ReprendreALAccueil />
-          {/* LOT P6 : LA LIGNE NE PROMET PLUS LA GRATUITÉ. « Sans compte, sans
-              installation » laissait croire que tout était offert. Elle dit
-              ce qui l'est (une partie de découverte, en solo) et comment l'arène
-              se prend pour une classe : les deux offres de l'arène, sur devis. Le lien
-              menait à la prise de rendez-vous tant qu'aucune page ne publiait
-              de prix ; il mène désormais à la grille (/tarifs), qui les lit
-              dans config/tarifs.ts. Celle-ci n'en écrit aucun. Le lien est à
-              l'encre, souligné (variante `lien`). */}
-          <p className="mt-5 text-sm leading-relaxed text-slate-400">
-            Une partie de découverte en solo, sans compte ni installation. Pour vos classes :{" "}
-            <Link href="/tarifs" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
-              {LES_OFFRES_DE_L_ARENE}
-            </Link>
-            , sur devis.
-          </p>
-          {/* L'arène n'est qu'un des quatre formats : le héros le dit, et mène à la bande qui les présente. */}
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            Aussi : le cours par la simulation, ses cas pratiques et les épisodes manager.{" "}
-            <Link href="#formats" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
-              Les quatre formats
-            </Link>
-          </p>
+          {/* VITRINE PREMIUM, LOT 1 (décision du propriétaire) : sous les deux boutons, une
+              seule ligne, celle de l'élève qui a un code. Les deux petits paragraphes qui
+              suivaient (la découverte en solo et les offres de l'arène ; les quatre formats)
+              sont descendus au pied de la bande des quatre formats, mot pour mot, avec leurs
+              liens (components/accueil-formats.tsx). */}
           {/* Sous `lg`, les neuf lieux en grille de 3 × 3, sous les boutons. */}
           <GrilleDesLieux className="mt-7 lg:hidden" />
             </div>

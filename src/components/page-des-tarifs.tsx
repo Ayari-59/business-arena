@@ -98,8 +98,9 @@ export function PageDesTarifs({
             L&apos;arène, pour l&apos;enseignement : lycées, BTS, écoles de commerce, universités
           </h2>
           <div data-offres className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {/* Une grille chiffrée : les cartes sans montant gardent la place de « À partir de ». */}
             {vue.cartes.map((o) => (
-              <CarteDOffre key={o.code} offre={o} />
+              <CarteDOffre key={o.code} offre={o} reserve={vue.cartes.some((x) => x.prixCents !== null)} />
             ))}
           </div>
           {vue.reseaux.map((r) => (

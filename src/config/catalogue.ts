@@ -228,6 +228,15 @@ export const euros = (cents: number): string =>
   Number.isInteger(cents / 100) ? formatEuro(cents / 100) : formatEuroCents(cents / 100);
 
 /**
+ * LE PRIX D'UNE OFFRE TEL QUE LA VITRINE LE DIT (vitrine premium, lot 1, décision du
+ * propriétaire) : « à partir de 290 € par an », le montant lu au catalogue ; « sur devis »
+ * sans prix. Le prix de référence est un plancher, le devis fixe le prix convenu : le
+ * devis, les CGV et la facture, qui disent ce prix exact, ne s'en servent pas.
+ */
+export const prixALaVitrine = (prixCents: number | null | undefined): string =>
+  prixCents ? `à partir de ${euros(prixCents)} par an` : "sur devis";
+
+/**
  * Dès combien d'unités une offre coûte STRICTEMENT moins que autant d'offres de
  * référence : à prix égal, la mention ne s'affiche pas plus tôt.
  */

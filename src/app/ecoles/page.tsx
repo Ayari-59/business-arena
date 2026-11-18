@@ -8,7 +8,7 @@ import {
   OFFRES,
   variablesDuCatalogue,
 } from "@/config/tarifs";
-import { enumerer, euros, ouvreLExamen, vueDesTarifs } from "@/config/catalogue";
+import { enumerer, ouvreLExamen, prixALaVitrine, vueDesTarifs } from "@/config/catalogue";
 import { COMPETENCES_D_EXAMEN } from "@/config/examen/competences";
 import { GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
 import { ETABLISSEMENTS_MINIMUM } from "@/config/examen/comparaisons";
@@ -259,7 +259,7 @@ async function EcolesPage() {
               {offresAPrix.map((o) => (
                 <li key={o.code} data-offre-ecole={o.code}>
                   <p className="titre-carte text-slate-100">
-                    {o.nom} · <span className="tabular-nums">{o.prixCents !== null ? `${euros(o.prixCents)} par an` : "sur devis"}</span>
+                    {o.nom} · <span className="tabular-nums">{prixALaVitrine(o.prixCents)}</span>
                   </p>
                   <p className="mt-1 text-base leading-relaxed text-slate-400">{o.pourQui}</p>
                   <Link

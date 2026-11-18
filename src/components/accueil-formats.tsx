@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Bande } from "@/components/bande";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { briques } from "@/config/articulation";
+import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
 
 /**
  * LES QUATRE FORMATS, SUR L'ACCUEIL (audit d'octobre 2026).
@@ -58,6 +59,31 @@ export function LesQuatreFormats({ contraste }: { contraste: boolean }) {
           </li>
         ))}
       </ul>
+      {/*
+        LES DEUX LIGNES DU HÉROS, DESCENDUES ICI (vitrine premium, lot 1, décision du
+        propriétaire). Elles suivaient les deux boutons de l'accueil ; le héros ne garde plus
+        que la porte de l'élève qui a un code. Mot pour mot, avec leurs liens : ce qui est
+        gratuit (une partie de découverte, en solo) et comment l'arène se prend pour une
+        classe (les offres de l'arène, sur devis, vers /tarifs, qui lit les prix dans
+        config/tarifs.ts ; cette ligne n'en écrit aucun) ; puis les trois autres formats,
+        et l'ancre de la bande, que le test de l'accueil (tests/e2e/cours.e2e.ts) compte.
+        Sous la liste, en petit et sobre, derrière un filet : un pied de bande.
+      */}
+      <div data-pied-des-formats="" className="mt-10 grid gap-2 border-t border-white/10 pt-5">
+        <p className="text-sm leading-relaxed text-slate-400">
+          Une partie de découverte en solo, sans compte ni installation. Pour vos classes :{" "}
+          <Link href="/tarifs" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
+            {LES_OFFRES_DE_L_ARENE}
+          </Link>
+          , sur devis.
+        </p>
+        <p className="text-sm leading-relaxed text-slate-400">
+          Aussi : le cours par la simulation, ses cas pratiques et les épisodes manager.{" "}
+          <Link href="#formats" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
+            Les quatre formats
+          </Link>
+        </p>
+      </div>
     </Bande>
   );
 }

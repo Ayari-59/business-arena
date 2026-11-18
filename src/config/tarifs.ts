@@ -27,7 +27,7 @@ import {
   type ModuleDuCatalogue,
   type OffreDuCatalogue,
   type ParametresArene,
-  euros,
+  prixALaVitrine,
 } from "@/config/catalogue";
 import { DECOUVERTE_PAR_DEFAUT, niveauMaxSansLicence, type ReglageDeLaDecouverte } from "@/config/decouverte";
 
@@ -1203,10 +1203,13 @@ export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
  * LES PHRASES QUE LE RESTE DU SITE TIRE DE LA GRILLE.
  * ------------------------------------------------------------------------- */
 
-/** « 290 € par an » d'une offre du catalogue ; « sur devis » si elle n'a pas de prix. */
+/**
+ * « à partir de 290 € par an » d'une offre du catalogue ; « sur devis » si elle n'a pas de
+ * prix. La formule de la vitrine (`prixALaVitrine`), celle des cartes de /tarifs et de /ecoles.
+ */
 function prixAnnuelDe(c: Catalogue, code: OffreDeLArene): string {
   const o = c.offres.find((x) => x.code === code);
-  return o && o.tarif === "prix" && o.prixCents ? `${euros(o.prixCents)} par an` : "sur devis";
+  return prixALaVitrine(o && o.tarif === "prix" ? o.prixCents : null);
 }
 
 /**
@@ -1231,7 +1234,7 @@ export const REPONSE_COMBIEN = reponseCombien(CATALOGUE_PAR_DEFAUT);
 export const descriptionDesTarifs = (c: Catalogue, prix = true): string =>
   !prix
     ? `Gratuit pour découvrir le simulateur en solo. ${LES_OFFRES_DE_L_ARENE_EN_TETE} et les épisodes manager se construisent sur mesure : chaque offre aboutit à un devis écrit. L'élève ne paie jamais.`
-    : `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} à ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} à ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} à ${prixAnnuelDe(c, "campus")}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'élève ne paie jamais.`;
+    : `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} ${prixAnnuelDe(c, "campus")}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'élève ne paie jamais.`;
 
 /** Les niveaux fermés, et ce qui les ouvre : « Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus. » */
 export function messageNiveauxReserves(vitrine: VitrineSolo): string {

@@ -261,8 +261,8 @@
     "episodes",
     "entreprise"
   ],
-  "LIGNE_DE_PRIX": "Offre Classe 290 € par an, offre Programme 990 € par an, offre Campus 1 990 € par an, sur devis. Les épisodes manager se proposent à part, sur devis.",
-  "REPONSE_COMBIEN": "La découverte en solo est gratuite, sans compte. Pour faire cours, sur devis : l'offre Classe coûte 290 € par an pour un groupe (une entreprise et un niveau choisis), l'offre Programme 990 € par an pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre Campus 1 990 € par an pour toute l'école. Les épisodes manager se proposent à part, sur devis.",
+  "LIGNE_DE_PRIX": "Offre Classe à partir de 290 € par an, offre Programme à partir de 990 € par an, offre Campus à partir de 1 990 € par an, sur devis. Les épisodes manager se proposent à part, sur devis.",
+  "REPONSE_COMBIEN": "La découverte en solo est gratuite, sans compte. Pour faire cours, sur devis : l'offre Classe coûte à partir de 290 € par an pour un groupe (une entreprise et un niveau choisis), l'offre Programme à partir de 990 € par an pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre Campus à partir de 1 990 € par an pour toute l'école. Les épisodes manager se proposent à part, sur devis.",
   "MARQUE_DE_L_ARENE": "Offre Classe, Programme ou Campus",
   "LES_OFFRES_DE_L_ARENE": "les offres Classe, Programme et Campus",
   "MARQUE_DES_EPISODES": "Épisodes manager · sur devis",

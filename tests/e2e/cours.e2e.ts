@@ -1884,8 +1884,12 @@ describe("l'accueil présente les quatre formats", () => {
     expect(await page.locator(`[data-format="cours"] a[href="/cours/${essai.code}"]`).count()).toBe(1);
     expect(await page.locator('[data-format="arene"] a[href="/jouer"]').count()).toBe(1);
     expect(await page.locator('[data-format="episodes"] a[href="/entreprises/episode"]').count()).toBe(1);
-    // Le héros mène à la bande.
+    // L'ancre de la bande (vitrine premium, lot 1 : la ligne qui la porte est descendue du héros
+    // au pied de la bande), avec ses deux phrases.
     expect(await page.locator('a[href="#formats"]').count()).toBe(1);
+    const pied = await page.locator("[data-formats-de-l-accueil] ~ [data-pied-des-formats]").innerText().then(espacesOrdinaires);
+    expect(pied).toContain("Une partie de découverte en solo, sans compte ni installation. Pour vos classes : les offres Classe, Programme et Campus, sur devis.");
+    expect(pied).toContain("Aussi : le cours par la simulation, ses cas pratiques et les épisodes manager. Les quatre formats");
     expect(await page.locator("#formats").count()).toBe(1);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.context().close();
