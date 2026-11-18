@@ -47,7 +47,7 @@ function sondage(p: Partial<Reponse> = {}): Reponse {
 }
 
 /** Monte le sondeur du pilotage, tel que la page le rend. */
-function monter(props: { dernierBrouillon?: string | null; submittedCount?: number } = {}) {
+function monter(props: { dernierBrouillon?: string | null; submittedCount?: number; mur?: boolean } = {}) {
   effets.length = 0;
   RoundStatusPoller({
     gameId: "partie",
@@ -56,7 +56,7 @@ function monter(props: { dernierBrouillon?: string | null; submittedCount?: numb
     endpoint: "submissions",
     submittedCount: props.submittedCount ?? 0,
     derniereDecision: null,
-    dernierBrouillon: props.dernierBrouillon === undefined ? T0 : props.dernierBrouillon,
+    ...(props.mur ? { insistant: true } : { dernierBrouillon: props.dernierBrouillon === undefined ? T0 : props.dernierBrouillon }),
   } as Parameters<typeof RoundStatusPoller>[0]);
   for (const f of effets) {
     const n = f();
@@ -139,6 +139,15 @@ describe("le sondeur du pilotage et les brouillons d'équipe", () => {
     await unSondage();
     await unSondage();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("le mur de la classe, qui sonde la même route sans montrer les brouillons, ne se recharge pas pour eux", async () => {
+    monter({ mur: true });
+    await unSondage();
+    reponse = sondage({ dernierBrouillon: T1 });
+    await unSondage();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(refresh).not.toHaveBeenCalled();
   });
 });

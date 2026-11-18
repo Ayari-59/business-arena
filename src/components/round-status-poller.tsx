@@ -40,7 +40,8 @@ interface Props {
    * L'heure du dernier brouillon d'équipe modifié pour le tour en cours, telle
    * que la page l'a rendue (le pilotage). Un brouillon ne change ni le compte ni
    * la dernière validation : sans elle, l'enseignant devait recharger la page
-   * pour voir le brouillon d'une équipe apparaître ou changer.
+   * pour voir le brouillon d'une équipe apparaître ou changer. Sans elle (le
+   * mur), le sondeur ne suit pas les brouillons.
    */
   dernierBrouillon?: string | null;
 }
@@ -81,6 +82,7 @@ export function RoundStatusPoller({
     let decisionVue: string | null | undefined = derniereDecisionInitiale.current;
     // L'heure du dernier brouillon d'équipe, vue au sondage précédent.
     let brouillonVu: string | null | undefined = dernierBrouillonInitial.current;
+    const suitLesBrouillons = dernierBrouillonInitial.current !== undefined;
 
     const planifier = () => {
       if (stopped) return;
@@ -134,7 +136,10 @@ export function RoundStatusPoller({
             if (decisionVue !== undefined && data.derniereDecision !== decisionVue) changed = true;
             decisionVue = data.derniereDecision;
           }
-          if (data.dernierBrouillon !== undefined) {
+          // Seule la page qui le montre (le pilotage) le suit : le mur de la classe,
+          // qui sonde la même route sans rien dire des brouillons, ne se recharge pas
+          // à chaque enregistrement d'une équipe.
+          if (suitLesBrouillons && data.dernierBrouillon !== undefined) {
             if (brouillonVu !== undefined && data.dernierBrouillon !== brouillonVu) changed = true;
             brouillonVu = data.dernierBrouillon;
           }
