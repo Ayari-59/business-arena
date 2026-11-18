@@ -1049,10 +1049,18 @@ export async function getTeacherGameView(
         decisionsAuPilotage:
           t.controller === "bot"
             ? null
-            : lireLaDecisionDuTour(
-                submitted.find((d) => d.teamId === t.id),
-                cadreDeLecture,
-              ),
+            : (() => {
+                const d = submitted.find((x) => x.teamId === t.id);
+                // LE BROUILLON D'ÉQUIPE : qui l'a modifié en dernier, et quand.
+                const modification =
+                  d?.status === "draft" && d.modifieLe
+                    ? {
+                        nom: pseudoAffichable(memberships.find((m) => m.userId === d.modifiePar)?.name),
+                        quand: d.modifieLe.toISOString(),
+                      }
+                    : null;
+                return lireLaDecisionDuTour(d, cadreDeLecture, modification);
+              })(),
         lastNetIncome: last ? resultatHorsSubvention({ netIncome: Number(last.netIncome), rescueSubsidy: last.incomeStatement?.rescueSubsidy }) : null,
         lastRescueSubsidy: last?.incomeStatement?.rescueSubsidy ?? 0,
         lastNetTreasury: last ? Number(last.netTreasury) : null,

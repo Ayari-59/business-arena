@@ -421,6 +421,13 @@
       "when": 1794479641228,
       "tag": "0059_catalogue_aligne_sur_le_code",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794566041228,
+      "tag": "0060_brouillon_d_equipe",
+      "breakpoints": true
     }
   ]
 }

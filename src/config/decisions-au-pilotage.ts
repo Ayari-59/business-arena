@@ -47,6 +47,11 @@ export interface DecisionsAuPilotage {
   autres: DecisionLue[];
   /** Les repères, une courte phrase chacun ; vide quand rien n'est à signaler. */
   reperes: string[];
+  /**
+   * LE BROUILLON D'ÉQUIPE : qui l'a modifié en dernier, et quand (ISO). `null`
+   * pour une décision validée ou sans auteur connu.
+   */
+  modification: { nom: string | null; quand: string } | null;
 }
 
 /** Ce qu'il faut savoir de la partie pour lire une décision. */
@@ -67,7 +72,11 @@ const PRINCIPAUX = ["price", "productionPlan", "supplierChoice", "marketingBudge
  */
 export const SEUIL_DE_SURPRODUCTION = 1.5;
 
-const euros = (v: number | undefined) => formatEuroCents(v ?? 0);
+// Un brouillon peut porter un prix ou un volume vide : il se lit « — », pas « 0,00 € ».
+const euros = (v: number | null | undefined) =>
+  v === null || Number.isNaN(v) ? "—" : formatEuroCents(v ?? 0);
+const unites = (v: number | null | undefined) =>
+  v === null || v === undefined || Number.isNaN(v) ? "—" : formatUnits(v);
 const ouiNon = (v: boolean | undefined) => (v ? "oui" : "non");
 
 /** Le nom d'un fournisseur du scénario ; son code s'il n'y est plus. */
@@ -83,7 +92,7 @@ function valeurDuLevier(champ: string, d: RoundDecisions, cadre: CadreDeLecture)
     case "price":
       return euros(d.price);
     case "productionPlan":
-      return `${formatUnits(d.productionPlan)} ${cadre.vocabulaire.units}`;
+      return `${unites(d.productionPlan)} ${cadre.vocabulaire.units}`;
     case "acceptOrder":
       return d.acceptOrder === undefined ? null : ouiNon(d.acceptOrder);
     case "supplierChoice":
@@ -184,7 +193,7 @@ export function lireLesDecisions(
           l.champ === "price"
             ? euros(own.price)
             : l.champ === "productionPlan"
-              ? `${formatUnits(own.productionPlan)} ${cadre.vocabulaire.units}`
+              ? `${unites(own.productionPlan)} ${cadre.vocabulaire.units}`
               : nomDuFournisseur(s, own.supplierChoice ?? d.supplierChoice);
         principales.push({ libelle: `${libelle} · ${p.name}`, valeur });
       }
@@ -269,15 +278,23 @@ export function reperesDesDecisions(d: RoundDecisions, scenario: EngineScenarioC
 export function lireLaDecisionDuTour(
   ligne: { status: string; payload: RoundDecisions } | undefined,
   cadre: CadreDeLecture,
+  /** Pour un brouillon : qui l'a modifié en dernier, et quand. */
+  modification: { nom: string | null; quand: string } | null = null,
 ): DecisionsAuPilotage {
   if (!ligne || (ligne.status !== "validated" && ligne.status !== "draft")) {
-    return { etat: "aucune", principales: [], autres: [], reperes: [] };
+    return { etat: "aucune", principales: [], autres: [], reperes: [], modification: null };
   }
   const { principales, autres } = lireLesDecisions(ligne.payload, cadre);
+  const brouillon = ligne.status === "draft";
+  const reperes = reperesDesDecisions(ligne.payload, cadre.scenario);
   return {
-    etat: ligne.status === "validated" ? "validee" : "brouillon",
+    etat: brouillon ? "brouillon" : "validee",
     principales,
     autres,
-    reperes: reperesDesDecisions(ligne.payload, cadre.scenario),
+    // LES REPÈRES D'UN BROUILLON : le seul prix sous le coût variable, qui se lit
+    // sur la saisie sans rien supposer. Les trois autres lisent le résultat que le
+    // serveur estime À LA VALIDATION, qu'un brouillon n'a pas encore.
+    reperes: brouillon ? reperes.filter((r) => r.startsWith("Prix sous le coût variable")) : reperes,
+    modification: brouillon ? modification : null,
   };
 }

@@ -210,6 +210,10 @@ export async function submitTeamDecisions(args: {
         status: "validated",
         validatedAt: new Date(),
         validatedBy: args.userId,
+        // LE BROUILLON D'ÉQUIPE DEVIENT LA DÉCISION VALIDÉE : sa saisie n'a plus
+        // d'objet (`services/brouillon-equipe.service.ts`). Qui l'a modifié en
+        // dernier reste écrit, comme une trace.
+        saisie: null,
       },
     });
     return { roundIndex: game.currentRound };
@@ -378,8 +382,14 @@ async function resolveGameRound(
       }
     }
 
-    // Décisions soumises pour ce tour + ventes et décisions du tour précédent
-    const submitted = await db.select().from(decisions).where(eq(decisions.roundId, roundRow.id));
+    // Décisions soumises pour ce tour + ventes et décisions du tour précédent.
+    // LA CLÔTURE NE JOUE JAMAIS UN BROUILLON (`config/brouillon-d-equipe.ts`) :
+    // une ligne `draft` est le travail en cours d'une équipe, pas une décision.
+    // L'équipe qui n'a qu'un brouillon est traitée comme une équipe sans
+    // décision : reconduite, ou repli au premier tour.
+    const submitted = (await db.select().from(decisions).where(eq(decisions.roundId, roundRow.id))).filter(
+      (d) => d.status !== "draft",
+    );
     const lastSold: Record<string, number> = {};
     const lastSoldByProduct: Record<string, Record<string, number>> = {};
     const previousPayloads: Record<string, RoundDecisions> = {};
@@ -415,7 +425,11 @@ async function resolveGameRound(
           .select()
           .from(decisions)
           .where(eq(decisions.roundId, prevRound.id));
-        for (const d of prevDecisions) previousPayloads[d.teamId] = d.payload as RoundDecisions;
+        // Un tour clos n'a plus de brouillon (la clôture les remplace, plus bas) ;
+        // le filtre le garde vrai même pour une ligne d'avant.
+        for (const d of prevDecisions) {
+          if (d.status !== "draft") previousPayloads[d.teamId] = d.payload as RoundDecisions;
+        }
       }
     }
 
@@ -563,7 +577,22 @@ async function resolveGameRound(
       )
       .onConflictDoUpdate({
         target: [decisions.roundId, decisions.teamId],
-        set: { status: "locked" },
+        // Une ligne validée se verrouille, sans rien réécrire d'autre. Une ligne
+        // encore `draft` (le brouillon d'équipe) devient EXACTEMENT la ligne
+        // qu'une équipe sans décision aurait reçue : la reconduction, sa source,
+        // son statut, sans note, sans auteur, sans saisie.
+        set: {
+          status: sql`case when ${decisions.status} = 'draft' then excluded.status else 'locked' end`,
+          payload: sql`case when ${decisions.status} = 'draft' then excluded.payload else ${decisions.payload} end`,
+          decisionSource: sql`case when ${decisions.status} = 'draft' then excluded.decision_source else ${decisions.decisionSource} end`,
+          validatedAt: sql`case when ${decisions.status} = 'draft' then excluded.validated_at else ${decisions.validatedAt} end`,
+          justification: sql`case when ${decisions.status} = 'draft' then null else ${decisions.justification} end`,
+          forecast: sql`case when ${decisions.status} = 'draft' then null else ${decisions.forecast} end`,
+          validatedBy: sql`case when ${decisions.status} = 'draft' then null else ${decisions.validatedBy} end`,
+          modifiePar: sql`case when ${decisions.status} = 'draft' then null else ${decisions.modifiePar} end`,
+          modifieLe: sql`case when ${decisions.status} = 'draft' then null else ${decisions.modifieLe} end`,
+          saisie: sql`null`,
+        },
       });
 
     await db
