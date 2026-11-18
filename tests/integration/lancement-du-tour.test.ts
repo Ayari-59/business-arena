@@ -18,7 +18,7 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { games, rounds, users } from "@/db/schema";
+import { games, hintUsages, rounds, users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
   closeCurrentRound,
@@ -36,7 +36,7 @@ import { createGameCore } from "@/services/game-creation.service";
 // test par test sur le code d'avant, où la fonction n'existait pas.
 import * as resolution from "@/services/round-resolution.service";
 import type { RoundDecisions } from "@/engine/types";
-import { getTeamSituations, submitDiagnosis, submitQuiz } from "@/services/pedagogy.service";
+import { getTeamSituations, submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
 import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
@@ -247,6 +247,24 @@ describe("la situation du tour qui attend son lancement", () => {
         submitQuiz({ instanceId: s.instanceId, userId: alice, answers: reponses }),
       ).resolves.toBeTruthy();
     }
+  });
+
+  it("débloquer un indice est refusé avec le même message ; après le lancement, c'est accepté", async () => {
+    const { gameId, alice } = await classeNeuve();
+    await closeCurrentRound({ gameId, teacherId, expectedRound: 1 });
+    const s = await situationDuTour(gameId, alice);
+    const indicesPris = async () =>
+      (await db.select().from(hintUsages).where(eq(hintUsages.situationInstanceId, s.instanceId))).length;
+
+    await expect(unlockHint({ instanceId: s.instanceId, userId: alice })).rejects.toThrow(
+      "Le tour 2 n'est pas encore lancé : votre professeur l'ouvrira.",
+    );
+    // Rien n'a été écrit : aucun indice débloqué.
+    expect(await indicesPris()).toBe(0);
+
+    await lancer({ gameId, teacherId, expectedRound: 2 });
+    await expect(unlockHint({ instanceId: s.instanceId, userId: alice })).resolves.toMatchObject({ level: 1 });
+    expect(await indicesPris()).toBe(1);
   });
 
   it("une date à venir : le refus dit la date, comme la validation", async () => {

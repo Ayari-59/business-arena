@@ -117,8 +117,8 @@ async function loadInstanceForUser(instanceId: string, userId: string) {
 }
 
 /**
- * LE TOUR ATTEND SON LANCEMENT : sa situation ne se rend pas encore. L'arène la cache
- * pendant l'attente ; une page restée ouverte ou un formulaire forgé reçoivent ici le
+ * LE TOUR ATTEND SON LANCEMENT : sa situation ne se rend pas encore (diagnostic, QCM)
+ * et ses indices ne se débloquent pas. L'arène la cache pendant l'attente ; une page restée ouverte ou un formulaire forgé reçoivent ici le
  * refus de la validation (`services/play-lock.ts`).
  */
 async function refuserSiLeTourAttend(
@@ -168,6 +168,8 @@ export async function unlockHint(args: {
 }): Promise<{ level: number; text: string }> {
   const { instance, situationRow, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
+  // Un indice se lit sur la situation : elle reste cachée tant que son tour attend.
+  await refuserSiLeTourAttend(instance, game);
   const levels = await unlockedLevels(args.instanceId);
   const next = nextUnlockableLevel(levels);
   if (next === null) throw new Error("Tous les indices sont déjà débloqués");
