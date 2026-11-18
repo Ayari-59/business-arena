@@ -34,6 +34,7 @@ import type { ConsequenceFact, InterpretationFact } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
+import { refusDuTourEnAttente } from "@/services/play-lock";
 import type { CompanyRoundResult } from "@/engine/types";
 /**
  * Moteur pédagogique côté services — barrel de compatibilité.
@@ -115,6 +116,22 @@ async function loadInstanceForUser(instanceId: string, userId: string) {
   };
 }
 
+/**
+ * LE TOUR ATTEND SON LANCEMENT : sa situation ne se rend pas encore. L'arène la cache
+ * pendant l'attente ; une page restée ouverte ou un formulaire forgé reçoivent ici le
+ * refus de la validation (`services/play-lock.ts`).
+ */
+async function refuserSiLeTourAttend(
+  instance: typeof situationInstances.$inferSelect,
+  game: typeof games.$inferSelect | undefined,
+): Promise<void> {
+  if (!game) return;
+  const tour = (await db.select().from(rounds).where(eq(rounds.id, instance.roundId)))[0];
+  if (!tour) return;
+  const refus = await refusDuTourEnAttente(game, tour);
+  if (refus) throw new Error(refus);
+}
+
 async function unlockedLevels(instanceId: string): Promise<number[]> {
   const rows = await db
     .select({ level: hintUsages.level })
@@ -187,6 +204,7 @@ export async function submitDiagnosis(args: {
 }): Promise<{ score: number }> {
   const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
+  await refuserSiLeTourAttend(instance, game);
   // Noté sur les causes réellement proposées à ce niveau (config/analyse-par-niveau).
   const score = evaluateDiagnosis(
     args.selectedOptionIds,
@@ -220,6 +238,7 @@ export async function submitQuiz(args: {
   const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
   if (instance.quiz) throw new Error("Le QCM de cette situation est déjà validé");
+  await refuserSiLeTourAttend(instance, game);
   // L'enseignant a retiré les QCM de cette partie : le formulaire n'est plus
   // servi, et une soumission forgée ne doit pas non plus être acceptée.
   // Les questions réellement POSÉES à ce niveau : celles que le joueur a vues, pas la version canonique.
