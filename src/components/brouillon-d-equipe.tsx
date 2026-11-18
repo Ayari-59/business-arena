@@ -58,6 +58,16 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
   const enPause = useRef(false);
   const actifRef = useRef(actif);
   const baseRef = useRef<string | null>(null);
+  // Une saisie que le serveur n'a pas encore reçue. Gardée en mémoire ET sur l'appareil :
+  // sans stockage (navigation privée), l'enregistrement pour l'équipe part quand même.
+  const enAttente = useRef(false);
+  const marquer = useCallback(
+    (attente: boolean) => {
+      enAttente.current = attente;
+      ecrireEtatLocal(cle, { base: baseRef.current, enAttente: attente });
+    },
+    [cle],
+  );
   const lire = useRef(lireLaSaisie);
   useEffect(() => {
     actifRef.current = actif;
@@ -74,7 +84,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
       encore.current = true;
       return;
     }
-    if (!lireEtatLocal(cle).enAttente) return;
+    if (!enAttente.current) return;
     const saisie = lire.current();
     if (!saisie) return;
     enCours.current = true;
@@ -83,7 +93,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
       const r = await enregistrerLeBrouillonAction(gameId, saisie);
       if (r.ok) {
         baseRef.current = r.etat.quand;
-        ecrireEtatLocal(cle, { base: r.etat.quand, enAttente: encore.current });
+        marquer(encore.current);
         setDernier(r.etat);
         setErreur(null);
       } else {
@@ -95,7 +105,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
       enCours.current = false;
     }
     if (encore.current) minuteur.current = setTimeout(() => relancer.current(), DELAI_D_ENREGISTREMENT_MS);
-  }, [cle, gameId]);
+  }, [gameId, marquer]);
   useEffect(() => {
     relancer.current = () => void enregistrer();
   }, [enregistrer]);
@@ -103,7 +113,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
   /** Une frappe : le brouillon local est déjà écrit ; le serveur suivra, regroupé. */
   const noterUnChangement = useCallback(() => {
     if (!actifRef.current) return;
-    ecrireEtatLocal(cle, { base: baseRef.current, enAttente: true });
+    marquer(true);
     if (enCours.current) {
       encore.current = true;
       return;
@@ -111,7 +121,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
     if (enPause.current) return;
     if (minuteur.current) clearTimeout(minuteur.current);
     minuteur.current = setTimeout(() => void enregistrer(), DELAI_D_ENREGISTREMENT_MS);
-  }, [cle, enregistrer]);
+  }, [enregistrer, marquer]);
 
   /**
    * À L'OUVERTURE : quelle saisie remettre dans la feuille, du brouillon local ou
@@ -125,18 +135,18 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
       if (initial && !localPlusRecent) {
         baseRef.current = initial.quand;
         ecrireBrouillon(cle, initial.saisie);
-        ecrireEtatLocal(cle, { base: initial.quand, enAttente: false });
+        marquer(false);
         return initial.saisie;
       }
       baseRef.current = initial?.quand ?? etat.base;
       // Une saisie restée sur l'appareil (le serveur ne l'a pas reçue) part tout de suite.
       if (local && (etat.enAttente || !initial)) {
-        ecrireEtatLocal(cle, { base: baseRef.current, enAttente: true });
+        marquer(true);
         minuteur.current = setTimeout(() => void enregistrer(), 0);
       }
       return local;
     },
-    [actif, cle, initial, enregistrer],
+    [actif, cle, initial, enregistrer, marquer],
   );
 
   // LE SONDAGE DE L'ARÈNE : un enregistrement plus récent que celui que la feuille
@@ -190,7 +200,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
     }
     baseRef.current = lu.quand;
     ecrireBrouillon(cle, lu.saisie);
-    ecrireEtatLocal(cle, { base: lu.quand, enAttente: false });
+    marquer(false);
     appliquer(lu.saisie);
     setDernier(lu);
     setErreur(null);
@@ -200,7 +210,7 @@ export function useBrouillonDEquipe({ gameId, cle, actif, initial, lireLaSaisie,
     enPause.current = false;
     setBandeau(null);
     // Le dernier enregistrement gagne : celui-ci.
-    ecrireEtatLocal(cle, { base: baseRef.current, enAttente: true });
+    marquer(true);
     void enregistrer();
   };
 
