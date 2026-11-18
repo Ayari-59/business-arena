@@ -120,6 +120,7 @@ export const GUIDE_ETUDIANT: Guide = {
         "Commencez par vos ventes estimées, votre prix et votre plan de production.",
         "Le « Résultat estimé », en haut de la feuille, se met à jour à chaque changement : discutez-en en équipe avant d'aller plus loin.",
         "Passez d'une rubrique à l'autre avec « Suivant ».",
+        "Votre saisie s'enregistre toute seule pour l'équipe : un coéquipier qui ouvre la feuille la retrouve, avec le prénom de qui l'a modifiée et l'heure. Si un bandeau dit qu'un coéquipier vient de la modifier, cliquez sur « Recharger » pour voir sa version.",
       ],
       voir: "Chaque champ est prérempli par une proposition à ajuster. Vos décisions restent modifiables jusqu'à la clôture du tour.",
       erreur:

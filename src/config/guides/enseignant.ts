@@ -159,6 +159,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
       faire: [
         "Laissez les équipes lire la situation, l'analyser et décider. Le tableau des équipes dit en direct qui a validé.",
         "Avant de clore, lisez sous chaque équipe ses décisions et ses repères : un prix sous le coût variable, une perte ou un découvert estimés, une production très au-dessus des ventes estimées. Vous seul les voyez, jamais le mur ni les élèves.",
+        "Une équipe qui n'a pas encore validé montre son brouillon, marqué « pas encore validé », avec qui l'a modifié et à quelle heure. À la clôture, un brouillon ne compte jamais : l'équipe est reconduite, comme une équipe sans décision.",
         "Si vous le souhaitez, distribuez un courrier : choisissez le destinataire puis le pli, et cliquez sur « Distribuer le courrier ». Il est annoncé aux équipes et s'applique à la clôture.",
         "Quand les équipes ont validé, cliquez sur le bouton qui clôt le tour en cours, puis confirmez avec « Clore et simuler ».",
       ],

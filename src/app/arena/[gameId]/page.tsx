@@ -10,6 +10,7 @@ import { MenuDeLArene } from "@/components/menu-de-l-arene";
 import { notFound } from "next/navigation";
 import { Suspense, cache } from "react";
 import { getGuestUserId } from "@/lib/guest";
+import { lireLeBrouillon } from "@/services/brouillon-equipe.service";
 import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
 import { estUnTelephone } from "@/lib/appareil";
@@ -193,6 +194,13 @@ async function ArenaPage({
         })
       : null;
   const statutSituations = statutDesSituations(situations.current);
+  // LE BROUILLON DE L'ÉQUIPE (`config/brouillon-d-equipe.ts`) : la saisie qu'un
+  // coéquipier, ou cet élève sur un autre appareil, a enregistrée pour le tour en
+  // cours. Lu pour la seule équipe de l'élève ; rien en solo ni après la validation.
+  const brouillonDeLEquipe =
+    view.kind === "class" && view.status !== "finished" && view.pendingDecisions === null
+      ? await lireLeBrouillon({ gameId, userId }).catch(() => null)
+      : null;
 
   // Assistant IA (facultatif) : coach de tour (solo) et tuteur. Disponibles
   // seulement si le compte y a droit (mur freemium), la surface est allumée en
@@ -1416,6 +1424,7 @@ async function ArenaPage({
       decisionsDuTourPasse={view.lastDecisions}
       kind={view.kind}
       alreadySubmitted={view.pendingDecisions !== null}
+      brouillonDeLEquipe={brouillonDeLEquipe}
       insuranceOffer={
         view.insuranceOffer
           ? {

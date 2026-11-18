@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-import { prochainDelai, CADENCE_DE_SEANCE_MS } from "@/lib/cadence-du-sondage";
+import { prochainDelai, CADENCE_DE_SEANCE_MS, EVENEMENT_DU_SONDAGE } from "@/lib/cadence-du-sondage";
 
 // LA CADENCE vit dans `lib/cadence-du-sondage.ts` : 12 s en séance, sans recul,
 // tant qu'une page attend une validation, une clôture ou une révélation ; le
@@ -94,6 +94,12 @@ export function RoundStatusPoller({
         if (res.ok) {
           const data = await res.json();
           const prev = stateRef.current;
+          // LE BROUILLON D'ÉQUIPE (`components/brouillon-d-equipe.tsx`) : la feuille
+          // ouverte écoute ce sondage pour savoir si un coéquipier a enregistré. Ce
+          // n'est pas un changement de la page : rien ne se recharge pour lui.
+          if (data.brouillon !== undefined) {
+            window.dispatchEvent(new CustomEvent(EVENEMENT_DU_SONDAGE, { detail: data.brouillon }));
+          }
 
           if (data.currentRound !== prev.currentRound) changed = true;
           if (data.roundStatus !== prev.roundStatus) changed = true;

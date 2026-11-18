@@ -269,6 +269,16 @@ export const decisions = pgTable(
     validatedBy: uuid("validated_by").references(() => users.id, {
       onDelete: "set null",
     }),
+    /**
+     * LE BROUILLON D'ÉQUIPE (migration 0060). Tant que la ligne est `draft`, la
+     * feuille de décision y enregistre la saisie de l'équipe, champ par champ
+     * (`config/brouillon-d-equipe.ts`), avec qui l'a modifiée et quand : les
+     * coéquipiers la retrouvent, d'un appareil à l'autre. La validation la
+     * vide ; la clôture ne la joue jamais (`round-resolution.service.ts`).
+     */
+    saisie: jsonb("saisie").$type<Record<string, string>>(),
+    modifiePar: uuid("modifie_par").references(() => users.id, { onDelete: "set null" }),
+    modifieLe: timestamp("modifie_le", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [uniqueIndex("decisions_round_team_uq").on(t.roundId, t.teamId)],

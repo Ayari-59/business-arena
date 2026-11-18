@@ -1,5 +1,6 @@
 import { Repliable } from "@/components/repliable";
 import { compter } from "@/lib/format";
+import { mentionDuBrouillon } from "@/config/brouillon-d-equipe";
 import type { DecisionLue, DecisionsAuPilotage } from "@/config/decisions-au-pilotage";
 
 /**
@@ -17,8 +18,14 @@ export function DecisionsDeLEquipe({ decisions }: { decisions: DecisionsAuPilota
   return (
     <div className="space-y-2" data-decisions-de-l-equipe={decisions.etat}>
       {decisions.etat === "brouillon" ? (
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Brouillon · pas encore validé
+        <p className="text-xs text-slate-400">
+          <span className="font-semibold uppercase tracking-wide">Brouillon · pas encore validé</span>
+          {decisions.modification ? (
+            <span data-brouillon-modifie>
+              {" · "}
+              {mentionDuBrouillon(decisions.modification.nom, new Date(decisions.modification.quand))}
+            </span>
+          ) : null}
         </p>
       ) : null}
       <Lignes lignes={decisions.principales} />

@@ -138,6 +138,10 @@ const LECTEURS: Record<string, { portee: Portee; raison: string }> = {
     portee: "transversal",
     raison: "les comptes de l'administration, par établissement",
   },
+  "src/services/brouillon-equipe.service.ts": {
+    portee: "une partie",
+    raison: "le brouillon d'une équipe pour le tour courant d'UNE partie",
+  },
   "src/services/affectation.service.ts": { portee: "une partie", raison: "la composition des équipes d'une partie" },
   "src/services/cockpit.service.ts": { portee: "une partie", raison: "le cockpit d'une partie" },
   "src/services/competition.service.ts": {
