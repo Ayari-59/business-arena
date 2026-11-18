@@ -1598,8 +1598,11 @@ async function ArenaPage({
       {/* ── L'ARDOISE DU DIRIGEANT ──
           En tête, à chaque étape du tour ; elle se replie en une ligne collée
           sous la barre du haut dès qu'on défile. La partie close a son ardoise
-          de clôture, plus bas. */}
-      {finished ? null : (
+          de clôture, plus bas. PENDANT L'ATTENTE DU LANCEMENT, ni l'ardoise ni la
+          bande de marché : l'élève lit le message, puis les résultats du tour clos,
+          qui portent les mêmes chiffres (CA, résultat, trésorerie, rang, IPG). Au
+          lancement, le sondage recharge la page et elles reviennent. */}
+      {finished || tourEnAttente ? null : (
         <>
           {tableauNode}
           <ArdoiseRepliee>
@@ -1634,8 +1637,9 @@ async function ArenaPage({
       {/* La partie close n'a plus de tour à décider : l'alerte se tait. */}
       {telephone || finished ? null : alerteTresorerieNode}
 
-      {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
-      {!telephone && !finished && courriersAnnonces.length > 0 ? (
+      {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ──
+          Elles annoncent le tour suivant : rien pendant l'attente du lancement. */}
+      {!telephone && !finished && !tourEnAttente && courriersAnnonces.length > 0 ? (
         <div>
           <BandeauCourriers courriers={courriersAnnonces} jours={view.roundDays} />
         </div>

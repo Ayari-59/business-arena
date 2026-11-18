@@ -14,6 +14,12 @@ import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
  * ordinateur (1280) comme sur téléphone (390, parcours en cartes). L'enseignant lance :
  * le sondage de round-status recharge les deux pages, et tout revient.
  *
+ * Le haut de l'arène se tait aussi pendant l'attente : ni le bandeau des courriers
+ * annoncés (le professeur en distribue un pendant l'attente), ni la bande de marché,
+ * ni l'ardoise du dirigeant (déployée ou repliée). Tous trois reviennent au lancement.
+ * Sur téléphone, seule l'ardoise est servie en haut (le bandeau et la bande ne le sont
+ * jamais : le parcours en cartes porte le courrier).
+ *
  * Captures (facultatives) : `E2E_CAPTURES=<dossier>` écrit l'arène pendant l'attente,
  * puis après le lancement, à 1280 et à 390.
  */
@@ -70,6 +76,18 @@ async function leTourSuivant(page: Page) {
     parcours: await page.getByRole("button", { name: /^(Décider|Analyser|Continuer)/ }).count(),
   };
 }
+
+/** Le haut de l'arène : le courrier annoncé, la bande de marché, l'ardoise. */
+async function leHautDeLArene(page: Page) {
+  return {
+    courriers: await page.locator('[aria-label="Courrier distribué pour ce tour"]').count(),
+    marche: await page.locator('section[aria-label="Le marché ce tour"]').count(),
+    ardoise: await page.locator("#ardoise-du-dirigeant").count(),
+    ardoiseRepliee: await page.locator("[data-ardoise-repliee]").count(),
+  };
+}
+
+const RIEN_EN_HAUT = { courriers: 0, marche: 0, ardoise: 0, ardoiseRepliee: 0 };
 
 /** Le message d'attente, espaces insécables normalisés comme `texte`. */
 async function messageDAttente(page: Page): Promise<string> {
@@ -136,13 +154,19 @@ describe("pendant l'attente du lancement, le tour suivant se cache", () => {
     await prof.locator("[data-podium-a-reveler] button").click({ timeout: 180_000 });
     await prof.waitForSelector("[data-lancement-du-tour]", { timeout: 120_000 });
     expect(await prof.getByRole("button", { name: "Lancer le tour 2", exact: true }).count()).toBe(1);
+
+    // Pendant l'attente, le professeur distribue un courrier au marché pour le tour 2.
+    await prof.getByRole("button", { name: "Distribuer le courrier", exact: true }).click({ timeout: 30_000 });
+    await prof.waitForSelector("text=Courriers distribués ce tour", { timeout: 60_000 });
   }, 300_000);
 
   it("sur ordinateur (1280) : le message et les résultats du tour 1, rien du tour 2", async () => {
     await aller(ordinateur, urlEleve);
     expect(await messageDAttente(ordinateur)).toContain(MESSAGE);
     expect(await leTourSuivant(ordinateur)).toEqual(RIEN);
-    // Les résultats du tour clos, dessous, comme avant.
+    // Ni courrier annoncé, ni bande de marché, ni ardoise en haut.
+    expect(await leHautDeLArene(ordinateur)).toEqual(RIEN_EN_HAUT);
+    // Les résultats du tour clos, dessous, comme avant : le rang du tour clos y est.
     expect(await ordinateur.locator("#dernier-resultat").count()).toBe(1);
     await capturer(ordinateur, "arene-en-attente");
   }, 120_000);
@@ -151,6 +175,7 @@ describe("pendant l'attente du lancement, le tour suivant se cache", () => {
     await aller(telephone, urlEleve);
     expect(await messageDAttente(telephone)).toContain(MESSAGE);
     expect(await leTourSuivant(telephone)).toEqual(RIEN);
+    expect(await leHautDeLArene(telephone)).toEqual(RIEN_EN_HAUT);
     const resultats = telephone.locator("[data-resultats-en-attente]");
     expect(await resultats.count()).toBe(1);
     expect(await resultats.innerText()).toContain("Ce que ça a donné");
@@ -174,12 +199,16 @@ describe("pendant l'attente du lancement, le tour suivant se cache", () => {
     // L'onglet « Décider » porte la feuille du tour 2.
     expect(await ordinateur.getByRole("tab", { name: /Décider/ }).count()).toBe(1);
     expect(await texte(ordinateur)).not.toContain(MESSAGE);
+    // Le haut de l'arène revient : le courrier annoncé, la bande de marché, l'ardoise.
+    expect(await leHautDeLArene(ordinateur)).toEqual({ courriers: 1, marche: 1, ardoise: 1, ardoiseRepliee: 1 });
     await capturer(ordinateur, "arene-apres-le-lancement");
 
     await telephone.bringToFront();
     await telephone.waitForSelector("[data-tour-en-attente]", { state: "detached", timeout: 90_000 });
     expect(await telephone.locator("[data-resultats-en-attente]").count()).toBe(0);
     expect(await telephone.getByRole("button", { name: /^(Décider|Analyser|Continuer)/ }).count()).toBeGreaterThan(0);
+    // L'ardoise revient ; le bandeau et la bande ne sont jamais servis sur téléphone.
+    expect(await leHautDeLArene(telephone)).toEqual({ courriers: 0, marche: 0, ardoise: 1, ardoiseRepliee: 1 });
     await capturer(telephone, "arene-apres-le-lancement");
 
     // Et la feuille du tour 2 se valide.
