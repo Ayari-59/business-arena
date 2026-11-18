@@ -2058,9 +2058,8 @@ async function ArenaPage({
               </div>
             ))}
           </section>
-        ) : telephone && !finished && !essaiTermine ? null : (
-          toursPasses
-        )}
+        ) : null}
+        {telephone && !finished && !essaiTermine ? null : toursPasses}
       </div>
 
       {/*
