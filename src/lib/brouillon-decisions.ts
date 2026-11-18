@@ -11,9 +11,11 @@
  * `FormData` produit — donc exactement ce que le serveur recevrait. Une case à
  * cocher décochée n'y figure pas, comme dans un envoi réel.
  *
- * Il est LOCAL au navigateur : rien ne part au serveur, rien n'est partagé
- * entre appareils, et il ne survit pas à un nettoyage du stockage. Ce n'est pas
- * une sauvegarde, c'est un filet.
+ * Il est LOCAL au navigateur, et il ne survit pas à un nettoyage du stockage.
+ * Ce n'est pas une sauvegarde, c'est un filet. En partie de classe, la feuille
+ * enregistre AUSSI la saisie sur le serveur, pour toute l'équipe
+ * (`config/brouillon-d-equipe.ts`) : le filet local garde ce que le serveur n'a
+ * pas encore reçu, et le serveur fait foi dès qu'il est plus récent.
  *
  * Tout passe par un try/catch : en navigation privée, avec un stockage plein ou
  * bloqué, `localStorage` jette. On perd alors le filet, jamais le formulaire.
@@ -57,6 +59,41 @@ export function ecrireBrouillon(cle: string, b: Brouillon): void {
 export function effacerBrouillon(cle: string): void {
   try {
     window.localStorage.removeItem(cle);
+    window.localStorage.removeItem(cleDeLEtat(cle));
+  } catch {
+    /* idem */
+  }
+}
+
+/**
+ * OÙ EN EST LE BROUILLON LOCAL FACE À CELUI DE L'ÉQUIPE, sur le serveur
+ * (`config/brouillon-d-equipe.ts`) : la version du serveur dont il part
+ * (`base`, l'heure de cet enregistrement), et s'il porte une saisie que le
+ * serveur n'a pas encore (`enAttente`). C'est ce qui dit, à l'ouverture de la
+ * feuille, lequel des deux fait foi, sans comparer l'horloge de l'appareil à
+ * celle du serveur.
+ */
+export interface EtatLocal {
+  base: string | null;
+  enAttente: boolean;
+}
+
+const cleDeLEtat = (cle: string) => `${cle}:serveur`;
+
+export function lireEtatLocal(cle: string): EtatLocal {
+  try {
+    const lu: unknown = JSON.parse(window.localStorage.getItem(cleDeLEtat(cle)) ?? "null");
+    if (typeof lu !== "object" || lu === null) return { base: null, enAttente: false };
+    const e = lu as { base?: unknown; enAttente?: unknown };
+    return { base: typeof e.base === "string" ? e.base : null, enAttente: e.enAttente === true };
+  } catch {
+    return { base: null, enAttente: false };
+  }
+}
+
+export function ecrireEtatLocal(cle: string, etat: EtatLocal): void {
+  try {
+    window.localStorage.setItem(cleDeLEtat(cle), JSON.stringify(etat));
   } catch {
     /* idem */
   }
@@ -73,7 +110,9 @@ export function effacerBrouillonsAnterieurs(gameId: string, cleAGarder: string):
     const aSupprimer: string[] = [];
     for (let i = 0; i < window.localStorage.length; i += 1) {
       const cle = window.localStorage.key(i);
-      if (cle && cle.startsWith(prefixeDuJeu) && cle !== cleAGarder) aSupprimer.push(cle);
+      if (cle && cle.startsWith(prefixeDuJeu) && cle !== cleAGarder && cle !== cleDeLEtat(cleAGarder)) {
+        aSupprimer.push(cle);
+      }
     }
     for (const cle of aSupprimer) window.localStorage.removeItem(cle);
   } catch {

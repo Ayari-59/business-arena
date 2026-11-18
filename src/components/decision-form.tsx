@@ -137,6 +137,8 @@ import {
   lireBrouillon,
   type Brouillon,
 } from "@/lib/brouillon-decisions";
+import type { BrouillonServi } from "@/config/brouillon-d-equipe";
+import { useBrouillonDEquipe } from "@/components/brouillon-d-equipe";
 
 const initialState: PlayRoundState = { error: null };
 
@@ -2652,6 +2654,7 @@ export function DecisionForm({
   proposed,
   kind,
   alreadySubmitted,
+  brouillonDeLEquipe = null,
   valideAuTourPasse = null,
   decisionsDuTourPasse = null,
   telephone = false,
@@ -2779,6 +2782,12 @@ export function DecisionForm({
   decisionsDuTourPasse?: RoundDecisions | null;
   kind: "solo" | "class";
   alreadySubmitted: boolean;
+  /**
+   * LE BROUILLON DE L'ÉQUIPE, enregistré sur le serveur (`config/brouillon-d-equipe.ts`) :
+   * la saisie d'un coéquipier, ou de cet élève sur un autre appareil. `null` sans
+   * brouillon, en solo, ou une fois les décisions validées.
+   */
+  brouillonDeLEquipe?: BrouillonServi | null;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer?: { premium: number; coveredLabels: string[] } | null;
   /** Décisions exposées au niveau de difficulté de la partie (doc 08 §2). */
@@ -4247,32 +4256,49 @@ export function DecisionForm({
   const cle = cleBrouillon(gameId, roundIndex);
   const brouillonRestaure = useRef(false);
 
-  const sauverBrouillon = () => {
+  /** La saisie de la feuille, telle qu'un envoi la porterait. */
+  const saisieDeLaFeuille = (): Brouillon | null => {
     const form = formRef.current;
-    if (!form || alreadySubmitted) return;
+    if (!form) return null;
     const b: Brouillon = {};
     for (const [nom, valeur] of new FormData(form).entries()) {
       if (typeof valeur === "string") b[nom] = valeur;
     }
-    ecrireBrouillon(cle, b);
+    return b;
   };
 
-  // La restauration se fait APRÈS le montage, jamais pendant le rendu : le
-  // serveur ne voit pas `localStorage`, et lire le stockage au rendu ferait
-  // diverger le HTML hydraté de celui du serveur.
-  useEffect(() => {
-    if (brouillonRestaure.current) return;
-    brouillonRestaure.current = true;
-    // Un tour joué ne se rejoue pas : son brouillon n'a plus d'objet.
-    effacerBrouillonsAnterieurs(gameId, cle);
-    if (alreadySubmitted) {
-      effacerBrouillon(cle);
-      return;
-    }
-    const b = lireBrouillon(cle);
-    const form = formRef.current;
-    if (!b || !form) return;
+  const sauverBrouillon = () => {
+    if (alreadySubmitted) return;
+    const b = saisieDeLaFeuille();
+    if (!b) return;
+    ecrireBrouillon(cle, b);
+    // En classe, le brouillon de l'équipe suit, regroupé (`brouillon-d-equipe.tsx`).
+    if (!enApplication.current) equipe.noterUnChangement();
+  };
 
+  /** Remettre une saisie dans la feuille : à l'ouverture, et au « Recharger » du bandeau. */
+  const appliquerBrouillon = (b: Brouillon) => {
+    const form = formRef.current;
+    if (!form) return;
+    // Les valeurs remises passent par des événements `input` : ce ne sont pas des
+    // frappes, et le brouillon de l'équipe ne doit pas repartir sous un autre nom.
+    enApplication.current = true;
+    try {
+      remettreLesChamps(form, b);
+    } finally {
+      enApplication.current = false;
+    }
+    // Le parc machines ne passe pas par des champs nommés : ses quantités
+    // vivent dans un état React et ressortent en JSON caché. On les relit là.
+    setEquipBuyQty(quantitesDepuisJson(b.equipmentBuyJson));
+    setEquipSellQty(quantitesDepuisJson(b.equipmentSellJson));
+    const loues = quantitesDepuisJson(b.equipmentLeaseJson);
+    setEquipLeaseQty(loues);
+    setModesDAcquisition(Object.fromEntries(Object.keys(loues).map((code) => [code, "credit-bail" as const])));
+    setChoixDesContrats(choixDepuisJson(b.leaseDecisionsJson));
+  };
+  const enApplication = useRef(false);
+  const remettreLesChamps = (form: HTMLFormElement, b: Brouillon) => {
     for (const champ of Array.from(form.elements)) {
       if (
         !(champ instanceof HTMLInputElement) &&
@@ -4300,16 +4326,43 @@ export function DecisionForm({
       const valeur = b[nom];
       if (valeur !== undefined && valeur !== champ.value) poserValeur(champ, valeur);
     }
+  };
 
-    // Le parc machines ne passe pas par des champs nommés : ses quantités
-    // vivent dans un état React et ressortent en JSON caché. On les relit là.
-    setEquipBuyQty(quantitesDepuisJson(b.equipmentBuyJson));
-    setEquipSellQty(quantitesDepuisJson(b.equipmentSellJson));
-    const loues = quantitesDepuisJson(b.equipmentLeaseJson);
-    setEquipLeaseQty(loues);
-    setModesDAcquisition(Object.fromEntries(Object.keys(loues).map((code) => [code, "credit-bail" as const])));
-    setChoixDesContrats(choixDepuisJson(b.leaseDecisionsJson));
+  // LE BROUILLON DE L'ÉQUIPE, sur le serveur (`config/brouillon-d-equipe.ts`) :
+  // partie de classe, tour jouable, rien encore de validé.
+  const equipe = useBrouillonDEquipe({
+    gameId,
+    cle,
+    actif: kind === "class" && !alreadySubmitted && !verrou,
+    initial: brouillonDeLEquipe,
+    lireLaSaisie: saisieDeLaFeuille,
+    appliquer: appliquerBrouillon,
+  });
+
+  // La restauration se fait APRÈS le montage, jamais pendant le rendu : le
+  // serveur ne voit pas `localStorage`, et lire le stockage au rendu ferait
+  // diverger le HTML hydraté de celui du serveur.
+  useEffect(() => {
+    if (brouillonRestaure.current) return;
+    brouillonRestaure.current = true;
+    // Un tour joué ne se rejoue pas : son brouillon n'a plus d'objet.
+    effacerBrouillonsAnterieurs(gameId, cle);
+    if (alreadySubmitted) {
+      effacerBrouillon(cle);
+      return;
+    }
+    // Le brouillon local, ou celui de l'équipe quand le serveur est plus récent.
+    const b = equipe.choisirAuMontage(lireBrouillon(cle));
+    if (b) appliquerBrouillon(b);
+    // Une seule fois, au montage : `appliquerBrouillon` et `equipe` changent à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cle, gameId, alreadySubmitted, formRef]);
+
+  // À la sortie d'une étape (ou d'une carte), le brouillon de l'équipe part sans attendre.
+  const enregistrerLeBrouillonDEquipe = equipe.enregistrerMaintenant;
+  useEffect(() => {
+    void enregistrerLeBrouillonDEquipe();
+  }, [etape, carte, enregistrerLeBrouillonDEquipe]);
 
   // Le tour est parti : le filet n'a plus lieu d'être.
   useEffect(() => {
@@ -4520,6 +4573,9 @@ export function DecisionForm({
           }
         />
       ) : null}
+      {/* LE BROUILLON DE L'ÉQUIPE : qui l'a modifié et quand, ou le bandeau d'un
+          coéquipier qui vient d'enregistrer (`brouillon-d-equipe.tsx`). */}
+      {equipe.rendu}
       {/* LE TÉMOIN DE LA PROPOSITION (lot P4) : tant qu'il part, les ventes
           estimées sont celles que la feuille a proposées, pas celles de
           l'équipe, et la validation ne les garde pas. */}

@@ -46,6 +46,8 @@ import {
   type ErreurDeChamp,
 } from "@/config/refus-de-decision";
 import { productFieldName } from "@/config/decision-source";
+import type { BrouillonServi, EtatDuBrouillon } from "@/config/brouillon-d-equipe";
+import { enregistrerLeBrouillon, lireLeBrouillon } from "@/services/brouillon-equipe.service";
 
 export interface PlayRoundState {
   /** Le refus en une phrase (ou `null`). */
@@ -515,4 +517,38 @@ export async function choisirMonEquipeAction(
   }
   revalidatePath(`/arena/${gameId}`);
   return { error: null };
+}
+
+/**
+ * LE BROUILLON D'ÉQUIPE (`config/brouillon-d-equipe.ts`) : la feuille l'enregistre
+ * pendant la saisie, quelques secondes après la dernière frappe et à la sortie
+ * d'une étape. Un refus revient en une phrase ; la feuille garde alors son
+ * brouillon local, et rien n'est perdu. Rien n'est revalidé : la page ne se
+ * recharge pas pour un brouillon.
+ */
+export type EnregistrementDuBrouillon = { ok: true; etat: EtatDuBrouillon } | { ok: false; error: string };
+
+export async function enregistrerLeBrouillonAction(
+  gameId: string,
+  saisie: Record<string, string>,
+): Promise<EnregistrementDuBrouillon> {
+  const userId = await getGuestUserId();
+  if (!userId) return { ok: false, error: "Session expirée : relancez une partie depuis l'accueil." };
+  try {
+    return { ok: true, etat: await enregistrerLeBrouillon({ gameId, userId, saisie }) };
+  } catch (error) {
+    // Les refus propres au brouillon se disent tels quels ; les autres (tour
+    // clos, planning, lancement) dans les mots de la validation.
+    const propre = error instanceof Error && REFUS_DU_BROUILLON.test(error.message);
+    return { ok: false, error: propre ? (error as Error).message : messageDuRefusServeur(error) };
+  }
+}
+
+const REFUS_DU_BROUILLON = /^(Brouillon |Enregistrements trop rapprochés|Les décisions de l'équipe sont déjà validées|Le brouillon d'équipe)/;
+
+/** Relire le brouillon de l'équipe : le bouton « Recharger » du bandeau. */
+export async function lireLeBrouillonAction(gameId: string): Promise<BrouillonServi | null> {
+  const userId = await getGuestUserId();
+  if (!userId) return null;
+  return lireLeBrouillon({ gameId, userId });
 }

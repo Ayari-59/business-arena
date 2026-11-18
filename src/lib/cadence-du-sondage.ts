@@ -43,3 +43,11 @@ export function prochainDelai(p: {
 export function requetesParMinute(pages: number, cadenceMs = CADENCE_DE_SEANCE_MS): number {
   return Math.round(pages * (60_000 / cadenceMs) * 100) / 100;
 }
+
+/**
+ * L'ÉVÉNEMENT QUE LE SONDEUR ÉMET À CHAQUE SONDAGE DE L'ARÈNE, avec l'état du
+ * brouillon de l'équipe (`config/brouillon-d-equipe.ts`). La feuille de décision
+ * l'écoute : elle sait ainsi, toutes les `CADENCE_DE_SEANCE_MS` en séance, si un
+ * coéquipier a enregistré le brouillon.
+ */
+export const EVENEMENT_DU_SONDAGE = "sondage-du-brouillon";

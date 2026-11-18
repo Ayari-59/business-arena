@@ -1261,15 +1261,19 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   // Historique des ventes : les décisions de TOUS les tours joués, pour
   // remettre le prix pratiqué en face des volumes qu'il a produits. Sans le
   // prix, la série des ventes ne s'explique pas.
-  const playerDecisionRows = await db
-    .select()
-    .from(decisions)
-    .where(
-      and(
-        inArray(decisions.roundId, gameRounds.map((r) => r.id)),
-        eq(decisions.teamId, playerTeam.id),
-      ),
-    );
+  // Un brouillon d'équipe n'est pas une décision : il ne se lit pas ici
+  // (`services/brouillon-equipe.service.ts` le sert à la feuille).
+  const playerDecisionRows = (
+    await db
+      .select()
+      .from(decisions)
+      .where(
+        and(
+          inArray(decisions.roundId, gameRounds.map((r) => r.id)),
+          eq(decisions.teamId, playerTeam.id),
+        ),
+      )
+  ).filter((d) => d.status !== "draft");
   const priceByRound = new Map(
     playerDecisionRows.map((d) => [
       roundIndexById.get(d.roundId)!,

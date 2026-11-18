@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { games, rounds, players, teams, decisions } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { etatDuLancement, statutSonde } from "@/lib/lancement-du-tour";
+import { etatDuBrouillon } from "@/services/brouillon-equipe.service";
 
 export async function GET(
   _request: Request,
@@ -85,9 +86,22 @@ export async function GET(
     ).length;
   }
 
+  /*
+    LE BROUILLON DE L'ÉQUIPE DE L'ÉLÈVE (`config/brouillon-d-equipe.ts`) : son
+    heure et son auteur, JAMAIS son contenu, et seulement pour l'équipe de qui
+    sonde. La feuille ouverte compare l'heure à celle qu'elle connaît : un
+    coéquipier a enregistré, elle le dit par un bandeau, sans rien écraser.
+    Une requête de plus, seulement quand le tour est ouvert.
+  */
+  const brouillon =
+    roundId && row.roundStatus === "open"
+      ? await etatDuBrouillon({ roundId, teamId: membership.teamId, userId })
+      : null;
+
   return NextResponse.json(
     {
       currentRound: row.currentRound,
+      brouillon,
       // « attente » tant que le tour attend son professeur ou sa date : la page de
       // l'élève se recharge d'elle-même au lancement, comme à la clôture.
       roundStatus: statutSonde(

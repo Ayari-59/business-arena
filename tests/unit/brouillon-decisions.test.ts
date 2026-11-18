@@ -6,8 +6,11 @@ import {
   ecrireBrouillon,
   effacerBrouillon,
   effacerBrouillonsAnterieurs,
+  ecrireEtatLocal,
   lireBrouillon,
+  lireEtatLocal,
 } from "@/lib/brouillon-decisions";
+import { bandeauDuBrouillon, mentionDuBrouillon } from "@/config/brouillon-d-equipe";
 
 /**
  * LE FILET SOUS LE FORMULAIRE DE DÉCISIONS.
@@ -131,6 +134,40 @@ describe("le ménage entre tours", () => {
     expect(lireBrouillon(cleBrouillon("p1", 1))).toBeNull();
     expect(lireBrouillon(tour2)).toEqual({ price: "59" });
     expect(lireBrouillon(cleBrouillon("p2", 1))).toEqual({ price: "70" });
+  });
+});
+
+describe("l'état face au brouillon de l'équipe (serveur)", () => {
+  beforeEach(() => poser(stockageEnMemoire()));
+
+  it("se relit, et vaut « rien en attente » quand il manque ou est abîmé", () => {
+    const cle = cleBrouillon("p1", 2);
+    expect(lireEtatLocal(cle)).toEqual({ base: null, enAttente: false });
+    ecrireEtatLocal(cle, { base: "2026-11-18T10:00:00.000Z", enAttente: true });
+    expect(lireEtatLocal(cle)).toEqual({ base: "2026-11-18T10:00:00.000Z", enAttente: true });
+    window.localStorage.setItem(`${cle}:serveur`, "{abîmé");
+    expect(lireEtatLocal(cle)).toEqual({ base: null, enAttente: false });
+  });
+
+  it("le ménage garde l'état du tour en cours, et l'effacement l'emporte avec le brouillon", () => {
+    const tour1 = cleBrouillon("p1", 1);
+    const tour2 = cleBrouillon("p1", 2);
+    ecrireEtatLocal(tour1, { base: null, enAttente: true });
+    ecrireBrouillon(tour2, { price: "59" });
+    ecrireEtatLocal(tour2, { base: "x", enAttente: true });
+    effacerBrouillonsAnterieurs("p1", tour2);
+    expect(lireEtatLocal(tour1)).toEqual({ base: null, enAttente: false });
+    expect(lireEtatLocal(tour2)).toEqual({ base: "x", enAttente: true });
+    effacerBrouillon(tour2);
+    expect(lireEtatLocal(tour2)).toEqual({ base: null, enAttente: false });
+  });
+
+  it("dit qui a modifié et à quelle heure, sans tiret au milieu", () => {
+    const quand = new Date("2026-11-18T13:32:00.000Z");
+    expect(mentionDuBrouillon("Léa", quand)).toBe("Modifié par Léa à 14:32");
+    expect(mentionDuBrouillon("Léa", quand, true)).toBe("Modifié par vous à 14:32");
+    expect(mentionDuBrouillon(null, quand)).toBe("Modifié à 14:32");
+    expect(bandeauDuBrouillon("Bruno", quand)).toBe("Brouillon modifié par Bruno à 14:32.");
   });
 });
 

@@ -84,3 +84,52 @@ describe("les décisions d'une équipe restent au pilotage", () => {
     expect(pilotage).toMatch(/<DecisionsDeLEquipe decisions=\{t\.decisionsAuPilotage\}/);
   });
 });
+
+/**
+ * LE BROUILLON D'ÉQUIPE (`config/brouillon-d-equipe.ts`) suit la même frontière. Sa SAISIE ne
+ * se lit que par le service, pour un membre de l'équipe : la page de l'arène (la feuille de
+ * l'élève), l'action « Recharger » et le sondage de l'arène, qui n'en rend que l'heure et
+ * l'auteur. Au pilotage, l'enseignant le voit par la ligne de décision ci-dessus. Le mur et
+ * les autres pages n'y touchent jamais.
+ */
+const SERVICE_DU_BROUILLON = /from "@\/services\/brouillon-equipe\.service"/;
+const LECTEURS_DU_BROUILLON = new Set([
+  "src/app/arena/[gameId]/page.tsx",
+  "src/app/arena/[gameId]/actions.ts",
+  "src/app/api/games/[gameId]/round-status/route.ts",
+]);
+
+describe("le brouillon d'une équipe reste à l'équipe et à son enseignant", () => {
+  it("seules la feuille de l'élève, son action et son sondage importent le service du brouillon", () => {
+    const fautifs = tous.filter(
+      (f) =>
+        f !== "src/services/brouillon-equipe.service.ts" &&
+        !LECTEURS_DU_BROUILLON.has(f) &&
+        SERVICE_DU_BROUILLON.test(readFileSync(join(RACINE, f), "utf8")),
+    );
+    expect(fautifs, "ces fichiers lisent le brouillon d'une équipe").toEqual([]);
+  });
+
+  it("le sondage de l'arène n'en rend que l'heure et l'auteur, jamais la saisie", () => {
+    const sondage = readFileSync(join(RACINE, "src/app/api/games/[gameId]/round-status/route.ts"), "utf8");
+    expect(sondage).toMatch(/\betatDuBrouillon\(/);
+    expect(sondage).not.toMatch(/\blireLeBrouillon\b/);
+    expect(sondage).not.toMatch(/\bsaisie\b/);
+  });
+
+  it("le service ne lit la saisie que pour l'équipe de l'élève", () => {
+    const service = readFileSync(join(RACINE, "src/services/brouillon-equipe.service.ts"), "utf8");
+    const lecture = service.slice(service.indexOf("export async function lireLeBrouillon"));
+    // L'équipe vient de `findUserTeam` (via `contexte`), jamais d'un paramètre reçu.
+    expect(lecture.slice(0, lecture.indexOf("\n}\n"))).toMatch(/eq\(decisions\.teamId, c\.team\.id\)/);
+    expect(lecture.slice(0, lecture.indexOf("\n}\n"))).not.toMatch(/teamId:/);
+  });
+
+  it("ni le mur projeté ni le pilotage n'importent le brouillon côté élève", () => {
+    for (const f of [...SURFACES_DE_LA_CLASSE, "src/app/teacher/games/[gameId]/page.tsx"]) {
+      const source = readFileSync(join(RACINE, f), "utf8");
+      expect(SERVICE_DU_BROUILLON.test(source), f).toBe(false);
+      expect(/components\/brouillon-d-equipe/.test(source), f).toBe(false);
+    }
+  });
+});
