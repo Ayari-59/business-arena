@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { bouton } from "@/components/bouton";
-import { LIBELLE_DU_DEVIS, OFFRES, OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { LIBELLE_DU_DEVIS, OFFRES_DE_L_ARENE, type NomsDesOffres } from "@/config/tarifs";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import type { LienDEssai } from "@/config/cours/chapitres-libres";
@@ -25,9 +25,12 @@ export function ChapitreReserve({
   reserve,
   essai,
   eleve,
+  noms,
   devis = lienDuDevisDuCours(),
 }: {
   titre: string;
+  /** Les noms des offres au catalogue en vigueur (services/catalogue.service.ts, `lireLesNoms`). */
+  noms: NomsDesOffres;
   /** « Ce chapitre est réservé » / « Ce cas pratique est réservé » (config/cours/situations.ts). */
   reserve: string;
   /** Le chapitre libre à proposer : celui du diplôme d'où l'on vient, sinon l'essai par défaut. */
@@ -79,15 +82,15 @@ export function ChapitreReserve({
         {reserve} aux établissements sous licence : le contenu s&apos;ouvre aux enseignants de
         l&apos;établissement, et à leurs élèves par leur classe. Chaque diplôme a son chapitre libre, qui s&apos;ouvre sans compte avec son cas
         pratique{essai.sigle ? ` : en ${essai.sigle}, « ${essai.titre} »` : `, comme « ${essai.titre} »`}.
-        Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, une classe ouvre les chapitres de son parcours ; avec
-        l&apos;offre {OFFRES.campus.nom}, tous les chapitres sont ouverts.
+        Avec l&apos;offre {noms.classe} ou {noms.programme}, une classe ouvre les chapitres de son parcours ; avec
+        l&apos;offre {noms.campus}, tous les chapitres sont ouverts.
       </p>
       {/* SORTIR DE L'IMPASSE (audit d'octobre 2026) : la page ne proposait que « Voir le cours ».
           Le cours et ses cas pratiques s'ouvrent avec une licence de l'arène, selon l'offre
           (cours.service, coursOuvert) : la page le dit, et mène aux offres et au devis. */}
       <p className="text-base text-slate-300" data-acces-du-cours="">
         Le cours et ses cas pratiques s&apos;ouvrent avec une licence de l&apos;arène : offre{" "}
-        {OFFRES_DE_L_ARENE.map((o) => OFFRES[o].nom).join(", ").replace(/, ([^,]*)$/, " ou $1")}.
+        {OFFRES_DE_L_ARENE.map((o) => noms[o]).join(", ").replace(/, ([^,]*)$/, " ou $1")}.
       </p>
       <p className="flex flex-wrap gap-3">
         <Link href={essai.href} className={bouton({ taille: "m" })}>

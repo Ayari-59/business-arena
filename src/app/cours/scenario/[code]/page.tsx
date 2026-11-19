@@ -2,6 +2,7 @@ import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { ScenarioAEmbranchements } from "@/components/cours/scenario";
 import { PiedDePage } from "@/components/pied-de-page";
 import { essaiPour } from "@/config/cours/chapitres-libres";
@@ -50,7 +51,7 @@ async function ScenarioPage({ params }: { params: Promise<{ code: string }> }) {
         : null;
     return (
       <>
-        <ChapitreReserve titre={scenario.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(scenario, { classe: classe?.parcours })} eleve={eleve} devis={lienDuDevisDuCours(parcoursDuContenu(scenario))} />
+        <ChapitreReserve titre={scenario.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(scenario, { classe: classe?.parcours })} eleve={eleve} noms={await lireLesNoms()} devis={lienDuDevisDuCours(parcoursDuContenu(scenario))} />
         <PiedDePage />
       </>
     );

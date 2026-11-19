@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Bande } from "@/components/bande";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { briques } from "@/config/articulation";
-import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { lesOffresDeLArene, type NomsDesOffres } from "@/config/tarifs";
 
 /**
  * LES QUATRE FORMATS, SUR L'ACCUEIL (audit d'octobre 2026).
@@ -18,7 +18,14 @@ import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
  * game. Tout le texte vient de config/articulation.ts, comme la carte du cours,
  * et les comptes se lisent dans les registres.
  */
-export function LesQuatreFormats({ contraste }: { contraste: boolean }) {
+export function LesQuatreFormats({
+  contraste,
+  noms,
+}: {
+  contraste: boolean;
+  /** Les noms des offres au catalogue en vigueur (services/catalogue.service.ts, `lireLesNoms`). */
+  noms: NomsDesOffres;
+}) {
   return (
     <Bande
       id="accueil.formats"
@@ -73,7 +80,7 @@ export function LesQuatreFormats({ contraste }: { contraste: boolean }) {
         <p className="text-sm leading-relaxed text-slate-400">
           Une partie de découverte en solo, sans compte ni installation. Pour vos classes :{" "}
           <Link href="/tarifs" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
-            {LES_OFFRES_DE_L_ARENE}
+            {lesOffresDeLArene(noms)}
           </Link>
           , sur devis.
         </p>

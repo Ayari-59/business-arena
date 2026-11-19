@@ -54,6 +54,14 @@ const PAGES_DU_CATALOGUE = [
   "/entreprises/episode",
   "/admin",
   "/admin/offres",
+  // LES PAGES QUI NOMMENT LES OFFRES (chantier « noms au catalogue », novembre 2026) : un nom
+  // changé ici se lit partout au prochain rendu. Les pages dynamiques relisent le catalogue
+  // par son étiquette ; celles-ci, statiques ou en ISR, se régénèrent.
+  "/",
+  "/animations",
+  "/cgv",
+  "/etablissement/sans-offre",
+  "/enseignants/episodes",
 ];
 
 function invaliderLeCatalogue(): void {

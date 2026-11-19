@@ -4,7 +4,8 @@ import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
-import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { lesOffresDeLArene } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 
 export const metadata: Metadata = {
   title: "Votre établissement",
@@ -17,7 +18,8 @@ export const metadata: Metadata = {
  * s'applique. Aucun compte n'est créé, rien n'est gardé : la page dit où en est
  * l'établissement et mène aux tarifs et à la demande de devis.
  */
-function SansOffrePage() {
+async function SansOffrePage() {
+  const noms = await lireLesNoms();
   return (
     <main id="main" className="pb-16" data-etablissement-sans-offre="">
       <EnTeteDePage
@@ -44,7 +46,7 @@ function SansOffrePage() {
             chapitre libre de leur diplôme
           </Link>
           , avec son cas pratique. Les parties de classe, où vos étudiants rejoignent votre partie par un code, demandent une
-          licence de l&apos;arène : elles sont incluses dans {LES_OFFRES_DE_L_ARENE}.{" "}
+          licence de l&apos;arène : elles sont incluses dans {lesOffresDeLArene(noms)}.{" "}
           <Link href="/teacher/login" prefetch={false} className={LIEN_A_L_ENCRE}>
             Espace enseignant
           </Link>

@@ -12,7 +12,8 @@ import { modelByCode } from "@/config/pedagogy/models";
 import { PrintButton } from "@/components/print-button";
 import { dossierOuvert } from "@/services/acces.service";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
-import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DE_L_ARENE, REFUS_DU_DOSSIER } from "@/config/tarifs";
+import { lienDuDevis, LIBELLE_DU_DEVIS, marqueDeLArene, refusDuDossier } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 
 /**
@@ -56,6 +57,7 @@ async function DossierEnseignantPage({
   const atelier = atelierByCode.get(code);
   if (!atelier) notFound();
   if (!(await dossierOuvert(session.userId))) {
+    const noms = await lireLesNoms();
     return (
       <main id="main" className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <p className="text-xs uppercase tracking-annonce text-slate-400">
@@ -72,8 +74,8 @@ async function DossierEnseignantPage({
           data-dossier-ferme=""
           className="mt-6 rounded-lg encadre-neutre px-4 py-3 text-base leading-relaxed text-slate-200"
         >
-          <strong className="font-semibold text-slate-50">{MARQUE_DE_L_ARENE}.</strong>{" "}
-          {REFUS_DU_DOSSIER} Le dossier de l&apos;élève reste public.{" "}
+          <strong className="font-semibold text-slate-50">{marqueDeLArene(noms)}.</strong>{" "}
+          {refusDuDossier(noms)} Le dossier de l&apos;élève reste public.{" "}
           <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
             {LIBELLE_DU_DEVIS}
           </Link>{" "}

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LesQuatreFormats } from "@/components/accueil-formats";
 import { getPlatformConfig } from "@/services/admin.service";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { etendueDesDecisions } from "@/config/decisions";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
@@ -276,7 +277,7 @@ function TroisEcrans() {
 }
 
 async function Home() {
-  const config = await getPlatformConfig();
+  const [config, noms] = await Promise.all([getPlatformConfig(), lireLesNoms()]);
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const c = (id: string) => contrasteDeLaBande(config.theme, id);
   // Le nombre de décisions se compte sur le registre des leviers : l'écrire
@@ -486,7 +487,7 @@ async function Home() {
         {/* ---------- Les quatre formats ---------- */}
         {/* Juste après la carte d'épisode et le classement de l'arène, posés côte à côte :
             la bande dit qu'il s'agit de deux formats parmi quatre, et que chacun se prend seul. */}
-        <LesQuatreFormats contraste={c("accueil.formats")} />
+        <LesQuatreFormats contraste={c("accueil.formats")} noms={noms} />
 
         {/* ---------- La boucle, et ce qu'on en retire ---------- */}
         {/*

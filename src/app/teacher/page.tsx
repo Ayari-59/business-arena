@@ -199,7 +199,7 @@ async function TeacherDashboard({
       <LigneDEtatDeLOffre etat={etat} niveauMaxGratuit={regle.niveauMaxAutres} noms={noms} />
 
       {!licence ? (
-        <AccueilDeLaDecouverte essai={essai} niveauMax={regle.active ? regle.niveauMaxAutres : NIVEAU_MAX} />
+        <AccueilDeLaDecouverte essai={essai} noms={noms} niveauMax={regle.active ? regle.niveauMaxAutres : NIVEAU_MAX} />
       ) : null}
 
       {echec ? (

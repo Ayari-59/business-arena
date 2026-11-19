@@ -2,8 +2,8 @@ import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { PageDesLycees } from "@/components/page-des-lycees";
 import { offresPourLesLycees } from "@/config/lycees";
-import { lireLeCatalogue } from "@/services/catalogue.service";
-import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { lireLeCatalogue, lireLesNoms } from "@/services/catalogue.service";
+import { lesOffresDeLArene, nomsDuCatalogue } from "@/config/tarifs";
 
 /**
  * LES LYCÉES : LE BAC STMG ET LES BTS (décision du propriétaire, 11 novembre 2026 ; audit de l'offre du
@@ -14,14 +14,18 @@ import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
  */
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/lycees" },
-  title: "Lycées : bac STMG et BTS",
-  description: `Pour le proviseur : le cours et l'arène pour le bac STMG et les BTS, ${LES_OFFRES_DE_L_ARENE}, un chapitre libre par diplôme, le bon de commande, le mandat administratif et Chorus Pro, aucun compte élève.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const noms = await lireLesNoms();
+  return {
+    alternates: { canonical: "/lycees" },
+    title: "Lycées : bac STMG et BTS",
+    description: `Pour le proviseur : le cours et l'arène pour le bac STMG et les BTS, ${lesOffresDeLArene(noms)}, un chapitre libre par diplôme, le bon de commande, le mandat administratif et Chorus Pro, aucun compte élève.`,
+  };
+}
 
 async function LyceesPage() {
-  return <PageDesLycees offres={offresPourLesLycees(await lireLeCatalogue())} />;
+  const catalogue = await lireLeCatalogue();
+  return <PageDesLycees offres={offresPourLesLycees(catalogue)} noms={nomsDuCatalogue(catalogue)} />;
 }
 
 export default avecTypographie(LyceesPage);

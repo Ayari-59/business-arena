@@ -1,6 +1,7 @@
 import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
-import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE, OFFRES } from "@/config/tarifs";
+import { ATELIERS_A_REFERENTIEL, lesOffresDeLArene, type NomsDesOffres } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import { publicDeLAtelier } from "@/config/formations";
 import { formationsAvecUnePage } from "@/config/couverture";
@@ -160,7 +161,7 @@ const TROIS_TEMPS = [
   },
 ];
 
-const CONFIANCE = [
+const confiance = (n: NomsDesOffres) => [
   {
     label: "Sans compte élève",
     desc: "Les élèves rejoignent par un code, aucune donnée personnelle exigée",
@@ -174,8 +175,8 @@ const CONFIANCE = [
     // concours sans engagement : la grille (config/tarifs.ts) n'a pas d'essai
     // en classe. Ce qui est gratuit, c'est le simulateur en solo ; l'offre qui
     // l'ouvre s'appelle « Essai gratuit » depuis novembre 2026, et dit ce qu'elle ouvre.
-    label: OFFRES.decouverte.nom,
-    desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}`,
+    label: n.decouverte,
+    desc: `Le simulateur en solo, sans compte ; la classe avec ${lesOffresDeLArene(n)}`,
   },
   {
     // LA PROMESSE SUIVAIT LA PHRASE QU'ON A RETIRÉE, et elle est devenue
@@ -192,7 +193,7 @@ const CONFIANCE = [
 
 async function EnseignantsPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
-  const { theme } = await getPlatformConfig();
+  const [{ theme }, noms] = await Promise.all([getPlatformConfig(), lireLesNoms()]);
   const c = (id: string) => contrasteDeLaBande(theme, id);
   // Comptés dans la base, jamais rédigés — et tus tant qu'ils ne prouvent rien.
   const [preuves, config] = await Promise.all([
@@ -508,7 +509,7 @@ async function EnseignantsPage() {
           contraste={c("enseignants.finale")}
           titre="Prêt à faire jouer votre classe ?"
           texte="Commencez par le réglage qui vous convient, ou ouvrez directement votre espace."
-          mentions={CONFIANCE}
+          mentions={confiance(noms)}
           prix={<LigneDePrix />}
         >
           <Link href="/orientation" className={bouton({ taille: "l" })}>

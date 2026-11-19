@@ -2,7 +2,7 @@ import { avecTypographie } from "@/components/typographie";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { phraseDesOuvertures } from "@/config/tableau-des-niveaux";
 import Link from "next/link";
-import { LES_OFFRES_DE_L_ARENE, reponseCombien } from "@/config/tarifs";
+import { lesOffresDeLArene, nomsDuCatalogue, reponseCombien } from "@/config/tarifs";
 import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
@@ -535,7 +535,7 @@ async function GuidePage() {
           id="guide.finale"
           contraste={c("guide.finale")}
           titre="Prêt à entrer dans l'arène ?"
-          texte={`Lancez une partie solo pour vous faire la main. La partie de classe vient avec ${LES_OFFRES_DE_L_ARENE} : ${TOURS_D_UNE_PARTIE} tours suffisent pour que le BFR devienne inoubliable.`}
+          texte={`Lancez une partie solo pour vous faire la main. La partie de classe vient avec ${lesOffresDeLArene(nomsDuCatalogue(catalogue))} : ${TOURS_D_UNE_PARTIE} tours suffisent pour que le BFR devienne inoubliable.`}
         >
           <Link href="/jouer" className={bouton({ taille: "l" })}>
             Jouer maintenant

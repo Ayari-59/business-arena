@@ -60,7 +60,8 @@ import { codesDeRepriseDeLaPartie, joueursSansCode } from "@/services/reprise.se
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { entitlementsForUser } from "@/services/entitlements.service";
-import { MARQUE_DE_L_ARENE } from "@/config/tarifs";
+import { marqueDeLArene } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { resolveAiSurface } from "@/services/ai.service";
 import { tuteurActifPour } from "@/services/tuteur.service";
@@ -110,6 +111,7 @@ async function TeacherGamePage({
   // code, justement parce qu'ils sont déjà dans la partie.
   const sansCode = await joueursSansCode(gameId, session.userId);
   const releve = await getGameGradeSheet(gameId, session.userId);
+  const noms = await lireLesNoms();
   // Qui joue dans quelle équipe : le seul écran d'où l'on répare une
   // affectation, et le seul recours d'un élève revenu d'un autre poste.
   const composition = await compositionDesEquipes(gameId);
@@ -1005,7 +1007,7 @@ async function TeacherGamePage({
             ) : (
               <span className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400">
                 <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-                Export tableur · {MARQUE_DE_L_ARENE}{" "}
+                Export tableur · {marqueDeLArene(noms)}{" "}
                 <Link href={LIEN_TARIFS} prefetch={false} className="underline underline-offset-4">
                   Voir les offres
                 </Link>

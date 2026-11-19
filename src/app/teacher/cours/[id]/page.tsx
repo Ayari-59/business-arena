@@ -33,7 +33,8 @@ import {
   parcoursRangesParDiplome,
   titreDuParcours,
 } from "@/config/cours/parcours-de-formation";
-import { LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { activitesDeLaClasse } from "@/services/activites.service";
 import type { Chapitre } from "@/config/cours/types";
@@ -102,7 +103,7 @@ async function ClasseDuCoursPage({
   if (!session) redirect(await connexionPourLaPageDemandee());
   const classe = /^[0-9a-f-]{36}$/.test(id) ? await laClasseDeLEnseignant(session.userId, id) : null;
   if (!classe) notFound();
-  const [staff, offre, attribues, impose, duPlusRecent] = await Promise.all([
+  const [staff, offre, attribues, impose, duPlusRecent, noms] = await Promise.all([
     getStaffContext(session.userId),
     offreDuCoursDeLEnseignant(session.userId),
     parcoursAttribues(session.userId),
@@ -110,6 +111,7 @@ async function ClasseDuCoursPage({
     parcoursImposeALEnseignant(session.userId),
     // LIBÉRER CHAPITRE PAR CHAPITRE (migration 0056) : les chapitres que l'enseignant a ouverts, le dernier d'abord.
     classe.liberation === "chapitre" ? chapitresLiberesDuPlusRecent(classe.id) : Promise.resolve([] as string[]),
+    lireLesNoms(),
   ]);
   const liberes = new Set(duPlusRecent);
   const duParcours = chapitresDuParcoursDansLOrdre(classe.parcours);
@@ -244,7 +246,7 @@ async function ClasseDuCoursPage({
         {classe.heritee && !classe.parcours ? (
           <p role="status" className="rounded-lg encadre-distinction px-4 py-2.5 text-sm" data-bandeau-parcours="">
             Choisissez le parcours du cours de cette classe, plus bas. Jusque-là, elle garde l&apos;accès qu&apos;elle avait ; ensuite,
-            avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, elle ouvrira les chapitres de ce parcours.
+            avec l&apos;offre {noms.classe} ou {noms.programme}, elle ouvrira les chapitres de ce parcours.
           </p>
         ) : null}
 
@@ -350,8 +352,8 @@ async function ClasseDuCoursPage({
                 ))}
               </select>
               <span id="parcours-heritee-aide" className="text-sm text-slate-400">
-                Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, la classe ouvre les chapitres de ce parcours ; choisi
-                une fois, il ne change plus. Avec l&apos;offre {OFFRES.campus.nom}, tous les chapitres sont ouverts. {CE_QU_EST_UN_PARCOURS}
+                Avec l&apos;offre {noms.classe} ou {noms.programme}, la classe ouvre les chapitres de ce parcours ; choisi
+                une fois, il ne change plus. Avec l&apos;offre {noms.campus}, tous les chapitres sont ouverts. {CE_QU_EST_UN_PARCOURS}
               </span>
               <div>
                 <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>

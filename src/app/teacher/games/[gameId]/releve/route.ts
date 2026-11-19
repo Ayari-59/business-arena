@@ -2,7 +2,8 @@ import { getSession } from "@/lib/session";
 import { getGameGradeSheet } from "@/services/pedagogy.service";
 import { releveOuvert } from "@/services/acces.service";
 import { getTeacherOrgId } from "@/services/auth.service";
-import { REFUS_DU_RELEVE } from "@/config/tarifs";
+import { refusDuReleve } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 
 /**
  * Le relevé de notes en tableur, une ligne par élève.
@@ -72,7 +73,7 @@ export async function GET(
   // l'arène en cours, ou la fin récente d'une licence (les résultats restent
   // téléchargeables le temps que disent les conditions de vente).
   if (!(await releveOuvert(await getTeacherOrgId(session.userId)))) {
-    return new Response(`${REFUS_DU_RELEVE} Voir les offres : /tarifs`, { status: 402 });
+    return new Response(`${refusDuReleve(await lireLesNoms())} Voir les offres : /tarifs`, { status: 402 });
   }
 
   const lignes = [COLONNES.join(";")];

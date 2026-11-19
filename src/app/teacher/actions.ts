@@ -61,7 +61,8 @@ import { consignerLaGazette } from "@/services/gazette.service";
 import { affecterEleve } from "@/services/affectation.service";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 import { OffreRequiseError } from "@/services/acces.service";
-import { LIBELLES_DU_DEVIS, lienDuDevis } from "@/config/tarifs";
+import { libellesDuDevis, lienDuDevis } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { synchroniserLaPartie } from "@/lti/ags/envois";
 import { plusTard } from "@/lti/ags/plus-tard";
 import { lireLeChoixDEssai } from "@/config/tour-d-essai";
@@ -701,7 +702,7 @@ export async function createCompetitionAction(
         values,
         offre: true,
         devis: erreur.offre
-          ? { href: lienDuDevis(erreur.offre), offre: LIBELLES_DU_DEVIS[erreur.offre].offre }
+          ? { href: lienDuDevis(erreur.offre), offre: libellesDuDevis(await lireLesNoms())[erreur.offre].offre }
           : undefined,
       };
     }
