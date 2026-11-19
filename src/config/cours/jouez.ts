@@ -34,7 +34,7 @@ import { DIFFICULTY_PRESETS } from "../difficulty";
 import { lesOffresDeLArene, type NomsDesOffres } from "../tarifs";
 
 /**
- * « les offres Classe, Programme et Campus », nommées au catalogue en vigueur : la mission porte
+ * Les offres de l'arène (`lesOffresDeLArene`), nommées au catalogue en vigueur : la mission porte
  * cette marque, que `missionAffichee` remplit avec les noms qu'elle reçoit.
  */
 const LES_OFFRES_DE_L_ARENE = "{lesOffresDeLArene}";

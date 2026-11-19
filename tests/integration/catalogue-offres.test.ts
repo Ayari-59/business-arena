@@ -54,7 +54,7 @@ import { getLicenceStatus } from "@/services/licence.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { envoyerDemandeDeDevisAction, type DevisFormState } from "@/app/devis/actions";
-import { CATALOGUE_PAR_DEFAUT, libellesDuDevisDe, variablesDuCatalogue } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, libellesDuDevisDe, NOMS_PAR_DEFAUT, variablesDuCatalogue } from "@/config/tarifs";
 import { offresDuDevis, vueDesTarifs, type OffreDuCatalogue } from "@/config/catalogue";
 import { DECOUVERTE_PAR_DEFAUT } from "@/config/decouverte";
 import { episodeOuvert, EPISODES_DE_DEMO } from "@/config/episodes/demos";
@@ -170,8 +170,8 @@ describe("le catalogue migré", () => {
     expect(etat.affichage).toEqual({ prixPublics: false });
     expect(etat.promotion).toBeNull();
     // Et ce que /tarifs en rend est la grille par défaut.
-    expect(vueDesTarifs(etat.catalogue, variablesDuCatalogue(etat.decouverte))).toEqual(
-      vueDesTarifs(GRILLE_TELLE_QUE_MIGREE, variablesDuCatalogue()),
+    expect(vueDesTarifs(etat.catalogue, variablesDuCatalogue(NOMS_PAR_DEFAUT, etat.decouverte))).toEqual(
+      vueDesTarifs(GRILLE_TELLE_QUE_MIGREE, variablesDuCatalogue(NOMS_PAR_DEFAUT)),
     );
     // Et chaque texte en attente est bien encore en base : sinon, la ligne n'a plus lieu d'être.
     const enBase = JSON.stringify(etat.catalogue.offres);
@@ -222,11 +222,11 @@ describe("une modification d'offre", () => {
       "modification",
     );
     const apres = await lireLeCatalogue();
-    const carte = vueDesTarifs(apres, variablesDuCatalogue()).cartes.find((c) => c.code === "programme")!;
+    const carte = vueDesTarifs(apres, variablesDuCatalogue(NOMS_PAR_DEFAUT)).cartes.find((c) => c.code === "programme")!;
     expect(carte.prixCents).toBe(109000);
     expect(carte.inclus.at(-1)).toBe("Une ligne ajoutée pour le test.");
     // La mention de Campus se recalcule sur le nouveau prix : 1 990 / 1 090, dès 2 entreprises.
-    expect(vueDesTarifs(apres, variablesDuCatalogue()).cartes.find((c) => c.code === "campus")!.mention).toBe(
+    expect(vueDesTarifs(apres, variablesDuCatalogue(NOMS_PAR_DEFAUT)).cartes.find((c) => c.code === "campus")!.mention).toBe(
       "Dès 2 entreprises, moins cher que 2 offres Programme",
     );
     expect(offresDuDevis(apres).map((o) => o.code)).toContain("programme");
@@ -285,7 +285,7 @@ describe("une modification d'offre", () => {
     };
     await enregistrerOffre(admin.userId, nouvelle, "creation");
     const c = await lireLeCatalogue();
-    expect(vueDesTarifs(c, variablesDuCatalogue()).cartes.map((x) => x.code)).toContain("campus-episodes");
+    expect(vueDesTarifs(c, variablesDuCatalogue(NOMS_PAR_DEFAUT)).cartes.map((x) => x.code)).toContain("campus-episodes");
     const libelles = libellesDuDevisDe(c.offres.find((o) => o.code === "campus-episodes")!);
     expect(libelles.offre).toBe("Offre Campus et épisodes");
     // Une licence de cette offre ouvre l'arène (Campus) ET les épisodes.
@@ -310,7 +310,7 @@ describe("une seule offre mise en avant", () => {
     await mettreEnAvant(admin.userId, "campus");
     let c = await lireLeCatalogue();
     expect(c.offres.filter((o) => o.miseEnAvant).map((o) => o.code)).toEqual(["campus"]);
-    const pleins = vueDesTarifs(c, variablesDuCatalogue()).cartes.filter((x) => x.bouton.principal);
+    const pleins = vueDesTarifs(c, variablesDuCatalogue(NOMS_PAR_DEFAUT)).cartes.filter((x) => x.bouton.principal);
     expect(pleins.map((x) => x.code)).toEqual(["campus"]);
     // Une option ou une offre masquée ne se met pas en avant.
     await expect(mettreEnAvant(admin.userId, "integration-lms")).rejects.toThrow(/carte de l'arène visible/);
@@ -461,7 +461,7 @@ describe("la Découverte, appliquée par services/acces.service.ts", () => {
     expect(episodeOuvert(acces, NON_DEMO, "standard")).toBe(false);
     expect(episodeOuvert(acces, ANCIENNE)).toBe(false);
     // Le texte de la carte de l'offre gratuite suit (variables).
-    const decouverte = vueDesTarifs(await lireLeCatalogue(), variablesDuCatalogue((await lireLEtatSansCache()).decouverte)).cartes[0]!;
+    const decouverte = vueDesTarifs(await lireLeCatalogue(), variablesDuCatalogue(NOMS_PAR_DEFAUT, (await lireLEtatSansCache()).decouverte)).cartes[0]!;
     expect(decouverte.inclus[0]).toContain("niveaux 1 à 2 (Premiers pas et Gestion)");
 
     // Un épisode inconnu est refusé ; le journal garde avant et après.

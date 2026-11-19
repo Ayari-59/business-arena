@@ -11,7 +11,7 @@ vi.mock("@/app/entreprises/episode/actions", () => ({ enregistrerPartieAction: v
 import { FICHES } from "@/config/episodes/fiches";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import { EPISODES_DE_DEMO } from "@/config/episodes/demos";
-import { CATALOGUE_PAR_DEFAUT, LES_OFFRES_DE_L_ARENE, variablesDuCatalogue } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, LES_OFFRES_DE_L_ARENE, NOMS_PAR_DEFAUT, variablesDuCatalogue } from "@/config/tarifs";
 import { vueDesTarifs } from "@/config/catalogue";
 import type { PartieJouee } from "@/config/episodes/types";
 import { construireProfil } from "@/pedagogy/profil/profil";
@@ -45,7 +45,7 @@ const texte = (html: string) =>
     .replace(/\s+/g, " ");
 
 const FORMULES = CATALOGUE_PAR_DEFAUT.offres.find((o) => o.code === "entreprise")!.formules;
-const VUE = vueDesTarifs(CATALOGUE_PAR_DEFAUT, variablesDuCatalogue(), { prix: false });
+const VUE = vueDesTarifs(CATALOGUE_PAR_DEFAUT, variablesDuCatalogue(NOMS_PAR_DEFAUT), { prix: false });
 
 describe("P0-1 : le guide de débrief des épisodes", () => {
   it("chaque épisode du registre a sa fiche, et sa page de fiche", () => {
@@ -59,7 +59,7 @@ describe("P0-1 : le guide de débrief des épisodes", () => {
   });
 
   it("le nombre du guide vient du registre des fiches, pas de celui des épisodes", () => {
-    expect(variablesDuCatalogue().fiches).toBe(String(FICHES.length));
+    expect(variablesDuCatalogue(NOMS_PAR_DEFAUT).fiches).toBe(String(FICHES.length));
     const guide = FORMULES.flatMap((f) => f.inclus).find((l) => /guide de débrief/.test(l));
     expect(guide).toBe("Le guide de débrief des {fiches} épisodes.");
     expect(JSON.stringify(VUE)).toContain(`Le guide de débrief des ${FICHES.length} épisodes.`);
@@ -156,7 +156,8 @@ describe("P0-3 : l'établissement sans offre", () => {
     const page = lire("app/etablissement/sans-offre/page.tsx");
     expect(page).not.toMatch(/et les\s+parties dont vous leur donnez le code/);
     expect(page).toMatch(/Les parties de classe, [^.]*demandent une\s+licence de l&apos;arène/);
-    expect(page).toMatch(/\{LES_OFFRES_DE_L_ARENE\}/);
+    // Les offres nommées au catalogue en vigueur (tests/architecture/noms-au-catalogue.test.ts).
+    expect(page).toMatch(/\{lesOffresDeLArene\(noms\)\}/);
     expect(LES_OFFRES_DE_L_ARENE).toMatch(/Classe.*Programme.*Campus/);
   });
 });

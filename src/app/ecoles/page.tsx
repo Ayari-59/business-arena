@@ -275,7 +275,7 @@ async function EcolesPage() {
               ))}
             </ul>
             <ul className="mt-8 grid gap-6 md:grid-cols-2">
-              {argumentsPourLesEcoles(noms).filter((a) => !a.episodes).map((a) => (
+              {argumentsPourLesEcoles(noms).filter((a) => a.titre !== noms.episodes).map((a) => (
                 <li key={a.titre}>
                   <p className="titre-carte text-slate-100">{a.titre}</p>
                   <p className="mt-1 text-base leading-relaxed text-slate-400">

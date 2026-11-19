@@ -88,6 +88,7 @@ function fichiers(racine: string): string[] {
 const HTML = renderToStaticMarkup(
   createElement(PageDesTarifs, {
     vue: vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT, { prix: true }),
+    noms: GRILLE.NOMS_PAR_DEFAUT,
     bandeau: null,
     prixPublics: true,
   }),
@@ -99,6 +100,7 @@ const metadata = { title: "Tarifs", description: descriptionDesTarifs(CATALOGUE_
 const HTML_SANS_PRIX = renderToStaticMarkup(
   createElement(PageDesTarifs, {
     vue: vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT, { prix: false }),
+    noms: GRILLE.NOMS_PAR_DEFAUT,
     bandeau: "−20 % sur Programme jusqu'au 30 novembre avec le code RENTREE",
     prixPublics: false,
   }),
@@ -120,8 +122,10 @@ describe("le catalogue par défaut", () => {
     const figee = GRILLE_FIGEE as Record<string, unknown>;
     const lu = (k: string): unknown => {
       const v = (GRILLE as Record<string, unknown>)[k];
-      if (k === "ceQuOuvrentLesEpisodes") return (v as (n: number) => string)(60);
-      if (k === "messageNiveauxReserves") return (v as (x: unknown) => string)({ active: true, entrepriseOuverte: "", niveauMaxAutres: 3 });
+      // Les phrases qui nomment les offres prennent les noms en paramètre : ici, les noms par défaut.
+      if (k === "ceQuOuvrentLesEpisodes") return (v as (n: unknown, t: number) => string)(GRILLE.NOMS_PAR_DEFAUT, 60);
+      if (k === "messageNiveauxReserves")
+        return (v as (n: unknown, x: unknown) => string)(GRILLE.NOMS_PAR_DEFAUT, { active: true, entrepriseOuverte: "", niveauMaxAutres: 3 });
       return v;
     };
     for (const k of Object.keys(figee)) expect(lu(k), k).toEqual(figee[k]);

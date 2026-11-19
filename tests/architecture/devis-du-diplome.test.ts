@@ -23,7 +23,7 @@ import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
 import { vueDOrientation } from "@/config/orientation";
 import { lienDuDevisDuCours, parametrageRequisAuDevis, parcoursRequisAuDevis, SOURCE_DU_COURS } from "@/config/parametrage-du-devis";
-import { CATALOGUE_PAR_DEFAUT, ENTREPRISES, NIVEAUX_DE_L_ARENE } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, ENTREPRISES, NIVEAUX_DE_L_ARENE, NOMS_PAR_DEFAUT } from "@/config/tarifs";
 
 /**
  * LE DEVIS DEMANDE LE DIPLÔME OU LE PARCOURS (audit produit du 10 novembre 2026, P1-4).
@@ -244,6 +244,7 @@ describe("une demande qui vient du cours", () => {
         reserve: "Ce chapitre est réservé",
         essai: { href: "/cours/x", titre: "X", sigle: null },
         eleve: null,
+        noms: NOMS_PAR_DEFAUT,
         devis: lienDuDevisDuCours("stmg-gf"),
       }),
     );
@@ -251,7 +252,7 @@ describe("une demande qui vient du cours", () => {
     expect(texte(reserve)).toContain("Demander un devis");
     // Sans parcours connu, la demande vient quand même du cours.
     const sansParcours = renderToStaticMarkup(
-      createElement(ChapitreReserve, { titre: "T", reserve: "R", essai: { href: "/cours/x", titre: "X", sigle: null }, eleve: null }),
+      createElement(ChapitreReserve, { titre: "T", reserve: "R", essai: { href: "/cours/x", titre: "X", sigle: null }, eleve: null, noms: NOMS_PAR_DEFAUT }),
     );
     expect(sansParcours).toContain('href="/devis?offre=classe&amp;source=cours"');
     expect(lire("app/cours/[chapitre]/page.tsx")).toContain("devis={lienDuDevisDuCours(parcoursDuContenu(chapitre, diplomeDeLAdresse(diplome)))}");

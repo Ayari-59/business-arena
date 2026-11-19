@@ -11,7 +11,7 @@ import { CaseDeLiberation } from "@/components/case-de-liberation";
 import { NouvelleClasseDuCours } from "@/components/nouvelle-classe-du-cours";
 import { CE_QU_EST_UN_PARCOURS, parcoursRangesParDiplome } from "@/config/cours/parcours-de-formation";
 import { CHAPITRES } from "@/config/cours/registre";
-import { CONDITIONS_DE_VENTE, LE_COURS_PAR_OFFRE, QUESTIONS_TARIFS, OFFRES } from "@/config/tarifs";
+import { CONDITIONS_DE_VENTE, LE_COURS_PAR_OFFRE, NOMS_PAR_DEFAUT, QUESTIONS_TARIFS, OFFRES } from "@/config/tarifs";
 import { chapitreDuParcoursDeLaClasse, parcoursDeLEssai, unParcoursParLicenceClasse } from "@/services/chapitres-de-la-classe";
 
 /**
@@ -65,6 +65,7 @@ describe("devant un chapitre fermé, l'élève d'une classe", () => {
   const props = {
     titre: "Les leviers du seuil",
     reserve: "Ce chapitre est réservé",
+    noms: NOMS_PAR_DEFAUT,
     essai: { href: "/cours/prix-cout-et-marge?diplome=bts-cg", titre: "Prix, coût et marge", sigle: "BTS CG" },
   };
   const rendu = (dansLeParcours?: boolean) =>
@@ -226,7 +227,7 @@ describe("les textes de Classe disent la règle du code", () => {
 
   it("les CGV, « Comment commander ? » et les conditions de /tarifs le disent aussi", () => {
     const cgv = lire("app/cgv/page.tsx");
-    expect(cgv).toContain("{remplir(LE_COURS_PAR_OFFRE.classe, variablesDuCatalogue())}");
+    expect(cgv).toContain("{remplir(LE_COURS_PAR_OFFRE.classe, variablesDuCatalogue(noms))}");
     expect(cgv).not.toMatch(/un groupe de \{ELEVES_PAR_CLASSE\}/);
     expect(cgv).toMatch(/dans l&apos;arène, une partie à la fois, de\{" "\}\s*\{ELEVES_PAR_CLASSE\} élèves au plus/);
     const commander = QUESTIONS_TARIFS.find((q) => q.q === "Comment commander ?")!.r;

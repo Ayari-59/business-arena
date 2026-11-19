@@ -20,6 +20,7 @@ import {
   LE_COURS_PAR_OFFRE,
   LES_OFFRES_DE_L_ARENE,
   MENTION_TVA,
+  NOMS_PAR_DEFAUT,
   PARAMETRAGE_DES_OFFRES,
   QUESTIONS_TARIFS,
   VARIABLES_PAR_DEFAUT,
@@ -86,12 +87,20 @@ const liensDe = (html: string) => [...html.matchAll(/href="([^"]*)"/g)].map((m) 
 /** Une page ou un composant sans état, rendu en HTML statique. */
 const rendre = (c: ComponentType<Record<string, unknown>>, props: Record<string, unknown> = {}) =>
   renderToStaticMarkup(createElement(c, props));
+/** Une page serveur asynchrone (elle lit le catalogue), rendue jusqu'au bout. */
+async function rendreEnAttendant(c: ComponentType<Record<string, unknown>>, props: Record<string, unknown> = {}): Promise<string> {
+  const { prerenderToNodeStream } = await import("react-dom/static");
+  const { prelude } = await prerenderToNodeStream(createElement(c, props));
+  let html = "";
+  for await (const morceau of prelude) html += String(morceau);
+  return html;
+}
 
 /** Les diplômes du lycée : le bac STMG et les BTS (les options comptent pour leur diplôme). */
 const DU_LYCEE = DIPLOMES_PROPOSES.filter((f) => f.code === "stmg" || f.code.startsWith("bts-"));
 
 const reponseALEssai = (essai: { autorise: boolean; dureeMaxJours: number }, inscriptionLibre?: boolean) =>
-  questionsDesTarifs(essai, inscriptionLibre).find((x) => /essayer avec un groupe/.test(x.q))!.r;
+  questionsDesTarifs(NOMS_PAR_DEFAUT, essai, inscriptionLibre).find((x) => /essayer avec un groupe/.test(x.q))!.r;
 
 describe("1 · l'essai avec un groupe : oui pour le cours", () => {
   it("l'essai de l'arène éteint (le défaut), la réponse dit oui pour le cours, et ce qui s'y fait", () => {
@@ -132,7 +141,7 @@ describe("1 · l'essai avec un groupe : oui pour le cours", () => {
     expect(code("src/app/teacher/cours/actions.ts")).not.toMatch(/verifierLaClasse|assertCanCreateGame/);
     // /tarifs passe le réglage de l'inscription libre à la question.
     expect(code("src/app/tarifs/page.tsx")).toMatch(/allowSelfServiceTeachers/);
-    expect(code("src/components/page-des-tarifs.tsx")).toMatch(/questionsDesTarifs\(essai, inscriptionLibre\)/);
+    expect(code("src/components/page-des-tarifs.tsx")).toMatch(/questionsDesTarifs\(noms, essai, inscriptionLibre\)/);
   });
 
   it("l'essai de l'arène allumé dans /admin/offres : la réponse reste celle de l'essai de l'offre Classe", () => {
@@ -150,8 +159,10 @@ describe("2 · la page Lycées, pour le proviseur", () => {
       PageDesLycees: ComponentType<Record<string, unknown>>;
     };
     const { offresPourLesLycees } = await import("@/config/lycees");
-    expect(code(PAGE)).toMatch(/<PageDesLycees offres=\{offresPourLesLycees\(await lireLeCatalogue\(\)\)\} \/>/);
-    return rendre(PageDesLycees, { offres: offresPourLesLycees(CATALOGUE_PAR_DEFAUT) });
+    // Le catalogue lu une fois : les offres, et les noms en vigueur (tests/architecture/noms-au-catalogue.test.ts).
+    expect(code(PAGE)).toMatch(/const catalogue = await lireLeCatalogue\(\);/);
+    expect(code(PAGE)).toMatch(/<PageDesLycees offres=\{offresPourLesLycees\(catalogue\)\} noms=\{nomsDuCatalogue\(catalogue\)\} \/>/);
+    return rendre(PageDesLycees, { offres: offresPourLesLycees(CATALOGUE_PAR_DEFAUT), noms: NOMS_PAR_DEFAUT });
   };
 
   it("existe, au menu juste après « Enseignants », au plan du site, avec ses métadonnées", async () => {
@@ -162,7 +173,11 @@ describe("2 · la page Lycées, pour le proviseur", () => {
     expect(lire("src/app/sitemap.ts")).toMatch(/"\/lycees"/);
     // Elle lit le catalogue : elle se régénère, comme /tarifs, à chaque enregistrement dans /admin/offres.
     expect(lire("src/app/admin/offres/actions.ts")).toMatch(/PAGES_DU_CATALOGUE = \[[^\]]*"\/lycees"/);
-    const { metadata } = (await import("@/app/lycees/page")) as { metadata: { title: string; description: string; alternates: { canonical: string } } };
+    // Les métadonnées nomment les offres : elles se lisent au catalogue (le catalogue par défaut, hors de Next).
+    const { generateMetadata } = (await import("@/app/lycees/page")) as unknown as {
+      generateMetadata: () => Promise<{ title: string; description: string; alternates: { canonical: string } }>;
+    };
+    const metadata = await generateMetadata();
     expect(metadata.alternates.canonical).toBe("/lycees");
     expect(metadata.title).toMatch(/^Lycées/);
     expect(metadata.description).toMatch(/STMG/);
@@ -190,7 +205,7 @@ describe("2 · la page Lycées, pour le proviseur", () => {
 
   it("dit les offres Classe, Programme et Campus telles que le code les applique", async () => {
     const t = texteDe(await pageRendue());
-    const v = variablesDuCatalogue();
+    const v = variablesDuCatalogue(NOMS_PAR_DEFAUT);
     for (const offre of ["classe", "programme", "campus"] as const) {
       expect(t, offre).toContain(plat(remplir(LE_COURS_PAR_OFFRE[offre], v)));
     }
@@ -335,7 +350,7 @@ describe("4 · après le devis : les délais et la fiche fournisseur", () => {
 
   it("les CGV les disent, avec la fiche fournisseur lue dans VENDEUR", async () => {
     const cgv = (await import("@/app/cgv/page")).default as ComponentType<Record<string, unknown>>;
-    const t = texteDe(rendre(cgv));
+    const t = texteDe(await rendreEnAttendant(cgv));
     expect(t).toContain(DELAIS);
     expect(t).toMatch(/Fiche fournisseur/);
     expect(t).toContain(`SIRET ${VENDEUR.siret}`);
@@ -381,6 +396,7 @@ describe("5 · les points secondaires de l'offre", () => {
   it("/tarifs : « Dans l'enseignement supérieur » en tête des épisodes", () => {
     const html = rendre(PageDesTarifs as ComponentType<Record<string, unknown>>, {
       vue: vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT, { prix: false }),
+      noms: NOMS_PAR_DEFAUT,
       bandeau: null,
       prixPublics: false,
     });

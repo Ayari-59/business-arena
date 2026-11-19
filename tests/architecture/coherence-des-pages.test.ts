@@ -24,7 +24,8 @@ describe("les promesses d'accès suivent le code", () => {
   it("les épisodes en classe disent que la cohorte demande l'offre épisodes", () => {
     const page = lire("src/app/enseignants/episodes/page.tsx");
     expect(page).not.toMatch(/Les épisodes se jouent\s+sans compte/);
-    expect(page).toContain("OFFRES.episodes.nom");
+    // Le nom de l'offre, lu au catalogue en vigueur (tests/architecture/noms-au-catalogue.test.ts).
+    expect(page).toContain("{noms.episodes}");
   });
 
   it("un chapitre réservé mène au chapitre libre de son diplôme, aux offres et au devis", () => {

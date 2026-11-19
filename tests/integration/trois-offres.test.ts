@@ -53,6 +53,7 @@ import {
   ENTREPRISES,
   horsLicence,
   nomDeLEntreprise,
+  NOMS_PAR_DEFAUT,
   parametrageDeLOffre,
   parametrageEnClair,
   PARAMETRAGE_DES_OFFRES,
@@ -389,13 +390,13 @@ describe("expiration et parties en cours", () => {
 describe("la règle, en fonction pure", () => {
   it("chaque refus nomme ce qui bloque et l'offre au-dessus", () => {
     const classe = parametrageDeLOffre("classe", { entreprise: "nova", niveau: 3 });
-    expect(horsLicence(classe, { entreprise: "nova", niveau: 3, enseignants: 1, partiesEnCours: { nombre: 0, laquelle: null } })).toBeNull();
-    expect(horsLicence(classe, { entreprise: null })?.message).toContain("Ce scénario n'en fait pas partie");
-    expect(horsLicence(classe, { partiesEnCours: { nombre: 1, laquelle: "2nde B" } })?.message).toContain(
+    expect(horsLicence(NOMS_PAR_DEFAUT, classe, { entreprise: "nova", niveau: 3, enseignants: 1, partiesEnCours: { nombre: 0, laquelle: null } })).toBeNull();
+    expect(horsLicence(NOMS_PAR_DEFAUT, classe, { entreprise: null })?.message).toContain("Ce scénario n'en fait pas partie");
+    expect(horsLicence(NOMS_PAR_DEFAUT, classe, { partiesEnCours: { nombre: 1, laquelle: "2nde B" } })?.message).toContain(
       "« 2nde B » est en cours",
     );
     const campus = parametrageDeLOffre("campus", {});
-    expect(horsLicence(campus, { entreprise: "transport", niveau: 6, enseignants: 400, partiesEnCours: { nombre: 40, laquelle: null } })).toBeNull();
+    expect(horsLicence(NOMS_PAR_DEFAUT, campus, { entreprise: "transport", niveau: 6, enseignants: 400, partiesEnCours: { nombre: 40, laquelle: null } })).toBeNull();
   });
 });
 

@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/db", () => ({ db: {} }));
 
-import { ENTREPRISES, NIVEAUX_DE_L_ARENE, parametrageRequisAuDevis } from "@/config/tarifs";
+import { ENTREPRISES, NIVEAUX_DE_L_ARENE, NOMS_PAR_DEFAUT, parametrageRequisAuDevis } from "@/config/tarifs";
 import { NAVIGATION_ENSEIGNANT } from "@/config/navigation";
 import { DevisForm } from "@/components/devis-form";
 import { AccueilDeLaDecouverte } from "@/components/accueil-de-la-decouverte";
@@ -36,7 +36,7 @@ const rendu = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStatic
 
 describe("P0-1 · l'enseignant sans offre sait d'emblée ce qu'il peut faire", () => {
   it("l'accueil de l'offre gratuite dit le solo, la classe du cours, les démonstrations, et le devis", () => {
-    const t = texte(rendu(createElement(AccueilDeLaDecouverte, { essai: { autorise: false, dureeMaxJours: 30 }, niveauMax: 3 })));
+    const t = texte(rendu(createElement(AccueilDeLaDecouverte, { essai: { autorise: false, dureeMaxJours: 30 }, noms: NOMS_PAR_DEFAUT, niveauMax: 3 })));
     expect(t).toContain("Votre compte est en essai gratuit");
     expect(t).toContain("aux niveaux 1 à 3");
     expect(t).toContain("Ouvrir une classe du cours");
@@ -46,7 +46,7 @@ describe("P0-1 · l'enseignant sans offre sait d'emblée ce qu'il peut faire", (
   });
 
   it("l'essai de l'offre Classe est proposé quand le propriétaire l'a ouvert, avec sa durée", () => {
-    const html = rendu(createElement(AccueilDeLaDecouverte, { essai: { autorise: true, dureeMaxJours: 21 }, niveauMax: 3 }));
+    const html = rendu(createElement(AccueilDeLaDecouverte, { essai: { autorise: true, dureeMaxJours: 21 }, noms: NOMS_PAR_DEFAUT, niveauMax: 3 }));
     expect(texte(html)).toContain("Demander l'essai");
     expect(texte(html)).toContain("21 jours au plus");
     expect(html).toContain('href="/devis?offre=classe"');
@@ -105,7 +105,7 @@ describe("P1-1 · la classe du cours sans offre, et l'élève devant un chapitre
   });
 
   it("l'élève d'une classe ne voit ni « Voir les offres » ni « Demander un devis »", () => {
-    const props = { titre: "Les flux", reserve: "Ce chapitre est réservé", essai: { href: "/cours/les-flux-de-l-entreprise?diplome=stmg", titre: "Les flux de l'entreprise", sigle: "STMG" } };
+    const props = { titre: "Les flux", reserve: "Ce chapitre est réservé", noms: NOMS_PAR_DEFAUT, essai: { href: "/cours/les-flux-de-l-entreprise?diplome=stmg", titre: "Les flux de l'entreprise", sigle: "STMG" } };
     const eleve = rendu(createElement(ChapitreReserve, { ...props, eleve: { classe: "BTS 1" } }));
     expect(texte(eleve)).toContain("n'est pas encore ouvert pour votre classe, « BTS 1 »");
     expect(texte(eleve)).toContain("votre enseignant");

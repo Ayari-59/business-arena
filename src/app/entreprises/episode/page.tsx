@@ -311,7 +311,7 @@ function CarteFermee({
   teinte: string;
   niveau: 3 | 4;
   metier: string | null;
-  /** « Épisodes manager · sur devis », le nom lu au catalogue en vigueur. */
+  /** La marque des épisodes (`marqueDesEpisodes`), le nom lu au catalogue en vigueur. */
   marque: string;
 }) {
   const Titre = niveau === 3 ? "h3" : "h4";

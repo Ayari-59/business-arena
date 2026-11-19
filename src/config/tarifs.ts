@@ -1130,8 +1130,6 @@ export interface ArgumentPourLesEcoles {
   titre: string;
   texte: string;
   lien?: { href: string; libelle: string };
-  /** L'argument des épisodes manager : /ecoles le dit dans sa propre bande. */
-  episodes?: true;
 }
 export const argumentsPourLesEcoles = (n: NomsDesOffres): readonly ArgumentPourLesEcoles[] => [
   {
@@ -1152,7 +1150,6 @@ export const argumentsPourLesEcoles = (n: NomsDesOffres): readonly ArgumentPourL
     titre: n.episodes,
     texte:
       "Pour les MBA, les cours de leadership et la formation continue (Executive Education) : des trimestres joués dans la peau d'un manager. À part, sur devis.",
-    episodes: true,
   },
 ];
 export const ARGUMENTS_POUR_LES_ECOLES: readonly ArgumentPourLesEcoles[] = argumentsPourLesEcoles(NOMS_PAR_DEFAUT);

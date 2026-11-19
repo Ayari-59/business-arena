@@ -145,7 +145,8 @@ describe("les preuves d'usage", () => {
     // Les engagements tenaient une section à eux, et ce test cherchait leur
     // boucle ; ils sont descendus sous les boutons de la bande finale, où une
     // objection se lève vraiment. L'ordre, lui, ne change pas.
-    expect(page.indexOf("<PreuvesDusageBande")).toBeLessThan(page.indexOf("mentions={CONFIANCE}"));
-    expect(page).toContain("mentions={CONFIANCE}");
+    // Les mentions nomment l'offre gratuite : elles se lisent au catalogue en vigueur (`confiance(noms)`).
+    expect(page.indexOf("<PreuvesDusageBande")).toBeLessThan(page.indexOf("mentions={confiance(noms)}"));
+    expect(page).toContain("mentions={confiance(noms)}");
   });
 });
