@@ -249,7 +249,7 @@ describe("une modification d'offre", () => {
     expect((await offre("programme")).prixCents).toBe(99000);
   });
 
-  it("refuse ce que la règle refuse : prix nul, variable inconnue, HT, nom figé", async () => {
+  it("refuse ce que la règle refuse : prix nul, variable inconnue, HT", async () => {
     const admin = await enseignant(true);
     const classe = await offre("classe");
     const refus = async (o: OffreDuCatalogue) => {
@@ -260,7 +260,8 @@ describe("une modification d'offre", () => {
     expect(await refus({ ...classe, prixCents: 0 })).toMatch(/prix de référence positif/);
     expect(await refus({ ...classe, inclus: ["Les {inconnue} choses."] })).toMatch(/Variables inconnues : \{inconnue\}/);
     expect(await refus({ ...classe, precisions: ["290 € HT par an."] })).toMatch(/franchise de TVA/);
-    expect(await refus({ ...classe, nom: "Groupe" })).toMatch(/figé/);
+    // Le nom d'une offre de la grille n'est plus figé : le site le lit au catalogue
+    // (tests/integration/noms-au-catalogue.test.ts).
     expect((await offre("classe")).prixCents).toBe(29000);
   });
 
