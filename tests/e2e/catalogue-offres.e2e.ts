@@ -18,7 +18,9 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  *    montant), un visiteur l'utilise dans /devis et lit « pris en compte » ; /admin montre
  *    le code et le prix remisé ;
  *  · l'admin attribue une licence offerte ; l'enseignant lit « offerte jusqu'au … » ;
- *  · l'admin change les démonstrations ; le catalogue des épisodes suit.
+ *  · l'admin change les démonstrations ; le catalogue des épisodes suit ;
+ *  · l'admin renomme une offre (« Programme » devient « Formation ») : /tarifs et l'accueil
+ *    disent le nouveau nom au prochain affichage (chantier « noms au catalogue »).
  * Chaque test remet ce qu'il a changé. Avec CAPTURES_CATALOGUE (un dossier), il laisse
  * les captures du rapport.
  */
@@ -329,6 +331,55 @@ describe("/admin/offres", () => {
     await demos(retiree, ajoutee.code);
     await aller(v, "/entreprises/episode");
     expect(await v.locator("[data-demos-gratuites]").innerText()).toContain(titre(retiree));
+    await visiteur.close();
+    await page.close();
+  });
+
+  it("l'admin renomme une offre : /tarifs et l'accueil disent le nouveau nom", async () => {
+    const page = await admin.newPage();
+    const renommer = async (nom: string) => {
+      await aller(page, "/admin/offres?offre=programme#edition");
+      const editeur = page.locator('[data-editeur-offre="programme"]');
+      // Le nom n'est plus figé : il se saisit comme les autres champs.
+      expect(await editeur.locator('[data-champ-offre="nom"]').getAttribute("readonly")).toBeNull();
+      await editeur.locator('[data-champ-offre="nom"]').fill(nom);
+      await editeur.getByRole("button", { name: "Enregistrer l'offre" }).click();
+      await page.waitForURL(/fait=offre/);
+    };
+    await renommer("Formation");
+
+    const visiteur = await contexte();
+    const v = await visiteur.newPage();
+    await aller(v, "/tarifs");
+    const tarifs = espaces(await v.locator("main").innerText());
+    expect(espaces(await v.locator('[data-offre="programme"]').innerText())).toContain("Formation");
+    expect(tarifs).toContain("Quelle différence entre Classe, Formation et Campus ?");
+    expect(tarifs).not.toMatch(/\bProgramme\b/);
+    await capture(v, "renommage-tarifs-1280", { fullPage: true });
+    await aller(v, "/");
+    const pied = espaces(await v.locator("[data-pied-des-formats]").innerText());
+    expect(pied).toContain("les offres Classe, Formation et Campus");
+    await v.locator("[data-pied-des-formats]").scrollIntoViewIfNeeded();
+    await capture(v, "renommage-accueil-1280");
+    // À 390 px, les mêmes noms.
+    const mobile = await contexte(390);
+    const m = await mobile.newPage();
+    await aller(m, "/tarifs");
+    expect(espaces(await m.locator('[data-offre="programme"]').innerText())).toContain("Formation");
+    await m.locator('[data-offre="programme"]').scrollIntoViewIfNeeded();
+    await capture(m, "renommage-tarifs-390");
+    await aller(m, "/");
+    expect(espaces(await m.locator("[data-pied-des-formats]").innerText())).toContain("les offres Classe, Formation et Campus");
+    await m.locator("[data-pied-des-formats]").scrollIntoViewIfNeeded();
+    await capture(m, "renommage-accueil-390");
+
+    // On remet le nom de la grille : les autres tests le lisent.
+    await renommer("Programme");
+    await aller(v, "/tarifs");
+    expect(espaces(await v.locator('[data-offre="programme"]').innerText())).toContain("Programme");
+    await aller(v, "/");
+    expect(espaces(await v.locator("[data-pied-des-formats]").innerText())).toContain("les offres Classe, Programme et Campus");
+    await mobile.close();
     await visiteur.close();
     await page.close();
   });
