@@ -15,7 +15,7 @@ import {
   type NatureDeLicence,
   type TypeDeRemise,
 } from "@/config/catalogue";
-import { parametrageDepuisLOffre, variablesDuCatalogue } from "@/config/tarifs";
+import { nomsDuCatalogue, parametrageDepuisLOffre, variablesDuCatalogue } from "@/config/tarifs";
 
 /**
  * ATTRIBUER UNE LICENCE DEPUIS UNE OFFRE DU CATALOGUE (/admin, formulaire de licence).
@@ -124,7 +124,7 @@ export async function attribuerUneLicence(
   const { amountCents, remise: remiseEnregistree } = montantFacture(s.nature, prixCatalogueCents, remise);
 
   // La copie des conditions au moment de la vente : la carte telle qu'elle se lit ce jour.
-  const carte = carteDeTarif(offre, catalogue, variablesDuCatalogue(decouverte));
+  const carte = carteDeTarif(offre, catalogue, variablesDuCatalogue(nomsDuCatalogue(catalogue), decouverte));
   const conditions: ConditionsDeVente = {
     code: offre.code,
     nom: offre.nom,

@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
 import { classeParCode, NOM_D_ELEVE_MAX } from "@/services/cours.service";
 import { refusDeLEffectif } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { refusTropDEssais } from "@/lib/code-de-partie";
 import { rejoindreClasseAction } from "../actions";
 
@@ -21,7 +22,6 @@ const REFUS: Record<string, string> = {
   inconnu: "Ce code ne mène à aucune classe. Vérifiez-le avec votre enseignant.",
   close: "Cette classe est close : elle n'accepte plus de nouvel élève.",
   nom: "Indiquez un prénom ou un pseudonyme : c'est ainsi que votre enseignant vous retrouvera.",
-  pleine: refusDeLEffectif("classe"),
 };
 
 /**
@@ -41,11 +41,13 @@ async function RejoindreUneClassePage({
   const message =
     refus === "trop"
       ? refusTropDEssais(attente)
-      : refus && Object.hasOwn(REFUS, refus)
-        ? REFUS[refus]
-        : code && !classe
-          ? REFUS.inconnu
-          : null;
+      : refus === "pleine"
+        ? refusDeLEffectif(await lireLesNoms(), "classe")
+        : refus && Object.hasOwn(REFUS, refus)
+          ? REFUS[refus]
+          : code && !classe
+            ? REFUS.inconnu
+            : null;
   // Le prénom déjà tapé sur /join ou avant un refus (audit UX, P1-3), borné à la longueur du champ.
   const nomInitial = nom.slice(0, NOM_D_ELEVE_MAX);
   return (

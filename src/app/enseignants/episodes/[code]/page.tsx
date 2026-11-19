@@ -10,9 +10,9 @@ import { formatNombre } from "@/lib/format";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { MARQUE_DEMO } from "@/config/episodes/demos";
-import { lireLaDecouverte } from "@/services/catalogue.service";
+import { lireLaDecouverte, lireLesNoms } from "@/services/catalogue.service";
 import { niveauParCode } from "@/config/episodes/niveaux";
-import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DES_EPISODES } from "@/config/tarifs";
+import { lienDuDevis, LIBELLE_DU_DEVIS, marqueDesEpisodes } from "@/config/tarifs";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { getSession } from "@/lib/session";
 import { unCompteAvecEpisodes } from "@/services/acces.service";
@@ -57,7 +57,7 @@ async function FichePage({ params }: { params: Promise<{ code: string }> }) {
   const session = await getSession();
   const avecEpisodes = session ? await unCompteAvecEpisodes([session.userId]) : false;
   // Les démonstrations de la Découverte (/admin/offres) et leur niveau.
-  const decouverte = await lireLaDecouverte();
+  const [decouverte, noms] = await Promise.all([lireLaDecouverte(), lireLesNoms()]);
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -126,7 +126,7 @@ async function FichePage({ params }: { params: Promise<{ code: string }> }) {
                 </>
               ) : (
                 <>
-                  <span className="font-semibold text-slate-200">{MARQUE_DES_EPISODES}.</span> Vos
+                  <span className="font-semibold text-slate-200">{marqueDesEpisodes(noms)}.</span> Vos
                   élèves le jouent dans une cohorte de votre établissement, dont la licence inclut
                   les épisodes manager : ils la rejoignent par son code, sans compte, puis ouvrent
                   le lien ci-dessus.{" "}

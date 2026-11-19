@@ -8,10 +8,10 @@ import { SITE_URL } from "@/config/site";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { listerCohortes, organisationsPourLesCohortes } from "@/services/cohortes.service";
-import { lireLaDecouverte } from "@/services/catalogue.service";
+import { lireLaDecouverte, lireLesNoms } from "@/services/catalogue.service";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import type { LicenceState } from "@/services/licence.service";
-import { OFFRES } from "@/config/tarifs";
+import type { NomsDesOffres } from "@/config/tarifs";
 import {
   creerCohorteAction,
   rattacherCohorteAction,
@@ -27,6 +27,7 @@ function ceQuOuvreLaCohorte(
   episodes: readonly string[] | null,
   close: boolean,
   demos: number,
+  noms: NomsDesOffres,
 ): string {
   if (close) {
     return "Close : plus de nouveaux participants, aucun nouvel épisode ouvert par la cohorte.";
@@ -36,7 +37,7 @@ function ceQuOuvreLaCohorte(
       ? `Licence épisodes en cours : les membres jouent ${episodes.length > 1 ? `les ${episodes.length} épisodes` : "l'épisode"} de la cohorte, et les démonstrations.`
       : "Licence épisodes en cours : les membres jouent tous les épisodes.";
   }
-  return `Sans licence épisodes en cours : les membres ne jouent que les ${demos} démonstrations de l'${OFFRES.decouverte.nom.toLowerCase()}.`;
+  return `Sans licence épisodes en cours : les membres ne jouent que les ${demos} démonstrations de l'${noms.decouverte.toLowerCase()}.`;
 }
 
 export const dynamic = "force-dynamic";
@@ -68,10 +69,11 @@ async function CohortesAdminPage({
   const context = await getStaffContext(session.userId);
   if (!context?.isPlatformAdmin) redirect("/teacher");
   const { creee, renouvelee, rattachee, erreur } = await searchParams;
-  const [cohortes, organisations, { demos }] = await Promise.all([
+  const [cohortes, organisations, { demos }, noms] = await Promise.all([
     listerCohortes(),
     organisationsPourLesCohortes(),
     lireLaDecouverte(),
+    lireLesNoms(),
   ]);
   const choixDeLOrganisation = (defaut: string, nom = "organisation") => (
     <select
@@ -99,9 +101,8 @@ async function CohortesAdminPage({
           Un nom qui dit l&apos;entreprise, le groupe et la période : il s&apos;affiche aux managers
           sur la page d&apos;invitation. L&apos;organisation est celle de l&apos;animateur : si sa
           licence en cours inclut les épisodes manager, elle ouvre tous les épisodes aux membres ;
-          sinon (aucune licence, ou une licence {OFFRES.classe.nom} ou {OFFRES.campus.nom} seule), ils ne jouent que les
-          démonstrations. Les licences se posent depuis la page Plateforme, case « Épisodes
-          manager ».
+          sinon (aucune licence, ou une licence {noms.classe} ou {noms.campus} seule), ils ne jouent que les
+          démonstrations. Les licences se posent depuis la page Plateforme, case « {noms.episodes} ».
         </p>
         <GuardedForm action={creerCohorteAction} label="création d'une cohorte">
           <div className="flex flex-wrap items-end gap-3">
@@ -169,7 +170,7 @@ async function CohortesAdminPage({
                 </p>
                 <p className="text-sm text-slate-300" data-acces-de-la-cohorte="">
                   {c.organisation ? `${c.organisation.nom} · ` : "Aucune organisation · "}
-                  {ceQuOuvreLaCohorte(c.organisation?.licence ?? null, c.episodes, !!c.closeLe, demos.length)}
+                  {ceQuOuvreLaCohorte(c.organisation?.licence ?? null, c.episodes, !!c.closeLe, demos.length, noms)}
                 </p>
                 {c.episodes ? (
                   <p className="text-xs text-slate-400" data-episodes-de-la-cohorte="">

@@ -5,11 +5,12 @@ import { EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { Repliable } from "@/components/repliable";
 import {
-  ARGUMENTS_POUR_LES_ECOLES,
-  CONDITIONS_DE_VENTE,
-  LES_OFFRES_DE_L_ARENE,
+  argumentsPourLesEcoles,
+  conditionsDeVente,
+  lesOffresDeLArene,
   MENTION_TVA,
   questionsDesTarifs,
+  type NomsDesOffres,
 } from "@/config/tarifs";
 import type { ColonneDEpisodes, VueDesTarifs } from "@/config/catalogue";
 import { VENDEUR } from "@/config/editeur";
@@ -30,12 +31,15 @@ import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
  */
 export function PageDesTarifs({
   vue,
+  noms,
   bandeau,
   prixPublics,
   essai = { autorise: false, dureeMaxJours: 0 },
   inscriptionLibre = true,
 }: {
   vue: VueDesTarifs;
+  /** Les noms des offres, lus au même catalogue que la vue (`nomsDuCatalogue`). */
+  noms: NomsDesOffres;
   /** Le réglage de l'essai d'établissement (/admin/offres) : la question de l'essai le suit. */
   essai?: { autorise: boolean; dureeMaxJours: number };
   /** L'inscription libre des enseignants (/admin) : fermée, le cours ne s'essaie plus seul. */
@@ -114,7 +118,7 @@ export function PageDesTarifs({
           {/* CE QUI PARLE AUX ÉCOLES : l'accréditation, les séminaires et compétitions,
               Moodle (bientôt), les épisodes pour les MBA. Rien qui n'existe pas. */}
           <ul data-arguments-ecoles className="mt-10 grid gap-x-10 gap-y-6 md:grid-cols-2">
-            {ARGUMENTS_POUR_LES_ECOLES.map((a) => (
+            {argumentsPourLesEcoles(noms).map((a) => (
               <li key={a.titre} className="border-t border-white/10 pt-4">
                 <h3 className="titre-carte text-slate-100">{a.titre}</h3>
                 <p className="mt-1 text-base leading-relaxed text-slate-400">
@@ -152,7 +156,7 @@ export function PageDesTarifs({
               <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
                 Des trimestres joués dans la peau d&apos;un manager : en MBA, en cours de
                 leadership, en formation continue (Executive Education), en classe ou en
-                entreprise. Ils se proposent à part : {LES_OFFRES_DE_L_ARENE} ne les incluent pas.
+                entreprise. Ils se proposent à part : {lesOffresDeLArene(noms)} ne les incluent pas.
               </p>
               <div
                 className={`mt-8 grid gap-x-10 gap-y-8 ${vue.episodes.colonnes.length === 2 ? "lg:grid-cols-[1fr_3fr]" : ""}`}
@@ -203,7 +207,7 @@ export function PageDesTarifs({
             classeResume="text-base font-semibold text-slate-100"
           >
             <ul className="mt-3 space-y-2 pl-6">
-              {CONDITIONS_DE_VENTE.map((c) => (
+              {conditionsDeVente(noms).map((c) => (
                 <li key={c} className="text-sm leading-relaxed text-slate-300">
                   {c}
                 </li>
@@ -224,7 +228,7 @@ export function PageDesTarifs({
             Les questions qu&apos;on nous pose
           </h2>
           <dl className="mt-5 grid gap-x-10 md:grid-cols-2">
-            {questionsDesTarifs(essai, inscriptionLibre).map((x) => (
+            {questionsDesTarifs(noms, essai, inscriptionLibre).map((x) => (
               <div key={x.q} className="border-t border-white/10 py-4">
                 <dt className="titre-carte text-slate-100">{x.q}</dt>
                 <dd className="mt-1 text-base leading-relaxed text-slate-400">{x.r}</dd>

@@ -34,7 +34,7 @@ import { NIVEAU_MAX } from "@/config/vitrine-solo";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
 import { catalogueDesEpisodes } from "@/config/episodes/catalogue";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
-import { ENTREPRISES, OFFRES, variablesDuCatalogue } from "@/config/tarifs";
+import { ENTREPRISES, nomsDuCatalogue, variablesDuCatalogue, type NomsDesOffres } from "@/config/tarifs";
 import {
   enregistrerCodePromoAction,
   enregistrerAffichageAction,
@@ -70,16 +70,16 @@ export const dynamic = "force-dynamic";
  * service aussi.
  */
 
-const FAITS: Record<string, string> = {
+const faits = (n: NomsDesOffres): Record<string, string> => ({
   offre: "Offre enregistrée : /tarifs et /devis la montrent déjà.",
   "en-avant": "Mise en avant déplacée : c'est désormais le seul bouton plein de /tarifs.",
   suppression: "Offre supprimée.",
   module: "Module enregistré.",
-  decouverte: `Réglage de l'${OFFRES.decouverte.nom.toLowerCase()} enregistré : la règle serveur l'applique dès maintenant.`,
+  decouverte: `Réglage de l'${n.decouverte.toLowerCase()} enregistré : la règle serveur l'applique dès maintenant.`,
   essai: "Réglage de l'essai enregistré.",
   code: "Code promo enregistré.",
   affichage: "Affichage des prix enregistré : les pages publiques le suivent dès maintenant.",
-};
+});
 
 const date = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Paris" });
 
@@ -150,7 +150,10 @@ async function AdminOffresPage({
   ]);
   const { catalogue, decouverte, essai, affichage } = etat;
   const maintenant = new Date();
-  const variables = variablesDuCatalogue(decouverte);
+  // Le catalogue lu sans cache : les noms tels que l'admin vient de les enregistrer.
+  const noms = nomsDuCatalogue(catalogue);
+  const variables = variablesDuCatalogue(noms, decouverte);
+  const FAITS = faits(noms);
   const offres = [...catalogue.offres].sort((a, b) => a.ordre - b.ordre || a.code.localeCompare(b.code));
   const enEdition =
     offreVisee === "nouvelle" ? NOUVELLE_OFFRE : (offres.find((o) => o.code === offreVisee) ?? null);
@@ -209,7 +212,6 @@ async function AdminOffresPage({
             catalogue={catalogue}
             variables={variables}
             prixPublics={affichage.prixPublics}
-            nomFige={offreVisee !== "nouvelle" && Object.hasOwn(OFFRES, enEdition.code)}
           />
         </section>
       ) : null}
@@ -336,7 +338,7 @@ async function AdminOffresPage({
         </h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-400">
           Les briques qu&apos;une offre compose. <strong className="text-slate-200">L&apos;arène</strong>,{" "}
-          <strong className="text-slate-200">{OFFRES.episodes.nom}</strong> et{" "}
+          <strong className="text-slate-200">{noms.episodes}</strong> et{" "}
           <strong className="text-slate-200">l&apos;examen individuel</strong> ont un effet dans le produit :
           la licence qui les porte ouvre les parties de classe, les concours, les épisodes et les examens,
           et le serveur le vérifie. <strong className="text-slate-200">Les autres sont descriptifs</strong> : affichés et
@@ -417,14 +419,14 @@ async function AdminOffresPage({
         </h2>
         {erreurIci("gratuites")}
         <div data-reglage-decouverte="">
-          <h3 className="text-base font-semibold text-slate-200">{OFFRES.decouverte.nom} : ce qui est ouvert sans licence</h3>
+          <h3 className="text-base font-semibold text-slate-200">{noms.decouverte} : ce qui est ouvert sans licence</h3>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-400">
             La règle serveur lit ce réglage à chaque création de partie et à chaque ouverture d&apos;épisode.
             Il remplace l&apos;ancien réglage « niveaux ouverts sans licence » de /admin. La carte
-            {` ${OFFRES.decouverte.nom}`} de /tarifs le dit d&apos;elle-même (variables{" "}
+            {` ${noms.decouverte}`} de /tarifs le dit d&apos;elle-même (variables{" "}
             <code className="font-mono">{"{niveauxDecouverte}"}</code>, <code className="font-mono">{"{demos}"}</code>).
           </p>
-          <GuardedForm action={enregistrerDecouverteAction} label={`réglage de l'${OFFRES.decouverte.nom.toLowerCase()}`} className="mt-3 grid gap-4">
+          <GuardedForm action={enregistrerDecouverteAction} label={`réglage de l'${noms.decouverte.toLowerCase()}`} className="mt-3 grid gap-4">
             <label className="flex items-center gap-3 text-sm text-slate-300">
               <input type="checkbox" name="soloActive" defaultChecked={decouverte.solo.active} className="h-4 w-4 accent-amber-400" />
               Fermer les niveaux au-delà du maximum à qui n&apos;a pas de licence de l&apos;arène en cours
@@ -503,7 +505,7 @@ async function AdminOffresPage({
             </fieldset>
             <div>
               <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
-                Enregistrer l&apos;{OFFRES.decouverte.nom.toLowerCase()}
+                Enregistrer l&apos;{noms.decouverte.toLowerCase()}
               </SubmitButton>
             </div>
           </GuardedForm>
@@ -553,7 +555,7 @@ async function AdminOffresPage({
               {gratuites.map((l) => (
                 <li key={l.id} data-licence-gratuite={l.nature}>
                   <span className="font-semibold text-slate-100">{l.organisation}</span> · Offre{" "}
-                  {l.nomDeLOffre ?? (l.arene ? OFFRES[l.arene].nom : OFFRES.episodes.nom)}{" "}
+                  {l.nomDeLOffre ?? (l.arene ? noms[l.arene] : noms.episodes)}{" "}
                   {l.nature === "offerte"
                     ? `offerte (${MOTIFS_DE_GRATUITE[l.motifGratuite as keyof typeof MOTIFS_DE_GRATUITE] ?? l.motifGratuite})`
                     : "à l'essai"}{" "}

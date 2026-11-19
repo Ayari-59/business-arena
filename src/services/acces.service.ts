@@ -36,7 +36,7 @@ import {
   type ParametrageDeLicence,
 } from "@/config/tarifs";
 import type { AccesAuxEpisodes } from "@/config/episodes/demos";
-import { lireLaDecouverte, lireLeCatalogue } from "@/services/catalogue.service";
+import { lireLaDecouverte, lireLeCatalogue, lireLesNoms } from "@/services/catalogue.service";
 import { ouvreLExamen } from "@/config/catalogue";
 import { refusDeLExamen } from "@/config/examen/textes";
 
@@ -109,7 +109,7 @@ export class NiveauReserveError extends OffreRequiseError {
 
 /** Le refus d'une partie de classe ou d'un concours sans licence de l'arène en cours. */
 export class ClasseReserveError extends OffreRequiseError {
-  constructor(message: string = refusDeLaClasse()) {
+  constructor(message: string) {
     super(message);
     this.name = "ClasseReserveError";
   }
@@ -199,7 +199,7 @@ export async function verifierLaClasse(organizationId: string): Promise<void> {
 
 /** Le refus de la classe, avec les niveaux du solo que la Découverte ouvre aujourd'hui. */
 async function refusDeLaClasseLu(): Promise<ClasseReserveError> {
-  return new ClasseReserveError(refusDeLaClasse((await getPlatformConfig()).vitrineSolo));
+  return new ClasseReserveError(refusDeLaClasse(await lireLesNoms(), (await getPlatformConfig()).vitrineSolo));
 }
 
 /**
@@ -279,7 +279,7 @@ export async function verifierLaLicence(
   const lic = await licenceDeLArene(organizationId);
   if (!lic) throw await refusDeLaClasseLu();
   const { statut, parametrage } = lic;
-  const hors = horsLicence(parametrage, {
+  const hors = horsLicence(await lireLesNoms(), parametrage, {
     entreprise: demande.concours
       ? ENTREPRISE_DES_CONCOURS
       : await entrepriseDe(demande.scenarioCode ?? DEFAULT_SCENARIO_CODE),
@@ -299,7 +299,7 @@ export async function verifierLaLicence(
 export async function verifierLaReprise(organizationId: string): Promise<void> {
   const lic = await licenceDeLArene(organizationId);
   if (!lic || lic.parametrage.maxPartiesEnCours === null) return;
-  const hors = horsLicence(lic.parametrage, { partiesEnCours: await partiesEnCours(organizationId) });
+  const hors = horsLicence(await lireLesNoms(), lic.parametrage, { partiesEnCours: await partiesEnCours(organizationId) });
   if (hors) throw new LicenceDepasseeError(hors);
 }
 
@@ -339,7 +339,7 @@ export async function verifierLExamen(
   if (!(await examenOuvert(organizationId))) throw new ExamenReserveError(await messageDuRefusDeLExamen());
   const lic = await licenceDeLArene(organizationId);
   if (!lic) throw new ExamenReserveError(await messageDuRefusDeLExamen());
-  const hors = horsLicence(lic.parametrage, {
+  const hors = horsLicence(await lireLesNoms(), lic.parametrage, {
     entreprise: await entrepriseDe(demande.scenarioCode),
     niveau: demande.niveau,
   });
@@ -427,7 +427,7 @@ export async function verifierLeNiveau(args: {
   const code = args.scenarioCode ?? DEFAULT_SCENARIO_CODE;
   if (!niveauReserve(vitrineSolo, code, args.niveau)) return;
   if (args.niveau <= NIVEAU_MAX && (await args.licence())) return;
-  throw new NiveauReserveError(messageNiveauxReserves(vitrineSolo));
+  throw new NiveauReserveError(messageNiveauxReserves(await lireLesNoms(), vitrineSolo));
 }
 
 /* ---------------------------------------------------------------------------

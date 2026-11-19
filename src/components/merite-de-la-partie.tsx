@@ -8,6 +8,7 @@ import { LIEN_TARIFS, niveauReserve } from "@/config/vitrine-solo";
 import { getSession } from "@/lib/session";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { getPlatformConfig } from "@/services/admin.service";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { meriteDeLaPartie } from "@/services/merite.service";
 import { CAS_DU_MERITE, type CasDuMerite, type VerdictDuMerite } from "@/pedagogy/merite/verdict";
 import { PHRASE_DE_LA_REFERENCE, deLaReference } from "@/pedagogy/merite/reference";
@@ -61,7 +62,7 @@ export async function MeriteDeLaPartieAuBilan({
   const merite = await meriteDeLaPartie(gameId);
   if (merite.etat !== "verdict") return <SansVerdict message={merite.message} />;
   const v = merite.verdict;
-  const [config, session] = await Promise.all([getPlatformConfig(), getSession()]);
+  const [config, session, noms] = await Promise.all([getPlatformConfig(), getSession(), lireLesNoms()]);
   const licence = await unCompteSousLicence([userId, session?.userId]);
   const ferme = niveauReserve(config.vitrineSolo, v.suite.entreprise, v.suite.niveau, licence);
   const choix = SCENARIO_CHOICES.find((s) => s.code === v.suite.entreprise);
@@ -77,7 +78,7 @@ export async function MeriteDeLaPartieAuBilan({
       : `/jouer?secteur=${encodeURIComponent(v.suite.entreprise)}&niveau=${v.suite.niveau}`,
     ferme: ferme
       ? {
-          message: messageNiveauxReserves(config.vitrineSolo),
+          message: messageNiveauxReserves(noms, config.vitrineSolo),
           tarifs: LIEN_TARIFS,
         }
       : null,

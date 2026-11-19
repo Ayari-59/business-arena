@@ -6,7 +6,8 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { FicheFournisseur } from "@/components/fiche-fournisseur";
 import { VENDEUR } from "@/config/editeur";
-import { CONDITIONS, ELEVES_PAR_CLASSE, LE_COURS_PAR_OFFRE, MENTION_TVA, OFFRES, variablesDuCatalogue } from "@/config/tarifs";
+import { CONDITIONS, ELEVES_PAR_CLASSE, LE_COURS_PAR_OFFRE, MENTION_TVA, variablesDuCatalogue } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { remplir } from "@/config/catalogue";
 import {
   DELAIS_APRES_LE_DEVIS,
@@ -50,7 +51,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function CgvPage() {
+async function CgvPage() {
+  const noms = await lireLesNoms();
   const adresse = `${VENDEUR.adresse.rue}, ${VENDEUR.adresse.codePostal} ${VENDEUR.adresse.ville}`;
   return (
     <>
@@ -75,7 +77,7 @@ function CgvPage() {
           <Section title="Les offres">
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                <strong className="text-slate-200">{OFFRES.decouverte.nom}</strong> : sans compte, l&apos;arène en solo.{" "}
+                <strong className="text-slate-200">{noms.decouverte}</strong> : sans compte, l&apos;arène en solo.{" "}
                 {LE_COURS_PAR_OFFRE.decouverte}
               </li>
               <li>
@@ -83,20 +85,20 @@ function CgvPage() {
                     P1-1 : « un groupe » et « toutes vos classes » dans la même ligne, et le parcours pas dit
                     « écrit au devis ») : dans l'arène, une partie à la fois ; dans le cours, un parcours pour
                     toutes les classes, autant de classes que voulu. */}
-                <strong className="text-slate-200">{OFFRES.classe.nom}</strong> : un enseignant ; dans l&apos;arène, une partie à la fois, de{" "}
+                <strong className="text-slate-200">{noms.classe}</strong> : un enseignant ; dans l&apos;arène, une partie à la fois, de{" "}
                 {ELEVES_PAR_CLASSE} élèves au plus, avec une entreprise et un niveau écrits au devis.{" "}
-                {remplir(LE_COURS_PAR_OFFRE.classe, variablesDuCatalogue())}
+                {remplir(LE_COURS_PAR_OFFRE.classe, variablesDuCatalogue(noms))}
               </li>
               <li>
-                <strong className="text-slate-200">{OFFRES.programme.nom}</strong> : l&apos;équipe d&apos;un programme, au nombre
+                <strong className="text-slate-200">{noms.programme}</strong> : l&apos;équipe d&apos;un programme, au nombre
                 d&apos;enseignants fixé au devis, une entreprise à tous les niveaux. {LE_COURS_PAR_OFFRE.programme}
               </li>
               <li>
-                <strong className="text-slate-200">{OFFRES.campus.nom}</strong> : tout l&apos;établissement, sans limite
+                <strong className="text-slate-200">{noms.campus}</strong> : tout l&apos;établissement, sans limite
                 d&apos;enseignants ni de groupes. {LE_COURS_PAR_OFFRE.campus}
               </li>
               <li>
-                <strong className="text-slate-200">{OFFRES.episodes.nom}</strong> et prestations humaines (formation, animation,
+                <strong className="text-slate-200">{noms.episodes}</strong> et prestations humaines (formation, animation,
                 lancement, débrief) : à part, sur devis.
               </li>
             </ul>
@@ -154,8 +156,8 @@ function CgvPage() {
 
           <Section title="Durée et résiliation">
             <p>
-              Durée : un an pour les offres {OFFRES.classe.nom} et {OFFRES.programme.nom} et pour les épisodes manager, une année
-              scolaire ({CONDITIONS.anneeScolaire.debut} au {CONDITIONS.anneeScolaire.fin}) pour l&apos;offre {OFFRES.campus.nom}.
+              Durée : un an pour les offres {noms.classe} et {noms.programme} et pour les épisodes manager, une année
+              scolaire ({CONDITIONS.anneeScolaire.debut} au {CONDITIONS.anneeScolaire.fin}) pour l&apos;offre {noms.campus}.
               Pas de reconduction tacite : le renouvellement passe par un nouveau devis.
             </p>
             <p>

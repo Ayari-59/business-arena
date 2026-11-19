@@ -1,5 +1,6 @@
 import { avecTypographie } from "@/components/typographie";
-import { nomDOffre, OFFRES, parametrageEnClair } from "@/config/tarifs";
+import { nomDOffre, parametrageEnClair } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { parametrageDe } from "@/services/licence.service";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
@@ -25,6 +26,9 @@ async function OrgAdminPage() {
   }
   // Le propriétaire de la plateforme voit aussi la sortie vers l'administration générale.
   const staff = await getStaffContext(session.userId);
+  const noms = await lireLesNoms();
+  // La licence émise garde le nom copié à la vente ; sinon, le nom au catalogue en vigueur.
+  const parametrage = dashboard.licence.licence ? parametrageDe(dashboard.licence.licence) : null;
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
@@ -60,15 +64,15 @@ async function OrgAdminPage() {
               Licence · {dashboard.licence.licence.label}
               {" · "}
               {[
-                dashboard.licence.licence.arene
+                parametrage
                   ? [
-                      nomDOffre(dashboard.licence.licence.arene),
-                      parametrageEnClair(parametrageDe(dashboard.licence.licence)!),
+                      parametrage.nom ? `Offre ${parametrage.nom}` : nomDOffre(noms, parametrage.offre),
+                      parametrageEnClair(parametrage),
                     ]
                       .filter(Boolean)
                       .join(" · ")
                   : null,
-                dashboard.licence.licence.episodes ? OFFRES.episodes.nom : null,
+                dashboard.licence.licence.episodes ? noms.episodes : null,
               ]
                 .filter(Boolean)
                 .join(" + ")}

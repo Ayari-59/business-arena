@@ -10,7 +10,8 @@ import {
   MARQUE_DEMO,
   NIVEAU_DES_DEMOS,
 } from "@/config/episodes/demos";
-import { MARQUE_DES_EPISODES, OFFRES } from "@/config/tarifs";
+import { marqueDesEpisodes } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { NIVEAUX as NIVEAUX_DES_EPISODES, niveauParCode } from "@/config/episodes/niveaux";
 import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
@@ -63,7 +64,7 @@ export const metadata: Metadata = {
  */
 async function EpisodesPage() {
   const entreprises = catalogueDesEpisodes();
-  const [userId, session] = await Promise.all([getGuestUserId(), getSession()]);
+  const [userId, session, noms] = await Promise.all([getGuestUserId(), getSession(), lireLesNoms()]);
   const acces = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
   // Tout est ouvert : une licence de compte ou d'une cohorte sans liste d'épisodes.
   const licence = acces.licence && !acces.episodes;
@@ -170,7 +171,7 @@ async function EpisodesPage() {
               <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
                 {unParMetier ? "Un épisode par métier," : demos.length > 1 ? "Des épisodes" : "Un épisode"} à jouer sans licence, au niveau{" "}
                 {niveauDesDemos}. Les autres épisodes, et les niveaux Standard
-                et Expert, sont inclus dans l&apos;offre {OFFRES.episodes.nom}, sur devis.{" "}
+                et Expert, sont inclus dans l&apos;offre {noms.episodes}, sur devis.{" "}
                 <Link
                   href={LIEN_TARIFS}
                 prefetch={false}
@@ -223,6 +224,7 @@ async function EpisodesPage() {
                   niveau={niveau}
                   teinte={teinte}
                   metier={secteur ? `${secteur.nom} · ${secteur.entreprise}` : null}
+                  marque={marqueDesEpisodes(noms)}
                 />
               );
             }}
@@ -303,11 +305,14 @@ function CarteFermee({
   teinte,
   niveau,
   metier,
+  marque,
 }: {
   ep: Episode;
   teinte: string;
   niveau: 3 | 4;
   metier: string | null;
+  /** « Épisodes manager · sur devis », le nom lu au catalogue en vigueur. */
+  marque: string;
 }) {
   const Titre = niveau === 3 ? "h3" : "h4";
   return (
@@ -323,7 +328,7 @@ function CarteFermee({
               data-marque-offre=""
               className="inline-block rounded-full border border-white/15 px-2.5 py-0.5 text-sm text-slate-300"
             >
-              {MARQUE_DES_EPISODES}
+              {marque}
             </span>
           </p>
           <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">

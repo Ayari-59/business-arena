@@ -5,8 +5,8 @@ import {
   lienDuDevis,
   LIBELLE_DU_DEVIS,
   nomDOffre,
-  OFFRES,
   parametrageEnClair,
+  type NomsDesOffres,
 } from "@/config/tarifs";
 
 /** « 31 août 2027 », au fuseau de Paris. */
@@ -23,15 +23,18 @@ const date = (d: Date) =>
  * « + Épisodes manager » si la licence les inclut, ou la
  * Découverte gratuite et le chemin vers un devis. Un mois avant la fin, la ligne le dit
  * et propose le devis de renouvellement ; une fois la fin passée, elle dit ce qui est
- * fermé et ce qui continue. Les noms viennent de config/tarifs.ts, ou de la copie des
- * conditions de l'offre vendue (/admin, migration 0041). Une licence OFFERTE ou D'ESSAI le
+ * fermé et ce qui continue. Les noms viennent de la copie des conditions de l'offre vendue
+ * (/admin, migration 0041), sinon du catalogue en vigueur (`noms`). Une licence OFFERTE ou D'ESSAI le
  * dit, avec sa fin : « [offre] Campus offerte jusqu'au 31 août 2027 ».
  */
 export function LigneDEtatDeLOffre({
   etat,
   niveauMaxGratuit,
+  noms,
 }: {
   etat: EtatDeLOffre;
+  /** Les noms des offres au catalogue en vigueur (services/catalogue.service.ts, `lireLesNoms`). */
+  noms: NomsDesOffres;
   /** Le dernier niveau ouvert sans licence (réglage de /admin). */
   niveauMaxGratuit: number;
 }) {
@@ -39,7 +42,7 @@ export function LigneDEtatDeLOffre({
   const plusEpisodes = episodes?.licence ? (
     <span data-etat-episodes="">
       {" "}
-      · + {OFFRES.episodes.nom}
+      · + {episodes.licence.arene === null && episodes.licence.nomDeLOffre ? episodes.licence.nomDeLOffre : noms.episodes}
       {episodes.licence.nature === "offerte" ? " offerts" : episodes.licence.nature === "essai" ? " à l'essai" : ""}{" "}
       jusqu&apos;au {date(episodes.licence.endsAt)}
     </span>
@@ -51,7 +54,7 @@ export function LigneDEtatDeLOffre({
   );
 
   // Le nom de l'offre VENDUE (copié sur la licence au moment de la vente), sinon celui du palier.
-  const nomVendu = arene?.licence?.nomDeLOffre ? `Offre ${arene.licence.nomDeLOffre}` : arene ? nomDOffre(arene.offre) : "";
+  const nomVendu = arene?.licence?.nomDeLOffre ? `Offre ${arene.licence.nomDeLOffre}` : arene ? nomDOffre(noms, arene.offre) : "";
   // Une licence offerte ou d'essai le dit, avec sa date de fin : « [offre] Campus offerte jusqu'au … ».
   const nature = arene?.licence?.nature ?? "vendue";
   const gratuite =
@@ -116,7 +119,7 @@ export function LigneDEtatDeLOffre({
     etatCode = "decouverte";
     contenu = (
       <>
-        <strong className="font-semibold text-slate-100">{OFFRES.decouverte.nom}</strong> : solo,
+        <strong className="font-semibold text-slate-100">{noms.decouverte}</strong> : solo,
         niveaux 1 à {niveauMaxGratuit}
         {plusEpisodes} · {devis("classe")}
       </>

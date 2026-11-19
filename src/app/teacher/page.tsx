@@ -20,9 +20,9 @@ import {
   estUneOffreDuDevis,
   horsLicence,
   LIBELLE_DU_DEVIS,
-  LIBELLES_DU_DEVIS,
+  libellesDuDevis,
   lienDuDevis,
-  MARQUE_DE_L_ARENE,
+  marqueDeLArene,
   marqueHorsLicence,
   messageNiveauxReserves,
   nomDOffre,
@@ -32,7 +32,7 @@ import {
 } from "@/config/tarifs";
 import { LigneDEtatDeLOffre } from "@/components/etat-de-l-offre";
 import { AccueilDeLaDecouverte } from "@/components/accueil-de-la-decouverte";
-import { lireLEssai } from "@/services/catalogue.service";
+import { lireLEssai, lireLesNoms } from "@/services/catalogue.service";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { archiverPartieAction, createClassGameAction, desarchiverPartieAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
@@ -101,10 +101,11 @@ async function TeacherDashboard({
   // niveau, marqués du nom de l'offre, et refusés par le serveur à la création.
   // L'ÉTAT DE L'OFFRE (PAR-13) : la ligne d'en-tête, et la règle de la classe (pas de
   // partie de classe ni de concours sans licence de l'arène en cours, PAR-01 et PAR-02).
-  const [{ vitrineSolo: regle }, etat, essai] = await Promise.all([
+  const [{ vitrineSolo: regle }, etat, essai, noms] = await Promise.all([
     getPlatformConfig(),
     etatDeLOffre(session.userId),
     lireLEssai(),
+    lireLesNoms(),
   ]);
   const licence =
     etat.arene !== null && (etat.arene.state === "active" || etat.arene.state === "bientot_expiree");
@@ -113,19 +114,19 @@ async function TeacherDashboard({
   // ce que la licence couvre, et marque le reste du nom de l'offre qui l'ouvre, avec le
   // lien ; le serveur refuse de toute façon (services/acces.service.ts, `verifierLaLicence`).
   const parametrage = licence ? etat.arene!.parametrage : null;
-  const marque = (d: Parameters<typeof marqueHorsLicence>[1]) =>
-    parametrage ? marqueHorsLicence(parametrage, d) : null;
+  const marque = (d: Parameters<typeof marqueHorsLicence>[2]) =>
+    parametrage ? marqueHorsLicence(noms, parametrage, d) : null;
   // Ce qui bloque toute création, quels que soient l'entreprise et le niveau : un
   // enseignant de trop, ou le groupe déjà en cours (offre Classe).
   const blocage: HorsLicence | null =
     parametrage && etat.arene
-      ? horsLicence(parametrage, {
+      ? horsLicence(noms, parametrage, {
           enseignants: etat.arene.teachers,
           partiesEnCours: etat.partiesEnCours ?? undefined,
         })
       : null;
   const blocageDuConcours: HorsLicence | null = parametrage
-    ? horsLicence(parametrage, { entreprise: entrepriseDuScenario(DEFAULT_SCENARIO_CODE) })
+    ? horsLicence(noms, parametrage, { entreprise: entrepriseDuScenario(DEFAULT_SCENARIO_CODE) })
     : null;
   const entrepriseParDefaut = parametrage?.entreprises?.[0] ?? DEFAULT_SCENARIO_CODE;
   const niveauParDefaut = parametrage?.niveaux?.[0] ?? Math.min(3, niveauMaxSansLicence);
@@ -195,7 +196,7 @@ async function TeacherDashboard({
       </EnTeteDePage>
       <div className={`${COLONNE_DE_PAGE} space-y-8`}>
 
-      <LigneDEtatDeLOffre etat={etat} niveauMaxGratuit={regle.niveauMaxAutres} />
+      <LigneDEtatDeLOffre etat={etat} niveauMaxGratuit={regle.niveauMaxAutres} noms={noms} />
 
       {!licence ? (
         <AccueilDeLaDecouverte essai={essai} niveauMax={regle.active ? regle.niveauMaxAutres : NIVEAU_MAX} />
@@ -217,7 +218,7 @@ async function TeacherDashboard({
                 data-devis-du-refus=""
                 className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
               >
-                {LIBELLE_DU_DEVIS} ({LIBELLES_DU_DEVIS[offre].offre})
+                {LIBELLE_DU_DEVIS} ({libellesDuDevis(noms)[offre].offre})
               </Link>{" "}
               ·
             </>
@@ -315,8 +316,8 @@ async function TeacherDashboard({
             className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
           >
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-            <strong className="font-semibold text-slate-100">{MARQUE_DE_L_ARENE}.</strong>{" "}
-            {refusDeLaClasse(regle)}{" "}
+            <strong className="font-semibold text-slate-100">{marqueDeLArene(noms)}.</strong>{" "}
+            {refusDeLaClasse(noms, regle)}{" "}
             <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
               {LIBELLE_DU_DEVIS}
             </Link>{" "}
@@ -335,20 +336,20 @@ async function TeacherDashboard({
             className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
           >
             <strong className="font-semibold text-slate-100">
-              {nomDOffre(parametrage.offre)} · {parametrageEnClair(parametrage)}.
+              {parametrage.nom ? `Offre ${parametrage.nom}` : nomDOffre(noms, parametrage.offre)} · {parametrageEnClair(parametrage)}.
             </strong>{" "}
             {parametrage.entreprises !== null
-              ? `Les autres entreprises sont marquées « ${nomDOffre("campus")} ». `
+              ? `Les autres entreprises sont marquées « ${nomDOffre(noms, "campus")} ». `
               : ""}
             {parametrage.niveaux !== null
-              ? `Les autres niveaux sont marqués « ${nomDOffre("programme")} ». `
+              ? `Les autres niveaux sont marqués « ${nomDOffre(noms, "programme")} ». `
               : ""}
             <Link
               href={lienDuDevis(parametrage.niveaux !== null ? "programme" : "campus")}
               prefetch={false}
               className={LIEN_A_L_ENCRE}
             >
-              {LIBELLE_DU_DEVIS} ({nomDOffre(parametrage.niveaux !== null ? "programme" : "campus")})
+              {LIBELLE_DU_DEVIS} ({nomDOffre(noms, parametrage.niveaux !== null ? "programme" : "campus")})
             </Link>{" "}
             ·{" "}
             <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
@@ -364,7 +365,7 @@ async function TeacherDashboard({
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
             {blocage.message}{" "}
             <Link href={lienDuDevis(blocage.offre)} prefetch={false} className={LIEN_A_L_ENCRE}>
-              {LIBELLE_DU_DEVIS} ({nomDOffre(blocage.offre)})
+              {LIBELLE_DU_DEVIS} ({nomDOffre(noms, blocage.offre)})
             </Link>
           </p>
         ) : null}
@@ -567,7 +568,7 @@ async function TeacherDashboard({
                     disabled={(fermeIci && !aDeuxEtages(regle)) || horsDuNiveau !== null}
                   >
                     {p.level} · {p.name} : {p.tagline}
-                    {fermeIci ? ` · ${MARQUE_DE_L_ARENE}` : ""}
+                    {fermeIci ? ` · ${marqueDeLArene(noms)}` : ""}
                     {horsDuNiveau ? ` · ${horsDuNiveau}` : ""}
                   </option>
                 );
@@ -577,9 +578,9 @@ async function TeacherDashboard({
               <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">
                 <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
                 <strong className="font-semibold text-slate-200">
-                  {niveauxFermes(regle)} · {MARQUE_DE_L_ARENE}.
+                  {niveauxFermes(regle)} · {marqueDeLArene(noms)}.
                 </strong>{" "}
-                {messageNiveauxReserves(regle)}{" "}
+                {messageNiveauxReserves(noms, regle)}{" "}
                 <Link
                   href={LIEN_TARIFS}
                 prefetch={false}
@@ -997,7 +998,7 @@ async function TeacherDashboard({
         >
           {!licence ? (
             <p data-concours-sans-licence="" className="mb-3 text-sm text-slate-300">
-              {refusDeLaClasse(regle)}{" "}
+              {refusDeLaClasse(noms, regle)}{" "}
               <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
                 Voir les offres
               </Link>
@@ -1012,7 +1013,7 @@ async function TeacherDashboard({
                 prefetch={false}
                 className={LIEN_A_L_ENCRE}
               >
-                {LIBELLE_DU_DEVIS} ({nomDOffre((blocageDuConcours ?? blocage)!.offre)})
+                {LIBELLE_DU_DEVIS} ({nomDOffre(noms, (blocageDuConcours ?? blocage)!.offre)})
               </Link>
             </p>
           ) : null}

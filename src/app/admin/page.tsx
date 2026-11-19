@@ -19,7 +19,8 @@ import {
   nomDuNiveau,
   NIVEAUX_DE_L_ARENE,
   nomDOffre,
-  OFFRES,
+  nomsDuCatalogue,
+  type NomsDesOffres,
   parametrageEnClair,
   libellesDuDevisDe,
 } from "@/config/tarifs";
@@ -81,12 +82,13 @@ const ETAT_LICENCE: Record<string, { libelle: string; couleur: string }> = {
  * Ce que couvre une licence, en clair : l'offre de l'arène et son paramétrage
  * (« [offre] Classe · NOVA · niveau 3 Pilotage »), « + » les épisodes s'ils sont inclus.
  */
-function perimetre(l: OrgLicence): string {
+function perimetre(l: OrgLicence, n: NomsDesOffres): string {
   const p = parametrageDe(l);
+  // Une licence émise garde le nom copié à la vente ; sinon, le nom au catalogue en vigueur.
   const arene = p
-    ? [nomDOffre(p.offre), parametrageEnClair(p)].filter((x) => x !== "").join(" · ")
+    ? [p.nom ? `Offre ${p.nom}` : nomDOffre(n, p.offre), parametrageEnClair(p)].filter((x) => x !== "").join(" · ")
     : null;
-  return [arene, l.episodes ? OFFRES.episodes.nom : null]
+  return [arene, l.episodes ? (!p && l.nomDeLOffre ? l.nomDeLOffre : n.episodes) : null]
     .filter((x): x is string => x !== null)
     .join(" + ");
 }
@@ -157,6 +159,7 @@ async function AdminPage({
   const mesureAnalyse = await mesurerLAnalyseSolo();
   const { catalogue, essai } = await lireLEtatDuCatalogue();
   const offresDeLicence = offresDuFormulaire(catalogue);
+  const noms = nomsDuCatalogue(catalogue);
   const libellesDe = (code: string) => {
     const o = catalogue.offres.find((x) => x.code === code);
     return o ? libellesDuDevisDe(o) : null;
@@ -873,7 +876,7 @@ async function AdminPage({
                       {ETAT_LICENCE[org.licence.state]?.libelle ?? org.licence.state}
                     </span>
                     {org.licence.licence
-                      ? ` · ${org.licence.licence.label} · ${perimetre(org.licence.licence)} · ${org.licence.teachers}${
+                      ? ` · ${org.licence.licence.label} · ${perimetre(org.licence.licence, noms)} · ${org.licence.teachers}${
                           org.licence.licence.maxTeachers === null
                             ? ""
                             : ` / ${org.licence.licence.maxTeachers}`
@@ -892,7 +895,7 @@ async function AdminPage({
                       {org.licences.map((l) => (
                         <li key={l.id} className="flex flex-wrap items-center gap-2">
                           <span className="text-slate-300">{l.label}</span>
-                          <span data-perimetre-licence="">{perimetre(l)}</span>
+                          <span data-perimetre-licence="">{perimetre(l, noms)}</span>
                           {vente(l) ? (
                             <span data-vente-licence={l.nature} className={l.nature === "vendue" ? "" : "font-semibold text-slate-200"}>
                               {vente(l)}
@@ -934,7 +937,7 @@ async function AdminPage({
                     offres={offresDeLicence}
                     entreprises={ENTREPRISES.map((e) => ({ code: e.code, nom: e.nom }))}
                     niveaux={NIVEAUX_DE_L_ARENE}
-                    episodes={OFFRES.episodes.nom}
+                    episodes={noms.episodes}
                     motifsDeRemise={Object.entries(MOTIFS_DE_REMISE).map(([code, libelle]) => ({ code, libelle }))}
                     motifsDeGratuite={Object.entries(MOTIFS_DE_GRATUITE).map(([code, libelle]) => ({ code, libelle }))}
                     essai={essai}
@@ -949,7 +952,7 @@ async function AdminPage({
                     l&apos;arène en cours, ou licence expirée, l&apos;établissement joue en solo aux
                     niveaux gratuits : ni partie de classe ni concours ne se créent, les parties en
                     cours se poursuivent. Les épisodes manager ne s&apos;ouvrent qu&apos;avec une offre qui
-                    les compose, ou la case « + {OFFRES.episodes.nom} ».
+                    les compose, ou la case « + {noms.episodes} ».
                   </p>
                 </details>
               ) : null}

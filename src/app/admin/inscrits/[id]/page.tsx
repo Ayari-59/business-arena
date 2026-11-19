@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { EnTeteAdmin } from "@/components/en-tete-admin";
 import {
   etablissementsAuChoix,
@@ -67,10 +68,11 @@ async function FicheInscritPage({
   if (!context?.isPlatformAdmin) redirect("/teacher");
   const [{ id }, { fait, refus }] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [i, etablissements, journal] = await Promise.all([
+  const [i, etablissements, journal, noms] = await Promise.all([
     ficheDeLInscrit(session.userId, id),
     etablissementsAuChoix(session.userId),
     lireLeJournal(session.userId, { cible: id, n: 30 }),
+    lireLesNoms(),
   ]);
   if (!i) notFound();
   const c = i.consentement;
@@ -117,7 +119,7 @@ async function FicheInscritPage({
           <Ligne libelle="Provenance">{LIBELLES_DE_PROVENANCE[i.provenance]}</Ligne>
           <Ligne libelle="Inscrit le">{jour(i.inscritLe)}</Ligne>
           <Ligne libelle="Dernière connexion">{i.derniereConnexionLe ? jour(i.derniereConnexionLe) : "—"}</Ligne>
-          <Ligne libelle="Offre en cours">{libelleDOffre(i.offre)}</Ligne>
+          <Ligne libelle="Offre en cours">{libelleDOffre(noms, i.offre)}</Ligne>
           <Ligne libelle="Parties de classe créées">{i.partiesDeClasse}</Ligne>
           <Ligne libelle="Cohortes créées">{i.cohortes}</Ligne>
           <Ligne libelle="Nouveautés">

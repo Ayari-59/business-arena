@@ -12,6 +12,7 @@ import { atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
 import { getSession } from "@/lib/session";
 import { getGuestUserId } from "@/lib/guest";
 import { getPlatformConfig } from "@/services/admin.service";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { licenceDeLArene, unCompteSousLicence } from "@/services/acces.service";
 import { getTeacherOrgId } from "@/services/auth.service";
 import { LIEN_TARIFS, niveauReserve } from "@/config/vitrine-solo";
@@ -20,7 +21,7 @@ import {
   horsLicence,
   LIBELLE_DU_DEVIS,
   lienDuDevis,
-  MARQUE_DE_L_ARENE,
+  marqueDeLArene,
   messageNiveauxReserves,
   nomDOffre,
   refusDeLaClasse,
@@ -147,10 +148,11 @@ async function AtelierPage({
   // UN ATELIER À UN NIVEAU FERMÉ SANS LICENCE : visible, avec son message, non lançable.
   // Le serveur refuse de toute façon la création (createClassGame) ; la fiche le dit
   // avant qu'on ait rempli le formulaire. Un concours ne se règle pas au niveau.
-  const [{ vitrineSolo }, session, invite] = await Promise.all([
+  const [{ vitrineSolo }, session, invite, noms] = await Promise.all([
     getPlatformConfig(),
     getSession(),
     getGuestUserId(),
+    lireLesNoms(),
   ]);
   // « Pas d'essai en classe » : sans licence de l'arène en cours, ni la partie ni le
   // concours d'un atelier ne se créent, quel que soit leur niveau (createClassGame,
@@ -166,7 +168,7 @@ async function AtelierPage({
   const orgDuCompte = !sansLicence && session ? await getTeacherOrgId(session.userId) : null;
   const licenceDuCompte = orgDuCompte ? await licenceDeLArene(orgDuCompte) : null;
   const horsDeLaLicence = licenceDuCompte
-    ? horsLicence(licenceDuCompte.parametrage, {
+    ? horsLicence(noms, licenceDuCompte.parametrage, {
         entreprise: entrepriseDuScenario(atelier.reglages.scenarioCode),
         niveau: tournoi ? undefined : atelier.reglages.niveau,
       })
@@ -460,10 +462,10 @@ async function AtelierPage({
               >
                 <strong className="font-semibold text-slate-100">
                   {niveauFerme ? `Niveau ${atelier.reglages.niveau} · ` : ""}
-                  {MARQUE_DE_L_ARENE}.
+                  {marqueDeLArene(noms)}.
                 </strong>{" "}
-                {niveauFerme ? `${messageNiveauxReserves(vitrineSolo)} ` : ""}
-                {refusDeLaClasse(vitrineSolo)}{" "}
+                {niveauFerme ? `${messageNiveauxReserves(noms, vitrineSolo)} ` : ""}
+                {refusDeLaClasse(noms, vitrineSolo)}{" "}
                 <Link
                   href={LIEN_TARIFS}
                   prefetch={false}
@@ -478,7 +480,7 @@ async function AtelierPage({
                 className="mt-4 rounded-lg encadre-neutre px-3 py-2.5 text-sm leading-relaxed text-slate-200 print:hidden"
               >
                 <strong className="font-semibold text-slate-100">
-                  {nomDOffre(horsDeLaLicence.offre)}.
+                  {nomDOffre(noms, horsDeLaLicence.offre)}.
                 </strong>{" "}
                 {horsDeLaLicence.message}{" "}
                 <Link
