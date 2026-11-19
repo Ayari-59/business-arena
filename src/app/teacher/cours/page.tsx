@@ -21,7 +21,8 @@ import {
   titreDuParcours,
 } from "@/config/cours/parcours-de-formation";
 import { classeSansOffre, offreDuCoursDeLEnseignant, parcoursDeLEssai, unParcoursParLicenceClasse } from "@/services/chapitres-de-la-classe";
-import { LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { NouvelleClasseDuCours } from "@/components/nouvelle-classe-du-cours";
@@ -50,19 +51,20 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
   const { refus } = await searchParams;
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
-  const [classes, staff, offre, attribues, impose] = await Promise.all([
+  const [classes, staff, offre, attribues, impose, noms] = await Promise.all([
     classesDeLEnseignant(session.userId),
     getStaffContext(session.userId),
     offreDuCoursDeLEnseignant(session.userId),
     parcoursAttribues(session.userId),
     parcoursImposeALEnseignant(session.userId),
+    lireLesNoms(),
   ]);
   // Les parcours que l'admin a attribués (migration 0056) : sans liste, tous ceux qu'on propose.
   // Sous l'offre Classe, le seul parcours de la licence quand il est fixé (décision du 10 novembre 2026).
   // Rangés par diplôme, le cours du diplôme en premier (décision du 11 novembre 2026).
   const aChoisir = PARCOURS_PROPOSES_A_CHOISIR.filter((p) => (impose ? p.code === impose : parcoursAttribue(attribues, p.code)));
   const groupes = parcoursRangesParDiplome(aChoisir.map((p) => p.code));
-  const offres = { classe: OFFRES.classe.nom, programme: OFFRES.programme.nom, campus: OFFRES.campus.nom };
+  const offres = { classe: noms.classe, programme: noms.programme, campus: noms.campus };
   const aide =
     offre === "classe"
       ? unParcoursParLicenceClasse(offres, impose ? (titreDuParcours(impose) ?? impose) : null)

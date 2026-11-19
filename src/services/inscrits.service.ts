@@ -13,7 +13,8 @@ import {
   organizations,
   users,
 } from "@/db/schema";
-import { OFFRES, OFFRES_DE_L_ARENE, type OffreDeLArene } from "@/config/tarifs";
+import { OFFRES_DE_L_ARENE, type NomsDesOffres, type OffreDeLArene } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { createInvite, getPlatformConfig, requirePlatformAdmin, updatePlatformConfig } from "@/services/admin.service";
 import { assertCanAddTeacher } from "@/services/licence.service";
 import { lireDomaines } from "@/config/inscriptions";
@@ -189,9 +190,9 @@ export interface CompteursDesInscrits {
 }
 
 /** « Campus + Épisodes manager », « Découverte ». */
-export function libelleDOffre(o: OffreEnCours): string {
-  const arene: string = o.arene ? OFFRES[o.arene].nom : OFFRES.decouverte.nom;
-  return o.episodes ? `${arene} + ${OFFRES.episodes.nom}` : arene;
+export function libelleDOffre(n: NomsDesOffres, o: OffreEnCours): string {
+  const arene: string = o.arene ? n[o.arene] : n.decouverte;
+  return o.episodes ? `${arene} + ${n.episodes}` : arene;
 }
 
 /** « Lycée Monge (administrateur) · IUT de Lille (enseignant) » ; l'admin de la plateforme en plus. */
@@ -504,12 +505,13 @@ export async function exporterLesInscrits(
   );
   const entete = options.consentants ? [...COLONNES_DE_L_EXPORT, COLONNE_DU_LIEN] : [...COLONNES_DE_L_EXPORT];
   const lignes = [entete.map(celluleCsv).join(";")];
+  const noms = await lireLesNoms();
   for (const i of retenus) {
     const cellules: (string | number | null)[] = [
       i.nom,
       i.email,
       libelleDesEtablissements(i),
-      libelleDOffre(i.offre),
+      libelleDOffre(noms, i.offre),
       enDate(i.inscritLe),
       enDate(i.derniereConnexionLe),
       i.partiesDeClasse,

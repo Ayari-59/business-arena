@@ -1,7 +1,7 @@
 import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { OffreDesEntreprises } from "@/components/offre-des-entreprises";
-import { variablesDuCatalogue } from "@/config/tarifs";
+import { nomsDuCatalogue, variablesDuCatalogue } from "@/config/tarifs";
 import { vueDesTarifs } from "@/config/catalogue";
 import { SEMAINES_DU_PARCOURS } from "@/config/episodes/parcours-en-cohorte";
 import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 async function OffreEntreprisesPage() {
   const { catalogue, decouverte, affichage } = await lireLEtatDuCatalogue();
-  const vue = vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix: affichage.prixPublics });
+  const vue = vueDesTarifs(catalogue, variablesDuCatalogue(nomsDuCatalogue(catalogue), decouverte), { prix: affichage.prixPublics });
   const colonnes = vue.episodes?.colonnes.filter((c) => c.public === "entreprises") ?? [];
   return <OffreDesEntreprises colonnes={colonnes} tarif={vue.episodes?.tarif ?? null} demos={compterLesDemos(decouverte)} />;
 }

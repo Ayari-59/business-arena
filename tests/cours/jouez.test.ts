@@ -12,6 +12,7 @@ import {
   missionDuChapitre,
   niveauDeLaGamme,
 } from "../../src/config/cours/jouez";
+import { NOMS_PAR_DEFAUT } from "../../src/config/tarifs";
 import { scenarioByCode, scenarioCodeForLevel } from "../../src/config/scenarios/registry";
 
 /**
@@ -52,7 +53,7 @@ describe("une mission par chapitre et par entreprise", () => {
           if (fournisseurs.includes(mot)) continue;
           expect(FORMULAIRE.some((t) => t.includes(`"${mot}"`) || t.includes(`legend="${mot}"`)), `${chapitre.code} chez ${code} : « ${mot} »`).toBe(true);
         }
-        const affichee = missionAffichee(chapitre.code, cas)!;
+        const affichee = missionAffichee(chapitre.code, cas, NOMS_PAR_DEFAUT)!;
         expect(affichee.adresse).toBe(`/jouer?secteur=${code}&niveau=${m!.niveau}`);
         if (m!.niveau <= NIVEAU_SANS_LICENCE) expect(affichee.reservee).toBeNull();
       }
@@ -80,7 +81,7 @@ describe("le niveau de la mission", () => {
           expect(["cout-par-produit", "assortiment", "portefeuille-abc"]).toContain(chapitre.code);
           expect(m.niveau).toBe(niveauDeLaGamme(code));
         }
-        expect(missionAffichee(chapitre.code, casDeLEntreprise(code))!.reservee).toContain(`niveau ${m.niveau} est inclus`);
+        expect(missionAffichee(chapitre.code, casDeLEntreprise(code), NOMS_PAR_DEFAUT)!.reservee).toContain(`niveau ${m.niveau} est inclus`);
       }
     }
   });

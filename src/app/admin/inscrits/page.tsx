@@ -25,7 +25,8 @@ import {
   type Inscrit,
   type RefusDeGestion,
 } from "@/services/inscrits.service";
-import { OFFRES } from "@/config/tarifs";
+import type { NomsDesOffres } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { VERSION_DU_TEXTE } from "@/config/nouveautes";
 import { bouton } from "@/components/bouton";
 import { EnTeteAdmin } from "@/components/en-tete-admin";
@@ -57,13 +58,14 @@ export const dynamic = "force-dynamic";
  * de chacun.
  */
 
-const NOMS_DES_FILTRES: Record<FiltreDOffre, string> = {
-  classe: OFFRES.classe.nom,
-  programme: OFFRES.programme.nom,
-  campus: OFFRES.campus.nom,
-  decouverte: `${OFFRES.decouverte.nom} (sans licence de l'arène)`,
-  episodes: OFFRES.episodes.nom,
-};
+/** Le nom de chaque filtre : celui de l'offre au catalogue en vigueur. */
+const nomsDesFiltres = (n: NomsDesOffres): Record<FiltreDOffre, string> => ({
+  classe: n.classe,
+  programme: n.programme,
+  campus: n.campus,
+  decouverte: `${n.decouverte} (sans licence de l'arène)`,
+  episodes: n.episodes,
+});
 
 const FAITS: Record<string, string> = {
   reglages: "Réglages des inscriptions enregistrés.",
@@ -99,12 +101,13 @@ async function AdminInscritsPage({
 
   const parametres = await searchParams;
   const filtres = lireLesFiltres(parametres);
-  const [liste, reglages, codes, etablissements, journal] = await Promise.all([
+  const [liste, reglages, codes, etablissements, journal, noms] = await Promise.all([
     listerInscrits(session.userId, filtres),
     reglagesDesInscriptions(session.userId),
     listerCodesDInvitation(session.userId),
     etablissementsAuChoix(session.userId),
     lireLeJournal(session.userId, { n: 15 }),
+    lireLesNoms(),
   ]);
   const { compteurs } = liste;
   const fait = typeof parametres.fait === "string" ? FAITS[parametres.fait] : undefined;
@@ -351,7 +354,7 @@ async function AdminInscritsPage({
               <option value="">Toutes</option>
               {FILTRES_D_OFFRE.map((o) => (
                 <option key={o} value={o}>
-                  {NOMS_DES_FILTRES[o]}
+                  {nomsDesFiltres(noms)[o]}
                 </option>
               ))}
             </select>
@@ -479,7 +482,7 @@ async function AdminInscritsPage({
                         {i.adminPlateforme ? <li className="text-slate-400">Administration de la plateforme</li> : null}
                       </ul>
                     </td>
-                    <td className="px-3 py-2">{libelleDOffre(i.offre)}</td>
+                    <td className="px-3 py-2">{libelleDOffre(noms, i.offre)}</td>
                     <td className="whitespace-nowrap px-3 py-2 tabular-nums">{jour(i.inscritLe)}</td>
                     <td className="whitespace-nowrap px-3 py-2 tabular-nums">
                       {i.derniereConnexionLe ? jour(i.derniereConnexionLe) : <span className="text-slate-400">—</span>}
@@ -564,7 +567,7 @@ async function AdminInscritsPage({
           </li>
           <li>
             Offre en cours : la plus grande licence en cours parmi les établissements de l&apos;enseignant ;{" "}
-            {OFFRES.decouverte.nom} sans licence de l&apos;arène.
+            {noms.decouverte} sans licence de l&apos;arène.
           </li>
           <li>
             Dernière connexion : enregistrée à chaque connexion (mot de passe, plateforme LTI ou établissement RENATER)

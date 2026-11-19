@@ -3,7 +3,7 @@ import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { VENDEUR } from "@/config/editeur";
-import { CONDITIONS, lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { CONDITIONS, lienDuDevis, LIBELLE_DU_DEVIS, type NomsDesOffres } from "@/config/tarifs";
 import { DELAIS_APRES_LE_DEVIS } from "@/config/conditions-legales";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
@@ -19,7 +19,14 @@ import { ESSAIS_DES_LYCEES, type OffrePourLesLycees } from "@/config/lycees";
  * s'y annoncent pas : ils sont pour l'enseignement supérieur (config/episodes/public-des-episodes.ts).
  * Les devis sont ceux de l'arène et du cours, jamais celui des épisodes.
  */
-export function PageDesLycees({ offres }: { offres: readonly OffrePourLesLycees[] }) {
+export function PageDesLycees({
+  offres,
+  noms,
+}: {
+  offres: readonly OffrePourLesLycees[];
+  /** Les noms des offres au catalogue en vigueur. */
+  noms: NomsDesOffres;
+}) {
   const lienDuChapitre = (code: string, diplome: string) => `/cours/${code}?diplome=${diplome}`;
   return (
     <>
@@ -126,7 +133,7 @@ export function PageDesLycees({ offres }: { offres: readonly OffrePourLesLycees[
               La commande : bon de commande, mandat administratif, Chorus Pro
             </h2>
             <ol className="list-decimal space-y-2 pl-6 text-base leading-relaxed text-slate-300">
-              <li>Demandez un devis écrit : l&apos;offre, l&apos;UAI de votre lycée, et, pour l&apos;offre Classe, le parcours du cours.</li>
+              <li>Demandez un devis écrit : l&apos;offre, l&apos;UAI de votre lycée, et, pour l&apos;offre {noms.classe}, le parcours du cours.</li>
               <li>Retournez-le signé, ou émettez un bon de commande qui le reprend.</li>
               <li>
                 La facture, payable à {CONDITIONS.delaiFactureJours} jours par virement ou par mandat administratif, est déposée sur

@@ -20,7 +20,8 @@ import {
   partiesDe,
 } from "@/services/episode-parties.service";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
-import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes } from "@/config/tarifs";
+import { conseilSansLicence, ceQuOuvrentLesEpisodes } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { getSession } from "@/lib/session";
 import { codeFaux, gardeDesCodes } from "@/lib/garde-des-codes";
@@ -70,13 +71,14 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
     const session = await getSession();
     const invite = await getGuestUserId();
     if (await estUnePartieDeDemonstrationPour({ userId: invite, sessionUserId: session?.userId, brut: entree })) {
+      const noms = await lireLesNoms();
       return {
         ...ECHEC,
         ok: true,
         compte: "decouverte",
-        conseil: CONSEIL_SANS_LICENCE,
+        conseil: conseilSansLicence(noms),
         // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
-        offre: (await suitUneCohorte(invite)) ? null : ceQuOuvrentLesEpisodes(NOMBRE_D_EPISODES),
+        offre: (await suitUneCohorte(invite)) ? null : ceQuOuvrentLesEpisodes(noms, NOMBRE_D_EPISODES),
       };
     }
     const userId = await getOrCreateGuestUserId();
@@ -84,10 +86,11 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
     // commencée, et on n'en casse jamais une.
     const r = await enregistrerPartie(userId, entree);
     if (!r.ok) return ECHEC;
-    const [parties, objectif, acces] = await Promise.all([
+    const [parties, objectif, acces, noms] = await Promise.all([
       partiesDe(userId),
       objectifDe(userId),
       accesAuxEpisodes({ userId, sessionUserId: session?.userId }),
+      lireLesNoms(),
     ]);
     const profil = construireProfil(parties, undefined, {
       objectif,
@@ -106,10 +109,10 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
       episodesComptes: profil.comptees.length,
       pourquoi: profil.cible?.pourquoi ?? null,
       objectifChoisi: profil.cible?.choisie ?? false,
-      conseil: acces.licence ? profil.conseil : CONSEIL_SANS_LICENCE,
+      conseil: acces.licence ? profil.conseil : conseilSansLicence(noms),
       // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
       offre:
-        acces.licence || (await suitUneCohorte(userId)) ? null : ceQuOuvrentLesEpisodes(NOMBRE_D_EPISODES),
+        acces.licence || (await suitUneCohorte(userId)) ? null : ceQuOuvrentLesEpisodes(noms, NOMBRE_D_EPISODES),
       recommandations: profil.recommandations.map((x) => ({
         code: x.code,
         numero: x.numero,

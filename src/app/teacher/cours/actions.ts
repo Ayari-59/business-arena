@@ -6,7 +6,8 @@ import { getSession } from "@/lib/session";
 import { choisirLeParcours, cloreClasse, creerClasse, parcoursImposeALEnseignant, permettreLaCalculatrice } from "@/services/cours.service";
 import { changerLaLiberation, libererLeChapitre } from "@/services/attributions.service";
 import { chapitreParCode } from "@/config/cours/registre";
-import { OFFRES } from "@/config/tarifs";
+import type { NomsDesOffres } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 
 /**
  * LES GESTES DE L'ENSEIGNANT SUR SES CLASSES DU COURS. L'enseignant est celui de la
@@ -31,9 +32,12 @@ export interface EtatDeLaNouvelleClasse {
 const REFUS_DE_LA_CLASSE = {
   nom: "Donnez un nom à la classe, par exemple « BTS CG 1 · groupe A ».",
   parcours: "Choisissez le parcours du cours de la classe dans la liste.",
-  impose: `Avec l'offre ${OFFRES.classe.nom}, une nouvelle classe suit le parcours de vos autres classes : choisissez-le dans la liste.`,
   horsDeLaListe: "Ce parcours n'est pas ouvert à votre établissement : choisissez-en un dans la liste.",
 } as const;
+
+/** Le refus du parcours imposé, l'offre nommée au catalogue en vigueur. */
+const refusDuParcoursImpose = (n: NomsDesOffres) =>
+  `Avec l'offre ${n.classe}, une nouvelle classe suit le parcours de vos autres classes : choisissez-le dans la liste.`;
 
 export async function creerClasseAction(_avant: EtatDeLaNouvelleClasse, formData: FormData): Promise<EtatDeLaNouvelleClasse> {
   const enseignantId = await enseignant();
@@ -59,7 +63,7 @@ export async function creerClasseAction(_avant: EtatDeLaNouvelleClasse, formData
     // de ceux qu'on propose, ou l'admin ne l'a pas attribué.
     const impose = await parcoursImposeALEnseignant(enseignantId);
     return {
-      erreurs: { parcours: impose !== null && valeurs.parcours !== impose ? REFUS_DE_LA_CLASSE.impose : REFUS_DE_LA_CLASSE.horsDeLaListe },
+      erreurs: { parcours: impose !== null && valeurs.parcours !== impose ? refusDuParcoursImpose(await lireLesNoms()) : REFUS_DE_LA_CLASSE.horsDeLaListe },
       valeurs,
     };
   }

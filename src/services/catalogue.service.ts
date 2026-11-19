@@ -39,7 +39,7 @@ import {
   type ReglageDeLaDecouverte,
   type ReglageDeLEssai,
 } from "@/config/decouverte";
-import { CATALOGUE_PAR_DEFAUT, OFFRES, VARIABLES_DU_CATALOGUE } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, nomsDuCatalogue, VARIABLES_DU_CATALOGUE, type NomsDesOffres } from "@/config/tarifs";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 
 /**
@@ -254,6 +254,11 @@ function defaut(): EtatDuCatalogue {
 export const lireLeCatalogue = async (): Promise<Catalogue> => (await lireLEtatDuCatalogue()).catalogue;
 export const lireLaDecouverte = async (): Promise<ReglageDeLaDecouverte> => (await lireLEtatDuCatalogue()).decouverte;
 export const lireLEssai = async (): Promise<ReglageDeLEssai> => (await lireLEtatDuCatalogue()).essai;
+/**
+ * Les noms des offres au catalogue en vigueur (renommées dans /admin/offres), par défaut ceux
+ * de config/tarifs.ts. Même cache que le catalogue, invalidé par /admin avec lui.
+ */
+export const lireLesNoms = async (): Promise<NomsDesOffres> => nomsDuCatalogue(await lireLeCatalogue());
 
 /** Le bandeau de /tarifs, s'il y a une promotion en cours ; null sinon. */
 export async function bandeauDeLaPromotion(maintenant: Date = new Date()): Promise<string | null> {
@@ -314,13 +319,9 @@ async function catalogueReel(): Promise<Catalogue> {
   return (await lireLEtatSansCache()).catalogue;
 }
 
-/** Les offres dont le nom est cité par les murs de licence et les phrases du site : il est figé. */
-const NOMS_FIGES = new Set<string>(Object.keys(OFFRES));
-
 /**
  * ENREGISTRE UNE OFFRE (création ou modification). Refuse, avec ses phrases, ce que
- * `erreursDeLOffre` refuse ; refuse aussi de changer le nom d'une offre de la grille,
- * de mettre en avant une deuxième offre (il faut déplacer la mise en avant) et de
+ * `erreursDeLOffre` refuse ; refuse aussi de mettre en avant une deuxième offre (il faut déplacer la mise en avant) et de
  * retirer la seule mise en avant. Journalise avant et après.
  */
 export async function enregistrerOffre(
@@ -334,11 +335,9 @@ export async function enregistrerOffre(
   const erreurs = erreursDeLOffre(offre, actuel, VARIABLES_DU_CATALOGUE);
   if (mode === "creation" && avant) erreurs.push(`Le code « ${offre.code} » est déjà pris.`);
   if (mode === "modification" && !avant) erreurs.push(`L'offre « ${offre.code} » n'existe pas.`);
-  if (avant && NOMS_FIGES.has(avant.code) && offre.nom.trim() !== avant.nom) {
-    erreurs.push(
-      `Le nom « ${avant.nom} » est figé : les murs de licence, les messages et les pages du site le citent. Créez une autre offre pour un autre nom.`,
-    );
-  }
+  // LE NOM SE CHANGE ICI (décision du propriétaire, novembre 2026) : les murs de licence, les
+  // messages et les pages du site le lisent au catalogue (`lireLesNoms`), au prochain rendu.
+  // Il était figé tant qu'ils l'écrivaient en dur. Les licences déjà émises gardent leur copie.
   const enAvant = actuel.offres.find((o) => o.miseEnAvant && o.code !== offre.code);
   if (offre.miseEnAvant && enAvant) {
     erreurs.push(

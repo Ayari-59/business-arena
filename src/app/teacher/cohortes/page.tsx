@@ -6,15 +6,15 @@ import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { unCompteAvecEpisodes } from "@/services/acces.service";
-import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DES_EPISODES, refusDesCohortes } from "@/config/tarifs";
-import { lireLaDecouverte } from "@/services/catalogue.service";
+import { lienDuDevis, LIBELLE_DU_DEVIS, marqueDesEpisodes, refusDesCohortes } from "@/config/tarifs";
+import { lireLaDecouverte, lireLesNoms } from "@/services/catalogue.service";
 import { cohortesDeLEnseignant } from "@/services/cohortes.service";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import {
   estUnRefusDeCohorte,
   NOM_DE_COHORTE_MAX,
-  REFUS_DE_COHORTE,
+  refusDeCohorte,
 } from "@/config/cohortes";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { compter, jourDeCreation } from "@/lib/format";
@@ -56,12 +56,14 @@ async function MesCohortesPage({
   const { refus, episode } = await searchParams;
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
-  const [cohortes, droits, staff, { demos }] = await Promise.all([
+  const [cohortes, droits, staff, { demos }, noms] = await Promise.all([
     cohortesDeLEnseignant(session.userId),
     unCompteAvecEpisodes([session.userId]),
     getStaffContext(session.userId),
     lireLaDecouverte(),
+    lireLesNoms(),
   ]);
+  const REFUS_DE_COHORTE = refusDeCohorte(noms);
   const licence = droits;
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const preselection = episode && episodeParCode(episode) ? episode : null;
@@ -108,8 +110,8 @@ async function MesCohortesPage({
             data-cohortes-sans-licence=""
             className="rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300 sm:px-4 sm:py-3"
           >
-            <strong className="font-semibold text-slate-100">{MARQUE_DES_EPISODES}.</strong>{" "}
-            {refusDesCohortes(demos.length)}{" "}
+            <strong className="font-semibold text-slate-100">{marqueDesEpisodes(noms)}.</strong>{" "}
+            {refusDesCohortes(noms, demos.length)}{" "}
             <Link href={lienDuDevis("episodes")} prefetch={false} className={LIEN_A_L_ENCRE}>
               {LIBELLE_DU_DEVIS}
             </Link>{" "}

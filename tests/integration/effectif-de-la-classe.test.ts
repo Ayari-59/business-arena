@@ -18,7 +18,7 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { coursEleves, players, teams, users } from "@/db/schema";
-import { ELEVES_PAR_CLASSE, refusDeLEffectif } from "@/config/tarifs";
+import { ELEVES_PAR_CLASSE, NOMS_PAR_DEFAUT, refusDeLEffectif } from "@/config/tarifs";
 import { createClassGame } from "@/services/game-creation.service";
 import { joinGameByCode } from "@/services/game.service";
 import { creerClasse, rejoindreClasse } from "@/services/cours.service";
@@ -61,7 +61,7 @@ describe("une partie de classe sous l'offre Classe", () => {
 
   it("au plafond, l'élève de plus reçoit le refus", async () => {
     const [nouveau] = await eleves(1);
-    expect(await joinGameByCode({ code: partie.code, userId: nouveau! })).toEqual({ error: refusDeLEffectif("partie") });
+    expect(await joinGameByCode({ code: partie.code, userId: nouveau! })).toEqual({ error: refusDeLEffectif(NOMS_PAR_DEFAUT, "partie") });
   });
 
   it("l'élève déjà inscrit revient", async () => {

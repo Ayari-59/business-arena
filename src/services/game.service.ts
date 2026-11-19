@@ -51,6 +51,7 @@ import {
 import { teamDisplayName } from "@/services/game-view.service";
 import { plafondDEleves, releveOuvert, verifierLaReprise } from "@/services/acces.service";
 import { refusDeLEffectif } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { etatDuLancement } from "@/lib/lancement-du-tour";
 
 // Re-exports depuis game-creation.service.ts pour compatibilité des consommateurs existants
@@ -275,7 +276,7 @@ export async function joinGameByCode(args: {
   if (game.mode !== "competition" && !game.competitionStageId) {
     const plafond = await plafondDEleves([game.organizationId]);
     if (plafond !== null && new Set(memberships.map((m) => m.userId)).size >= plafond) {
-      return { error: refusDeLEffectif("partie") };
+      return { error: refusDeLEffectif(await lireLesNoms(), "partie") };
     }
   }
 

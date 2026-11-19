@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/db", () => ({ db: {} }));
 
-import { CATALOGUE_PAR_DEFAUT, LES_OFFRES_DE_L_ARENE, VARIABLES_PAR_DEFAUT, descriptionDesTarifs, ligneDePrix, reponseCombien } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, LES_OFFRES_DE_L_ARENE, NOMS_PAR_DEFAUT, VARIABLES_PAR_DEFAUT, descriptionDesTarifs, ligneDePrix, reponseCombien } from "@/config/tarifs";
 import { euros, prixALaVitrine, vueDesTarifs, type Catalogue } from "@/config/catalogue";
 import { PageDesTarifs } from "@/components/page-des-tarifs";
 import { LesQuatreFormats } from "@/components/accueil-formats";
@@ -53,7 +53,7 @@ describe("l'accueil : une seule ligne sous les boutons, aucune phrase perdue", (
   });
 
   it("les deux phrases et leurs liens descendent dans la bande des quatre formats", () => {
-    const html = renderToStaticMarkup(createElement(LesQuatreFormats, { contraste: false }));
+    const html = renderToStaticMarkup(createElement(LesQuatreFormats, { contraste: false, noms: NOMS_PAR_DEFAUT }));
     const t = plat(html);
     expect(t).toContain(`${PREMIERE_PHRASE} ${LES_OFFRES_DE_L_ARENE} , sur devis.`);
     expect(t).toContain(`${SECONDE_PHRASE} Les quatre formats`);
@@ -72,7 +72,7 @@ const AUTRE: Catalogue = {
 const rendreLesTarifs = (c: Catalogue, prix: boolean) =>
   plat(
     renderToStaticMarkup(
-      createElement(PageDesTarifs, { vue: vueDesTarifs(c, VARIABLES_PAR_DEFAUT, { prix }), bandeau: null, prixPublics: prix }),
+      createElement(PageDesTarifs, { vue: vueDesTarifs(c, VARIABLES_PAR_DEFAUT, { prix }), noms: NOMS_PAR_DEFAUT, bandeau: null, prixPublics: prix }),
     ),
   );
 

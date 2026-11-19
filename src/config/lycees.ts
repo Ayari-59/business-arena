@@ -8,6 +8,7 @@ import {
   OFFRES_DE_L_ARENE,
   nomDeLEntreprise,
   nomDOffre,
+  nomsDuCatalogue,
   variablesDuCatalogue,
   type OffreDeLArene,
 } from "./tarifs";
@@ -93,7 +94,8 @@ function lesConcours(p: ParametresArene): string {
  * le paramétrage de l'arène de chacune et ses modules. Une offre masquée ou sans arène ne se dit pas.
  */
 export function offresPourLesLycees(c: Catalogue): OffrePourLesLycees[] {
-  const variables = variablesDuCatalogue();
+  const noms = nomsDuCatalogue(c);
+  const variables = variablesDuCatalogue(noms);
   return OFFRES_DE_L_ARENE.flatMap((code) => {
     const o = c.offres.find((x) => x.code === code && x.visible);
     const p = o ? parametresAreneDe(o) : null;
@@ -105,6 +107,6 @@ export function offresPourLesLycees(c: Catalogue): OffrePourLesLycees[] {
       lesConcours(p),
       ...(ouvreLExamen(o) ? ["L'examen individuel : une partie solo notée sur une grille fixe, la même pour tous les candidats."] : []),
     ];
-    return [{ code, nom: nomDOffre(code), pourQui: pourQui(p), lignes, devis: o.bouton.cible || `/devis?offre=${code}` }];
+    return [{ code, nom: nomDOffre(noms, code), pourQui: pourQui(p), lignes, devis: o.bouton.cible || `/devis?offre=${code}` }];
   });
 }

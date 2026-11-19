@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { messageNiveauxReserves } from "@/config/tarifs";
+import { messageNiveauxReserves, NOMS_PAR_DEFAUT } from "@/config/tarifs";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import {
@@ -153,10 +153,10 @@ describe("ce qui est enregistré", () => {
 
 describe("le message", () => {
   it("dit quels niveaux sont fermés et quelles offres les incluent", () => {
-    expect(messageNiveauxReserves(VITRINE_SOLO_PAR_DEFAUT)).toBe(
+    expect(messageNiveauxReserves(NOMS_PAR_DEFAUT, VITRINE_SOLO_PAR_DEFAUT)).toBe(
       "Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.",
     );
-    expect(messageNiveauxReserves({ ...allumee, niveauMaxAutres: 5 })).toBe(
+    expect(messageNiveauxReserves(NOMS_PAR_DEFAUT, { ...allumee, niveauMaxAutres: 5 })).toBe(
       "Le niveau 6 est inclus dans les offres Classe, Programme et Campus.",
     );
     expect(niveauxFermes(VITRINE_SOLO_PAR_DEFAUT)).toBe("Les niveaux 4 à 6");

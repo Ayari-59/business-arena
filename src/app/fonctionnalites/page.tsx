@@ -1,7 +1,8 @@
 import { avecTypographie } from "@/components/typographie";
 import { NIVEAUX_D_INDICE } from "@/config/scenarios/situation-kit";
 import Link from "next/link";
-import { LES_OFFRES_DE_L_ARENE, OFFRES } from "@/config/tarifs";
+import { lesOffresDeLArene, type NomsDesOffres } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import { ALL_SITUATIONS, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
@@ -63,19 +64,19 @@ const PILLARS = [
   },
 ];
 
-const DIFFERENTIATORS = [
+const differentiators = (n: NomsDesOffres) => [
   { label: "Sans compte", desc: "Aucune inscription requise pour les élèves" },
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
   // L'ancien « Essai gratuit » promettait tous les scénarios et toutes les fonctionnalités
   // sans engagement : la grille (config/tarifs.ts) ouvre le solo, pas la classe. L'offre
   // gratuite s'appelle « Essai gratuit » depuis novembre 2026, et dit ce qu'elle ouvre.
-  { label: OFFRES.decouverte.nom, desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}` },
+  { label: n.decouverte, desc: `Le simulateur en solo, sans compte ; la classe avec ${lesOffresDeLArene(n)}` },
   { label: "Testé", desc: "Moteur déterministe, tenu par sa suite de tests" },
 ];
 
 async function FonctionnalitesPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
-  const { theme } = await getPlatformConfig();
+  const [{ theme }, noms] = await Promise.all([getPlatformConfig(), lireLesNoms()]);
   const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
     <>
@@ -272,7 +273,7 @@ async function FonctionnalitesPage() {
           contraste={c("fonctionnalites.finale")}
           titre="Prêt à tester ?"
           texte="Lancez une partie en 30 secondes, sans compte ni installation."
-          mentions={DIFFERENTIATORS}
+          mentions={differentiators(noms)}
           prix={<LigneDePrix />}
         >
           <Link href="/jouer" className={bouton({ taille: "l" })}>

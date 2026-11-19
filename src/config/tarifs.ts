@@ -98,18 +98,54 @@ export const OFFRES_DE_L_ARENE: readonly OffreDeLArene[] = ["classe", "programme
 export const estUneOffreDeLArene = (v: unknown): v is OffreDeLArene =>
   typeof v === "string" && (OFFRES_DE_L_ARENE as readonly string[]).includes(v);
 
+/**
+ * LES NOMS EN VIGUEUR SE LISENT AU CATALOGUE (décision du propriétaire, novembre 2026 : il
+ * renomme les offres dans /admin/offres, et le site entier suit au prochain rendu). `OFFRES`
+ * ci-dessus n'en est que la VALEUR PAR DÉFAUT : catalogue absent, base neuve, tests. Toute
+ * phrase qui nomme une offre prend ces noms en paramètre (`nomsDuCatalogue`, et côté serveur
+ * services/catalogue.service.ts, `lireLesNoms`). Garde : tests/architecture/noms-au-catalogue.test.ts.
+ */
+export type CodeDOffreNommee = keyof typeof OFFRES;
+export type NomsDesOffres = Readonly<Record<CodeDOffreNommee, string>>;
+
+/** Les noms par défaut, ceux du catalogue par défaut. */
+export const NOMS_PAR_DEFAUT: NomsDesOffres = {
+  decouverte: OFFRES.decouverte.nom,
+  classe: OFFRES.classe.nom,
+  programme: OFFRES.programme.nom,
+  campus: OFFRES.campus.nom,
+  reseau: OFFRES.reseau.nom,
+  episodes: OFFRES.episodes.nom,
+};
+
+/** Les noms des offres d'un catalogue ; un nom absent ou vide garde sa valeur par défaut. */
+export function nomsDuCatalogue(c: { offres: readonly { code: string; nom: string }[] } | null | undefined): NomsDesOffres {
+  const noms: Record<CodeDOffreNommee, string> = { ...NOMS_PAR_DEFAUT };
+  for (const code of Object.keys(NOMS_PAR_DEFAUT) as CodeDOffreNommee[]) {
+    const nom = c?.offres.find((o) => o.code === code)?.nom.trim();
+    if (nom) noms[code] = nom;
+  }
+  return noms;
+}
+
 /** « Offre Classe », « Offre Programme », « Offre Campus », « Offre Épisodes manager ». */
-export const nomDOffre = (code: keyof typeof OFFRES): string => `Offre ${OFFRES[code].nom}`;
+export const nomDOffre = (n: NomsDesOffres, code: CodeDOffreNommee): string => `Offre ${n[code]}`;
 
 /** Ce qui ouvre l'arène, en une marque : « Offre Classe, Programme ou Campus ». */
-export const MARQUE_DE_L_ARENE = `Offre ${OFFRES.classe.nom}, ${OFFRES.programme.nom} ou ${OFFRES.campus.nom}`;
+export const marqueDeLArene = (n: NomsDesOffres): string => `Offre ${n.classe}, ${n.programme} ou ${n.campus}`;
 
 /** Ce qui ouvre l'arène, dans une phrase : « les offres Classe, Programme et Campus ». */
-export const LES_OFFRES_DE_L_ARENE = `les offres ${OFFRES.classe.nom}, ${OFFRES.programme.nom} et ${OFFRES.campus.nom}`;
-const LES_OFFRES_DE_L_ARENE_EN_TETE = `Les offres ${OFFRES.classe.nom}, ${OFFRES.programme.nom} et ${OFFRES.campus.nom}`;
+export const lesOffresDeLArene = (n: NomsDesOffres): string => `les offres ${n.classe}, ${n.programme} et ${n.campus}`;
+export const lesOffresDeLAreneEnTete = (n: NomsDesOffres): string => `Les offres ${n.classe}, ${n.programme} et ${n.campus}`;
 
 /** Ce qui ouvre les épisodes, en une marque : « Épisodes manager · sur devis ». */
-export const MARQUE_DES_EPISODES = `${OFFRES.episodes.nom} · sur devis`;
+export const marqueDesEpisodes = (n: NomsDesOffres): string => `${n.episodes} · sur devis`;
+
+/** Les mêmes, sur les noms par défaut : pour les tests (la garde les refuse dans src/). */
+export const MARQUE_DE_L_ARENE = marqueDeLArene(NOMS_PAR_DEFAUT);
+export const LES_OFFRES_DE_L_ARENE = lesOffresDeLArene(NOMS_PAR_DEFAUT);
+export const LES_OFFRES_DE_L_ARENE_EN_TETE = lesOffresDeLAreneEnTete(NOMS_PAR_DEFAUT);
+export const MARQUE_DES_EPISODES = marqueDesEpisodes(NOMS_PAR_DEFAUT);
 
 /* ---------------------------------------------------------------------------
  * LES PRIX ET LES CONDITIONS.
@@ -193,8 +229,8 @@ export const SEUIL_RESEAU_ETABLISSEMENTS = 10;
 export const ELEVES_PAR_CLASSE = 35;
 
 /** Le refus de l'élève de trop, sous l'offre Classe : il ne peut rien y faire, son enseignant le peut. */
-export const refusDeLEffectif = (lieu: "partie" | "classe") =>
-  `Cette ${lieu} compte déjà ${ELEVES_PAR_CLASSE} élèves, le plus que l'offre ${OFFRES.classe.nom} de votre établissement accueille. Prévenez votre enseignant.`;
+export const refusDeLEffectif = (n: NomsDesOffres, lieu: "partie" | "classe") =>
+  `Cette ${lieu} compte déjà ${ELEVES_PAR_CLASSE} élèves, le plus que l'offre ${n.classe} de votre établissement accueille. Prévenez votre enseignant.`;
 
 /** La cohorte animée des entreprises. */
 export const COHORTE = { managers: 15, episodesMin: 3, episodesMax: 6 } as const;
@@ -290,6 +326,12 @@ export interface ParametrageDeLicence {
   maxEnseignants: number | null;
   /** Le plafond de parties de classe et de concours en cours en même temps ; null : sans plafond. */
   maxPartiesEnCours: number | null;
+  /**
+   * Le nom de l'offre COPIÉ sur la licence au moment de la vente (services/licence.service.ts,
+   * `nomDeLOffre`) : « Votre offre … » le garde, même si le catalogue a renommé l'offre depuis.
+   * Absent : une licence d'avant le catalogue, nommée au catalogue en vigueur.
+   */
+  nom?: string;
 }
 
 /**
@@ -337,7 +379,7 @@ export function parametrageDeLOffre(
   offre: OffreDeLArene,
   choix: { entreprise?: string | null; niveau?: number | null; maxEnseignants?: number | null },
 ): ParametrageDeLicence {
-  return { ...parametrageDepuisLOffre(OFFRES[offre].nom, PARAMETRAGE_DES_OFFRES[offre], choix), offre };
+  return { ...parametrageDepuisLOffre(NOMS_PAR_DEFAUT[offre], PARAMETRAGE_DES_OFFRES[offre], choix), offre };
 }
 
 /** L'offre de l'arène au-dessus : Classe, puis Programme, puis Campus. */
@@ -379,14 +421,14 @@ export interface HorsLicence {
  * Null : la demande est couverte. Chaque refus dit CE QUI bloque et ce que l'offre
  * au-dessus ouvre.
  */
-export function horsLicence(p: ParametrageDeLicence, d: DemandeALaLicence): HorsLicence | null {
-  const votre = `Votre offre ${OFFRES[p.offre].nom}`;
+export function horsLicence(n: NomsDesOffres, p: ParametrageDeLicence, d: DemandeALaLicence): HorsLicence | null {
+  const votre = `Votre offre ${p.nom ?? n[p.offre]}`;
   if (d.entreprise !== undefined && p.entreprises !== null && !(d.entreprise && p.entreprises.includes(d.entreprise))) {
     const quoi = d.entreprise ? nomDeLEntreprise(d.entreprise) : "Ce scénario";
     return {
       quoi: "entreprise",
       offre: "campus",
-      message: `${votre} couvre ${enumeration(p.entreprises.map(nomDeLEntreprise))}. ${quoi} n'en fait pas partie : l'offre ${OFFRES.campus.nom} ouvre les ${ENTREPRISES.length} entreprises.`,
+      message: `${votre} couvre ${enumeration(p.entreprises.map(nomDeLEntreprise))}. ${quoi} n'en fait pas partie : l'offre ${n.campus} ouvre les ${ENTREPRISES.length} entreprises.`,
     };
   }
   if (d.niveau !== undefined && p.niveaux !== null && !p.niveaux.includes(d.niveau)) {
@@ -394,7 +436,7 @@ export function horsLicence(p: ParametrageDeLicence, d: DemandeALaLicence): Hors
     return {
       quoi: "niveau",
       offre,
-      message: `${votre} couvre le ${enumeration(p.niveaux.map(nomDuNiveau))}. Le ${nomDuNiveau(d.niveau)} n'en fait pas partie : l'offre ${OFFRES[offre].nom} ouvre les niveaux ${PREMIER_NIVEAU} à ${DERNIER_NIVEAU}${offre === "programme" ? " pour la même entreprise" : ""}.`,
+      message: `${votre} couvre le ${enumeration(p.niveaux.map(nomDuNiveau))}. Le ${nomDuNiveau(d.niveau)} n'en fait pas partie : l'offre ${n[offre]} ouvre les niveaux ${PREMIER_NIVEAU} à ${DERNIER_NIVEAU}${offre === "programme" ? " pour la même entreprise" : ""}.`,
     };
   }
   if (d.enseignants !== undefined && p.maxEnseignants !== null && d.enseignants > p.maxEnseignants) {
@@ -402,7 +444,7 @@ export function horsLicence(p: ParametrageDeLicence, d: DemandeALaLicence): Hors
     return {
       quoi: "enseignants",
       offre,
-      message: `${votre} couvre ${enseignants(p.maxEnseignants)}, et l'établissement en compte ${d.enseignants}. L'offre ${OFFRES[offre].nom} ouvre l'arène à ${ENSEIGNANTS_DE_L_OFFRE[offre]}.`,
+      message: `${votre} couvre ${enseignants(p.maxEnseignants)}, et l'établissement en compte ${d.enseignants}. L'offre ${n[offre]} ouvre l'arène à ${ENSEIGNANTS_DE_L_OFFRE[offre]}.`,
     };
   }
   if (d.partiesEnCours !== undefined && p.maxPartiesEnCours !== null && d.partiesEnCours.nombre >= p.maxPartiesEnCours) {
@@ -417,7 +459,7 @@ export function horsLicence(p: ParametrageDeLicence, d: DemandeALaLicence): Hors
     return {
       quoi: "parties",
       offre,
-      message: `${couvre} Terminez ou rangez ce qui est en cours pour en créer une autre ; l'offre ${OFFRES[offre].nom} ouvre plusieurs groupes en même temps.`,
+      message: `${couvre} Terminez ou rangez ce qui est en cours pour en créer une autre ; l'offre ${n[offre]} ouvre plusieurs groupes en même temps.`,
     };
   }
   return null;
@@ -427,11 +469,11 @@ export function horsLicence(p: ParametrageDeLicence, d: DemandeALaLicence): Hors
  * Un refus dit sans la valeur refusée (le code seul a voyagé dans l'adresse, comme sur la
  * page d'activité LTI) : ce que la licence couvre, et ce que l'offre au-dessus ouvre.
  */
-export function refusSansLaDemande(p: ParametrageDeLicence, quoi: HorsLicence["quoi"]): string {
+export function refusSansLaDemande(n: NomsDesOffres, p: ParametrageDeLicence, quoi: HorsLicence["quoi"]): string {
   const offre: OffreDeLArene =
     quoi === "entreprise" ? "campus" : quoi === "niveau" && p.offre === "classe" ? "programme" : offreAuDessus(p.offre);
-  const couvre = `Votre offre ${OFFRES[p.offre].nom} couvre`;
-  const ouvre = `L'offre ${OFFRES[offre].nom} ouvre`;
+  const couvre = `Votre offre ${p.nom ?? n[p.offre]} couvre`;
+  const ouvre = `L'offre ${n[offre]} ouvre`;
   switch (quoi) {
     case "entreprise":
       return `${couvre} ${enumeration((p.entreprises ?? []).map(nomDeLEntreprise))}. ${ouvre} les ${ENTREPRISES.length} entreprises.`;
@@ -445,9 +487,9 @@ export function refusSansLaDemande(p: ParametrageDeLicence, quoi: HorsLicence["q
 }
 
 /** La marque d'un choix hors licence (« Offre Campus »), ou null s'il est couvert. */
-export function marqueHorsLicence(p: ParametrageDeLicence, d: DemandeALaLicence): string | null {
-  const h = horsLicence(p, d);
-  return h ? nomDOffre(h.offre) : null;
+export function marqueHorsLicence(n: NomsDesOffres, p: ParametrageDeLicence, d: DemandeALaLicence): string | null {
+  const h = horsLicence(n, p, d);
+  return h ? nomDOffre(n, h.offre) : null;
 }
 
 /**
@@ -512,9 +554,10 @@ const ENSEIGNEMENT = {
   effectif: "Nombre d'enseignants et d'intervenants",
 };
 
-export const LIBELLES_DU_DEVIS: Record<OffreDuDevis, LibellesDuDevis> = {
+/** Les libellés du formulaire de devis, l'offre nommée au catalogue en vigueur. */
+export const libellesDuDevis = (n: NomsDesOffres): Record<OffreDuDevis, LibellesDuDevis> => ({
   classe: {
-    offre: nomDOffre("classe"),
+    offre: nomDOffre(n, "classe"),
     organisation: ENSEIGNEMENT.organisation,
     exempleOrganisation: ENSEIGNEMENT.exempleOrganisation,
     identifiant: ENSEIGNEMENT.identifiant,
@@ -522,32 +565,34 @@ export const LIBELLES_DU_DEVIS: Record<OffreDuDevis, LibellesDuDevis> = {
     niveau: true,
   },
   programme: {
-    offre: nomDOffre("programme"),
+    offre: nomDOffre(n, "programme"),
     ...ENSEIGNEMENT,
     entreprise: true,
   },
-  campus: { offre: nomDOffre("campus"), ...ENSEIGNEMENT },
+  campus: { offre: nomDOffre(n, "campus"), ...ENSEIGNEMENT },
   reseau: {
-    offre: OFFRES.reseau.nom,
+    offre: n.reseau,
     ...ENSEIGNEMENT,
     organisation: "Réseau, groupe ou académie",
     exempleOrganisation: "Groupe d'écoles, groupe scolaire, académie, région",
     effectif: "Nombre d'établissements",
   },
   episodes: {
-    offre: `${OFFRES.episodes.nom}, en cours ou en école`,
+    offre: `${n.episodes}, en cours ou en école`,
     ...ENSEIGNEMENT,
     // Pas de lycée : les épisodes s'annoncent dans l'enseignement supérieur (config/episodes/public-des-episodes.ts).
     exempleOrganisation: "École de commerce, université, IUT",
   },
   entreprise: {
-    offre: `${OFFRES.episodes.nom}, pour une entreprise ou un organisme de formation`,
+    offre: `${n.episodes}, pour une entreprise ou un organisme de formation`,
     organisation: "Organisation",
     exempleOrganisation: "Entreprise, organisme de formation",
     identifiant: "SIRET (facultatif)",
     effectif: "Nombre de managers",
   },
-};
+});
+/** Les mêmes, sur les noms par défaut : pour les tests, et pour ce qui ne nomme pas l'offre. */
+export const LIBELLES_DU_DEVIS: Record<OffreDuDevis, LibellesDuDevis> = libellesDuDevis(NOMS_PAR_DEFAUT);
 
 /** Ce que le formulaire demande, selon le public de l'offre (`formulaire` au catalogue). */
 const PAR_FORMULAIRE: Record<OffreDuCatalogue["formulaire"], Omit<LibellesDuDevis, "offre">> = {
@@ -666,7 +711,7 @@ export const ENT_DU_SECONDAIRE = { nom: "ENT du secondaire (GAR)", etat: "À l'�
  * niveaux, épisodes, ateliers), les conditions, et le réglage de la Découverte (niveaux
  * ouverts en solo, démonstrations). /admin/offres les liste à côté des champs.
  */
-export function variablesDuCatalogue(d: ReglageDeLaDecouverte = DECOUVERTE_PAR_DEFAUT): Record<string, string> {
+export function variablesDuCatalogue(n: NomsDesOffres, d: ReglageDeLaDecouverte = DECOUVERTE_PAR_DEFAUT): Record<string, string> {
   const max = niveauMaxSansLicence(d);
   return {
     entreprises: String(ENTREPRISES.length),
@@ -690,12 +735,12 @@ export function variablesDuCatalogue(d: ReglageDeLaDecouverte = DECOUVERTE_PAR_D
     elevesParClasse: String(ELEVES_PAR_CLASSE),
     episodesMin: String(COHORTE.episodesMin),
     episodesMax: String(COHORTE.episodesMax),
-    lesOffresDeLArene: LES_OFFRES_DE_L_ARENE,
+    lesOffresDeLArene: lesOffresDeLArene(n),
   };
 }
 
 /** Les noms des variables, pour la validation et l'aide de /admin/offres. */
-export const VARIABLES_DU_CATALOGUE: readonly string[] = Object.keys(variablesDuCatalogue());
+export const VARIABLES_DU_CATALOGUE: readonly string[] = Object.keys(variablesDuCatalogue(NOMS_PAR_DEFAUT));
 
 /** Les paramètres de l'arène des trois offres de la grille. */
 const arene = (code: OffreDeLArene): CompositionDeModule => ({ module: "arene", parametres: { ...PARAMETRAGE_DES_OFFRES[code] } });
@@ -991,7 +1036,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
 export const CATALOGUE_PAR_DEFAUT: Catalogue = { modules: [...MODULES_PAR_DEFAUT], offres: [...OFFRES_PAR_DEFAUT] };
 
 /** Les variables par défaut (la Découverte par défaut). */
-export const VARIABLES_PAR_DEFAUT: Readonly<Record<string, string>> = variablesDuCatalogue();
+export const VARIABLES_PAR_DEFAUT: Readonly<Record<string, string>> = variablesDuCatalogue(NOMS_PAR_DEFAUT);
 
 /* ---------------------------------------------------------------------------
  * LA GRILLE PAR DÉFAUT, RENDUE : les formes que lisaient /tarifs, /ecoles et les tests
@@ -1081,11 +1126,12 @@ export const OPTIONS: readonly { nom: string; prix: string }[] = VUE_PAR_DEFAUT.
 export const LE_RELEVE_DE_L_ARENE =
   "Dans l'arène, le relevé s'exporte en tableur, une ligne par élève : note sur 20, diagnostic, questions, rang, indice de performance globale ; la maîtrise des notions se lit partie par partie.";
 
-export const ARGUMENTS_POUR_LES_ECOLES: readonly {
+export interface ArgumentPourLesEcoles {
   titre: string;
   texte: string;
   lien?: { href: string; libelle: string };
-}[] = [
+}
+export const argumentsPourLesEcoles = (n: NomsDesOffres): readonly ArgumentPourLesEcoles[] => [
   {
     titre: "Des traces pour l'accréditation",
     texte: `Pour l'assurance of learning (AACSB, EQUIS). ${LE_RELEVE_DE_L_ARENE} Le relevé ne suit pas la grille de compétences de votre école : il se reprend dans la vôtre. Les épisodes manager, eux, mesurent un profil de compétences.`,
@@ -1101,11 +1147,12 @@ export const ARGUMENTS_POUR_LES_ECOLES: readonly {
     lien: INTEGRATION_LMS.lien,
   },
   {
-    titre: OFFRES.episodes.nom,
+    titre: n.episodes,
     texte:
       "Pour les MBA, les cours de leadership et la formation continue (Executive Education) : des trimestres joués dans la peau d'un manager. À part, sur devis.",
   },
 ];
+export const ARGUMENTS_POUR_LES_ECOLES: readonly ArgumentPourLesEcoles[] = argumentsPourLesEcoles(NOMS_PAR_DEFAUT);
 
 /* ---------------------------------------------------------------------------
  * LES CONDITIONS, LES QUESTIONS.
@@ -1116,20 +1163,21 @@ export const ARGUMENTS_POUR_LES_ECOLES: readonly {
  * ni rappel par courriel (aucun envoi ne le fait) : l'échéance se lit dans l'espace
  * enseignant. Le lieu d'hébergement n'y figure pas : il n'est pas confirmé.
  */
-export const CONDITIONS_DE_VENTE: readonly string[] = [
+export const conditionsDeVente = (n: NomsDesOffres): readonly string[] => [
   `Prix annuels, établis sur devis. ${MENTION_TVA}.`,
   "Toutes les offres se vendent sur devis : vous recevez un devis écrit, vous le retournez signé ou vous émettez un bon de commande, la licence est ouverte, puis la facture suit.",
   QUI_FACTURE,
   `Facture payable à ${CONDITIONS.delaiFactureJours} jours, par virement ou par mandat administratif. Les factures publiques passent par Chorus Pro.`,
-  `Durée : un an pour les offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom} et pour les épisodes manager, une année scolaire pour l'offre ${OFFRES.campus.nom}.`,
-  `Les offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom} se paramètrent à l'achat : l'entreprise, et pour ${OFFRES.classe.nom} le niveau et le parcours du cours, sont écrits sur le devis et ouverts pour l'année.`,
+  `Durée : un an pour les offres ${n.classe} et ${n.programme} et pour les épisodes manager, une année scolaire pour l'offre ${n.campus}.`,
+  `Les offres ${n.classe} et ${n.programme} se paramètrent à l'achat : l'entreprise, et pour ${n.classe} le niveau et le parcours du cours, sont écrits sur le devis et ouverts pour l'année.`,
   // La règle de l'offre Classe dans le cours (décision du propriétaire, 11 novembre 2026 ; services/chapitres-de-la-classe.ts).
-  `Sous l'offre ${OFFRES.classe.nom}, le parcours du cours est un parcours de la liste : le cours d'un diplôme ou une matière. C'est le même pour toutes les classes de l'enseignant : celui écrit au devis, sinon celui de sa première classe créée sous la licence. Il crée autant de classes du cours qu'il le souhaite, de ${ELEVES_PAR_CLASSE} élèves au plus chacune.`,
+  `Sous l'offre ${n.classe}, le parcours du cours est un parcours de la liste : le cours d'un diplôme ou une matière. C'est le même pour toutes les classes de l'enseignant : celui écrit au devis, sinon celui de sa première classe créée sous la licence. Il crée autant de classes du cours qu'il le souhaite, de ${ELEVES_PAR_CLASSE} élèves au plus chacune.`,
   "Pas de reconduction tacite : l'échéance s'affiche dans l'espace enseignant, et le renouvellement passe par un nouveau devis.",
   `À la fin de l'offre, les parties et les résultats restent consultables ${CONDITIONS.consultationApresMois} mois, relevé de notes compris.`,
   // Comme les mentions légales (audit du 10 novembre 2026 : « sans nom » était faux pour le cours et l'examen).
   "Les étudiants et les élèves jouent sans compte ni adresse électronique : un code suffit. Seules la classe du cours, qui garde le nom de l'élève, et l'examen individuel, qui garde le nom et le numéro d'étudiant du candidat, enregistrent un nom.",
 ];
+export const CONDITIONS_DE_VENTE: readonly string[] = conditionsDeVente(NOMS_PAR_DEFAUT);
 
 const QUESTION_DE_L_ESSAI = "Peut-on essayer avec un groupe ?";
 
@@ -1157,47 +1205,53 @@ const QUESTION_DE_L_ESSAI = "Peut-on essayer avec un groupe ?";
  *    serveur sans offre de l'arène (services/acces.service.ts, `refusDeLaClasse`).
  * Garde : tests/architecture/pages-de-l-offre.test.ts.
  */
-export const reponseSurLEssai = (essai: { autorise: boolean; dureeMaxJours: number }, inscriptionLibre = true): string =>
+export const reponseSurLEssai = (
+  n: NomsDesOffres,
+  essai: { autorise: boolean; dureeMaxJours: number },
+  inscriptionLibre = true,
+): string =>
   essai.autorise
-    ? `Oui, sur demande et sans paiement : un essai de l'offre ${OFFRES.classe.nom}, ${essai.dureeMaxJours} jours au plus, pour un enseignant et un groupe de ${ELEVES_PAR_CLASSE} élèves au plus, une partie à la fois, une entreprise et un niveau. Demandez-le par le devis ; il s'ouvre après votre demande et se ferme seul à son terme, sans facture ni reconduction.`
+    ? `Oui, sur demande et sans paiement : un essai de l'offre ${n.classe}, ${essai.dureeMaxJours} jours au plus, pour un enseignant et un groupe de ${ELEVES_PAR_CLASSE} élèves au plus, une partie à la fois, une entreprise et un niveau. Demandez-le par le devis ; il s'ouvre après votre demande et se ferme seul à son terme, sans facture ni reconduction.`
     : inscriptionLibre
-      ? `Oui, pour le cours : créez votre compte enseignant, puis une classe ; vos élèves y suivent le chapitre libre de leur diplôme et son cas pratique, sans offre. Les parties de classe de l'arène commencent avec ${LES_OFFRES_DE_L_ARENE}.`
-      : `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${LES_OFFRES_DE_L_ARENE}.`;
+      ? `Oui, pour le cours : créez votre compte enseignant, puis une classe ; vos élèves y suivent le chapitre libre de leur diplôme et son cas pratique, sans offre. Les parties de classe de l'arène commencent avec ${lesOffresDeLArene(n)}.`
+      : `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${lesOffresDeLArene(n)}.`;
 
 /**
  * Les questions de /tarifs, l'essai selon son réglage (/admin/offres), et l'inscription libre des
  * enseignants (/admin) : sans elle, le cours ne s'essaie plus seul.
  */
 export const questionsDesTarifs = (
+  n: NomsDesOffres,
   essai: { autorise: boolean; dureeMaxJours: number },
   inscriptionLibre = true,
 ): readonly { q: string; r: string }[] =>
-  QUESTIONS_TARIFS.map((x) => (x.q === QUESTION_DE_L_ESSAI ? { q: x.q, r: reponseSurLEssai(essai, inscriptionLibre) } : x));
+  questionsTarifs(n).map((x) => (x.q === QUESTION_DE_L_ESSAI ? { q: x.q, r: reponseSurLEssai(n, essai, inscriptionLibre) } : x));
 
 /** Les questions qu'on nous pose avant d'acheter. */
-export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
+const questionsTarifs = (n: NomsDesOffres): readonly { q: string; r: string }[] => [
   {
     q: "Les élèves paient-ils ?",
     r: "Non, jamais. Ils rejoignent la partie de leur enseignant avec un code, sans compte ni adresse électronique.",
   },
   {
     q: "Comment commander ?",
-    r: `Demandez un devis écrit depuis cette page : il précise l'offre ; pour ${OFFRES.classe.nom}, l'entreprise, le niveau et le parcours du cours, le même pour toutes vos classes ; pour ${OFFRES.programme.nom}, l'entreprise et le nombre d'enseignants et d'intervenants ; et la durée. Bon de commande, mandat administratif et Chorus Pro sont acceptés.`,
+    r: `Demandez un devis écrit depuis cette page : il précise l'offre ; pour ${n.classe}, l'entreprise, le niveau et le parcours du cours, le même pour toutes vos classes ; pour ${n.programme}, l'entreprise et le nombre d'enseignants et d'intervenants ; et la durée. Bon de commande, mandat administratif et Chorus Pro sont acceptés.`,
   },
   {
-    q: `Quelle différence entre ${OFFRES.classe.nom}, ${OFFRES.programme.nom} et ${OFFRES.campus.nom} ?`,
-    r: `${OFFRES.classe.nom} : un enseignant, un groupe à la fois, une entreprise et un niveau. ${OFFRES.programme.nom} : l'équipe d'un programme, toutes ses promotions en même temps, une entreprise à tous les niveaux. ${OFFRES.campus.nom} : toute l'école, les ${ENTREPRISES.length} entreprises, sans limite d'enseignants, d'intervenants ni de groupes.`,
+    q: `Quelle différence entre ${n.classe}, ${n.programme} et ${n.campus} ?`,
+    r: `${n.classe} : un enseignant, un groupe à la fois, une entreprise et un niveau. ${n.programme} : l'équipe d'un programme, toutes ses promotions en même temps, une entreprise à tous les niveaux. ${n.campus} : toute l'école, les ${ENTREPRISES.length} entreprises, sans limite d'enseignants, d'intervenants ni de groupes.`,
   },
   {
     q: QUESTION_DE_L_ESSAI,
     // La réponse par défaut : l'essai de l'arène éteint, l'inscription libre ouverte.
-    r: reponseSurLEssai({ autorise: false, dureeMaxJours: 0 }),
+    r: reponseSurLEssai(n, { autorise: false, dureeMaxJours: 0 }),
   },
   {
     q: "Les épisodes manager sont-ils inclus ?",
-    r: `Non. ${LES_OFFRES_DE_L_ARENE_EN_TETE} ouvrent l'arène. Les épisodes manager se proposent à part, sur devis, en classe comme en entreprise ; ${compterLesDemos(DECOUVERTE_PAR_DEFAUT)} démonstrations restent gratuites.`,
+    r: `Non. ${lesOffresDeLAreneEnTete(n)} ouvrent l'arène. Les épisodes manager se proposent à part, sur devis, en classe comme en entreprise ; ${compterLesDemos(DECOUVERTE_PAR_DEFAUT)} démonstrations restent gratuites.`,
   },
 ];
+export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = questionsTarifs(NOMS_PAR_DEFAUT);
 
 /* ---------------------------------------------------------------------------
  * LES PHRASES QUE LE RESTE DU SITE TIRE DE LA GRILLE.
@@ -1217,69 +1271,76 @@ function prixAnnuelDe(c: Catalogue, code: OffreDeLArene): string {
  * catalogue. Prix cachés (`prix` faux, le réglage par défaut) : aucun montant, des offres
  * sur mesure, sur devis.
  */
-export const ligneDePrix = (c: Catalogue, prix = true): string =>
+export const ligneDePrix = (c: Catalogue, prix = true, n: NomsDesOffres = nomsDuCatalogue(c)): string =>
   !prix
-    ? `${LES_OFFRES_DE_L_ARENE_EN_TETE} se construisent sur mesure, sur devis. Les épisodes manager se proposent à part, sur devis.`
-    : `${nomDOffre("classe")} ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} ${prixAnnuelDe(c, "campus")}, sur devis. Les épisodes manager se proposent à part, sur devis.`;
+    ? `${lesOffresDeLAreneEnTete(n)} se construisent sur mesure, sur devis. Les épisodes manager se proposent à part, sur devis.`
+    : `${nomDOffre(n, "classe")} ${prixAnnuelDe(c, "classe")}, offre ${n.programme} ${prixAnnuelDe(c, "programme")}, offre ${n.campus} ${prixAnnuelDe(c, "campus")}, sur devis. Les épisodes manager se proposent à part, sur devis.`;
 export const LIGNE_DE_PRIX = ligneDePrix(CATALOGUE_PAR_DEFAUT);
 
 /** La réponse du guide à « Combien ça coûte ? » (audit C-08), lue au catalogue ; sans montant si les prix sont cachés. */
-export const reponseCombien = (c: Catalogue, prix = true): string =>
+export const reponseCombien = (c: Catalogue, prix = true, n: NomsDesOffres = nomsDuCatalogue(c)): string =>
   !prix
-    ? `La découverte en solo est gratuite, sans compte. Pour faire cours, chaque offre se construit sur mesure et se vend sur devis : l'offre ${OFFRES.classe.nom} pour un groupe (une entreprise et un niveau choisis), l'offre ${OFFRES.programme.nom} pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre ${OFFRES.campus.nom} pour toute l'école. Les épisodes manager se proposent à part, sur devis.`
-    : `La découverte en solo est gratuite, sans compte. Pour faire cours, sur devis : l'offre ${OFFRES.classe.nom} coûte ${prixAnnuelDe(c, "classe")} pour un groupe (une entreprise et un niveau choisis), l'offre ${OFFRES.programme.nom} ${prixAnnuelDe(c, "programme")} pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre ${OFFRES.campus.nom} ${prixAnnuelDe(c, "campus")} pour toute l'école. Les épisodes manager se proposent à part, sur devis.`;
+    ? `La découverte en solo est gratuite, sans compte. Pour faire cours, chaque offre se construit sur mesure et se vend sur devis : l'offre ${n.classe} pour un groupe (une entreprise et un niveau choisis), l'offre ${n.programme} pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre ${n.campus} pour toute l'école. Les épisodes manager se proposent à part, sur devis.`
+    : `La découverte en solo est gratuite, sans compte. Pour faire cours, sur devis : l'offre ${n.classe} coûte ${prixAnnuelDe(c, "classe")} pour un groupe (une entreprise et un niveau choisis), l'offre ${n.programme} ${prixAnnuelDe(c, "programme")} pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre ${n.campus} ${prixAnnuelDe(c, "campus")} pour toute l'école. Les épisodes manager se proposent à part, sur devis.`;
 export const REPONSE_COMBIEN = reponseCombien(CATALOGUE_PAR_DEFAUT);
 
 /** La description de /tarifs pour les moteurs, lue au catalogue ; sans montant si les prix sont cachés. */
-export const descriptionDesTarifs = (c: Catalogue, prix = true): string =>
+export const descriptionDesTarifs = (c: Catalogue, prix = true, n: NomsDesOffres = nomsDuCatalogue(c)): string =>
   !prix
-    ? `Gratuit pour découvrir le simulateur en solo. ${LES_OFFRES_DE_L_ARENE_EN_TETE} et les épisodes manager se construisent sur mesure : chaque offre aboutit à un devis écrit. L'élève ne paie jamais.`
-    : `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} ${prixAnnuelDe(c, "campus")}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'élève ne paie jamais.`;
+    ? `Gratuit pour découvrir le simulateur en solo. ${lesOffresDeLAreneEnTete(n)} et les épisodes manager se construisent sur mesure : chaque offre aboutit à un devis écrit. L'élève ne paie jamais.`
+    : `Gratuit pour découvrir le simulateur en solo. ${nomDOffre(n, "classe")} ${prixAnnuelDe(c, "classe")}, offre ${n.programme} ${prixAnnuelDe(c, "programme")}, offre ${n.campus} ${prixAnnuelDe(c, "campus")}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'élève ne paie jamais.`;
 
 /** Les niveaux fermés, et ce qui les ouvre : « Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus. » */
-export function messageNiveauxReserves(vitrine: VitrineSolo): string {
+export function messageNiveauxReserves(n: NomsDesOffres, vitrine: VitrineSolo): string {
   const premier = vitrine.niveauMaxAutres + 1;
   return premier >= NIVEAU_MAX
-    ? `Le niveau ${NIVEAU_MAX} est inclus dans ${LES_OFFRES_DE_L_ARENE}.`
-    : `Les niveaux ${premier} à ${NIVEAU_MAX} sont inclus dans ${LES_OFFRES_DE_L_ARENE}.`;
+    ? `Le niveau ${NIVEAU_MAX} est inclus dans ${lesOffresDeLArene(n)}.`
+    : `Les niveaux ${premier} à ${NIVEAU_MAX} sont inclus dans ${lesOffresDeLArene(n)}.`;
 }
 
 /**
  * Le refus d'une partie de classe ou d'un concours sans offre de l'arène en cours ; les
  * niveaux du solo sont ceux de la Découverte (réglée dans /admin/offres).
  */
-export const refusDeLaClasse = (vitrine: VitrineSolo = VITRINE_SOLO_PAR_DEFAUT): string =>
-  `Les parties de classe et les concours sont inclus dans ${LES_OFFRES_DE_L_ARENE}. Sans offre en cours, l'arène se joue en solo, aux niveaux ${NIVEAUX_GRATUITS.de} à ${vitrine.active ? vitrine.niveauMaxAutres : NIVEAU_MAX}. Les parties déjà créées se poursuivent.`;
+export const refusDeLaClasse = (n: NomsDesOffres, vitrine: VitrineSolo = VITRINE_SOLO_PAR_DEFAUT): string =>
+  `Les parties de classe et les concours sont inclus dans ${lesOffresDeLArene(n)}. Sans offre en cours, l'arène se joue en solo, aux niveaux ${NIVEAUX_GRATUITS.de} à ${vitrine.active ? vitrine.niveauMaxAutres : NIVEAU_MAX}. Les parties déjà créées se poursuivent.`;
 /** Le même refus, avec la Découverte par défaut (niveaux 1 à 3). */
-export const REFUS_DE_LA_CLASSE = refusDeLaClasse();
+export const REFUS_DE_LA_CLASSE = refusDeLaClasse(NOMS_PAR_DEFAUT);
 
 /** Le refus du dossier enseignant d'un atelier (les corrigés) sans offre de l'arène en cours. */
-export const REFUS_DU_DOSSIER = `Le dossier enseignant des ateliers, avec ses corrigés, est inclus dans ${LES_OFFRES_DE_L_ARENE}.`;
+export const refusDuDossier = (n: NomsDesOffres): string =>
+  `Le dossier enseignant des ateliers, avec ses corrigés, est inclus dans ${lesOffresDeLArene(n)}.`;
+export const REFUS_DU_DOSSIER = refusDuDossier(NOMS_PAR_DEFAUT);
 
 /** Le refus du relevé de notes sans offre de l'arène, ni fin d'offre récente. */
-export const REFUS_DU_RELEVE = `Le relevé de notes est inclus dans ${LES_OFFRES_DE_L_ARENE}, et reste téléchargeable ${CONDITIONS.consultationApresMois} mois après la fin de l'offre.`;
+export const refusDuReleve = (n: NomsDesOffres): string =>
+  `Le relevé de notes est inclus dans ${lesOffresDeLArene(n)}, et reste téléchargeable ${CONDITIONS.consultationApresMois} mois après la fin de l'offre.`;
+export const REFUS_DU_RELEVE = refusDuReleve(NOMS_PAR_DEFAUT);
 
 /** Le refus d'une cohorte d'épisodes sans offre qui inclut les épisodes ; `demos` : les démonstrations de la Découverte. */
-export const refusDesCohortes = (demos: number = compterLesDemos(DECOUVERTE_PAR_DEFAUT)): string =>
-  `Créer une cohorte demande une offre qui inclut les épisodes manager (${MARQUE_DES_EPISODES}). ${LES_OFFRES_DE_L_ARENE_EN_TETE} seules ne les ouvrent pas. ${demos > 1 ? `Les ${demos} épisodes de démonstration se jouent` : demos === 1 ? "L'épisode de démonstration se joue" : "Les épisodes de démonstration se jouent"} sans cohorte, par leur lien.`;
-export const REFUS_DES_COHORTES = refusDesCohortes();
+export const refusDesCohortes = (n: NomsDesOffres, demos: number = compterLesDemos(DECOUVERTE_PAR_DEFAUT)): string =>
+  `Créer une cohorte demande une offre qui inclut les épisodes manager (${marqueDesEpisodes(n)}). ${lesOffresDeLAreneEnTete(n)} seules ne les ouvrent pas. ${demos > 1 ? `Les ${demos} épisodes de démonstration se jouent` : demos === 1 ? "L'épisode de démonstration se joue" : "Les épisodes de démonstration se jouent"} sans cohorte, par leur lien.`;
+export const REFUS_DES_COHORTES = refusDesCohortes(NOMS_PAR_DEFAUT);
 
 /** Sans licence épisodes : ce que l'offre ouvre (le lien vers le devis suit). `total` : les épisodes du registre. */
-export const ceQuOuvrentLesEpisodes = (total: number): string =>
-  `L'offre ${OFFRES.episodes.nom}, sur devis, ouvre les ${total} épisodes aux niveaux Standard et Expert, et le profil décisionnel qu'ils construisent.`;
+export const ceQuOuvrentLesEpisodes = (n: NomsDesOffres, total: number): string =>
+  `L'offre ${n.episodes}, sur devis, ouvre les ${total} épisodes aux niveaux Standard et Expert, et le profil décisionnel qu'ils construisent.`;
 
 /** Le conseil de niveau sans licence épisodes : la démonstration ne se joue qu'en Découverte. */
-export const POURQUOI_LA_DECOUVERTE = `Sans licence, les démonstrations se jouent au niveau Démonstration, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre ${OFFRES.episodes.nom}, sur devis.`;
+export const pourquoiLaDecouverte = (n: NomsDesOffres): string =>
+  `Sans licence, les démonstrations se jouent au niveau Démonstration, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre ${n.episodes}, sur devis.`;
+export const POURQUOI_LA_DECOUVERTE = pourquoiLaDecouverte(NOMS_PAR_DEFAUT);
 
 /**
  * Le niveau conseillé sans licence épisodes : la démonstration ne se joue qu'en
  * Découverte, et le profil ne compte pas la Découverte. Le conseil le dit plutôt que de
  * proposer un niveau qui ne se lance pas.
  */
-export const CONSEIL_SANS_LICENCE: { niveau: CodeNiveau; pourquoi: string } = {
+export const conseilSansLicence = (n: NomsDesOffres): { niveau: CodeNiveau; pourquoi: string } => ({
   niveau: NIVEAU_DES_DEMOS,
-  pourquoi: POURQUOI_LA_DECOUVERTE,
-};
+  pourquoi: pourquoiLaDecouverte(n),
+});
+export const CONSEIL_SANS_LICENCE: { niveau: CodeNiveau; pourquoi: string } = conseilSansLicence(NOMS_PAR_DEFAUT);
 
 /**
  * Devant un élève : jamais de message de vente (audit C-02). Il a souvent suivi le lien de son

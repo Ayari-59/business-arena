@@ -2,11 +2,11 @@ import { desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { orgLicences, organizationMembers, organizations } from "@/db/schema";
 import {
-  OFFRES,
   PARAMETRAGE_DES_OFFRES,
   type OffreDeLArene,
   type ParametrageDeLicence,
 } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { estUnMotifDeGratuite, type NatureDeLicence } from "@/config/catalogue";
 
 /**
@@ -103,6 +103,8 @@ export function parametrageDe(l: OrgLicence): ParametrageDeLicence | null {
     niveaux: l.niveaux,
     maxEnseignants: l.maxTeachers,
     maxPartiesEnCours: l.maxPartiesEnCours,
+    // Le nom copié à la vente : la licence émise le garde (« Votre offre … »).
+    ...(l.nomDeLOffre ? { nom: l.nomDeLOffre } : {}),
   };
 }
 
@@ -285,9 +287,10 @@ export async function assertCanAddTeacher(organizationId: string): Promise<void>
   }
   if (plafond !== null && plafond !== undefined && statut.teachers >= plafond) {
     const offre = statut.licence?.arene;
+    const n = await lireLesNoms();
     throw new Error(
       offre === "classe"
-        ? `L'offre ${OFFRES.classe.nom} couvre ${plafond} enseignant, déjà rattaché. L'offre ${OFFRES.programme.nom} ouvre l'arène à l'équipe pédagogique et aux intervenants du programme.`
+        ? `L'offre ${statut.licence?.nomDeLOffre ?? n.classe} couvre ${plafond} enseignant, déjà rattaché. L'offre ${n.programme} ouvre l'arène à l'équipe pédagogique et aux intervenants du programme.`
         : `La licence couvre ${plafond} enseignants et intervenants, tous rattachés. Le renouvellement ou une extension ouvre une place.`,
     );
   }
@@ -364,10 +367,10 @@ export async function setOrgLicence(args: {
   // seul endroit qui écrit une licence, plutôt que dans une contrainte de base que les
   // migrations rejouées auraient du mal à porter (drizzle/0038_trois_offres.sql).
   if (arene === "classe" && (entreprises?.length !== 1 || niveaux?.length !== 1)) {
-    throw new Error(`Une licence ${OFFRES.classe.nom} porte une entreprise et un niveau.`);
+    throw new Error(`Une licence ${(await lireLesNoms()).classe} porte une entreprise et un niveau.`);
   }
   if (arene === "programme" && entreprises !== null && entreprises.length !== 1) {
-    throw new Error(`Une licence ${OFFRES.programme.nom} porte une entreprise.`);
+    throw new Error(`Une licence ${(await lireLesNoms()).programme} porte une entreprise.`);
   }
   const maxPartiesEnCours =
     args.maxPartiesEnCours !== undefined

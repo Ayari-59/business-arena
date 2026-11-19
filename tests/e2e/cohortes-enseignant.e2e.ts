@@ -7,8 +7,8 @@ import { enseignantSousLicence } from "./helpers/licence";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
 import { estUneDemo, EPISODES_DE_DEMO } from "../../src/config/episodes/demos";
 import { FICHES } from "../../src/config/episodes/fiches";
-import { LICENCE_SANS_LES_EPISODES, REFUS_DE_COHORTE, REFUS_SANS_LICENCE } from "../../src/config/cohortes";
-import { EPISODE_FERME_POUR_L_ELEVE } from "../../src/config/tarifs";
+import { LICENCE_SANS_LES_EPISODES, refusDeCohorte } from "../../src/config/cohortes";
+import { EPISODE_FERME_POUR_L_ELEVE, NOMS_PAR_DEFAUT } from "../../src/config/tarifs";
 import { Client } from "pg";
 import { insecables } from "../../src/lib/typographie";
 
@@ -280,7 +280,7 @@ describe("un enseignant sous licence Classe seule (sans les épisodes)", () => {
     // 11 novembre 2026, P2-6).
     const refus = page.locator('[data-refus-de-cohorte="licence"]');
     await refus.waitFor({ state: "visible" });
-    expect(await refus.textContent()).toContain(REFUS_SANS_LICENCE);
+    expect(await refus.textContent()).toContain(refusDeCohorte(NOMS_PAR_DEFAUT).licence);
     expect(await page.getByLabel("Nom de la cohorte").inputValue()).toBe("Seconde 4");
     expect(await page.locator(`input[name="episodes"][value="${EPISODES_DE_DEMO[0]}"]`).isChecked()).toBe(true);
     expect(await page.getByText("Aucune cohorte pour l'instant.").count()).toBe(1);
@@ -305,7 +305,7 @@ describe("un enseignant sans licence", () => {
     const refus = page.locator('[data-refus-de-cohorte="licence"]');
     await refus.waitFor({ state: "visible" });
     expect(await refus.getAttribute("role")).toBe("alert");
-    expect(await refus.textContent()).toContain(REFUS_SANS_LICENCE);
+    expect(await refus.textContent()).toContain(refusDeCohorte(NOMS_PAR_DEFAUT).licence);
     expect(await refus.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     expect(await page.getByText("Aucune cohorte pour l'instant.").count()).toBe(1);
     await ctx.close();
@@ -321,7 +321,7 @@ describe("une cohorte refusée garde la saisie (audit UX du 11 novembre 2026, P2
     const refus = page.locator("[data-refus-de-cohorte]");
     await refus.waitFor({ state: "visible" });
     expect(await refus.getAttribute("data-refus-de-cohorte")).toBe("episodes");
-    expect(await refus.textContent()).toContain(REFUS_DE_COHORTE.episodes);
+    expect(await refus.textContent()).toContain(refusDeCohorte(NOMS_PAR_DEFAUT).episodes);
     // La page ne s'est pas rechargée, le nom tapé est là.
     expect(new URL(page.url()).search).toBe("");
     expect(await page.getByLabel("Nom de la cohorte").inputValue()).toBe("Terminale STMG · groupe C");

@@ -11,12 +11,13 @@ import {
   EPISODE_FERME_POUR_L_ELEVE,
   lienDuDevisDesEpisodes,
   LIBELLE_DU_DEVIS,
-  MARQUE_DES_EPISODES,
-  OFFRES,
+  marqueDesEpisodes,
+  type NomsDesOffres,
 } from "@/config/tarifs";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { accesAuxEpisodes, niveauxDeLEpisode, suitUneCohorte } from "@/services/acces.service";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { coursDeLEpisode } from "@/pedagogy/cours/suites";
 import { introServie, reglagesDesNiveaux } from "@/pedagogy/episodes/partie-servie";
 
@@ -75,7 +76,7 @@ async function EpisodePage({
   const [{ code }, { hasard }] = await Promise.all([params, searchParams]);
   const ep = episodeParCode(code);
   if (!ep) notFound();
-  const [userId, session] = await Promise.all([getGuestUserId(), getSession()]);
+  const [userId, session, noms] = await Promise.all([getGuestUserId(), getSession(), lireLesNoms()]);
   const acces = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
   const niveaux = niveauxDeLEpisode(acces, code);
   // DEVANT UN ÉLÈVE, PAS DE VENTE (audit C-02) : qui suit une cohorte, ou arrive par le
@@ -89,8 +90,8 @@ async function EpisodePage({
   const offre = eleve
     ? null
     : {
-        marque: MARQUE_DES_EPISODES,
-        nom: OFFRES.episodes.nom,
+        marque: marqueDesEpisodes(noms),
+        nom: noms.episodes,
         devis,
         libelle: LIBELLE_DU_DEVIS,
       };
@@ -111,7 +112,7 @@ async function EpisodePage({
             cours={coursDeLEpisode(code)}
           />
         ) : (
-          <EpisodeFerme code={code} eleve={eleve} devis={devis} demosReglees={acces.demos ?? EPISODES_DE_DEMO} />
+          <EpisodeFerme code={code} eleve={eleve} devis={devis} demosReglees={acces.demos ?? EPISODES_DE_DEMO} noms={noms} />
         )}
       </main>
       <PiedDePage />
@@ -128,6 +129,7 @@ function EpisodeFerme({
   eleve,
   devis,
   demosReglees,
+  noms,
 }: {
   code: string;
   eleve: boolean;
@@ -135,6 +137,8 @@ function EpisodeFerme({
   devis: string;
   /** Les démonstrations de la Découverte (/admin/offres). */
   demosReglees: readonly string[];
+  /** Les noms des offres au catalogue en vigueur. */
+  noms: NomsDesOffres;
 }) {
   const ep = episodeParCode(code)!;
   const secteur = secteurDe(code);
@@ -172,8 +176,8 @@ function EpisodeFerme({
             className="rounded-lg encadre-neutre px-4 py-3 text-base leading-relaxed text-slate-200"
           >
             <p>
-              <strong className="font-semibold text-slate-50">{MARQUE_DES_EPISODES}.</strong> Cet
-              épisode est inclus dans l&apos;offre {OFFRES.episodes.nom}, qui se propose à part,
+              <strong className="font-semibold text-slate-50">{marqueDesEpisodes(noms)}.</strong> Cet
+              épisode est inclus dans l&apos;offre {noms.episodes}, qui se propose à part,
               sur devis. Sans elle, seuls les {demos.length} épisodes de démonstration
               se jouent, au niveau Démonstration.
             </p>

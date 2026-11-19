@@ -31,7 +31,13 @@ import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { ARTICLES_PAR_TICKET } from "../scenarios/sector-kpis";
 import { libellesDuStock } from "../scenarios/libelles-des-stocks";
 import { DIFFICULTY_PRESETS } from "../difficulty";
-import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
+import { lesOffresDeLArene, type NomsDesOffres } from "../tarifs";
+
+/**
+ * Les offres de l'arène (`lesOffresDeLArene`), nommées au catalogue en vigueur : la mission porte
+ * cette marque, que `missionAffichee` remplit avec les noms qu'elle reçoit.
+ */
+const LES_OFFRES_DE_L_ARENE = "{lesOffresDeLArene}";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
 
 /**
@@ -2197,15 +2203,16 @@ export interface MissionAffichee {
   reservee: string | null;
 }
 
-export function missionAffichee(code: string, c: Cas): MissionAffichee | null {
+export function missionAffichee(code: string, c: Cas, noms: NomsDesOffres): MissionAffichee | null {
   const m = missionDuChapitre(code, c);
   if (!m) return null;
+  const offres = (t: string) => t.replaceAll(LES_OFFRES_DE_L_ARENE, lesOffresDeLArene(noms));
   return {
     niveau: m.niveau,
-    faire: m.faire,
-    chercher: m.chercher,
+    faire: offres(m.faire),
+    chercher: offres(m.chercher),
     ou: m.lieux.map((l) => LIEUX_DE_L_ARENE[l].chemin),
     adresse: adresseDeLaMission(c, m),
-    reservee: m.niveau > NIVEAU_SANS_LICENCE ? `Le niveau ${m.niveau} est inclus dans ${LES_OFFRES_DE_L_ARENE}.` : null,
+    reservee: m.niveau > NIVEAU_SANS_LICENCE ? `Le niveau ${m.niveau} est inclus dans ${lesOffresDeLArene(noms)}.` : null,
   };
 }

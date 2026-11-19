@@ -9,7 +9,7 @@ import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 import { dureeEnClair } from "@/config/cours/duree";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
-import { OFFRES } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants/episodes" },
@@ -28,7 +28,8 @@ export const metadata: Metadata = {
  * l'épisode enseigne, comment conduire la séance de deux heures, le corrigé
  * du calcul et les questions du débrief.
  */
-function EpisodesEnClassePage() {
+async function EpisodesEnClassePage() {
+  const noms = await lireLesNoms();
   const avecFiche = new Map(FICHES.map((f) => [f.code, f]));
   const entreprises = catalogueDesEpisodes((code) => avecFiche.has(code));
   return (
@@ -50,7 +51,7 @@ function EpisodesEnClassePage() {
             avoir refusé une commande rentable. Toute la classe joue le même trimestre, sous les
             mêmes aléas ; la séance tient en deux heures, débrief compris. Vos élèves les jouent
             sans compte, dans une cohorte de votre établissement : la cohorte demande l&apos;offre{" "}
-            {OFFRES.episodes.nom}, et quelques épisodes de démonstration se jouent librement sur{" "}
+            {noms.episodes}, et quelques épisodes de démonstration se jouent librement sur{" "}
             <Link href="/entreprises/episode" className="text-slate-200 underline underline-offset-4 hover:text-slate-50">
               la page des épisodes
             </Link>

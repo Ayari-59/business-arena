@@ -14,7 +14,8 @@ import { FORMATIONS, formationsDe } from "@/config/formations";
 import { PiedDePage } from "@/components/pied-de-page";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 import { EncartSurMesure } from "@/components/encart-sur-mesure";
-import { OFFRES, OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 
 export const metadata: Metadata = {
@@ -91,7 +92,8 @@ const MOTS_DES_REFERENTIELS = (() => {
 
 const ENTREPRISES = entreprisesEtFormations();
 
-function AteliersPage() {
+async function AteliersPage() {
+  const noms = await lireLesNoms();
   return (
     <>
       <main id="main" className="relative overflow-hidden">
@@ -382,7 +384,7 @@ function AteliersPage() {
             <p data-acces-des-ateliers="">
               Les fiches se lisent librement. Le dossier de l&apos;enseignant, ses
               corrigés et la partie de la classe s&apos;ouvrent avec une licence de
-              l&apos;arène : offre {OFFRES_DE_L_ARENE.map((o) => OFFRES[o].nom).join(", ").replace(/, ([^,]*)$/, " ou $1")}.{" "}
+              l&apos;arène : offre {OFFRES_DE_L_ARENE.map((o) => noms[o]).join(", ").replace(/, ([^,]*)$/, " ou $1")}.{" "}
               <Link href={LIEN_TARIFS} className="text-slate-200 underline underline-offset-4 hover:text-slate-50">
                 Voir les offres
               </Link>

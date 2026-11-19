@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { CATALOGUE_PAR_DEFAUT, LE_COURS_PAR_OFFRE, questionsDesTarifs } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, LE_COURS_PAR_OFFRE, NOMS_PAR_DEFAUT, questionsDesTarifs } from "@/config/tarifs";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 
 /**
@@ -110,7 +110,7 @@ describe("la page commerciale des entreprises", () => {
 
 describe("l'essai avec un groupe", () => {
   const reponse = (essai: { autorise: boolean; dureeMaxJours: number }) =>
-    questionsDesTarifs(essai).find((x) => /essayer avec un groupe/.test(x.q))!.r;
+    questionsDesTarifs(NOMS_PAR_DEFAUT, essai).find((x) => /essayer avec un groupe/.test(x.q))!.r;
   it("l'essai d'établissement activé dans /admin/offres : la réponse dit oui, sans paiement, et sa durée", () => {
     const r = reponse({ autorise: true, dureeMaxJours: 21 });
     expect(r).not.toMatch(/^Non/);
@@ -121,7 +121,7 @@ describe("l'essai avec un groupe", () => {
     // Le cours s'essaie en classe sans offre : le compte enseignant, une classe, le chapitre libre et son
     // cas (tests/architecture/pages-de-l-offre.test.ts vérifie chaque mot dans le code).
     expect(reponse({ autorise: false, dureeMaxJours: 30 })).toMatch(/^Oui, pour le cours/);
-    const fermee = questionsDesTarifs({ autorise: false, dureeMaxJours: 30 }, false).find((x) => /essayer avec un groupe/.test(x.q))!.r;
+    const fermee = questionsDesTarifs(NOMS_PAR_DEFAUT, { autorise: false, dureeMaxJours: 30 }, false).find((x) => /essayer avec un groupe/.test(x.q))!.r;
     expect(fermee).toMatch(/^Non/);
   });
   it("/tarifs passe le réglage de l'essai à la page", () => {

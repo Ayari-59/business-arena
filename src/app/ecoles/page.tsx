@@ -1,12 +1,13 @@
 import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import {
-  ARGUMENTS_POUR_LES_ECOLES,
+  argumentsPourLesEcoles,
   LE_RELEVE_DE_L_ARENE,
   lienDuDevis,
   LIBELLE_DU_DEVIS,
-  OFFRES,
+  nomsDuCatalogue,
   variablesDuCatalogue,
+  type NomsDesOffres,
 } from "@/config/tarifs";
 import { enumerer, ouvreLExamen, prixALaVitrine, vueDesTarifs } from "@/config/catalogue";
 import { COMPETENCES_D_EXAMEN } from "@/config/examen/competences";
@@ -130,7 +131,7 @@ const QUESTIONS = [
 
 /** Les deux devis de la page, chacun sous son nom : les épisodes, et l'arène (Campus, ou Programme dans la liste). */
 const DEVIS_DES_EPISODES = "Devis des épisodes manager";
-const DEVIS_DE_L_ARENE = `Devis ${OFFRES.campus.nom} ou ${OFFRES.programme.nom}`;
+const devisDeLArene = (n: NomsDesOffres) => `Devis ${n.campus} ou ${n.programme}`;
 
 async function EcolesPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
@@ -138,7 +139,9 @@ async function EcolesPage() {
   // Les offres de l'arène qui se vendent (pas la Découverte), lues au catalogue
   // (/admin/offres) ; leur prix seulement si l'affichage des prix est allumé.
   const { catalogue, decouverte, affichage } = await lireLEtatDuCatalogue();
-  const offresAPrix = vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix: affichage.prixPublics }).cartes.filter(
+  const noms = nomsDuCatalogue(catalogue);
+  const DEVIS_DE_L_ARENE = devisDeLArene(noms);
+  const offresAPrix = vueDesTarifs(catalogue, variablesDuCatalogue(noms, decouverte), { prix: affichage.prixPublics }).cartes.filter(
     (o) => o.tarif !== "gratuit",
   );
   const c = (id: string) => contrasteDeLaBande(theme, id);
@@ -272,7 +275,7 @@ async function EcolesPage() {
               ))}
             </ul>
             <ul className="mt-8 grid gap-6 md:grid-cols-2">
-              {ARGUMENTS_POUR_LES_ECOLES.filter((a) => a.titre !== OFFRES.episodes.nom).map((a) => (
+              {argumentsPourLesEcoles(noms).filter((a) => a.titre !== noms.episodes).map((a) => (
                 <li key={a.titre}>
                   <p className="titre-carte text-slate-100">{a.titre}</p>
                   <p className="mt-1 text-base leading-relaxed text-slate-400">

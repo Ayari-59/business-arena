@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BureauDuComptable } from "@/components/cours/bureau";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { PiedDePage } from "@/components/pied-de-page";
 import { bureauParCode } from "@/config/cours/bureaux";
 import { essaiPour } from "@/config/cours/chapitres-libres";
@@ -49,7 +50,7 @@ async function BureauPage({ params }: { params: Promise<{ code: string }> }) {
         : null;
     return (
       <>
-        <ChapitreReserve titre={bureau.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(bureau, { classe: classe?.parcours })} eleve={eleve} devis={lienDuDevisDuCours(parcoursDuContenu(bureau))} />
+        <ChapitreReserve titre={bureau.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(bureau, { classe: classe?.parcours })} eleve={eleve} noms={await lireLesNoms()} devis={lienDuDevisDuCours(parcoursDuContenu(bureau))} />
         <PiedDePage />
       </>
     );

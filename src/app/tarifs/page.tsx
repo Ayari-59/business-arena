@@ -1,7 +1,7 @@
 import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { PageDesTarifs } from "@/components/page-des-tarifs";
-import { descriptionDesTarifs, variablesDuCatalogue } from "@/config/tarifs";
+import { descriptionDesTarifs, nomsDuCatalogue, variablesDuCatalogue } from "@/config/tarifs";
 import { vueDesTarifs } from "@/config/catalogue";
 import { bandeauDeLaPromotion, lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -52,7 +52,8 @@ async function TarifsPage() {
   // lecture la dit fermée (services/admin.service.ts) : la réponse ne promet alors rien.
   return (
     <PageDesTarifs
-      vue={vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix })}
+      vue={vueDesTarifs(catalogue, variablesDuCatalogue(nomsDuCatalogue(catalogue), decouverte), { prix })}
+      noms={nomsDuCatalogue(catalogue)}
       bandeau={await bandeauDeLaPromotion()}
       prixPublics={prix}
       essai={essai}

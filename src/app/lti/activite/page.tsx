@@ -29,8 +29,8 @@ import {
   type HorsLicence,
 } from "@/config/tarifs";
 import { licenceDeLArene } from "@/services/acces.service";
-import { estUnRefusDeCohorte, NOM_DE_COHORTE_MAX, REFUS_DE_COHORTE } from "@/config/cohortes";
-import { lireLaDecouverte } from "@/services/catalogue.service";
+import { estUnRefusDeCohorte, NOM_DE_COHORTE_MAX, refusDeCohorte, type RefusDeCohorte } from "@/config/cohortes";
+import { lireLaDecouverte, lireLesNoms } from "@/services/catalogue.service";
 import {
   ANSWER_FORMATS,
   DEFAULT_ANSWER_FORMAT,
@@ -134,7 +134,7 @@ async function ActiviteLtiPage({
     );
   }
 
-  const [ouvertures, parties, cohortes, { vitrineSolo }, licenceDeLOrganisation, { demos }, lesExamens] = await Promise.all([
+  const [ouvertures, parties, cohortes, { vitrineSolo }, licenceDeLOrganisation, { demos }, lesExamens, noms] = await Promise.all([
     ouverturesDeLOrganisation(plateforme.organizationId),
     getTeacherGames(enseignantId),
     cohortesDeLEnseignant(enseignantId),
@@ -142,6 +142,7 @@ async function ActiviteLtiPage({
     licenceDeLArene(plateforme.organizationId),
     lireLaDecouverte(),
     examensDeLEnseignant(enseignantId),
+    lireLesNoms(),
   ]);
   const examensOuverts = lesExamens.filter((e) => !e.closLe);
   // Le paramétrage de la licence (offres Classe, Programme, Campus) : le formulaire part
@@ -156,17 +157,17 @@ async function ActiviteLtiPage({
     : refus === "introuvable"
       ? { texte: "Cette partie ou cette cohorte n'est pas l'une des vôtres, ou l'activité vient d'être reliée.", tarifs: false }
       : refus === "niveau"
-        ? { texte: messageNiveauxReserves(vitrineSolo), tarifs: true }
+        ? { texte: messageNiveauxReserves(noms, vitrineSolo), tarifs: true }
         : refus === "classe"
-          ? { texte: refusDeLaClasse(vitrineSolo), tarifs: true }
+          ? { texte: refusDeLaClasse(noms, vitrineSolo), tarifs: true }
           : refus.startsWith("licence-") && parametrage && QUOI_HORS_LICENCE.includes(refus.slice("licence-".length))
             ? {
-                texte: refusSansLaDemande(parametrage, refus.slice("licence-".length) as HorsLicence["quoi"]),
+                texte: refusSansLaDemande(noms, parametrage, refus.slice("licence-".length) as HorsLicence["quoi"]),
                 tarifs: true,
               }
           : refus.startsWith("cohorte-") && estUnRefusDeCohorte(refus.slice("cohorte-".length))
             ? {
-                texte: REFUS_DE_COHORTE[refus.slice("cohorte-".length) as keyof typeof REFUS_DE_COHORTE],
+                texte: refusDeCohorte(noms)[refus.slice("cohorte-".length) as RefusDeCohorte],
                 tarifs: refus === "cohorte-licence",
               }
             : { texte: "La partie n'a pas pu être créée. Réessayez.", tarifs: false };
@@ -191,7 +192,7 @@ async function ActiviteLtiPage({
 
         {!ouvertures.partie && !ouvertures.cohorte ? (
           <p className="rounded-xl encadre-neutre px-4 py-3 text-sm text-slate-200" data-sans-licence="">
-            {refusDeLaClasse(vitrineSolo)} <Tarifs />
+            {refusDeLaClasse(noms, vitrineSolo)} <Tarifs />
           </p>
         ) : null}
 
@@ -381,7 +382,7 @@ async function ActiviteLtiPage({
           </>
         ) : ouvertures.cohorte ? (
           <p className="text-sm text-slate-400">
-            {refusDeLaClasse(vitrineSolo)} <Tarifs />
+            {refusDeLaClasse(noms, vitrineSolo)} <Tarifs />
           </p>
         ) : null}
 
@@ -436,7 +437,7 @@ async function ActiviteLtiPage({
           </>
         ) : ouvertures.partie ? (
           <p className="text-sm text-slate-400">
-            {refusDesCohortes(demos.length)} <Tarifs />
+            {refusDesCohortes(noms, demos.length)} <Tarifs />
           </p>
         ) : null}
 

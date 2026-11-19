@@ -22,6 +22,7 @@ import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
 import { getSession } from "@/lib/session";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
+import { lireLesNoms } from "@/services/catalogue.service";
 import Link from "next/link";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
@@ -99,6 +100,7 @@ async function ChapitrePage({
           reserve={motsDuContenu(chapitre.code).reserve}
           essai={essaiPour(chapitre, { classe: classeDeLEleveLue?.parcours, demande: diplomeDeLAdresse(diplome) })}
           eleve={eleve}
+          noms={await lireLesNoms()}
           devis={lienDuDevisDuCours(parcoursDuContenu(chapitre, diplomeDeLAdresse(diplome)))}
         />
         <PiedDePage />
@@ -130,7 +132,7 @@ async function ChapitrePage({
           cas={cas}
           entreprises={possibles.map(({ code: c, nom }) => ({ code: c, nom }))}
           classe={classe !== undefined}
-          mission={missionAffichee(chapitre.code, cas)}
+          mission={missionAffichee(chapitre.code, cas, await lireLesNoms())}
           suites={suitesDuChapitre(chapitre.code)}
           calculatrice={classeDeLEleveLue?.calculatrice ?? true}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}

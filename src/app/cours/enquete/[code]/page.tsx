@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BureauDuComptable } from "@/components/cours/bureau";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { PiedDePage } from "@/components/pied-de-page";
 import { enqueteParCode, lienDeLEnquete } from "@/config/cours/enquetes";
 import { essaiPour } from "@/config/cours/chapitres-libres";
@@ -50,7 +51,7 @@ async function EnquetePage({ params }: { params: Promise<{ code: string }> }) {
         : null;
     return (
       <>
-        <ChapitreReserve titre={enquete.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(enquete, { classe: classe?.parcours })} eleve={eleve} devis={lienDuDevisDuCours(parcoursDuContenu(enquete))} />
+        <ChapitreReserve titre={enquete.titre} reserve="Ce cas pratique est réservé" essai={essaiPour(enquete, { classe: classe?.parcours })} eleve={eleve} noms={await lireLesNoms()} devis={lienDuDevisDuCours(parcoursDuContenu(enquete))} />
         <PiedDePage />
       </>
     );

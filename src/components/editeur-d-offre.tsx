@@ -53,7 +53,6 @@ export function EditeurDOffre({
   mode,
   catalogue,
   variables,
-  nomFige,
   prixPublics,
 }: {
   initiale: OffreDuCatalogue;
@@ -61,8 +60,6 @@ export function EditeurDOffre({
   catalogue: Catalogue;
   /** Les variables des textes et ce qu'elles valent aujourd'hui. */
   variables: Readonly<Record<string, string>>;
-  /** Le nom est-il figé (cité par les murs de licence et les phrases du site) ? */
-  nomFige: boolean;
   /** Les prix s'affichent-ils sur le site ? Éteint, le prix est une référence interne. */
   prixPublics: boolean;
 }) {
@@ -121,14 +118,13 @@ export function EditeurDOffre({
             <span className={ETIQUETTE}>Nom</span>
             <input
               value={o.nom}
-              readOnly={nomFige}
               onChange={(e) => maj({ nom: e.target.value })}
               className={CHAMP}
               data-champ-offre="nom"
             />
-            {nomFige ? (
+            {mode === "modification" ? (
               <span className="mt-1 block text-xs text-slate-400">
-                Figé : les murs de licence et les phrases du site le citent.
+                Le site entier le lit ici, au prochain affichage ; les licences déjà émises gardent le leur.
               </span>
             ) : null}
           </label>

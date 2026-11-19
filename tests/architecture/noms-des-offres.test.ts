@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { MARQUE_DE_L_ARENE, MARQUE_DES_EPISODES, nomDOffre, OFFRES } from "@/config/tarifs";
+import { MARQUE_DE_L_ARENE, MARQUE_DES_EPISODES, nomDOffre, NOMS_PAR_DEFAUT, OFFRES } from "@/config/tarifs";
 import { VENDEUR } from "@/config/editeur";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { DIFFICULTES } from "@/config/ateliers/types";
@@ -104,9 +104,9 @@ describe("les noms des offres", () => {
 
   it("les noms composés de la grille ne s'écrivent qu'au même endroit", () => {
     const composes = [
-      nomDOffre("classe"),
-      nomDOffre("programme"),
-      nomDOffre("campus"),
+      nomDOffre(NOMS_PAR_DEFAUT, "classe"),
+      nomDOffre(NOMS_PAR_DEFAUT, "programme"),
+      nomDOffre(NOMS_PAR_DEFAUT, "campus"),
       MARQUE_DE_L_ARENE,
       MARQUE_DES_EPISODES,
       `offres ${OFFRES.classe.nom}, ${OFFRES.programme.nom} et ${OFFRES.campus.nom}`,

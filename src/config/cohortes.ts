@@ -1,4 +1,4 @@
-import { REFUS_DES_COHORTES } from "./tarifs";
+import { refusDesCohortes, type NomsDesOffres } from "./tarifs";
 
 /**
  * LES COHORTES CRÉÉES PAR L'ENSEIGNANT : CE QUE L'ÉCRAN DIT, ÉCRIT UNE FOIS.
@@ -18,23 +18,24 @@ import { REFUS_DES_COHORTES } from "./tarifs";
 /** La longueur d'un nom de cohorte. */
 export const NOM_DE_COHORTE_MAX = 120;
 
-/** Le refus sans licence épisodes, avec ce qui reste possible (le lien vers les tarifs suit). */
-export const REFUS_SANS_LICENCE = REFUS_DES_COHORTES;
-
-/** Les refus de l'action, par code : l'adresse porte le code, jamais le texte. */
-export const REFUS_DE_COHORTE = {
-  licence: REFUS_SANS_LICENCE,
+/**
+ * Les refus de l'action, par code : l'adresse porte le code, jamais le texte. Celui sans licence
+ * épisodes dit ce qui reste possible (le lien vers les tarifs suit), l'offre nommée au catalogue
+ * en vigueur.
+ */
+export const refusDeCohorte = (n: NomsDesOffres) => ({
+  licence: refusDesCohortes(n),
   organisation:
     "Votre compte n'est rattaché à aucun établissement : la cohorte n'a pas pu être créée.",
   nom: "Donnez un nom à la cohorte, par exemple la classe et le groupe.",
   episodes: "Cochez au moins un épisode.",
   introuvable: "Cette cohorte n'existe pas, ou elle n'est pas l'une des vôtres.",
-} as const;
+});
 
-export type RefusDeCohorte = keyof typeof REFUS_DE_COHORTE;
+export type RefusDeCohorte = keyof ReturnType<typeof refusDeCohorte>;
+const CODES_DE_REFUS: readonly string[] = ["licence", "organisation", "nom", "episodes", "introuvable"] satisfies RefusDeCohorte[];
 
-export const estUnRefusDeCohorte = (v: string | undefined): v is RefusDeCohorte =>
-  !!v && Object.hasOwn(REFUS_DE_COHORTE, v);
+export const estUnRefusDeCohorte = (v: string | undefined): v is RefusDeCohorte => !!v && CODES_DE_REFUS.includes(v);
 
 /**
  * LA FIN DE LA LICENCE ÉPISODES, DITE À L'ENSEIGNANT (audit UX du 11 novembre 2026, P2-7 ; la phrase est

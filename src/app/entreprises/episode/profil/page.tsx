@@ -14,7 +14,8 @@ import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { getSession } from "@/lib/session";
 import { accesAuxEpisodes, episodeOuvert, suitUneCohorte } from "@/services/acces.service";
-import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes, lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { conseilSansLicence, ceQuOuvrentLesEpisodes, lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import {
   CONFIANCES,
   MENTION,
@@ -277,13 +278,14 @@ async function ProfilPage({
   // Découverte ; et la page dit ce qu'apporte l'offre (services/acces.service.ts).
   const session = await getSession();
   const acces = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
+  const noms = await lireLesNoms();
   // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
   const eleve = !session && (await suitUneCohorte(userId));
   const calcule = construireProfil(parties, undefined, {
     objectif,
     proposables: (code) => episodeOuvert(acces, code),
   });
-  const profil = acces.licence ? calcule : { ...calcule, conseil: CONSEIL_SANS_LICENCE };
+  const profil = acces.licence ? calcule : { ...calcule, conseil: conseilSansLicence(noms) };
   const n = profil.comptees.length;
   const nomDe = (code: string) => {
     const ep = episodeParCode(code);
@@ -534,7 +536,7 @@ async function ProfilPage({
                 className="max-w-3xl text-sm leading-relaxed text-slate-300"
                 data-offre-entreprise=""
               >
-                {ceQuOuvrentLesEpisodes(NOMBRE_D_EPISODES)}{" "}
+                {ceQuOuvrentLesEpisodes(noms, NOMBRE_D_EPISODES)}{" "}
                 <Link
                   href={lienDuDevis("episodes")}
                   prefetch={false}

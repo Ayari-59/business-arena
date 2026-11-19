@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { DIFFICULTY_PRESETS, premierNiveauQuiOuvre } from "@/config/difficulty";
 import { leviersDuNiveau } from "@/config/decisions";
 import { comparatifDesNiveaux, tableauDuNiveau } from "@/config/tableau-des-niveaux";
@@ -15,7 +16,7 @@ import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
 import { getGuestUserId } from "@/lib/guest";
 import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
-import { MARQUE_DE_L_ARENE, messageNiveauxReserves } from "@/config/tarifs";
+import { marqueDeLArene, messageNiveauxReserves } from "@/config/tarifs";
 import { getSession } from "@/lib/session";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
@@ -46,7 +47,7 @@ async function JouerPage({
 }: {
   searchParams: Promise<{ secteur?: string; niveau?: string; trop?: string; reserve?: string }>;
 }) {
-  const config = await getPlatformConfig();
+  const [config, noms] = await Promise.all([getPlatformConfig(), lireLesNoms()]);
   // Celui qui revient retrouve sa partie AVANT d'en configurer une autre.
   const userId = await getGuestUserId();
   const enCours = userId ? await partiesSoloEnCours(userId) : [];
@@ -129,7 +130,7 @@ async function JouerPage({
                 role="status"
                 className="mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200"
               >
-                {messageNiveauxReserves(config.vitrineSolo)} Choisissez un niveau plus bas, ou{" "}
+                {messageNiveauxReserves(noms, config.vitrineSolo)} Choisissez un niveau plus bas, ou{" "}
                 <Link
                   href={LIEN_TARIFS}
                 prefetch={false}
@@ -203,7 +204,7 @@ async function JouerPage({
                   // L'encadré des niveaux fermés ne propose QUE les tarifs : un compte
                   // enseignant n'ouvre pas les niveaux 4 à 6, une licence le fait (PAR-14).
                   liens={{ tarifs: { href: LIEN_TARIFS, libelle: "Voir les offres" } }}
-                  offre={{ marque: MARQUE_DE_L_ARENE, message: messageNiveauxReserves(config.vitrineSolo) }}
+                  offre={{ marque: marqueDeLArene(noms), message: messageNiveauxReserves(noms, config.vitrineSolo) }}
                   levels={DIFFICULTY_PRESETS.map((p) => ({
                     level: p.level,
                     name: p.name,

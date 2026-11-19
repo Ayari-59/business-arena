@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { dossierOuvert } from "@/services/acces.service";
-import { REFUS_DU_DOSSIER } from "@/config/tarifs";
+import { refusDuDossier } from "@/config/tarifs";
+import { lireLesNoms } from "@/services/catalogue.service";
 import { atelierByCode } from "@/config/ateliers";
 import { grilleEvaluationCsv } from "@/config/ateliers/formulaires";
 
@@ -30,7 +31,7 @@ export async function GET(
   if (!atelier) return new Response("Atelier introuvable.", { status: 404 });
   // Le dossier enseignant suit la règle de la classe (services/acces.service.ts).
   if (!(await dossierOuvert(session.userId))) {
-    return new Response(`${REFUS_DU_DOSSIER} Voir les offres : /tarifs`, { status: 402 });
+    return new Response(`${refusDuDossier(await lireLesNoms())} Voir les offres : /tarifs`, { status: 402 });
   }
 
   return new Response(grilleEvaluationCsv(atelier), {

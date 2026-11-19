@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { Icone } from "@/components/icone";
-import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { lienDuDevis, LIBELLE_DU_DEVIS, type NomsDesOffres } from "@/config/tarifs";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import type { ReglageDeLEssai } from "@/config/decouverte";
 
@@ -18,9 +18,12 @@ import type { ReglageDeLEssai } from "@/config/decouverte";
  */
 export function AccueilDeLaDecouverte({
   essai,
+  noms,
   niveauMax,
 }: {
   essai: ReglageDeLEssai;
+  /** Les noms des offres au catalogue en vigueur. */
+  noms: NomsDesOffres;
   /** Le dernier niveau de l'arène ouvert en solo sans offre. */
   niveauMax: number;
 }) {
@@ -31,7 +34,7 @@ export function AccueilDeLaDecouverte({
       className="carte grid gap-3 p-4 sm:p-6"
     >
       <h2 id="decouverte-titre" className="titre-carte text-slate-100">
-        Votre compte est en {OFFRES.decouverte.nom.toLowerCase()} : voici ce que vous pouvez faire tout de suite
+        Votre compte est en {noms.decouverte.toLowerCase()} : voici ce que vous pouvez faire tout de suite
       </h2>
       <ul className="grid gap-2 text-sm leading-relaxed text-slate-300">
         <li>
@@ -59,7 +62,7 @@ export function AccueilDeLaDecouverte({
         Les parties de classe, les concours, les cohortes d&apos;épisodes et les examens demandent une offre.{" "}
         {essai.autorise ? (
           <>
-            Pour essayer avec un groupe, demandez l&apos;essai de l&apos;offre {OFFRES.classe.nom} : {essai.dureeMaxJours}{" "}
+            Pour essayer avec un groupe, demandez l&apos;essai de l&apos;offre {noms.classe} : {essai.dureeMaxJours}{" "}
             jours au plus, sans paiement, qui se ferme seul à son terme.{" "}
             <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
               Demander l&apos;essai
