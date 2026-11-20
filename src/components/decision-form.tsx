@@ -2916,6 +2916,8 @@ export function DecisionForm({
     /** Le budget sous lequel la disponibilité se dégrade, calculé par le moteur. */
     seuilDEntretien?: number;
     laborCapacity: number;
+    /** Les heures par unité du produit de référence : celles qui comptent la capacité de main-d'œuvre. */
+    hoursPerUnit?: number;
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
     productivity: number;
@@ -2931,6 +2933,12 @@ export function DecisionForm({
 }) {
   // L'aide du champ d'entretien : le seuil du métier, puis l'état de l'atelier.
   const aideEntretien = aideDuBudgetEntretien(capacityFacts);
+  // En gamme, la capacité de main-d'œuvre se compte au rythme du produit de référence :
+  // la note le nomme (« comptée en NOVA One »).
+  const referenceDuRythme =
+    gamme && capacityFacts?.hoursPerUnit !== undefined
+      ? (gamme.find((p) => p.hoursPerUnit === capacityFacts.hoursPerUnit)?.name ?? null)
+      : null;
   // LE HAUT DU CURSEUR DE VOLUME est ce que l'atelier peut réellement produire ce tour : la plus
   // basse de la capacité machine disponible et de la capacité de main-d'œuvre. Au-delà, le moteur
   // borne de toute façon la production. Hors cas (abonnement, pas de capacité connue), le curseur
@@ -5006,12 +5014,18 @@ export function DecisionForm({
         <PanneauConsulte
           titre={v.capacityPanelTitle}
           icone="usine"
+          // EN GAMME, LE GOULOT DÉPEND DU MIX : la main-d'œuvre se compte au rythme du
+          // produit de référence, et une Studio prend bien plus d'heures qu'une Go. Le
+          // résumé dit alors ce que sont les 7 000 (les machines), sans désigner un goulot
+          // que les plans peuvent démentir ; le résultat estimé dit la capacité du tour.
           resume={`${Math.round(capacityFacts.availableMachineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel} · ${
-            capacityFacts.bottleneck === "labor"
-              ? v.laborLabel
-              : capacityFacts.bottleneck === "machine"
-                ? v.capacityBottleneckLabel
-                : "équilibré"
+            gamme
+              ? "machines, le goulot dépend du mix"
+              : capacityFacts.bottleneck === "labor"
+                ? v.laborLabel
+                : capacityFacts.bottleneck === "machine"
+                  ? v.capacityBottleneckLabel
+                  : "équilibré"
           }`}
         >
           {/*
@@ -5050,12 +5064,16 @@ export function DecisionForm({
             <FaitCapacite
               label={v.laborLabel}
               valeur={`${Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel}`}
-              note={`${capacityFacts.headcount} pers. × prod. ${Math.round(capacityFacts.productivity * 100)} %`}
+              note={`${capacityFacts.headcount} pers. × prod. ${Math.round(capacityFacts.productivity * 100)} %${
+                referenceDuRythme ? `, comptée en ${referenceDuRythme}` : ""
+              }`}
             />
             <FaitCapacite
               label="Goulot"
               valeur={
-                capacityFacts.bottleneck === "labor"
+                gamme
+                  ? "Selon le mix"
+                  : capacityFacts.bottleneck === "labor"
                   ? v.laborLabel
                   : capacityFacts.bottleneck === "machine"
                     ? v.capacityBottleneckLabel
@@ -5067,7 +5085,12 @@ export function DecisionForm({
               couleur="text-slate-100"
             />
           </dl>
-          {capacityFacts.bottleneck === "labor" ? (
+          {gamme ? (
+            <p className="mt-2 text-xs text-slate-300">
+              Les heures dépendent des références produites : le résultat estimé dit ce que
+              votre atelier peut produire avec vos plans.
+            </p>
+          ) : capacityFacts.bottleneck === "labor" ? (
             // Sans embauches à ce niveau, « envisagez d'embaucher » envoyait vers un levier absent.
             <p className="mt-2 text-xs text-slate-300">
               {on.hr

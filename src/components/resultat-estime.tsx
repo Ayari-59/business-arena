@@ -10,6 +10,7 @@ import { ChiffreQuiArrive, ValeurRafraichie } from "@/components/chiffre-qui-arr
 import { dureeDuJeton } from "@/lib/mouvement";
 import { formatEuro, formatUnits } from "@/lib/format";
 import { Icone } from "@/components/icone";
+import { alerteDuManque, phrasesDuManque } from "@/lib/phrases-du-manque";
 import type { EstimationEnCours } from "@/lib/estimation-en-cours";
 import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
 
@@ -154,6 +155,7 @@ export function resumeDeLEstimation(
     unites,
     manquantes: estime.manquantes,
     ventesLivrables: estime.ventesLivrables,
+    alerteDuManque: estime.manque ? alerteDuManque(estime.manque, { unit: unite, units: unites }) : null,
   };
 }
 
@@ -306,6 +308,8 @@ export function EncartResultatEstime({
   // Au-delà du découvert autorisé, le tour se clôt en crise de trésorerie.
   const auDelaDuDecouvert = !vide && estime.margeSousLeDecouvert < 0;
   const alertes = (manque ? 1 : 0) + (tresorerieNegative ? 1 : 0) + (auDelaDuDecouvert ? 1 : 0);
+  // POURQUOI IL MANQUERA DES VENTES : la capacité du tour, ce qui la limite, quoi faire.
+  const pourquoi = manque && estime.manque ? phrasesDuManque(estime.manque, v) : null;
   return (
     <section
       ref={cadran}
@@ -434,15 +438,19 @@ export function EncartResultatEstime({
             {manque || tresorerieNegative || auDelaDuDecouvert ? (
               <ul className="space-y-1 text-sm leading-relaxed text-slate-200">
                 {manque ? (
-                  <li className="flex items-start gap-2">
-                    <Icone nom="alerte" className="mt-0.5 h-4 w-4 text-slate-400" />
+                  <li data-alerte-du-manque="" className="flex items-start gap-2">
+                    <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                     <span>
                       Vous ne pourrez livrer que{" "}
                       <strong className="font-semibold tabular-nums">
                         {formatUnits(estime.ventesLivrables)} {v.units}
                       </strong>{" "}
-                      : {formatUnits(estime.manquantes)} de vos ventes estimées manqueraient, faute
-                      de stock et de capacité.
+                      : {formatUnits(estime.manquantes)} de vos ventes estimées manqueraient.
+                      {pourquoi
+                        ? [...pourquoi.causes, ...(pourquoi.conseil ? [pourquoi.conseil] : [])].map((phrase) => (
+                            <span key={phrase}> {phrase}</span>
+                          ))
+                        : null}
                     </span>
                   </li>
                 ) : null}
@@ -648,9 +656,9 @@ export function LigneEstimeeCompacte({
           </div>
         </dl>
         {e.manquantes >= 1 ? (
-          <p className="mt-3 flex items-start gap-2 text-sm leading-snug text-slate-200">
+          <p data-alerte-du-manque="" className="mt-3 flex items-start gap-2 text-sm leading-snug text-slate-200">
             <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-            Vous ne pourrez livrer que {formatUnits(e.ventesLivrables)} {e.unites}.
+            <span>{e.alerteDuManque ?? `Vous ne pourrez livrer que ${formatUnits(e.ventesLivrables)} ${e.unites}.`}</span>
           </p>
         ) : null}
         {e.tresorerieNette < 0 ? (

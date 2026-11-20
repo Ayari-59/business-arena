@@ -13,6 +13,9 @@ import type {
 import { mapGammeSegments, toGamme } from "../gamme";
 import { estUneNouveaute } from "../groupe/nouveautes";
 import { simulateRound } from "../simulation";
+import { analyserLeManque, entreeDuManque, type AnalyseDuManque } from "./manque";
+
+export type { AnalyseDuManque, CauseDuManque, LimiteDuManque } from "./manque";
 
 /**
  * LE RÉSULTAT ESTIMÉ : CE QUE L'ÉQUIPE CROIT, AVANT QUE LE MARCHÉ NE RÉPONDE.
@@ -109,6 +112,13 @@ export interface ResultatEstime {
    * découvert utilisé). Négatif : le tour se clorait en crise de trésorerie.
    */
   margeSousLeDecouvert: number;
+  /**
+   * POURQUOI IL MANQUERA DES VENTES (`./manque.ts`) : ce que l'atelier peut
+   * vraiment produire ce tour, ce qui le limite (machines, main-d'œuvre, plan,
+   * approvisionnement, rebuts), la plus contraignante d'abord, et quelle
+   * référence manque. `null` quand rien ne manque.
+   */
+  manque: AnalyseDuManque | null;
   /** Le compte de résultat estimé, ligne à ligne. */
   compte: IncomeStatement;
   /** Le résultat complet du tour estimé, pour qui veut aller plus loin (tests, serveur). */
@@ -190,6 +200,16 @@ export function estimerLeTour(
     };
   });
   const somme = (f: (r: ReferenceEstimee) => number) => references.reduce((s, r) => s + f(r), 0);
+  const manque = analyserLeManque(
+    entreeDuManque({
+      scenario,
+      state,
+      decisions,
+      ventes,
+      livrables: Object.fromEntries(references.map((r) => [r.code, r.livrables])),
+      resultat,
+    }),
+  );
   return {
     references,
     ventesEstimees: somme((r) => r.estimees),
@@ -205,6 +225,7 @@ export function estimerLeTour(
     pointMort: resultat.breakeven.breakEvenUnits,
     margeSousLeDecouvert:
       (resultat.bank?.overdraftLimit ?? scenario.finance.overdraftLimit) - resultat.balanceSheet.overdraft,
+    manque,
     compte: resultat.incomeStatement,
     resultat,
   };
