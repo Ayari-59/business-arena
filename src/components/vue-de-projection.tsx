@@ -136,6 +136,7 @@ export function VueDeProjection({
   classement,
   classementRevele,
   libelleTourClos,
+  surtitreDuClassement = "Verdict du marché",
   tourRevele,
   finished,
   retour,
@@ -163,6 +164,11 @@ export function VueDeProjection({
   /** Le classement du dernier tour clos est-il révélé aux élèves ? */
   classementRevele: boolean;
   libelleTourClos: string | null;
+  /**
+   * Le surtitre de la révélation : « Verdict du marché », ou « Tour d'essai · ne compte
+   * pas » quand le classement projeté est celui du tour d'essai.
+   */
+  surtitreDuClassement?: string;
   /**
    * L'index du dernier tour clos dont le classement est révélé, ou null. C'est
    * lui qui déclenche la révélation : un tour plus récent que celui que ce
@@ -445,8 +451,9 @@ export function VueDeProjection({
             <RevelationDuMarche
               key={cle}
               animer={enCours}
-              // Le même surtitre qu'en solo : c'est le même rituel.
-              surtitre="Verdict du marché"
+              // Le même surtitre qu'en solo, c'est le même rituel ; celui de l'essai
+              // dit qu'il ne compte pas.
+              surtitre={surtitreDuClassement}
               titre={
                 libelleTourClos ? `${libelleTourClos} · le marché a répondu` : "Le marché a répondu"
               }

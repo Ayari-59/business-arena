@@ -67,6 +67,7 @@ import { synchroniserLaPartie } from "@/lti/ags/envois";
 import { plusTard } from "@/lti/ags/plus-tard";
 import { lireLeChoixDEssai } from "@/config/tour-d-essai";
 import { BasculeRefuseeError, commencerLaVraiePartie } from "@/services/tour-d-essai.service";
+import { revelerLeClassementDeLEssai } from "@/services/podium-de-l-essai.service";
 import { envoyerLeLienDeConfirmation } from "@/services/confirmation-email.service";
 
 export interface FormState {
@@ -380,6 +381,19 @@ export async function setRankingRevealedAction(
   const roundIndex = z.coerce.number().int().positive().parse(formData.get("roundIndex"));
   const revealed = formData.get("revealed") === "1";
   await setRankingRevealed({ gameId, teacherId: session.userId, roundIndex, revealed });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+/**
+ * Révèle le classement du tour d'essai quand l'essai est déjà dans son archive : la
+ * vraie partie a commencé d'elle-même à la clôture de l'essai, ou sans qu'il ait été
+ * révélé (services/podium-de-l-essai.service.ts). Le mur et l'arène jouent alors son
+ * podium, tant que la vraie partie n'a clos aucun tour.
+ */
+export async function revelerLeClassementDeLEssaiAction(gameId: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await revelerLeClassementDeLEssai({ gameId, teacherId: session.userId });
   revalidatePath(`/teacher/games/${gameId}`);
 }
 

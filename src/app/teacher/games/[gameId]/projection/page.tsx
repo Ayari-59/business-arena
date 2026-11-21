@@ -7,7 +7,8 @@ import { getTeacherGameView } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { dateDeLancement } from "@/lib/lancement-du-tour";
-import { tourAffiche } from "@/config/tour-d-essai";
+import { PODIUM_DE_L_ESSAI, tourAffiche } from "@/config/tour-d-essai";
+import { tourDEssaiALaUne } from "@/services/podium-de-l-essai.service";
 import { SITE_URL } from "@/config/site";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { EchoDeSeance } from "@/components/signal-de-seance";
@@ -76,9 +77,27 @@ async function ProjectionPage({
   const elevesConnectes = composition.reduce((total, e) => total + e.membres.length, 0);
 
   const tourCourant = view.rounds.find((r) => r.index === view.currentRound);
-  const dernierTourClos = [...view.rounds]
+  const dernierVraiTourClos = [...view.rounds]
     .filter((r) => r.status === "resolved")
     .sort((a, b) => b.index - a.index)[0];
+  // LE TOUR D'ESSAI ARCHIVÉ SE RÉVÈLE COMME UN AUTRE. La vraie partie commencée, tout
+  // l'essai est dans son archive : tant qu'elle n'a clos aucun tour, le mur y relit le
+  // classement de l'essai, sa révélation et son podium, avec la vue de la partie
+  // d'archive elle-même (services/podium-de-l-essai.service.ts). Même rideau : il ne
+  // se joue qu'une fois révélé par l'animateur.
+  const essaiALaUne = await tourDEssaiALaUne({
+    gameId,
+    essai: view.essai,
+    vraiTourClos: dernierVraiTourClos !== undefined,
+  });
+  const archive = essaiALaUne ? await getTeacherGameView(essaiALaUne.archiveId, session.userId) : null;
+  // La source du classement : la partie, ou l'archive de son essai.
+  const source = archive ?? view;
+  const dernierTourClos = archive
+    ? archive.rounds.find((r) => r.index === essaiALaUne!.tour)
+    : dernierVraiTourClos;
+  // Le classement projeté est-il celui de l'essai ? Il ne compte pas, et le mur le dit.
+  const classementDEssai = essaiEnJeu || archive !== null;
 
   // L'échéance effective du tour : la première des deux bornes qui tombe, la
   // fenêtre du tour ou celle de la partie. Même règle que le verrou côté
@@ -94,7 +113,12 @@ async function ProjectionPage({
   const defaut: Panneau =
     elevesConnectes === 0 && !finished
       ? "code"
-      : (finished || tourCourant?.status !== "open" || view.lancement) && dernierTourClos?.rankingRevealed
+      : (finished ||
+            tourCourant?.status !== "open" ||
+            view.lancement ||
+            // L'essai archivé révélé, tant qu'aucune équipe n'a validé le vrai tour 1.
+            (archive !== null && equipes.every((e) => !e.aValide))) &&
+          dernierTourClos?.rankingRevealed
         ? "classement"
         : "tour";
 
@@ -104,7 +128,7 @@ async function ProjectionPage({
   // CE QUE LE TOUR A DONNÉ, ÉQUIPE PAR ÉQUIPE. Le classement dit la place,
   // `teams` dit les chiffres du dernier tour clos : la projection a besoin des
   // deux sur la même ligne, et les relie par l'identifiant d'équipe.
-  const chiffresDuTour = new Map(view.teams.map((t) => [t.teamId, t]));
+  const chiffresDuTour = new Map(source.teams.map((t) => [t.teamId, t]));
 
   return (
     <main id="main" className="ardoise min-h-screen bg-slate-950 text-slate-100">
@@ -160,7 +184,7 @@ async function ProjectionPage({
               : `Le ${periodLabel(view.roundDays, view.currentRound).toLowerCase()} n'est pas encore lancé.`
             : null
         }
-        classement={view.ranking.map((row) => {
+        classement={source.ranking.map((row) => {
           const equipe = chiffresDuTour.get(row.teamId);
           const resultat = equipe?.lastNetIncome ?? null;
           const tresorerie = equipe?.lastNetTreasury ?? null;
@@ -193,9 +217,10 @@ async function ProjectionPage({
           };
         })}
         classementRevele={dernierTourClos?.rankingRevealed ?? false}
+        surtitreDuClassement={classementDEssai ? PODIUM_DE_L_ESSAI.surtitre : undefined}
         libelleTourClos={
           dernierTourClos
-            ? essaiEnJeu
+            ? classementDEssai
               ? `Tour d'essai ${dernierTourClos.index}`
               : periodLabel(view.roundDays, dernierTourClos.index)
             : null
@@ -208,8 +233,10 @@ async function ProjectionPage({
           // Après un essai, la vraie partie repart au tour 1 : ses révélations sont
           // numérotées après celles de l'essai, sinon le vrai tour 1 passerait pour
           // déjà vu et ne se jouerait pas.
+          // L'essai archivé garde, lui, son numéro d'essai : déjà dévoilé avant la
+          // bascule, il ne se rejoue pas.
           dernierTourClos?.rankingRevealed
-            ? dernierTourClos.index + (view.essai?.phase === "fini" ? view.essai.tours : 0)
+            ? dernierTourClos.index + (view.essai?.phase === "fini" && !archive ? view.essai.tours : 0)
             : null
         }
         finished={finished}

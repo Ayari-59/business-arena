@@ -183,7 +183,17 @@ describe("le tour d'essai, de la création à la vraie partie", () => {
       expect(await bandeau.innerText()).toContain("La vraie partie commence");
       const vu = await texte(p);
       expect(vu, "aucun tour passé : la vraie partie n'a rien joué").not.toMatch(/Tours passés/i);
-      expect(vu).not.toContain("ne compte pas");
+      // Seul le podium de l'essai le dit encore, sous son rideau (l'animateur ne l'a pas
+      // révélé) : la vraie partie, elle, compte.
+      expect(await p.locator('[data-podium-de-l-essai="voile"]').count()).toBe(1);
+      const horsPodium = await p.evaluate(() => {
+        const blocs = [...document.querySelectorAll<HTMLElement>("[data-podium-de-l-essai]")];
+        blocs.forEach((n) => (n.style.display = "none"));
+        const vu = document.body.innerText;
+        blocs.forEach((n) => (n.style.display = ""));
+        return vu;
+      });
+      expect(horsPodium).not.toContain("ne compte pas");
       await sansDebord(p);
       await capture(p, `eleve-vraie-partie-${largeur}`);
     }

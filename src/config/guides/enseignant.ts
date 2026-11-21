@@ -110,9 +110,10 @@ export const GUIDE_ENSEIGNANT: Guide = {
       faire: [
         "Si vous avez choisi un tour d'essai à la création, la partie s'ouvre dessus : l'ardoise dit « Tour d'essai · ne compte pas », et vos élèves lisent le même bandeau.",
         "Les équipes jouent le tour comme un vrai : elles lisent la situation, décident, envoient. Clôturez-le avec le bouton qui clôt le tour d'essai, puis « Clore et simuler ».",
+        "Révélez le classement de l'essai : l'essai finit par son podium, sur l'écran des élèves et sur la projection, et il ne compte pas.",
         "Commentez les résultats avec la classe : c'est le moment d'expliquer ce que montre la feuille, sans enjeu.",
         "Cliquez sur « Commencer la vraie partie » et confirmez : toutes les entreprises repartent de l'état initial du scénario, au tour un.",
-        "Si vous aviez coché « Commencer la vraie partie dès la fin de l'essai », ce passage se fait tout seul à la clôture de l'essai.",
+        "Si vous aviez coché « Commencer la vraie partie dès la fin de l'essai », ce passage se fait tout seul à la clôture de l'essai. Le pilotage garde alors le bouton « Révéler le classement de l'essai » jusqu'à la clôture du premier vrai tour.",
       ],
       voir: "Après le passage, l'ardoise dit que la vraie partie a commencé, et « Revoir le tour d'essai » garde ses résultats sous la main. Rien de l'essai ne compte : ni le classement, ni le bilan, ni les exports, ni l'évaluation entre coéquipiers, ni les notes envoyées à Moodle.",
       erreur:
