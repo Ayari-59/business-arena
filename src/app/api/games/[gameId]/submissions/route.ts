@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { games, rounds, teams, decisions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { etatDuLancement, statutSonde } from "@/lib/lancement-du-tour";
+import { tourDEssaiALaUne } from "@/services/podium-de-l-essai.service";
 
 export async function GET(
   _request: Request,
@@ -34,9 +35,21 @@ export async function GET(
     .from(rounds)
     .where(eq(rounds.gameId, gameId));
   const currentRoundRow = toursDeLaPartie.find((t) => t.index === game.currentRound);
-  const dernierTourRevele = toursDeLaPartie
+  const dernierTourReveleDeLaPartie = toursDeLaPartie
     .filter((t) => t.revele !== null)
     .reduce<number | null>((max, t) => (max === null || t.index > max ? t.index : max), null);
+  // LE TOUR D'ESSAI ARCHIVÉ (services/podium-de-l-essai.service.ts) : tant que la vraie
+  // partie n'a clos aucun tour, la révélation de l'essai compte pour 0, et la page qui
+  // sonde se recharge pour jouer son podium.
+  const essaiALaUne =
+    dernierTourReveleDeLaPartie === null
+      ? await tourDEssaiALaUne({
+          gameId,
+          essai: game.essai,
+          vraiTourClos: toursDeLaPartie.some((t) => t.status === "resolved"),
+        })
+      : null;
+  const dernierTourRevele = essaiALaUne?.revele ? 0 : dernierTourReveleDeLaPartie;
 
   let submittedCount = 0;
   // LA DERNIÈRE DÉCISION ENVOYÉE : en classe, une équipe peut valider de

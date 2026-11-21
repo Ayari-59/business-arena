@@ -47,6 +47,8 @@ import { QuiARendu } from "@/components/qui-a-rendu";
 import { Embleme } from "@/components/embleme";
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { BandeauDuTourDEssai } from "@/components/bandeau-du-tour-d-essai";
+import { PodiumDeLEssai } from "@/components/podium-de-l-essai";
+import { podiumDeLEssaiPourLEleve } from "@/services/podium-de-l-essai.service";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
 import { CoupureDePresse, RevueDePresse } from "@/components/coupure-de-presse";
@@ -232,6 +234,29 @@ async function ArenaPage({
   // comme sur téléphone. L'élève lit le message d'attente, puis les résultats du tour
   // clos. Au lancement, le sondage de round-status recharge la page : tout revient.
   const tourEnAttente = !finished && !essaiTermine && view.playLock.enAttenteDuLancement;
+  // LE PODIUM DU TOUR D'ESSAI (config/tour-d-essai.ts, `PODIUM_DE_L_ESSAI`). L'essai
+  // clos, son classement est encore celui de la partie, sous le rideau de la vue. La
+  // vraie partie commencée, il est dans l'archive, relu tant qu'aucun vrai tour n'est
+  // clos (services/podium-de-l-essai.service.ts), sous le même rideau.
+  const podiumDeLEssai =
+    view.kind !== "class" || !view.essai
+      ? null
+      : essaiTermine
+        ? {
+            revele: view.classement.revele,
+            marches: view.classement.revele
+              ? view.ranking.map((r) => ({ nom: r.name, rang: r.rank, moi: r.isPlayer, ipg: r.bpi }))
+              : [],
+            replie: null,
+          }
+        : await podiumDeLEssaiPourLEleve({
+            gameId,
+            userId,
+            essai: view.essai,
+            vraiTourClos: periods.length > 0,
+          }).then((p) =>
+            p ? { ...p, replie: { ouvert: view.essai?.enchainement === "auto" } } : null,
+          );
   const hasActivePeriod = !finished && !essaiTermine && !tourEnAttente;
 
   // ── Écran intermédiaire « Tour simulé » (solo, après une validation) ──
@@ -1567,6 +1592,13 @@ async function ArenaPage({
         tour={view.currentRound}
         vraiTourJoue={periods.length > 0}
       />
+      {podiumDeLEssai ? (
+        <PodiumDeLEssai
+          revele={podiumDeLEssai.revele}
+          marches={podiumDeLEssai.marches}
+          replie={podiumDeLEssai.replie}
+        />
+      ) : null}
       {/* LE TOUR N'EST PAS ENCORE OUVERT : il attend le professeur ou sa date
           (lib/lancement-du-tour.ts, planning). La phrase se lit en tête, sans
           ouvrir la feuille de décision, où « Valider » reste grisé. Les résultats

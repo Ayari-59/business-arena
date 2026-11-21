@@ -203,6 +203,10 @@ const LECTEURS: Record<string, { portee: Portee; raison: string }> = {
   "src/services/situation-instance.service.ts": { portee: "une partie", raison: "les situations d'un tour" },
   "src/services/subvention.service.ts": { portee: "une partie", raison: "les subventions d'une partie" },
   "src/services/tour-d-essai.service.ts": { portee: "une partie", raison: "la bascule et la relecture de l'essai" },
+  "src/services/podium-de-l-essai.service.ts": {
+    portee: "une partie",
+    raison: "le podium de l'essai, relu dans l'archive d'UNE partie pour l'afficher ; rien n'y compte",
+  },
   "src/services/tuteur.service.ts": { portee: "une partie", raison: "l'interrupteur du tuteur IA d'une partie" },
   "src/services/effacement.service.ts": {
     portee: "transversal",
