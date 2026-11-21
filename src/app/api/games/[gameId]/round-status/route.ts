@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { games, rounds, players, teams, decisions } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { etatDuLancement, statutSonde } from "@/lib/lancement-du-tour";
+import { tourDEssaiALaUne } from "@/services/podium-de-l-essai.service";
 import { etatDuBrouillon } from "@/services/brouillon-equipe.service";
 
 export async function GET(
@@ -69,13 +70,25 @@ export async function GET(
   // rendu, et le dernier classement révélé, que l'élève attend pour voir son
   // rang (il ne change ni le tour ni son statut).
   const toursDeLaPartie = await db
-    .select({ id: rounds.id, index: rounds.index, revele: rounds.rankingRevealedAt })
+    .select({ id: rounds.id, index: rounds.index, status: rounds.status, revele: rounds.rankingRevealedAt })
     .from(rounds)
     .where(eq(rounds.gameId, gameId));
   const roundId = toursDeLaPartie.find((t) => t.index === row.currentRound)?.id;
-  const dernierTourRevele = toursDeLaPartie
+  const dernierTourReveleDeLaPartie = toursDeLaPartie
     .filter((t) => t.revele !== null)
     .reduce<number | null>((max, t) => (max === null || t.index > max ? t.index : max), null);
+  // LE TOUR D'ESSAI ARCHIVÉ (services/podium-de-l-essai.service.ts) : tant que la vraie
+  // partie n'a clos aucun tour, la révélation de l'essai compte pour 0, et la page qui
+  // sonde se recharge pour jouer son podium.
+  const essaiALaUne =
+    dernierTourReveleDeLaPartie === null
+      ? await tourDEssaiALaUne({
+          gameId,
+          essai: row.essai,
+          vraiTourClos: toursDeLaPartie.some((t) => t.status === "resolved"),
+        })
+      : null;
+  const dernierTourRevele = essaiALaUne?.revele ? 0 : dernierTourReveleDeLaPartie;
   if (roundId && equipes.length > 1) {
     const rendues = await db
       .select({ teamId: decisions.teamId, status: decisions.status })

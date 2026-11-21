@@ -192,6 +192,37 @@ export function bandeauDeLEssai(args: {
 }
 
 /**
+ * LE PODIUM DU TOUR D'ESSAI. L'essai finit par son podium, comme un tour normal, sur
+ * l'écran des élèves et au mur, et sous le même rideau : rien ne se voit avant que
+ * l'animateur ait révélé son classement. Il ne compte pas plus que le reste de l'essai.
+ */
+export const PODIUM_DE_L_ESSAI = {
+  /** Le titre du podium, à l'écran de l'élève. */
+  titre: "Podium du tour d'essai · ne compte pas",
+  /** Le surtitre de la révélation, au mur. */
+  surtitre: "Tour d'essai · ne compte pas",
+  /** Ce que l'élève lit avant la révélation. */
+  rideau: "Le classement du tour d'essai sera révélé par votre enseignant.",
+  /** Après la bascule, l'élève le retrouve sous ce titre. */
+  revoir: "Revoir le tour d'essai",
+} as const;
+
+/**
+ * L'ESSAI ARCHIVÉ RESTE À LA UNE tant que la vraie partie n'a clos aucun tour. Après la
+ * bascule, tout l'essai est dans son archive : le mur, l'élève et le pilotage y relisent
+ * son dernier tour clos, sa révélation et son podium. Quand la vraie partie a un tour
+ * clos, c'est lui qui se révèle, et l'essai ne se relit plus que dans « Revoir le tour
+ * d'essai » de l'animateur.
+ */
+export function essaiArchiveALaUne(args: {
+  essai: Pick<TourDEssai, "phase"> | null;
+  /** La vraie partie a-t-elle au moins un tour clos ? */
+  vraiTourClos: boolean;
+}): boolean {
+  return args.essai?.phase === "fini" && !args.vraiTourClos;
+}
+
+/**
  * Le choix du formulaire de création : « aucun » (le défaut, et toute valeur
  * inconnue), 1 ou 2 tours ; l'enchaînement automatique si la case est cochée.
  */

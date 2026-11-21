@@ -48,6 +48,7 @@ import {
   supprimerPartieAction,
   setGameScheduleAction,
   setRankingRevealedAction,
+  revelerLeClassementDeLEssaiAction,
   setRoundWindowsAction,
 } from "../../actions";
 import { utcToParisLocalInput } from "@/lib/paris-time";
@@ -74,6 +75,7 @@ import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 import { resumePourLePilotage } from "@/services/pairs.service";
 import { CommencerLaVraiePartie } from "@/components/commencer-la-vraie-partie";
 import { EXPLICATION_DU_TOUR_D_ESSAI } from "@/config/tour-d-essai";
+import { tourDEssaiALaUne } from "@/services/podium-de-l-essai.service";
 import { ZoneQuiDefile } from "@/components/zone-qui-defile";
 import { DecisionsDeLEquipe } from "@/components/decisions-de-l-equipe";
 import { Fragment } from "react";
@@ -161,6 +163,15 @@ async function TeacherGamePage({
   // tout autre geste. Pas pendant l'essai, qui a son propre déroulé.
   const aReveler =
     dernierTourClos && !dernierTourClos.rankingRevealed && !essaiEnJeu ? dernierTourClos : null;
+  // LE TOUR D'ESSAI ARCHIVÉ, À LA UNE tant que la vraie partie n'a clos aucun tour
+  // (services/podium-de-l-essai.service.ts) : quand elle a commencé d'elle-même à la
+  // clôture de l'essai, c'est ici que l'animateur révèle le classement de l'essai, et la
+  // projection joue son podium.
+  const essaiALaUne = await tourDEssaiALaUne({
+    gameId,
+    essai,
+    vraiTourClos: dernierTourClos !== undefined,
+  });
 
   // Synthèse IA des justifications (facultative) : droit du compte + réglage
   // admin + clé API.
@@ -274,8 +285,8 @@ async function TeacherGamePage({
           recharge et joue la révélation du classement. */}
       <SignalDeSeance
         gameId={gameId}
-        tourClos={dernierTourClos?.index ?? null}
-        revele={dernierTourClos?.rankingRevealed ?? false}
+        tourClos={dernierTourClos?.index ?? essaiALaUne?.tour ?? null}
+        revele={dernierTourClos?.rankingRevealed ?? essaiALaUne?.revele ?? false}
       />
 
       {/*
@@ -462,6 +473,36 @@ async function TeacherGamePage({
             >
               Revoir le tour d&apos;essai →
             </Link>
+          </p>
+        ) : null}
+        {essaiALaUne && !essaiALaUne.revele ? (
+          <div data-podium-de-l-essai-a-reveler="" className="mt-4 space-y-3">
+            <p className="max-w-2xl text-sm text-slate-300">
+              Les élèves ne voient pas encore le classement du tour d&apos;essai : révélez-le, et la
+              projection joue le podium de l&apos;essai devant la classe. Il ne compte pas.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <GuardedForm
+                action={revelerLeClassementDeLEssaiAction.bind(null, view.gameId)}
+                label="révélation du classement de l'essai"
+              >
+                <SubmitButton className={bouton({ variante: "secondaire", taille: "s" })}>
+                  <Icone nom="trophee" /> Révéler le classement de l&apos;essai
+                </SubmitButton>
+              </GuardedForm>
+              <Link
+                href={`/teacher/games/${gameId}/projection`}
+                className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                <Icone nom="ecran" /> Ouvrir la projection d&apos;abord →
+              </Link>
+            </div>
+          </div>
+        ) : null}
+        {essaiALaUne?.revele ? (
+          <p className="mt-3 text-sm text-slate-300" data-podium-de-l-essai-revele="">
+            Classement de l&apos;essai révélé aux élèves : la projection montre son podium jusqu&apos;à la
+            clôture du premier vrai tour.
           </p>
         ) : null}
       </section>

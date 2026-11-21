@@ -8,6 +8,7 @@ import { compter, formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
+import { PodiumDesEquipes } from "@/components/podium";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +112,13 @@ async function RevoirLEssaiPage({
           <section aria-labelledby="essai-classement" className="space-y-3">
             <div id="essai-classement">
               <Rubrique note="pour le débrief, il ne compte pas">Classement de l&apos;essai</Rubrique>
+            </div>
+            {/* L'essai finit par son podium, comme l'ont vu la classe et le mur. */}
+            <div className="mx-auto max-w-md py-2">
+              <PodiumDesEquipes
+                etiquette="Podium du tour d'essai"
+                marches={essai.classement.map((c) => ({ nom: c.nom, rang: c.rang, moi: false, ipg: c.ipg }))}
+              />
             </div>
             <ol className="carte divide-y divide-white/10" data-classement-de-l-essai="">
               {essai.classement.map((c) => (

@@ -96,7 +96,7 @@ export const GUIDE_ETUDIANT: Guide = {
         "En tête : votre entreprise, le tour en cours et quelques chiffres du marché, comme le prix usuel ou la demande de saison.",
         "Le tour se joue en trois temps : « Situation », puis « Analyser », puis « Décider ». Lisez la situation avant de décider.",
         "La ligne sous le titre dit combien d'équipes ont déjà rendu.",
-        "Si votre enseignant a prévu un tour d'essai, un bandeau le dit : ce tour se joue comme un vrai, mais rien n'en compte, et la partie repart ensuite de zéro. Le bandeau annonce alors que la vraie partie commence.",
+        "Si votre enseignant a prévu un tour d'essai, un bandeau le dit : ce tour se joue comme un vrai, mais rien n'en compte, et la partie repart ensuite de zéro. L'essai finit par son podium, une fois son classement révélé par votre enseignant. Le bandeau annonce alors que la vraie partie commence.",
       ],
       voir: "Une situation d'entreprise : un problème qui se pose, pas un exercice. À vous de comprendre ce qui se joue.",
       erreur:
