@@ -21,7 +21,14 @@ export function FaitsCles({
 
   // La capacité manque tant que l'état de l'entreprise n'existe pas encore. On
   // dit alors ce qu'on sait (la gamme) plutôt que d'inventer un plafond.
-  const faitsCapacite = capacityFacts
+  const faitsCapacite = capacityFacts && gamme
+    ? [
+        // EN GAMME, LE PLAFOND DÉPEND DU MIX : les 7 000 sont ceux des machines à plein ;
+        // les heures, elles, dépendent des références produites.
+        `machines : ${nombre(capacityFacts.availableMachineCapacity)} ${vocabulary.units} au plus`,
+        "main-d'œuvre selon le mix",
+      ]
+    : capacityFacts
     ? [
         // Le plafond réel est le plus bas des deux : produire au-delà ne se peut
         // pas, quel que soit l'autre.

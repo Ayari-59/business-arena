@@ -28,6 +28,11 @@ export interface EstimationEnCours {
   unites: string;
   manquantes: number;
   ventesLivrables: number;
+  /**
+   * L'alerte de manque entière, en un texte (`lib/phrases-du-manque.ts`) : ce que
+   * l'atelier peut produire, ce qui le limite, quoi faire. `null` sans manque.
+   */
+  alerteDuManque: string | null;
 }
 
 let courante: EstimationEnCours | null = null;

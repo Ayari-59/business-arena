@@ -167,6 +167,11 @@ describe("le résultat estimé, de la saisie au verdict", () => {
     await page.waitForTimeout(900);
     const bloc = page.locator("[data-resultat-estime]");
     expect(await bloc.innerText()).toContain("Vous ne pourrez livrer que");
+    // L'alerte dit ce qui limite et quoi faire, pas seulement le total.
+    const alerte = await page.locator("[data-alerte-du-manque]").innerText();
+    expect(alerte).toMatch(/ne couvre que|votre atelier peut produire environ/);
+    expect(alerte).toMatch(/Pour livrer plus|ramenez vos ventes estimées/);
+    expect(alerte).not.toContain("faute de stock et de capacité");
     // CHARTE : une estimation n'est pas un résultat. Aucun texte de l'encart ne
     // prend le vert ni le rouge francs.
     const teintes = await bloc.evaluate((racine) => {
