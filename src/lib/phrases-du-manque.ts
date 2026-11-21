@@ -9,6 +9,15 @@ import { formatDecimal, formatUnits } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 
+export interface OptionsDuManque {
+  /**
+   * L'équipe peut-elle embaucher dans cette partie ? La même règle que le champ
+   * « Embauches » de la feuille (`on.hr`, le levier RH du niveau). Sans elle, le
+   * conseil ne parle pas d'embauche.
+   */
+  embauches: boolean;
+}
+
 export interface PhrasesDuManque {
   /** « Vous ne pourrez livrer que … » */
   constat: string;
@@ -32,6 +41,7 @@ const pourcent = (x: number) => `${formatDecimal(x * 100, 2)} %`;
 export function phrasesDuManque(
   a: AnalyseDuManque,
   v: { unit: string; units: string },
+  options: OptionsDuManque,
 ): PhrasesDuManque {
   const u = (n: number) => `${formatUnits(n)} ${Math.round(n) > 1 ? v.units : v.unit}`;
   const constat = `Vous ne pourrez livrer que ${u(a.livrables)} : ${formatUnits(a.manquantes)} de vos ventes estimées manqueraient.`;
@@ -97,10 +107,14 @@ export function phrasesDuManque(
       `Il manquerait ${liste(a.references.map((r) => `${formatUnits(r.manquantes)} ${r.nom}`))}.`,
     );
   }
-  return { constat, causes, conseil: conseilDuManque(a, u) };
+  return { constat, causes, conseil: conseilDuManque(a, u, options) };
 }
 
-function conseilDuManque(a: AnalyseDuManque, u: (n: number) => string): string | null {
+function conseilDuManque(
+  a: AnalyseDuManque,
+  u: (n: number) => string,
+  options: OptionsDuManque,
+): string | null {
   const premiere = a.limites[0];
   if (!premiere) return null;
   const ceTour = a.gamme
@@ -108,9 +122,13 @@ function conseilDuManque(a: AnalyseDuManque, u: (n: number) => string): string |
     : "Ce tour, ramenez vos ventes estimées à ce que l'atelier peut produire";
   switch (premiere.cause) {
     case "main-d-oeuvre":
+    {
+      // L'embauche ne se dit que là où la feuille la propose (le levier RH du niveau).
+      const embauche = options.embauches ? " ; une embauche ne compterait qu'au tour suivant" : "";
       return a.gamme && a.plusLongueAProduire
-        ? `Pour livrer plus, baissez un plan de production, d'abord celui de ${a.plusLongueAProduire}, la référence la plus longue à produire ; une embauche ne compterait qu'au tour suivant.`
-        : `${ceTour} ; une embauche ne compterait qu'au tour suivant.`;
+        ? `Pour livrer plus, baissez un plan de production, d'abord celui de ${a.plusLongueAProduire}, la référence la plus longue à produire${embauche}.`
+        : `${ceTour}${embauche}.`;
+    }
     case "machines":
       return a.disponibilite < 0.995
         ? `${ceTour} ; un meilleur entretien relèvera la disponibilité au tour suivant.`
@@ -139,7 +157,11 @@ function conseilDuManque(a: AnalyseDuManque, u: (n: number) => string): string |
 }
 
 /** L'alerte entière, en un seul texte (la barre du téléphone le transporte tel quel). */
-export function alerteDuManque(a: AnalyseDuManque, v: { unit: string; units: string }): string {
-  const p = phrasesDuManque(a, v);
+export function alerteDuManque(
+  a: AnalyseDuManque,
+  v: { unit: string; units: string },
+  options: OptionsDuManque,
+): string {
+  const p = phrasesDuManque(a, v, options);
   return [p.constat, ...p.causes, ...(p.conseil ? [p.conseil] : [])].join(" ");
 }

@@ -10,6 +10,7 @@ import { NOVA_GAMME_DEFINITION } from "@/config/scenarios/registry";
 import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { estimerLeTour, expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
 import type { CompanyState, RoundDecisions } from "@/engine/types";
+import { presetByLevel } from "@/config/difficulty";
 
 /**
  * LE CAS DES PHOTOS : UNE GAMME NOVA SOUS LA CAPACITÉ DES MACHINES, ET POURTANT UN MANQUE.
@@ -90,17 +91,51 @@ describe("le cas des photos : la main-d'œuvre, pas les machines", () => {
     "Pour livrer plus, baissez un plan de production, d'abord celui de NOVA Studio, la référence la plus longue à produire ; une embauche ne compterait qu'au tour suivant.";
 
   it("le cadran (ordinateur) dit la capacité, la cause, les références et quoi faire", () => {
-    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: def.sector }));
+    const html = rendu(
+      createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: def.sector, embauches: true }),
+    );
     const alerte = html.match(/<li data-alerte-du-manque=""[^>]*>[\s\S]*?<\/li>/)?.[0] ?? "";
     expect(alerte.replace(/<[^>]+>/g, "")).toBe(ALERTE);
     expect(html).not.toContain("faute de stock et de capacité");
   });
 
   it("le tiroir du téléphone dit la même alerte", () => {
-    const resume = resumeDeLEstimation(estime, v.units, v.unit);
+    const resume = resumeDeLEstimation(estime, v.units, v.unit, { embauches: true });
     expect(lisible(resume!.alerteDuManque!)).toBe(ALERTE);
     const html = rendu(createElement(LigneEstimeeCompacte, { estimation: resume }));
     expect(html).toContain(ALERTE);
+  });
+
+  /**
+   * L'EMBAUCHE NE SE CONSEILLE QUE LÀ OÙ ELLE SE DÉCIDE. La feuille montre le champ
+   * « Embauches » quand le levier RH du niveau est ouvert (`on.hr`, lu dans
+   * `presetFromProfile(...).decisions.hr`) : le conseil suit la même règle.
+   */
+  const SANS_EMBAUCHE = ALERTE.replace(" ; une embauche ne compterait qu'au tour suivant.", ".");
+  const auNiveau = (niveau: 2 | 4) => presetByLevel.get(niveau)!.decisions.hr;
+
+  it("niveau avec embauche (4) : la mention est présente, au cadran et au tiroir", () => {
+    expect(auNiveau(4)).toBe(true);
+    const html = rendu(
+      createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: def.sector, embauches: auNiveau(4) }),
+    );
+    expect(html).toContain("une embauche ne compterait qu'au tour suivant");
+    const resume = resumeDeLEstimation(estime, v.units, v.unit, { embauches: auNiveau(4) });
+    expect(lisible(resume!.alerteDuManque!)).toBe(ALERTE);
+  });
+
+  it("niveau sans embauche (2) : aucune mention d'embauche, le conseil s'arrête au plan", () => {
+    expect(auNiveau(2)).toBe(false);
+    const html = rendu(
+      createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: def.sector, embauches: auNiveau(2) }),
+    );
+    expect(html).not.toMatch(/embauch/i);
+    const resume = resumeDeLEstimation(estime, v.units, v.unit, { embauches: auNiveau(2) });
+    expect(lisible(resume!.alerteDuManque!)).toBe(SANS_EMBAUCHE);
+    expect(SANS_EMBAUCHE).toMatch(/la référence la plus longue à produire\.$/);
+    // Sans réglage, la feuille ne promet pas un levier qu'elle ne montre pas.
+    const parDefaut = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: def.sector }));
+    expect(parDefaut).not.toMatch(/embauch/i);
   });
 
   it("des ventes estimées à la capacité du tour : plus d'alerte", () => {

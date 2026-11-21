@@ -12,7 +12,8 @@ import { alerteDuManque, phrasesDuManque } from "../../src/lib/phrases-du-manque
 
 const v = { unit: "enceinte", units: "enceintes" };
 const lisible = (t: string) => t.replace(/[   ]/g, " ");
-const texte = (e: EntreeDuManque) => lisible(alerteDuManque(analyserLeManque(e)!, v));
+const texte = (e: EntreeDuManque, embauches = true) =>
+  lisible(alerteDuManque(analyserLeManque(e)!, v, { embauches }));
 
 /** Une référence sans histoire : tout ce qu'elle planifie, elle le produit et le livre. */
 function ref(p: Partial<ReferenceDuManque> & { code: string }): ReferenceDuManque {
@@ -109,6 +110,19 @@ describe("mono-produit", () => {
     );
   });
 
+  it("main-d'œuvre sans embauche au niveau : le conseil s'arrête au plan", () => {
+    const e: EntreeDuManque = {
+      gamme: false,
+      ...atelier,
+      capaciteMainDOeuvre: 6_383,
+      references: [ref({ code: "nova", planSaisi: 7_000, estimees: 7_000, livrables: 6_383, produit: 6_383 })],
+    };
+    expect(texte(e, true)).toContain("une embauche ne compterait qu'au tour suivant");
+    const sans = texte(e, false);
+    expect(sans).not.toMatch(/embauch/i);
+    expect(sans).toMatch(/Ce tour, ramenez vos ventes estimées à ce que l'atelier peut produire\.$/);
+  });
+
   it("plan trop bas : le plan, stock compris, ne couvre pas l'estimation", () => {
     const e: EntreeDuManque = {
       gamme: false,
@@ -169,7 +183,7 @@ describe("mono-produit", () => {
       ["plan", 1_000],
       ["main-d-oeuvre", 400],
     ]);
-    const p = phrasesDuManque(a, v);
+    const p = phrasesDuManque(a, v, { embauches: true });
     expect(lisible(p.causes[0]!)).toMatch(/^Votre plan de production/);
     expect(lisible(p.causes[1]!)).toMatch(/^Ce tour, votre atelier peut produire environ 5 600 enceintes, pas 6 000/);
     // Monter le plan au-delà des heures ne livrerait rien : le conseil dit la limite.
@@ -205,6 +219,24 @@ describe("gamme", () => {
         "Ce tour, votre atelier peut produire environ 6 048 enceintes, pas 6 300 : vos 4 salariés n'ont pas assez d'heures. " +
         "Il manquerait 116 NOVA One, 96 NOVA Studio et 40 NOVA Go. " +
         "Pour livrer plus, baissez un plan de production, d'abord celui de NOVA Studio, la référence la plus longue à produire ; une embauche ne compterait qu'au tour suivant.",
+    );
+  });
+
+  it("main-d'œuvre en gamme sans embauche : le plan de la référence la plus longue, rien d'autre", () => {
+    const e: EntreeDuManque = {
+      gamme: true,
+      ...atelier,
+      capaciteMainDOeuvre: 6_048,
+      references: [
+        go({ planSaisi: 1_000, livrables: 960, produit: 960 }),
+        one({ planSaisi: 2_900, livrables: 2_784, produit: 2_784 }),
+        studio({ planSaisi: 2_400, livrables: 2_304, produit: 2_304 }),
+      ],
+    };
+    const sans = texte(e, false);
+    expect(sans).not.toMatch(/embauch/i);
+    expect(sans).toMatch(
+      /Pour livrer plus, baissez un plan de production, d'abord celui de NOVA Studio, la référence la plus longue à produire\.$/,
     );
   });
 
@@ -272,7 +304,7 @@ describe("gamme", () => {
         one({ planSaisi: 3_000 }),
       ],
     };
-    expect(lisible(phrasesDuManque(analyserLeManque(e)!, v).causes[0]!)).toBe(
+    expect(lisible(phrasesDuManque(analyserLeManque(e)!, v, { embauches: true }).causes[0]!)).toBe(
       "Le fournisseur de NOVA Go vous rationne : il ne livre que 60,00 % des composants.",
     );
   });

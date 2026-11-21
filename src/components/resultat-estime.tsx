@@ -141,6 +141,8 @@ export function resumeDeLEstimation(
   estime: ResultatEstime | null,
   unites: string,
   unite: string = unites,
+  /** Le levier RH du niveau (`on.hr`) : sans lui, l'alerte ne parle pas d'embauche. */
+  options: { embauches?: boolean } = {},
 ): EstimationEnCours | null {
   if (!estime) return null;
   return {
@@ -155,7 +157,7 @@ export function resumeDeLEstimation(
     unites,
     manquantes: estime.manquantes,
     ventesLivrables: estime.ventesLivrables,
-    alerteDuManque: estime.manque ? alerteDuManque(estime.manque, { unit: unite, units: unites }) : null,
+    alerteDuManque: estime.manque ? alerteDuManque(estime.manque, { unit: unite, units: unites }, { embauches: options.embauches === true }) : null,
   };
 }
 
@@ -276,6 +278,11 @@ export function EncartResultatEstime({
    * dit sous le bandeau dès qu'une décision du tour en dépend. `null` : rien à dire.
    */
   limites = null,
+  /**
+   * L'équipe peut-elle embaucher à ce niveau ? La règle du champ « Embauches » de la
+   * feuille (`on.hr`). Faux par défaut : l'alerte ne promet pas un levier absent.
+   */
+  embauches = false,
 }: {
   estime: ResultatEstime | null;
   vocabulary: ScenarioVocabulary;
@@ -284,6 +291,7 @@ export function EncartResultatEstime({
   cockpit?: React.ReactNode;
   allerAuChamp?: () => void;
   limites?: string | null;
+  embauches?: boolean;
 }) {
   const cadran = useRef<HTMLElement>(null);
   // LA HAUTEUR DU CADRAN, publiée sur la feuille : un champ qui prend le focus
@@ -301,7 +309,7 @@ export function EncartResultatEstime({
     return () => veille.disconnect();
   }, []);
 
-  const resume = resumeDeLEstimation(estime, v.units, v.unit);
+  const resume = resumeDeLEstimation(estime, v.units, v.unit, { embauches });
   const vide = !estime || estime.ventesEstimees <= 0;
   const manque = !vide && estime.manquantes >= 1;
   const tresorerieNegative = !vide && estime.tresorerieNette < 0;
@@ -309,7 +317,7 @@ export function EncartResultatEstime({
   const auDelaDuDecouvert = !vide && estime.margeSousLeDecouvert < 0;
   const alertes = (manque ? 1 : 0) + (tresorerieNegative ? 1 : 0) + (auDelaDuDecouvert ? 1 : 0);
   // POURQUOI IL MANQUERA DES VENTES : la capacité du tour, ce qui la limite, quoi faire.
-  const pourquoi = manque && estime.manque ? phrasesDuManque(estime.manque, v) : null;
+  const pourquoi = manque && estime.manque ? phrasesDuManque(estime.manque, v, { embauches }) : null;
   return (
     <section
       ref={cadran}

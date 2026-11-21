@@ -4203,7 +4203,7 @@ export function DecisionForm({
   // SUR TÉLÉPHONE, LE RÉSULTAT ESTIMÉ PASSE À LA BARRE (lot P7) : un résumé en
   // nombres, publié à chaque rendu (le magasin ne prévient la barre que si un
   // chiffre a changé), retiré quand la feuille s'en va.
-  const resumeEstime = modeCartes && estimation ? resumeDeLEstimation(estime, v.units, v.unit) : null;
+  const resumeEstime = modeCartes && estimation ? resumeDeLEstimation(estime, v.units, v.unit, { embauches: on.hr }) : null;
   useEffect(() => {
     definirEstimationEnCours(resumeEstime, allerAuChampDesVentes);
   });
@@ -4563,6 +4563,8 @@ export function DecisionForm({
           vocabulary={v}
           secteur={secteur}
           allerAuChamp={allerAuChampDesVentes}
+          // L'alerte de manque ne conseille d'embaucher que si le champ « Embauches » existe.
+          embauches={on.hr}
           limites={
             groupe && donneesRecap
               ? (() => {
