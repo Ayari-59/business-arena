@@ -4,15 +4,23 @@ import { notFound } from "next/navigation";
 import { ChapitreGuide } from "@/components/cours/chapitre-guide";
 import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
-import { chapitreParCode } from "@/config/cours/registre";
+import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
+import type { Chapitre } from "@/config/cours/types";
+import {
+  accesDuSuivant,
+  chapitreSuivant,
+  navigationDuChapitre,
+  parcoursDeReference,
+  type NavigationDuChapitre,
+} from "@/pedagogy/cours/navigation-de-l-eleve";
 import { essaiPour } from "@/config/cours/chapitres-libres";
 import { parcoursDuContenu } from "@/config/cours/devis-du-contenu";
 import { lienDuDevisDuCours } from "@/config/parametrage-du-devis";
 import { chapitrePropose } from "@/config/formations-proposees";
-import { motsDuContenu } from "@/config/cours/situations";
+import { motsDuContenu, situationParCode } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
 import { getGuestUserId } from "@/lib/guest";
-import { classeDeLEleve, progressionDeLEleve } from "@/services/cours.service";
+import { classeDeLEleve, coursOuvert, progressionDeLEleve } from "@/services/cours.service";
 import { chapitreDuParcoursDeLaClasse } from "@/services/chapitres-de-la-classe";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 import { competencesAffichees, diplomeDeLAdresse } from "@/config/cours/competences-affichees";
@@ -118,6 +126,7 @@ async function ChapitrePage({
   // la reprend quand l'appareil n'en a pas. Celle d'une autre entreprise ne vaut pas pour celle-ci.
   const enregistree = classeDeLEleveLue && userId ? await progressionDeLEleve(userId, chapitre.code) : null;
   const repriseDuServeur = enregistree && enregistree.entreprise === choisie.code ? { index: enregistree.etape, etapes: enregistree.etapes } : null;
+  const navigation = await navigationDeLaPage(chapitre, { classe: classeDeLEleveLue, eleve: userId, diplome: demande, entreprise: choisie.code });
   return (
     <>
       <main id="main" data-metier={choisie.teinte} className="relative overflow-x-clip">
@@ -138,6 +147,7 @@ async function ChapitrePage({
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
           repriseDuServeur={repriseDuServeur}
           diplome={demande}
+          navigation={navigation}
         />
         {diaporama && <Diaporama chapitre={chapitre.code} entreprise={choisie.code} diplome={demande} />}
         <AuBureau chapitre={chapitre.code} />
@@ -147,6 +157,37 @@ async function ChapitrePage({
       <PiedDePage />
     </>
   );
+}
+
+/**
+ * OÙ EN EST L'ÉLÈVE, ET OÙ ALLER ENSUITE (audit du cours du 25 novembre 2026, usage 1.3 et 1.4) : le
+ * parcours de référence du chapitre (celui de la classe de l'élève, ou du diplôme d'où il vient ;
+ * pedagogy/cours/navigation-de-l-eleve.ts), son fil d'Ariane, le retour à sa liste, et le chapitre suivant
+ * avec son accès, lu par la règle de toujours (../acces.ts) : la licence et la libération de l'enseignant
+ * décident, la page dit seulement pourquoi un chapitre reste fermé. Un cas pratique prend le parcours du
+ * premier chapitre qu'il reprend, sans suivant.
+ */
+async function navigationDeLaPage(
+  chapitre: Chapitre,
+  { classe, eleve, diplome, entreprise }: { classe: { parcours: string | null } | null; eleve: string | null; diplome: string | null; entreprise: string },
+): Promise<NavigationDuChapitre | null> {
+  const dansLeRegistre = CHAPITRES.some((c) => c.code === chapitre.code);
+  const repere = dansLeRegistre ? chapitre : chapitreParCode(situationParCode(chapitre.code)?.reprend[0] ?? "");
+  if (!repere) return null;
+  const reference = parcoursDeReference(repere, { classe, diplome });
+  const suivant = dansLeRegistre ? chapitreSuivant(reference, chapitre.code) : null;
+  const lien = (c: Chapitre) => `/cours/${c.code}?entreprise=${c.entreprises && !c.entreprises.codes.includes(entreprise) ? c.entreprises.codes[0] : entreprise}`;
+  if (!suivant) return navigationDuChapitre(reference, chapitre.code, null, lien);
+  const ouvert = await chapitreOuvert(suivant);
+  // Fermé à l'élève d'une classe : par la libération de son enseignant, ou par l'offre de sa classe.
+  const lu =
+    !ouvert && classe && eleve && !(await getSession())
+      ? {
+          ouvertSansLiberation: await coursOuvert({ eleve }, suivant, { sansLiberation: true }),
+          dansLeParcours: classe.parcours === null || chapitreDuParcoursDeLaClasse(classe.parcours, suivant),
+        }
+      : null;
+  return navigationDuChapitre(reference, chapitre.code, { chapitre: suivant, acces: accesDuSuivant({ ouvert, eleve: lu }) }, lien);
 }
 
 /**
