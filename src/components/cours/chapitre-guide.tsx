@@ -19,11 +19,13 @@ import { natureDuChamp } from "@/pedagogy/cours/deux-decimales";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { bouton } from "@/components/bouton";
+import { Icone } from "@/components/icone";
 import { sansMolette } from "@/components/sans-molette";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import type { Cas } from "@/config/cours/cas";
 import type { MissionAffichee } from "@/config/cours/jouez";
 import type { Lien, SuitesDuChapitre } from "@/pedagogy/cours/suites";
+import { MOT_DE_L_ACCES, type NavigationDuChapitre, type PasDuFil } from "@/pedagogy/cours/mots-de-la-navigation";
 import type { OptionDeChoix, Piece } from "@/config/cours/types";
 import type {
   ACompleterServi,
@@ -1649,7 +1651,80 @@ const PASTILLE_DE_L_ETAT: Record<EtatDeLObjectif, string> = {
   "a-revoir": "pastille-perte",
 };
 
-function FinDuChapitre({
+/**
+ * LA SUITE DU PARCOURS, EN TÊTE DE LA FIN (audit du cours du 25 novembre 2026, usage 1.3) : le chapitre
+ * suivant du parcours de l'élève, celui de sa classe ou celui du diplôme d'où il vient
+ * (pedagogy/cours/navigation-de-l-eleve.ts), en bouton principal quand il lui est ouvert ; fermé, son
+ * titre et la raison (« pas encore ouvert par votre enseignant ») ; au dernier chapitre, la fin du parcours.
+ * À côté, le retour à la liste d'où il vient.
+ */
+function SuiteDuParcours({ navigation }: { navigation: NavigationDuChapitre }) {
+  const { suite, retour } = navigation;
+  if (!suite) return null;
+  return (
+    <section className="carte grid gap-3 p-4 sm:p-5" aria-label="La suite du parcours" data-suite-du-parcours={suite.genre}>
+      {suite.genre === "suivant" ? (
+        suite.acces === "ouvert" ? (
+          <p>
+            <Link href={suite.href} className={bouton({ taille: "l" })} data-chapitre-suivant-du-parcours={suite.code}>
+              Chapitre suivant : {suite.titre}
+            </Link>
+          </p>
+        ) : (
+          <p className="text-slate-200" data-chapitre-suivant-du-parcours={suite.code} data-acces-du-suivant={suite.acces}>
+            Chapitre suivant : <strong className="font-semibold">{suite.titre}</strong>
+            <span className="text-slate-400">
+              {" "}
+              <Icone nom="verrou" /> {MOT_DE_L_ACCES[suite.acces]}
+            </span>
+          </p>
+        )
+      ) : (
+        <p className="text-slate-200" data-fin-du-parcours="">
+          {suite.phrase}
+        </p>
+      )}
+      <p className="text-sm">
+        <Link href={retour.href} className="text-amber-300 underline-offset-4 hover:underline">
+          {retour.libelle}
+        </Link>
+      </p>
+    </section>
+  );
+}
+
+/**
+ * LE FIL D'ARIANE DU CHAPITRE (audit du cours du 25 novembre 2026, usage 1.4) : « Cours › BTS CG › bloc ›
+ * chapitre », chaque pas un lien vers sa liste, ou « Ma classe › chapitre » pour l'élève d'une classe. Sans
+ * navigation (un cas pratique sans parcours), « Cours » seul.
+ */
+function FilDAriane({ fil, titre }: { fil: readonly PasDuFil[]; titre: string }) {
+  return (
+    <nav aria-label="Fil d'Ariane" className="mb-2 text-sm text-slate-400" data-fil-d-ariane="">
+      <ol className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+        {fil.map((pas) => (
+          <li key={`${pas.libelle}|${pas.href ?? ""}`} className="flex items-baseline gap-x-1.5">
+            {pas.href ? (
+              <Link href={pas.href} className="underline-offset-4 hover:text-slate-200 hover:underline">
+                {pas.libelle}
+              </Link>
+            ) : (
+              <span>{pas.libelle}</span>
+            )}
+            <span aria-hidden>›</span>
+          </li>
+        ))}
+        <li>
+          <span aria-current="page" className="text-slate-300">
+            {titre}
+          </span>
+        </li>
+      </ol>
+    </nav>
+  );
+}
+
+export function FinDuChapitre({
   chapitre,
   cas,
   suivi,
@@ -1660,6 +1735,7 @@ function FinDuChapitre({
   mission,
   suites,
   garde,
+  navigation = null,
 }: {
   chapitre: ChapitreServi;
   cas: Cas;
@@ -1673,7 +1749,10 @@ function FinDuChapitre({
   suites: SuitesDuChapitre | null;
   /** Le diplôme de l'adresse, à garder dans les liens vers un autre chapitre : « &diplome=dcg », ou rien. */
   garde: string;
+  /** Le chapitre suivant du parcours (ou sa fin) et le retour à la liste d'où l'on vient, calculés par la page. */
+  navigation?: NavigationDuChapitre | null;
 }) {
+  const retour = navigation?.retour ?? { href: "/cours", libelle: "Retour au cours" };
   const notees = chapitre.etapes.filter((e) => e.type !== "lecture");
   const duPremierCoup = notees.filter((e) => {
     const s = suivi.etapes[e.id];
@@ -1698,6 +1777,7 @@ function FinDuChapitre({
           {duPremierCoup} étape{duPremierCoup > 1 ? "s" : ""} réussie{duPremierCoup > 1 ? "s" : ""} du premier coup sur {notees.length}, chez {cas.entreprise}.
         </p>
       </div>
+      {navigation?.suite && <SuiteDuParcours navigation={navigation} />}
       {bilan ? (
         <>
           <section className="grid gap-3" data-bilan-des-objectifs="">
@@ -1792,11 +1872,11 @@ function FinDuChapitre({
         </div>
       </details>
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" className={bouton({ taille: "m" })} onClick={recommencer}>
+        <button type="button" className={bouton({ variante: navigation?.suite ? "secondaire" : "principal", taille: "m" })} onClick={recommencer}>
           {chapitre.mots.recommencer}
         </button>
-        <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>
-          Retour au cours
+        <Link href={retour.href} className={bouton({ variante: "secondaire", taille: "m" })} data-retour-du-chapitre="">
+          {retour.libelle}
         </Link>
       </div>
       <section className="grid gap-2">
@@ -1830,6 +1910,7 @@ export function ChapitreGuide({
   calculatrice = true,
   diplome = null,
   repriseDuServeur = null,
+  navigation = null,
 }: {
   /** Le chapitre ouvert, réduit à ses données pour cette entreprise, après le contrôle de la licence. */
   chapitre: ChapitreServi;
@@ -1855,6 +1936,8 @@ export function ChapitreGuide({
    * (config/cours/competences-affichees.ts).
    */
   diplome?: string | null;
+  /** Le fil d'Ariane, le retour à la liste et le chapitre suivant du parcours (pedagogy/cours/navigation-de-l-eleve.ts). */
+  navigation?: NavigationDuChapitre | null;
 }) {
   // Le chapitre est servi dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
   const { code } = chapitre;
@@ -1938,12 +2021,10 @@ export function ChapitreGuide({
   return (
     // Avec la calculatrice, un peu plus de place en bas : son bouton flotte au-dessus du dernier bouton de l'étape.
     <div className={`mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-10 ${calculatrice ? "pb-28" : "pb-16"}`}>
+      <FilDAriane fil={navigation?.fil ?? [{ libelle: "Cours", href: "/cours" }]} titre={chapitre.titre} />
       <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
         <p className="text-xs uppercase tracking-annonce text-slate-400">
-          <Link href="/cours" className="hover:text-slate-300">
-            Cours
-          </Link>{" "}
-          · {chapitre.parcours} · Palier {chapitre.palier}
+          {chapitre.parcours} · Palier {chapitre.palier}
         </p>
         <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs font-semibold text-slate-300">{cas.entreprise}</span>
         {classe && <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400">Mode classe</span>}
@@ -1987,6 +2068,7 @@ export function ChapitreGuide({
           mission={mission}
           suites={suites}
           garde={garde}
+          navigation={navigation}
         />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

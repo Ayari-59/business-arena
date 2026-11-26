@@ -386,6 +386,23 @@ export async function progressionDeLEleve(
 }
 
 /**
+ * TOUTES LES PROGRESSIONS D'UN ÉLÈVE DANS SA CLASSE D'AUJOURD'HUI, par chapitre (audit du cours du
+ * 25 novembre 2026, usage 1.2) : « Ma classe » et la liste de son diplôme en disent l'état, fait, en cours
+ * ou à faire (pedagogy/cours/navigation-de-l-eleve.ts). Les mêmes lignes que `progressionDeLEleve`, lues
+ * en une fois ; vide sans classe.
+ */
+export async function progressionsDeLEleve(
+  userId: string,
+): Promise<Map<string, { entreprise: string; etape: number; majLe: Date }>> {
+  const lignes = await db
+    .select({ chapitre: coursProgressions.chapitre, entreprise: coursProgressions.entreprise, etape: coursProgressions.etape, majLe: coursProgressions.majLe })
+    .from(coursProgressions)
+    .innerJoin(coursEleves, and(eq(coursEleves.userId, coursProgressions.userId), eq(coursEleves.classeId, coursProgressions.classeId)))
+    .where(eq(coursProgressions.userId, userId));
+  return new Map(lignes.map(({ chapitre, ...p }) => [chapitre, p]));
+}
+
+/**
  * Enregistrer la progression d'un élève dans le chapitre qu'il suit, pour sa classe.
  * Sans classe, rien ne s'écrit : le cours seul reste sur l'appareil.
  *

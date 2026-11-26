@@ -1739,7 +1739,8 @@ describe("la page d'un chapitre n'annonce que les compétences du diplôme d'où
     await enseignantSousLicence(ctx);
     const page = await ctx.newPage();
 
-    await aller(page, "/cours?diplome=dcg");
+    // La liste est repliée par bloc (audit du cours du 25 novembre 2026, usage 1.5) : l'ancre du chapitre ouvre le sien.
+    await aller(page, "/cours?diplome=dcg#chapitre-les-operations-en-devises");
     const lien = page.locator('[data-programme="dcg"] [data-chapitre="les-operations-en-devises"] a[href^="/cours/les-operations-en-devises?"]').first();
     expect(await lien.getAttribute("href")).toMatch(/[?&]diplome=dcg(&|$)/);
     await lien.click();
@@ -1750,7 +1751,8 @@ describe("la page d'un chapitre n'annonce que les compétences du diplôme d'où
     expect(dcg).toContain("UE10 · Comptabilité approfondie");
     for (const autre of ["BTS CG", "BUT GEA", "Contrôle et traitement comptable", "Produire l'information comptable"]) expect(dcg, autre).not.toContain(autre);
 
-    await aller(page, "/cours?diplome=bts-cg");
+    // La liste est repliée par bloc (audit du cours du 25 novembre 2026, usage 1.5) : l'ancre du chapitre ouvre le sien.
+    await aller(page, "/cours?diplome=bts-cg#chapitre-les-operations-en-devises");
     const duBts = page.locator('[data-programme="bts-cg"] [data-chapitre="les-operations-en-devises"] a[href^="/cours/les-operations-en-devises?"]').first();
     await duBts.click();
     await page.waitForURL(/\/cours\/les-operations-en-devises\?.*diplome=bts-cg/, { timeout: 60_000 });

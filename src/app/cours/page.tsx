@@ -38,7 +38,20 @@ import { EssaiDuDiplome } from "@/components/cours/essai-du-diplome";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
-import { classeDeLEleve, coursOuvert, liberationDeLEleve } from "@/services/cours.service";
+import { classeDeLEleve, coursOuvert, liberationDeLEleve, progressionsDeLEleve } from "@/services/cours.service";
+import {
+  ancreDuBloc,
+  ancreDuChapitre,
+  blocOuvert,
+  chapitreDuBouton,
+  etatDuBloc,
+  etatDuBlocEnClair,
+  etatDuChapitre,
+  etatEnClair,
+  gesteDuChapitre,
+  type ChapitreEtSonEtat,
+  type EtatDuChapitre,
+} from "@/pedagogy/cours/navigation-de-l-eleve";
 import { codeDeRepriseDuProfil } from "@/services/cohortes.service";
 import { AIDE_CODE_DE_REPRISE_COURS, formaterCodeDeReprise } from "@/config/reprise";
 import { chapitreDuParcoursDeLaClasse, libereALaClasse } from "@/services/chapitres-de-la-classe";
@@ -117,11 +130,27 @@ async function CoursPage({
   const pilote = essai?.chapitre ?? chapitreLibreParDefaut();
   // « MA CLASSE » (audit UX du 11 novembre 2026, P1-1) : les chapitres ouverts à la classe, et celui à
   // commencer, lus par la règle de l'élève (services/cours.service.ts, `coursOuvert`).
+  // L'ÉTAT DE CHAQUE CHAPITRE (audit du cours du 25 novembre 2026, usage 1.2) : la progression que la
+  // classe a déjà enregistrée, lue une fois ; fait, en cours (étape n sur N) ou à faire.
+  const progressions = classe && userId ? await progressionsDeLEleve(userId) : new Map<string, { entreprise: string; etape: number; majLe: Date }>();
+  const etatDe = (c: Chapitre): ChapitreEtSonEtat => ({
+    code: c.code,
+    etat: etatDuChapitre(progressions.get(c.code), c.etapes.length),
+    majLe: progressions.get(c.code)?.majLe ?? null,
+  });
   const maClasse = classe && userId ? await chapitresDeMaClasse(userId, classe.parcours) : null;
+  // Le bloc ouvert de la liste d'un diplôme : celui où l'élève en est, sinon le premier qui a des chapitres.
+  const blocALOuverture = parcours ? blocOuvert(parcours.blocs.map((b) => b.chapitres.map((l) => etatDe(l.chapitre)))) : -1;
   // LE CODE DE REPRISE DE L'ÉLÈVE (audit UX du 11 novembre 2026, P1-5) : celui de son profil, le
   // mécanisme des épisodes, posé ici à sa première venue dans « Ma classe ».
   const codeDeReprise = classe && userId ? await codeDeRepriseDuProfil(userId, true) : null;
-  const aCommencer = maClasse?.aCommencer ?? essaiDeLaClasse?.chapitre ?? pilote;
+  // LE BOUTON DE « MA CLASSE » : « Reprendre, étape n sur N » sur le chapitre en cours le plus récent,
+  // « Commencer » sur celui que la classe propose, « Revoir » quand tout est fait.
+  const auBouton = maClasse ? chapitreDuBouton(maClasse.ouverts.map((l) => etatDe(l.chapitre)), maClasse.aCommencer?.code ?? null) : null;
+  const aCommencer = (auBouton ? chapitreParCode(auBouton.code) : null) ?? maClasse?.aCommencer ?? essaiDeLaClasse?.chapitre ?? pilote;
+  const etatDuBouton: EtatDuChapitre = auBouton?.etat ?? { etat: "a-faire" };
+  // Le chapitre se rouvre dans l'entreprise où l'élève l'a commencé (sa progression y est), sauf entreprise imposée.
+  const entrepriseDe = (c: Chapitre) => imposee?.code ?? progressions.get(c.code)?.entreprise;
   const diplomeDeLaClasse = formationDuParcours(classe?.parcours) ?? undefined;
   // Les entreprises où l'essai se joue (un chapitre peut n'en garder que certaines).
   const entreprisesDuPilote = ENTREPRISES.filter((e) => !pilote.entreprises || pilote.entreprises.codes.includes(e.code));
@@ -176,18 +205,21 @@ async function CoursPage({
               </p>
               <p>
                 <Link
-                  href={lienDuChapitre(aCommencer, imposee?.code, diplomeDeLaClasse)}
+                  href={lienDuChapitre(aCommencer, entrepriseDe(aCommencer), diplomeDeLaClasse)}
                   className={bouton({ taille: "l" })}
                   data-commencer-en-classe={aCommencer.code}
+                  data-etat-du-bouton={etatDuBouton.etat}
                 >
-                  Commencer : {aCommencer.titre}
+                  {gesteDuChapitre(etatDuBouton)} : {aCommencer.titre}
                 </Link>
               </p>
               {maClasse && maClasse.ouverts.length > 0 ? (
                 <ChapitresDeMaClasse
                   lignes={maClasse.ouverts}
                   aCommencer={aCommencer.code}
-                  lien={(c) => lienDuChapitre(c, imposee?.code, diplomeDeLaClasse)}
+                  propose={maClasse.aCommencer?.code ?? null}
+                  etat={(c) => etatDe(c).etat}
+                  lien={(c) => lienDuChapitre(c, entrepriseDe(c), diplomeDeLaClasse)}
                 />
               ) : null}
               {codeDeReprise ? <MonCodeDeReprise code={codeDeReprise} /> : null}
@@ -309,7 +341,14 @@ async function CoursPage({
                 {programme ? ` dans le ${programme.formation.sigle}` : ""}
               </h2>
               {trouves.length > 0 ? (
-                <ListeDeChapitres chapitres={trouves} imposee={imposee?.code} ouverts={ouverts} diplome={programme?.formation.code} eleve={eleveDeLaClasse} />
+                <ListeDeChapitres
+                  chapitres={trouves}
+                  imposee={imposee?.code}
+                  ouverts={ouverts}
+                  diplome={programme?.formation.code}
+                  eleve={eleveDeLaClasse}
+                  etat={eleveDeLaClasse ? (c) => etatDe(c).etat : undefined}
+                />
               ) : (
                 <p className="text-sm text-slate-400">
                   Essayez un autre mot, ou{" "}
@@ -376,25 +415,48 @@ async function CoursPage({
                   Les chapitres, dans l&apos;ordre d&apos;apprentissage
                 </h3>
                 {parcours.blocs.length > 0 ? (
-                  parcours.blocs.map((b) => (
-                    <section
+                  // LA LISTE REPLIÉE PAR BLOC (audit du cours du 25 novembre 2026, usage 1.5 : 21 écrans sur
+                  // téléphone). Chaque bloc dit son nombre de chapitres et son état ; celui où l'élève en est
+                  // s'ouvre, les autres d'un clic. Le fil d'Ariane et le « Retour » d'un chapitre visent son
+                  // ancre, qui ouvre son bloc (OuvreLeTiroirVise).
+                  parcours.blocs.map((b, k) => {
+                    const etats = b.chapitres.map((l) => etatDe(l.chapitre));
+                    const etatDuBlocLu = eleveDeLaClasse ? etatDuBloc(etats.map((e) => e.etat)) : null;
+                    const ouvertsDuBloc = b.chapitres.filter((l) => ouverts.has(l.chapitre.code)).length;
+                    const n = b.chapitres.length;
+                    return (
+                    <details
                       key={b.bloc ?? "autres"}
+                      id={ancreDuBloc(k)}
+                      open={k === blocALOuverture}
                       data-bloc-du-diplome={b.bloc ?? "autres"}
-                      aria-label={b.bloc ?? "Autres chapitres du parcours"}
-                      className="grid gap-2"
+                      data-etat-du-bloc={etatDuBlocLu?.etat}
+                      className="group scroll-mt-24 rounded-lg border border-white/10"
                     >
-                      <h4 className="text-base font-semibold text-slate-100">
-                        {b.bloc ?? "Autres chapitres du parcours"}
-                        {b.partie ? <span className="ml-2 text-xs font-normal text-slate-400">{b.partie}</span> : null}
-                        {b.enCours ? (
-                          <span
-                            data-en-cours=""
-                            className="ml-2 inline-block rounded-full border border-amber-400/40 px-2 py-0.5 align-middle text-xs font-medium text-amber-300"
-                          >
-                            en cours
+                      <summary className="grid min-h-11 cursor-pointer list-none grid-cols-[auto_1fr] items-baseline gap-x-2 px-3 py-2 [&::-webkit-details-marker]:hidden">
+                        <span aria-hidden className="inline-block text-amber-400 transition-transform group-open:rotate-90">
+                          ▸
+                        </span>
+                        <span className="grid gap-0.5">
+                          <span className="text-base font-semibold text-slate-100">
+                            {b.bloc ?? "Autres chapitres du parcours"}
+                            {b.partie ? <span className="ml-2 text-xs font-normal text-slate-400">{b.partie}</span> : null}
+                            {b.enCours ? (
+                              <span
+                                data-en-cours=""
+                                className="ml-2 inline-block rounded-full border border-amber-400/40 px-2 py-0.5 align-middle text-xs font-medium text-amber-300"
+                              >
+                                en cours
+                              </span>
+                            ) : null}
                           </span>
-                        ) : null}
-                      </h4>
+                          <span className="text-xs text-slate-400" data-resume-du-bloc="">
+                            {n === 0 ? "pas encore de chapitre" : `${n} chapitre${n > 1 ? "s" : ""}`}
+                            {etatDuBlocLu ? ` · ${etatDuBlocEnClair(etatDuBlocLu)}` : !eleveDeLaClasse && n > 0 && ouvertsDuBloc > 0 && ouvertsDuBloc < n ? ` · ${ouvertsDuBloc} ouvert${ouvertsDuBloc > 1 ? "s" : ""}` : ""}
+                          </span>
+                        </span>
+                      </summary>
+                      <div className="grid gap-2 border-t border-white/10 px-3 py-3">
                       {b.chapitres.length === 0 ? (
                         <p data-theme-vide="" className="text-sm text-slate-400">
                           Chapitres en préparation.
@@ -407,14 +469,24 @@ async function CoursPage({
                             </p>
                           ) : null}
                           <ol className="grid gap-3">
-                            {b.chapitres.map((l) => (
-                              <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} diplome={programme.formation.code} eleve={eleveDeLaClasse} />
+                            {b.chapitres.map((l, i) => (
+                              <ChapitreDuParcours
+                                key={l.chapitre.code}
+                                ligne={l}
+                                imposee={entrepriseDe(l.chapitre)}
+                                ouvert={ouverts.has(l.chapitre.code)}
+                                diplome={programme.formation.code}
+                                eleve={eleveDeLaClasse}
+                                etat={eleveDeLaClasse ? etats[i]!.etat : undefined}
+                              />
                             ))}
                           </ol>
                         </>
                       )}
-                    </section>
-                  ))
+                      </div>
+                    </details>
+                    );
+                  })
                 ) : (
                   <p className="text-sm text-slate-400">Aucun chapitre du cours ne travaille encore ce diplôme.</p>
                 )}
@@ -652,16 +724,40 @@ async function chapitresDeMaClasse(eleve: string, parcours: string | null): Prom
   return { ouverts: lignes, aCommencer };
 }
 
-/** Les chapitres ouverts à la classe, sous « Ma classe » : les premiers en clair, la suite repliée. */
-function ChapitresDeMaClasse({ lignes, aCommencer, lien }: { lignes: readonly LigneDeMaClasse[]; aCommencer: string; lien: (c: Chapitre) => string }) {
+/**
+ * Les chapitres ouverts à la classe, sous « Ma classe » : les premiers en clair, la suite repliée. Chacun dit
+ * son état pour l'élève (fait, en cours, à faire ; audit du cours du 25 novembre 2026, usage 1.2), puis
+ * pourquoi il est ouvert.
+ */
+function ChapitresDeMaClasse({
+  lignes,
+  aCommencer,
+  propose,
+  etat,
+  lien,
+}: {
+  lignes: readonly LigneDeMaClasse[];
+  aCommencer: string;
+  /** Le chapitre que la classe propose : le dernier libéré, en mode chapitre par chapitre. */
+  propose: string | null;
+  etat: (c: Chapitre) => EtatDuChapitre;
+  lien: (c: Chapitre) => string;
+}) {
   const EN_CLAIR = 6;
   const mot = (l: LigneDeMaClasse) =>
-    l.etat === "libere" ? (l.chapitre.code === aCommencer ? "libéré en dernier" : "libéré") : l.etat === "libre" ? "libre" : "ouvert";
+    l.etat === "libere" ? (l.chapitre.code === propose ? "libéré en dernier" : "libéré") : l.etat === "libre" ? "libre" : "ouvert";
   const ligne = (l: LigneDeMaClasse) => (
-    <li key={l.chapitre.code} data-chapitre-de-ma-classe={l.chapitre.code} data-etat={l.etat} className="flex flex-wrap items-baseline gap-x-2">
+    <li
+      key={l.chapitre.code}
+      data-chapitre-de-ma-classe={l.chapitre.code}
+      data-etat={l.etat}
+      aria-current={l.chapitre.code === aCommencer ? "step" : undefined}
+      className="flex flex-wrap items-baseline gap-x-2"
+    >
       <Link href={lien(l.chapitre)} className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline">
         {l.chapitre.titre}
       </Link>
+      <EtatDeLEleve etat={etat(l.chapitre)} />
       <span className="text-xs text-slate-400">{mot(l)}</span>
     </li>
   );
@@ -680,6 +776,19 @@ function ChapitresDeMaClasse({ lignes, aCommencer, lien }: { lignes: readonly Li
         </details>
       ) : null}
     </div>
+  );
+}
+
+/** L'état d'un chapitre pour l'élève d'une classe, en pastille de la charte : fait, en cours, à faire. */
+function EtatDeLEleve({ etat }: { etat: EtatDuChapitre }) {
+  const pastille = etat.etat === "fait" ? "pastille-gain" : etat.etat === "en-cours" ? "pastille-etat" : "";
+  return (
+    <span
+      data-etat-du-chapitre={etat.etat}
+      className={`${pastille} inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${etat.etat === "a-faire" ? "border border-white/15 text-slate-300" : "text-slate-100"}`}
+    >
+      {etatEnClair(etat)}
+    </span>
   );
 }
 
@@ -782,16 +891,19 @@ function ChapitreDuParcours({
   ouvert,
   diplome,
   eleve,
+  etat,
 }: {
   ligne: ChapitreDuDiplome;
   imposee?: string;
   ouvert: boolean;
   diplome?: string;
   eleve?: EleveDeLaClasse;
+  /** L'état du chapitre pour l'élève d'une classe : fait, en cours, à faire. */
+  etat?: EtatDuChapitre;
 }) {
   const c = ligne.chapitre;
   return (
-    <li data-chapitre={c.code} data-rang={ligne.rang} data-approfondissement={ligne.approfondissement ? "" : undefined} className="grid gap-x-3 gap-y-1 sm:grid-cols-[2rem_1fr_auto] sm:items-baseline">
+    <li id={ancreDuChapitre(c.code)} data-chapitre={c.code} data-rang={ligne.rang} data-approfondissement={ligne.approfondissement ? "" : undefined} className="grid scroll-mt-24 gap-x-3 gap-y-1 sm:grid-cols-[2rem_1fr_auto] sm:items-baseline">
       <span className="text-sm font-semibold tabular-nums text-slate-400">{ligne.rang}.</span>
       <span className="grid min-w-0 gap-0.5">
         <Link
@@ -800,6 +912,11 @@ function ChapitreDuParcours({
         >
           {c.titre}
         </Link>
+        {etat ? (
+          <span>
+            <EtatDeLEleve etat={etat} />
+          </span>
+        ) : null}
         <span className="text-xs text-slate-400">
           Palier {c.palier} · {publicDuChapitre(c)}
           {/* Un chapitre de niveau supérieur gardé pour ce diplôme (config/cours/pour-aller-plus-loin.ts). */}
@@ -869,6 +986,7 @@ function ListeDeChapitres({
   ouverts,
   diplome,
   eleve,
+  etat,
 }: {
   chapitres: readonly Chapitre[];
   imposee?: string;
@@ -878,6 +996,8 @@ function ListeDeChapitres({
   diplome?: string;
   /** L'élève d'une classe : un chapitre fermé ne se dit pas « réservé ». */
   eleve?: EleveDeLaClasse;
+  /** L'état de chaque chapitre pour l'élève d'une classe. */
+  etat?: (c: Chapitre) => EtatDuChapitre;
 }) {
   return (
     <ol className="grid gap-2.5">
@@ -891,6 +1011,11 @@ function ListeDeChapitres({
             >
               {c.titre}
             </Link>
+            {etat ? (
+              <span>
+                <EtatDeLEleve etat={etat(c)} />
+              </span>
+            ) : null}
             <span className="text-xs text-slate-400">{publicDuChapitre(c)}</span>
             <CasDuChapitre chapitre={c.code} imposee={imposee} diplome={diplome} />
           </span>
